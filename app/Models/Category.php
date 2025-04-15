@@ -10,6 +10,6 @@ class Category extends Model
 
     public function fragments()
     {
-        return $this->hasMany(SeerLog::class);
+        return $this->hasMany(Fragment::class);
     }
 }

@@ -4,7 +4,7 @@
 
     use Illuminate\Database\Eloquent\Model;
 
-    class SeerLog extends Model
+    class Fragment extends Model
     {
         protected $guarded = [];
 

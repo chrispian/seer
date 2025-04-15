@@ -2,10 +2,10 @@
 
     namespace App\Http\Controllers;
 
-    use App\Models\SeerLog;
+    use App\Models\Fragment;
     use Illuminate\Http\Request;
 
-    class SeerLogController extends Controller
+    class FragmentController extends Controller
     {
         public function store(Request $request)
         {
@@ -25,21 +25,21 @@
 
             unset($data['category']); // prevent mass-assignment issues
 
-            $log = \App\Models\SeerLog::create($data);
+            $log = \App\Models\Fragment::create($data);
 
             return response()->json($log);
         }
 
-        public function update(Request $request, SeerLog $log)
+        public function update(Request $request, Fragment $fragment)
         {
-            $log->update($request->only(['type', 'message', 'tags', 'relationships']));
-            return response()->json($log);
+            $fragment->update($request->only(['type', 'message', 'tags', 'relationships']));
+            return response()->json($fragment);
         }
 
         public function index(Request $request)
         {
             return response()->json(
-                SeerLog::query()
+                Fragment::query()
                     ->latest()
                     ->get()
             );
@@ -50,7 +50,7 @@
             $query = $request->get('q');
 
             return response()->json(
-                \App\Models\SeerLog::with('category')
+                \App\Models\Fragment::with('category')
                     ->where('message', 'like', "%{$query}%")
                     ->orWhereJsonContains('tags', $query)
                     ->latest()
@@ -61,7 +61,7 @@
 
         public function recall(Request $request)
         {
-            $query = SeerLog::with('category')->latest();
+            $query = Fragment::with('category')->latest();
 
             if ($request->has('type')) {
                 $query->where('type', $request->type);
