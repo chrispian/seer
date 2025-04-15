@@ -5,9 +5,9 @@
     use App\Models\SeerLog;
     use Illuminate\Database\Eloquent\Factories\Factory;
 
-    class SeerLogFactory extends Factory
+    class FragmentFactory extends Factory
     {
-        protected $model = SeerLog::class;
+        protected $model = Fragment::class;
 
         public function definition(): array
         {

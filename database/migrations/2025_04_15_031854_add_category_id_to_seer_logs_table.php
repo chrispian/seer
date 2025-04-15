@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('seer_logs', function (Blueprint $table) {
+        Schema::table('fragments', function (Blueprint $table) {
             $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
         });
     }

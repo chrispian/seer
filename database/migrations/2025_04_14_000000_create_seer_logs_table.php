@@ -6,7 +6,7 @@
 
     return new class extends Migration {
         public function up(): void {
-            Schema::create('seer_logs', function (Blueprint $table) {
+            Schema::create('fragments', function (Blueprint $table) {
                 $table->id();
                 $table->string('type');
                 $table->text('message');
