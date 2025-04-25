@@ -260,8 +260,13 @@ PROMPT
             return "No fragments found of type `{$type}`.";
         }
 
-        return "### Recall\n\n" . $results
-                ->map(fn ($f) => "- [ ] {$f->message}")
+        $fragmentPrefix = '';
+        if ($type === 'todo') {
+            $fragmentPrefix = '- [ ] ';
+        }
+
+        return $results
+                ->map(fn ($f) => "\n{$fragmentPrefix}{$f->message}")
                 ->implode("\n");
 
 
