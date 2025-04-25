@@ -11,6 +11,7 @@
         protected $casts = [
             'tags' => 'array',
             'relationships' => 'array',
+            'metadata' => 'array',
         ];
 
         public function category()

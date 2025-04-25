@@ -1,6 +1,7 @@
 <?php
 
-    use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AnalyzeFragmentController;
+use Illuminate\Support\Facades\Route;
     use App\Http\Controllers\FragmentController;
 
     Route::post('/fragment', [FragmentController::class, 'store']);
@@ -8,5 +9,7 @@
     Route::get('/fragment', [FragmentController::class, 'index']);
     Route::get('/search', [FragmentController::class, 'search']);
     Route::get('/recall', [FragmentController::class, 'recall']);
+    Route::post('/analyze-fragment', AnalyzeFragmentController::class);
+
 
 
