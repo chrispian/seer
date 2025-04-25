@@ -2,9 +2,15 @@
 
     namespace App\Http\Controllers;
 
+    use App\Actions\EnrichFragmentWithLlama;
+    use App\Actions\RouteToVault;
+    use App\Actions\SuggestTags;
+    use App\Models\Category;
     use App\Models\Fragment;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Http;
+    use Illuminate\Support\Facades\Log;
+    use Illuminate\Support\Facades\Pipeline;
 
     class FragmentController extends Controller
     {
@@ -14,96 +20,56 @@
                 'message' => 'required|string',
             ]);
 
-            $parsed = app(\App\Actions\ParseFragmentInput::class)($request->input('message'));
-            $data = array_merge($request->only(['relationships', 'category', 'source']), $parsed);
+            // Create base fragment with only required message field
+            $fragment = Fragment::create([
+                'message' => $request->input('message'),
+                'type' => 'chaos', // ← this is the fix
+                'source' => $request->input('source'),
+                'relationships' => $request->input('relationships', []),
+            ]);
 
-            // Find or create category
-            if (!empty($data['category'])) {
-                $category = \App\Models\Category::firstOrCreate(['name' => $data['category']]);
-                $data['category_id'] = $category->id;
+            // Run parse action directly (sync)
+             app(\App\Actions\ParseChaosFragment::class)($fragment);
+
+            // Attach category if present
+            if ($categoryName = $request->input('category')) {
+                $category = Category::firstOrCreate(['name' => $categoryName]);
+                $fragment->category_id = $category->id;
+                $fragment->save();
             }
 
-            unset($data['category']); // prevent mass-assignment issues
-
-            $fragment = \App\Models\Fragment::create($data);
-
-            // Enrichment via LLaMA
-            dispatch(function () use ($fragment) {
-                try {
-                    $prompt = app(\App\Http\Controllers\AnalyzeFragmentController::class)
-                        ->buildPrompt($fragment->message, '', $fragment->type);
-
-
-                    $response = Http::timeout(20)->post('http://localhost:11434/api/generate', [
-                        'model' => 'llama3',
-                        'prompt' => $prompt,
-                        'stream' => false,
-                    ]);
-
-                    if ($response->ok()) {
-                        $llamaResponse = $response->json();
-
-                        \Log::info('LLaMA response raw', [
-                            'fragment_id' => $fragment->id,
-                            'prompt' => $prompt,
-                            'raw_response' => $llamaResponse,
-                        ]);
-
-                        // Extract JSON block from the response
-                        $raw = $llamaResponse['response'];
-                        $cleanJson = $raw;
-
-                        if (preg_match('/```(?:json)?\s*(\{.*?\})\s*```/s', $raw, $matches)) {
-                            $cleanJson = $matches[1];
-                        } elseif (str_starts_with(trim($raw), 'Here')) {
-                            $parts = explode('```', $raw);
-                            $cleanJson = $parts[1] ?? $raw;
-                        }
-
-                        $parsed = json_decode($cleanJson, true);
-
-                        if (json_last_error() === JSON_ERROR_NONE) {
-                            \Log::info('LLaMA enrichment parsed', [
-                                'fragment_id' => $fragment->id,
-                                'enrichment' => $parsed,
-                            ]);
-
-                            $currentMetadata = is_array($fragment->metadata) ? $fragment->metadata : [];
-                            $fragment->metadata = array_merge($currentMetadata, [
-                                'enrichment' => $parsed,
-                            ]);
-
-                            // Optionally sync enriched type back to main `type` field if it’s in the approved list
-                            $validTypes = [
-                                'bookmark', 'log', 'observation', 'insight', 'link',
-                                'media', 'seed', 'shard', 'note', 'todo', 'calendar',
-                                'reminder', 'contact', 'article', 'project'
-                            ];
-
-                            if (!empty($parsed['type']) && in_array($parsed['type'], $validTypes)) {
-                                $fragment->type = $parsed['type'];
-                            }
-
-
-                            $fragment->save();
-                        } else {
-                            \Log::error('JSON decode failed', [
-                                'fragment_id' => $fragment->id,
-                                'error' => json_last_error_msg(),
-                                'cleanJson' => $cleanJson,
-                            ]);
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    \Log::error('Fragment enrichment failed', [
-                        'fragment_id' => $fragment->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            });
+            // Dispatch enrichment pipeline (async)
+//            dispatch(function () use ($fragment) {
+//                try {
+//                    app(Pipeline::class)
+//                        ->send($fragment)
+//                        ->through([
+//                            \App\Actions\ParseChaosFragment::class,
+////                            // \App\Actions\ParseAtomicFragment::class,
+////                            \App\Actions\EnrichFragmentWithLlama::class,
+////                            \App\Actions\InferFragmentType::class,
+////                            \App\Actions\SuggestTags::class,
+////                            \App\Actions\RouteToVault::class,
+//
+//                        ])
+//                        ->thenReturn();
+//                } catch (\Throwable $e) {
+//                    Log::error('Enrichment pipeline failed', [
+//                        'fragment_id' => $fragment->id,
+//                        'error' => $e->getMessage(),
+//                    ]);
+//
+//                    $fragment->metadata = array_merge($fragment->metadata ?? [], [
+//                        'enrichment_status' => 'pipeline_failed',
+//                        'error' => $e->getMessage(),
+//                    ]);
+//                    $fragment->save();
+//                }
+//            })->onQueue('fragments');
 
             return response()->json($fragment);
         }
+
 
         public function update(Request $request, Fragment $fragment)
         {

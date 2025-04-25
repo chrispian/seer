@@ -2,12 +2,14 @@
 
 namespace App\Actions;
 
-class ParseFragmentInput
+use App\Models\Fragment;
+
+class ParseAtomicFragment
 {
-    public function __invoke(string $input): array
+    public function __invoke(Fragment $fragment): Fragment
     {
         // Match `type` as first word
-        preg_match('/^(\w+)\s+(.*)$/s', trim($input), $matches);
+        preg_match('/^(\w+)\s+(.*)$/s', trim($fragment->message), $matches);
         $type = strtolower(trim($matches[1] ?? 'note'));
         $body = trim($matches[2] ?? '');
 
@@ -17,10 +19,10 @@ class ParseFragmentInput
 
         $cleanMessage = preg_replace('/#\w+/', '', $body);
 
-        return [
-            'type' => $type,
-            'message' => trim($cleanMessage),
-            'tags' => $tags,
-        ];
+        $fragment->type = $type;
+        $fragment->tags = $tags;
+        $fragment->message = trim($cleanMessage);
+
+        return tap($fragment)->save();
     }
 }

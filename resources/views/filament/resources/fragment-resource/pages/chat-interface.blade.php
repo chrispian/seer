@@ -9,7 +9,9 @@
                     <div class="pt-2">
                         <div class="rounded px-3 py-2 bg-zinc-800 text-black">
                             <strong class="text-black">{{ ucfirst($message['type']) }}:</strong>
-                            {{ $message['message'] }}
+                            <x-markdown>
+                                {{ $message['message'] }}
+                            </x-markdown>
                         </div>
                     </div>
                 @endforeach

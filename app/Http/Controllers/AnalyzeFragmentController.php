@@ -2,54 +2,62 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\ParseAtomicFragment;
+use App\Models\Fragment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Pipeline\Pipeline;
 
 class AnalyzeFragmentController extends Controller
 {
     public function __invoke(Request $request)
     {
-        $request->validate([
-            'message' => 'required|string',
-            'context' => 'nullable|string',
-            'model' => 'nullable|string', // default to llama3
-            'type' => 'nullable|string',
-        ]);
+//        $request->validate([
+//            'message' => 'required|string',
+//            'context' => 'nullable|string',
+//            'model' => 'nullable|string', // default to llama3
+//            'type' => 'nullable|string',
+//        ]);
+//
+//        $message = $request->input('message');
+//        $context = $request->input('context', '');
+//        $model = $request->input('model', 'llama3');
+//        $type = $request->input('type');
+//
+//        $prompt = $this->buildPrompt($message, $context, $type);
+//
+//        $ollamaResponse = Http::timeout(20)
+//            ->post('http://localhost:11434/api/generate', [
+//                'model' => $model,
+//                'prompt' => $prompt,
+//                'stream' => false,
+//            ]);
+//
+//        if (! $ollamaResponse->ok()) {
+//            Log::error('Fragment enrichment failed', [
+//                'status' => $ollamaResponse->status(),
+//                'response' => $ollamaResponse->body(),
+//            ]);
+//            return response()->json([
+//                'error' => 'Failed to enrich fragment',
+//                'details' => $ollamaResponse->body(),
+//            ], Response::HTTP_BAD_GATEWAY);
+//        }
+//
+//        $data = $ollamaResponse->json();
+//        return response()->json([
+//            'message' => $message,
+//            'model' => $model,
+//            'analysis' => $data['response'] ?? null,
+//        ]);
 
-        $message = $request->input('message');
-        $context = $request->input('context', '');
-        $model = $request->input('model', 'llama3');
-        $type = $request->input('type');
+        $parsed = app(ParseAtomicFragment::class)($request->input('message'));
 
-        $prompt = $this->buildPrompt($message, $context, $type);
+        $fragment = Fragment::create(array_merge($request->only(['source']), $parsed));
 
-        $ollamaResponse = Http::timeout(20)
-            ->post('http://localhost:11434/api/generate', [
-                'model' => $model,
-                'prompt' => $prompt,
-                'stream' => false,
-            ]);
+        dispatch(new \App\Jobs\EnrichFragment($fragment))->onQueue('fragments');
 
-        if (! $ollamaResponse->ok()) {
-            Log::error('Fragment enrichment failed', [
-                'status' => $ollamaResponse->status(),
-                'response' => $ollamaResponse->body(),
-            ]);
-            return response()->json([
-                'error' => 'Failed to enrich fragment',
-                'details' => $ollamaResponse->body(),
-            ], Response::HTTP_BAD_GATEWAY);
-        }
 
-        $data = $ollamaResponse->json();
-        return response()->json([
-            'message' => $message,
-            'model' => $model,
-            'analysis' => $data['response'] ?? null,
-        ]);
+
     }
 
     public function buildPrompt(string $message, string $context = '', ?string $type = null): string

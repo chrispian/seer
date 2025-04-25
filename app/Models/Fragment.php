@@ -12,7 +12,9 @@
             'tags' => 'array',
             'relationships' => 'array',
             'metadata' => 'array',
+            'state' => 'array',
         ];
+
 
         public function category()
         {

@@ -9,10 +9,14 @@
         "php": "^8.2",
         "filament/filament": "^3.3",
         "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
+        "laravel/tinker": "^2.10.1",
+        "openai-php/client": "^0.10.3",
+        "openai-php/laravel": "^0.11.0",
+        "spatie/laravel-markdown": "^2.7"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "hollis-labs/laravel-console": "^0.1.1",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.41",
@@ -69,5 +73,12 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/hollis-labs/laravel-console"
+        }
+    ]
+
 }
