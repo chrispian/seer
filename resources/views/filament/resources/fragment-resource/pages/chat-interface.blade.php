@@ -11,33 +11,28 @@
             </div>
         @endif
 
-
         {{-- Chat Output --}}
-        <div id="chat-output" class="flex-1 overflow-y-auto">
+            <div id="chat-output" class="flex-1 overflow-y-auto">
             <div class="space-y-2 divide-y divide-zinc-800">
-
-                {{-- Recalled Todos --}}
-                <h1 class="text-red-500 text-sm">Recalled Todos Count: {{ count($recalledTodos) }}</h1>
-
                 {{-- Normal Chat --}}
                 <div class="mt-6">
-                    @if (!empty($chatHistory))
-                        @foreach ($chatHistory as $entry)
-                            <x-chat-markdown>
-                                {{ $entry['message'] }}
-                            </x-chat-markdown>
-                        @endforeach
-                    @endif
+                    @foreach ($chatMessages as $entry)
+                        <x-chat-markdown>
+                            {{ $entry['message'] }}
+                        </x-chat-markdown>
+                    @endforeach
 
-                        @if (!empty($recalledTodos))
+                    @if (!empty($recalledTodos))
+                            {{-- Recalled Todos --}}
+                            <h1 class="text-red-500 text-sm">Recalled Todos Count: {{ count($recalledTodos) }}</h1>
+
                             <h2 class="text-lg font-semibold text-gray-300 mb-2">Todos:</h2>
-                            <ul class="list-none space-y-1">
-                                @foreach ($recalledTodos as $entry)
-                                    <livewire:todo-item :fragment="\App\Models\Fragment::find($entry['id'])" :key="$entry['id']" />
-                                @endforeach
-                            </ul>
-                        @endif
-
+                        <ul class="list-none space-y-1">
+                            @foreach ($recalledTodos as $entry)
+                                <livewire:todo-item :fragment="\App\Models\Fragment::find($entry['id'])" :key="$entry['id']" />
+                            @endforeach
+                        </ul>
+                    @endif
 
                 </div>
 
@@ -48,10 +43,19 @@
 
 
         {{-- Input Bar --}}
-        <form class="p-1">
+        <form id="chat-form" x-data wire:submit.prevent="handleInput" class="p-1">
+
+
         <textarea
-            wire:model="input"
-            wire:keydown.enter.prevent="handleInput"
+            x-data
+            wire:model.defer="input"
+            wire:keydown.enter.prevent="
+                $el.value = '';
+
+                $nextTick(() => {
+                    document.getElementById('chat-form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                });
+            "
             class="
                 w-full
                 p-2
@@ -62,13 +66,115 @@
                 resize-none
                 "
             rows="3"
-            placeholder="Type your fragment and press Enter..."
-            autofocus
-        ></textarea>
+        >
+        </textarea>
+
+            @if (!empty($commandHistory))
+                <div class="mt-4 bg-zinc-900 p-3 rounded shadow-inner">
+                    <h3 class="text-sm font-semibold text-gray-400 mb-2">Recent Commands</h3>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach (array_reverse(array_slice($commandHistory, -8)) as $cmd)
+                            <button
+                                wire:click="injectCommand('{{ addslashes($cmd) }}')"
+                                class="text-xs bg-zinc-800 hover:bg-zinc-700 text-gray-300 rounded px-2 py-1"
+                            >
+                                {{ $cmd }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <div class="mt-4">
+                <button
+                    x-data
+                    x-on:click="$dispatch('open-command-palette')"
+                    class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                >
+                    ➕ Commands
+                </button>
+            </div>
+
+
+
         </form>
 
 
     </div>
+
+
+    <div
+        x-data="{ open: false }"
+        x-on:open-command-palette.window="open = true"
+        x-show="open"
+        style="display: none;"
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+    >
+        <div class="bg-white dark:bg-zinc-900 rounded-lg p-6 w-96 shadow-xl">
+            <h3 class="text-lg font-semibold mb-4 text-center">⚡ Command Palette</h3>
+            <div class="space-y-2">
+                @foreach (\App\Services\CommandRegistry::all() as $cmd)
+                    <button
+                        wire:click="injectCommand('/{{ $cmd }} ')"
+                        x-on:click="open = false"
+                        class="w-full text-left bg-zinc-800 hover:bg-zinc-700 text-gray-200 rounded px-3 py-2 text-sm"
+                    >
+                        /{{ $cmd }}
+                    </button>
+                @endforeach
+            </div>
+            <div class="mt-4 text-center">
+                <button
+                    x-on:click="open = false"
+                    class="text-xs text-gray-400 hover:text-gray-200"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Pusher -->
+    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+
+    <!-- Add Laravel Echo -->
+    <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
+
+    <script>
+        console.log('Initializing Echo...');
+
+        window.Pusher = Pusher;
+
+        const isHttps = window.location.protocol === 'https:';
+
+        window.Echo = new Echo({
+            broadcaster: 'pusher',
+            key: '1cdf7afdbf274ab9e94bf2cae69839fb',
+            wsHost: 'seer.test',
+            wsPort: 6001,
+            wssPort: 6001,
+            forceTLS: true,
+            encrypted: true,
+            disableStats: true,
+            enabledTransports: ['wss'], // ONLY wss
+        });
+
+        console.log('Subscribing to lens channel...');
+
+        window.Echo.channel('lens')
+            .listen('FragmentProcessed', (e) => {
+                console.log('FragmentProcessed event received!', e);
+            });
+    </script>
+
+
+        <script>
+        Echo.channel('lens')
+            .listen('TestLensBroadcast', (e) => {
+                console.log('Lens Realtime Event:', e);
+                // TODO: you could push to chatMessages dynamically too!
+            });
+    </script>
 </x-filament-panels::page>
 
 

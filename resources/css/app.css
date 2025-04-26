@@ -9,3 +9,9 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+
+.prose :where(li):not(:where([class~=not-prose],[class~=not-prose] *)) {
+    margin-bottom: 0;
+    margin-top: 0;
+}
