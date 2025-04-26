@@ -7,6 +7,7 @@ use App\Models\Bookmark;
 use App\Models\Fragment;
 use Filament\Resources\Pages\Page;
 use Illuminate\Pipeline\Pipeline;
+use Illuminate\Support\Carbon;
 use OpenAI\Laravel\Facades\OpenAI;
 
 
@@ -20,6 +21,14 @@ class ChatInterface extends Page
     public $chatHistory = [];
 
     protected static string $view = 'filament.resources.fragment-resource.pages.chat-interface';
+    public $recalledTodos = [];
+
+    public ?array $currentSession = null;
+
+    public ?Carbon $lastActivityAt = null;
+    public int $sessionTimeoutMinutes = 60; // ← default to 1 hour inactivity
+
+
     public static function shouldRegisterNavigation( array $parameters = [] ): bool
     {
         return false;
@@ -47,7 +56,15 @@ class ChatInterface extends Page
 
     public function mount()
     {
-        $this->chatHistory = Fragment::latest()->take(20)->get()->reverse()->values()->toArray();
+        $this->chatHistory = Fragment::latest()
+            ->take(20)
+            ->get()
+            ->reverse()
+            ->values()
+            ->toArray();
+
+        $this->recalledTodos = []; // 👈 Add this!
+
     }
 
     public function handleInput()
@@ -55,14 +72,56 @@ class ChatInterface extends Page
         $message = trim($this->input);
         $this->input = '';
 
-        $fragment = Fragment::create([
+        // Check session timeout
+        if ($this->currentSession && $this->lastActivityAt) {
+            if ($this->lastActivityAt->diffInMinutes(now()) >= $this->sessionTimeoutMinutes) {
+                $this->endSession('Timeout');
+            }
+        }
+
+        $this->lastActivityAt = now();
+
+        $fragmentData = [
             'vault' => 'default',
             'type' => 'log',
             'message' => $message,
             'source' => 'chat',
-        ]);
+            'tags' => [],
+            'state' => [],
+        ];
 
+        if ($this->currentSession) {
+            $fragmentData = array_merge($fragmentData, [
+                'vault' => $this->currentSession['vault'] ?? 'default',
+                'type' => $this->currentSession['type'] ?? 'log',
+                'tags' => array_merge($fragmentData['tags'], $this->currentSession['tags']),
+                'metadata' => array_merge([
+                    'session_key' => $this->currentSession['session_key'],
+                    'session_identifier' => $this->currentSession['identifier'],
+                    'session_context' => $this->currentSession['context'] ?? null,
+                ], $fragmentData['metadata'] ?? []),
+
+            ]);
+        }
+
+        $fragment = Fragment::create($fragmentData);
         $this->chatHistory[] = $fragment->toArray();
+
+        if (str_starts_with($message, ':session end')) {
+            $this->endSession();
+            return;
+        }
+
+        if (str_starts_with($message, ':session show')) {
+            $this->showSession();
+            return;
+        }
+
+        if (str_starts_with($message, ':session')) {
+            $this->startSession($message);
+            return;
+        }
+
 
         if (str_starts_with($message, ':frag')) {
             $parsed = $this->parseFragment($message);
@@ -112,13 +171,33 @@ class ChatInterface extends Page
 
         // Handle Recall
         if (str_starts_with($message, ':recall')) {
-            $summary = $this->runRecallByType($message);
-            $this->chatHistory[] = [
-                'type' => 'recall',
-                'message' => $summary,
-            ];
+            $type = 'todo'; // extracted from $message
+            $limit = 5;     // extracted from $message
+
+            $results = \App\Models\Fragment::where('type', $type)
+                ->latest()
+                ->limit($limit)
+                ->get();
+
+            foreach ($results as $fragment) {
+                $this->recalledTodos[] = [
+                    'id' => $fragment->id,
+                    'type' => $fragment->type,
+                    'message' => $fragment->message,
+                ];
+            }
+
+            // $this->chatHistory = array_merge($this->chatHistory, $batch);
+
             return;
         }
+
+
+        if (str_starts_with($message, ':recall session')) {
+            $this->recallSession($message);
+            return;
+        }
+
 
         // Bookmark
 
@@ -350,6 +429,7 @@ Here are the commands you can use in the chat:
 
 #### 🔍 Recall & Memory
 - `:recall type:todo limit:5` – Recall recent fragments by type
+- `:recall session {hint}` – Recall all fragments from a saved session (coming soon 🚀)
 - `:bookmark` – Bookmark the most recent fragment (or all from chaos)
 - `:bookmark list` – List saved bookmarks
 - `:bookmark show {hint}` – Replay a bookmark in the chat
@@ -359,14 +439,180 @@ Here are the commands you can use in the chat:
 - `:frag This is something worth remembering` – Log a fragment
 - `:chaos This contains multiple items. Do X. Also do Y.` – Split and log a chaos fragment
 
+#### 🧠 Sessions
+- `:session vault:work type:meeting Project Sync #weekly` – Start a scoped session for all new fragments
+- `:session show` – Display current active session details
+- `:session end` – End the current session and return to normal logging
+
+Sessions automatically attach vault, type, tags, and an internal session key to all fragments you create while active.
+
+Example:
+`:session vault:writing type:seeds Ideas for Short Stories #shorts`
+
+✅ All fragments during this session will be stored with:
+- Vault: `writing`
+- Type: `seeds`
+- Tags: `shorts`
+- Identifier: `Ideas for Short Stories`
+- Session grouping key for easy recall later.
+
 #### 🧹 Chat Tools
 - `:clear` – Clear the current chat view
 - `:help` – Show this help message
 
 ---
-All fragments are stored and processed. Bookmarks give you quick access to curated sets.
+All fragments are stored and processed. Bookmarks and sessions give you quick access to curated memories and grouped ideas.
 MARKDOWN;
 
+    }
+
+    public function toggleTodoCompletion(int $fragmentId)
+    {
+        $fragment = \App\Models\Fragment::find($fragmentId);
+
+        if (!$fragment) return;
+
+        $state = $fragment->state ?? [];
+
+        if (($state['status'] ?? 'open') === 'complete') {
+            $state['status'] = 'open';
+        } else {
+            $state['status'] = 'complete';
+        }
+
+        $fragment->state = $state;
+        $fragment->save();
+    }
+
+    protected function startSession(string $input)
+    {
+        $input = trim(str_replace(':session', '', $input)); // Strip ':session'
+
+        $vault = $this->extractVault($input) ?? 'default';
+        $type = $this->extractType($input) ?? 'note';
+        $tags = $this->extractTags($input);
+        $identifier = $this->extractIdentifier($input);
+
+        $this->currentSession = [
+            'vault' => $vault,
+            'type' => $type,
+            'tags' => $tags,
+            'identifier' => $identifier,
+            'context' => null,
+            'session_key' => 'sess_' . \Illuminate\Support\Str::uuid()->toString(),
+            'started_at' => now()->toISOString(),
+        ];
+
+        $this->chatHistory[] = [
+            'type' => 'system',
+            'message' => "✅ Session started for vault `{$vault}` and type `{$type}` with tags [" . implode(', ', $tags) . "].",
+        ];
+    }
+
+    protected function endSession()
+    {
+        $this->currentSession = null;
+
+        $this->chatHistory[] = [
+            'type' => 'system',
+            'message' => "🚪 Session ended. Normal fragment logging resumed.",
+        ];
+    }
+
+    public function showSession()
+    {
+        if (!$this->currentSession) {
+            $this->chatHistory[] = [
+                'type' => 'system',
+                'message' => "⚡ No active session.",
+            ];
+            return;
+        }
+
+        $tagsString = !empty($this->currentSession['tags']) ? implode(', ', $this->currentSession['tags']) : '(no tags)';
+
+        $this->chatHistory[] = [
+            'type' => 'system',
+            'message' => <<<TEXT
+**Session Active**
+
+- Vault: `{$this->currentSession['vault']}`
+- Type: `{$this->currentSession['type']}`
+- Tags: `{$tagsString}`
+- Identifier: `{$this->currentSession['identifier']}`
+- Context: `{$this->currentSession['context']}`
+- Started: `{$this->currentSession['started_at']}`
+TEXT,
+        ];
+    }
+
+        protected function extractVault(string $input): ?string
+    {
+        if (preg_match('/(?:vault:|:vault\s+)(\w+)/i', $input, $match)) {
+            return $match[1];
+        }
+        return null;
+    }
+
+
+    protected function extractType(string $input): ?string
+    {
+        if (preg_match('/(?:type:|:type\s+)(\w+)/i', $input, $match)) {
+            return $match[1];
+        }
+        return null;
+    }
+
+
+    protected function extractTags(string $input): array
+    {
+        preg_match_all('/#(\w+)/', $input, $matches);
+        return $matches[1] ?? [];
+    }
+
+    protected function extractIdentifier(string $input): ?string
+    {
+        $withoutCommands = preg_replace('/(:vault\s+\w+)|(:type\s+\w+)|(#\w+)/', '', $input);
+        return trim($withoutCommands);
+    }
+
+    protected function recallSession(string $input)
+    {
+        $hint = trim(str_replace(':recall session', '', $input));
+
+        if (empty($hint)) {
+            $this->chatHistory[] = [
+                'type' => 'system',
+                'message' => "⚡ Please specify a session identifier hint (e.g., `:recall session Project Sync`).",
+            ];
+            return;
+        }
+
+        $fragments = \App\Models\Fragment::query()
+            ->where('metadata->session_identifier', 'like', "%{$hint}%")
+            ->orderBy('created_at')
+            ->get();
+
+        if ($fragments->isEmpty()) {
+            $this->chatHistory[] = [
+                'type' => 'system',
+                'message' => "⚡ No session found matching `{$hint}`.",
+            ];
+            return;
+        }
+
+        foreach ($fragments as $fragment) {
+            $this->recalledTodos[] = [
+                'id' => $fragment->id,
+                'type' => $fragment->type,
+                'message' => $fragment->message,
+            ];
+        }
+
+        $this->chatHistory[] = [
+            'type' => 'system',
+            'message' => "✅ Recalled " . $fragments->count() . " fragments from session `{$hint}`.",
+        ];
     }
 
 
