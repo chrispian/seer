@@ -15,7 +15,7 @@ return [
                 'cluster' => env('PUSHER_APP_CLUSTER', 'mt1'),
                 'host' => env('PUSHER_HOST', 'seer.test'),
                 'port' => env('PUSHER_PORT', 6001),
-                'scheme' => 'https',
+                'scheme' => 'http',
                 'useTLS' => false,
                 'encrypted' => false,
                 'curl_options' => [

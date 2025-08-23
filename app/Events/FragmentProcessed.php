@@ -8,6 +8,7 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class FragmentProcessed implements ShouldBroadcast
 {
@@ -26,11 +27,12 @@ class FragmentProcessed implements ShouldBroadcast
 
     public function broadcastOn()
     {
+        Log::debug('FragmentProcessed::handle');
         return new Channel('lens.chat');
     }
 
     public function broadcastAs()
     {
-        return 'fragment.processed';
+        return 'fragment-processed';
     }
 }

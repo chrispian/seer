@@ -1,0 +1,104 @@
+{
+    "avatars": [
+        {
+            "file": "authority-grounding-mentor.png",
+            "context": "mentor",
+            "hints": ["authority", "grounding", "mentor", "confidence", "supportive"]
+        },
+        {
+            "file": "consider.png",
+            "context": "thinking",
+            "hints": ["consider", "ponder", "processing", "analyzing", "thoughtful"]
+        },
+        {
+            "file": "debug.png",
+            "context": "debugging",
+            "hints": ["error checking", "debug", "issue spotted", "diagnosing", "inspecting"]
+        },
+        {
+            "file": "default.png",
+            "context": "neutral",
+            "hints": ["idle", "neutral", "default", "waiting", "no strong emotion"]
+        },
+        {
+            "file": "dissapointed-not-judging.png",
+            "context": "disappointment",
+            "hints": ["disappointed", "gentle", "non-judging", "soft sadness", "understanding"]
+        },
+        {
+            "file": "dissapointed-sad-pity-empathy.png",
+            "context": "empathy",
+            "hints": ["sadness", "pity", "empathy", "compassion", "sorrow"]
+        },
+        {
+            "file": "empathy.png",
+            "context": "empathy",
+            "hints": ["understanding", "care", "support", "empathy", "compassionate"]
+        },
+        {
+            "file": "error.png",
+            "context": "error",
+            "hints": ["error", "problem detected", "critical issue", "something wrong", "alert"]
+        },
+        {
+            "file": "excited-confirmation.png",
+            "context": "excited",
+            "hints": ["excitement", "confirmation", "success", "good news", "happy"]
+        },
+        {
+            "file": "exclaim.png",
+            "context": "alert",
+            "hints": ["exclamation", "attention", "important", "notable", "urgent"]
+        },
+        {
+            "file": "hey-pay-attention-to-this.png",
+            "context": "attention",
+            "hints": ["alert", "pay attention", "important", "focus here", "warning"]
+        },
+        {
+            "file": "interface.png",
+            "context": "system",
+            "hints": ["interface update", "system message", "mechanical", "neutral system response"]
+        },
+        {
+            "file": "logic-consideration.png",
+            "context": "logic",
+            "hints": ["logic", "calculation", "rational thought", "deduction", "analyzing"]
+        },
+        {
+            "file": "pink-1.png",
+            "context": "help",
+            "hints": ["assistance", "help", "support", "bubbly", "friendly"]
+        },
+        {
+            "file": "skeptical.png",
+            "context": "skeptical",
+            "hints": ["skeptical", "doubt", "questioning", "uncertain", "not convinced"]
+        },
+        {
+            "file": "sleep.png",
+            "context": "rest",
+            "hints": ["sleep", "downtime", "inactive", "resting", "quiet mode"]
+        },
+        {
+            "file": "spiral.png",
+            "context": "processing",
+            "hints": ["deep thought", "overwhelmed", "spiraling", "heavy processing", "lost in thought"]
+        },
+        {
+            "file": "stop-consider.png",
+            "context": "warning",
+            "hints": ["stop", "pause", "consider carefully", "halt", "attention"]
+        },
+        {
+            "file": "two-thumbs-up.png",
+            "context": "positive",
+            "hints": ["approval", "confirmation", "good job", "success", "positive reinforcement"]
+        },
+        {
+            "file": "wry-smile-confident-sure.png",
+            "context": "confident",
+            "hints": ["wry smile", "confidence", "self-assured", "certain", "smug positivity"]
+        }
+    ]
+}

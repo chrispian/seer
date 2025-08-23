@@ -10,6 +10,6 @@
         class="accent-green-600 rounded focus:ring focus:ring-green-500"
     />
     <span :class="checked ? 'line-through opacity-60' : ''">
-        aaaa {{ $label }}
+        {{ $label }}
     </span>
 </label>

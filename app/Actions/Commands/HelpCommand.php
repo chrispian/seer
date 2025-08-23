@@ -11,6 +11,7 @@ class HelpCommand implements HandlesCommand
     public function handle(CommandRequest $command): CommandResponse
     {
         return new CommandResponse(
+
             message:  <<<MARKDOWN
 ### Commands Cheat Sheet
 
@@ -52,7 +53,9 @@ Example:
 ---
 All fragments are stored and processed. Bookmarks and sessions give you quick access to curated memories and grouped ideas.
 MARKDOWN,
-            type: 'system'
+            type: 'system',
+            shouldResetChat: true,
+
         );
     }
 }

@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\Log;
 
 class EnrichFragmentWithLlama
 {
-    public function __invoke(Fragment $fragment): Fragment
+    public function __invoke(Fragment $fragment): ?Fragment
     {
+
+        Log::debug('EnrichFragmentWithLlama::invoke()');
+
         $prompt = <<<PROMPT
 Given the following user input, return a structured fragment in JSON.
 

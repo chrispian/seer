@@ -3,11 +3,15 @@
 namespace App\Actions;
 
 use App\Models\Fragment;
+use Illuminate\Support\Facades\Log;
 
 class ParseAtomicFragment
 {
     public function __invoke(Fragment $fragment): Fragment
     {
+
+        Log::debug('ParseAtomicFragment::invoke()');
+
         // Match `type` as first word
         preg_match('/^(\w+)\s+(.*)$/s', trim($fragment->message), $matches);
         $type = strtolower(trim($matches[1] ?? 'note'));

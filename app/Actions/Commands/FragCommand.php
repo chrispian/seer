@@ -43,7 +43,8 @@ class FragCommand implements HandlesCommand
                     'type' => $fragment->type,
                     'message' => $fragment->message,
                 ]
-            ]
+            ],
+            shouldResetChat: true,
         );
     }
 }

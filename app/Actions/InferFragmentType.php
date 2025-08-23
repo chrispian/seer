@@ -3,11 +3,15 @@
 namespace App\Actions;
 
 use App\Models\Fragment;
+use Illuminate\Support\Facades\Log;
 
 class InferFragmentType
 {
     public function __invoke(Fragment $fragment): Fragment
     {
+
+        Log::debug('EnrichFragmentWithLlama::invoke()');
+
         if ($fragment->type !== 'note') {
             return $fragment; // already has a type from ParseAtomicFragment
         }

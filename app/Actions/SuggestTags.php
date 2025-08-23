@@ -10,12 +10,15 @@
 namespace App\Actions;
 
 use App\Models\Fragment;
+use Illuminate\Support\Facades\Log;
 
 class SuggestTags
 {
 
     public function __invoke(Fragment $fragment): Fragment
     {
+
+        Log::debug('SuggestTags::invoke()');
         $keywords = [
             'todo' => 'task',
             'insight' => 'idea',

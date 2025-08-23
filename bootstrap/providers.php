@@ -3,4 +3,5 @@
 return [
     App\Providers\AppServiceProvider::class,
     App\Providers\Filament\FragmentsPanelProvider::class,
+    App\Providers\BroadcastServiceProvider::class,
 ];

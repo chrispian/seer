@@ -1,4 +1,5 @@
 <x-filament-panels::page class="max-w-3xl mx-auto rounded border mt-10 bg-white">
+
     <div class="h-screen w-full bg-zinc-950 text-black flex flex-col pt-[10px]">
 
         @if ($currentSession)
@@ -10,7 +11,16 @@
                 <button wire:click="showSession" class="text-sm underline hover:text-green-600">Details</button>
             </div>
         @endif
-
+            <div
+                id="drift-avatar"
+                x-data="{ avatar: '/interface/avatars/default/default.png' }"
+                x-init="$watch('avatar', value => {
+    $el.querySelector('img').src = value;
+  })"
+                class="top-[calc(100%-150px)] right-6 z-50 float-right bg-black w-20 rounded-full shadow-lg p-1 border-4 border-blue-400 animate-pulse transition-all"
+            >
+                <img :src="avatar" alt="Drift Avatar" class="float-right bg-black  rounded-full w-15 h-15 object-cover transition duration-500">
+            </div>
         {{-- Chat Output --}}
             <div id="chat-output" class="flex-1 overflow-y-auto">
             <div class="space-y-2 divide-y divide-zinc-800">
@@ -51,7 +61,6 @@
             wire:model.defer="input"
             wire:keydown.enter.prevent="
                 $el.value = '';
-
                 $nextTick(() => {
                     document.getElementById('chat-form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
                 });
@@ -71,9 +80,8 @@
 
             @if (!empty($commandHistory))
                 <div class="mt-4 bg-zinc-900 p-3 rounded shadow-inner">
-                    <h3 class="text-sm font-semibold text-gray-400 mb-2">Recent Commands</h3>
                     <div class="flex flex-wrap gap-2">
-                        @foreach (array_reverse(array_slice($commandHistory, -8)) as $cmd)
+                        @foreach (array_reverse(array_slice($commandHistory, -4)) as $cmd)
                             <button
                                 wire:click="injectCommand('{{ addslashes($cmd) }}')"
                                 class="text-xs bg-zinc-800 hover:bg-zinc-700 text-gray-300 rounded px-2 py-1"
@@ -134,47 +142,52 @@
         </div>
     </div>
 
-    <!-- Add Pusher -->
-    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+{{--    <!-- Add Pusher -->--}}
+{{--    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>--}}
 
-    <!-- Add Laravel Echo -->
-    <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
+{{--    <!-- Add Laravel Echo -->--}}
+{{--    <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>--}}
 
     <script>
-        console.log('Initializing Echo...');
+        // console.log('Initializing Echo...');
+        //
+        // window.Pusher = Pusher;
+        //
+        // const isHttps = window.location.protocol === 'http:';
+        //
+        // window.Echo = new Echo({
+        //     broadcaster: 'pusher',
+        //     key: '1cdf7afdbf274ab9e94bf2cae69839fb',
+        //     wsHost: 'seer.test',
+        //     wsPort: 6001,
+        //     wssPort: 6001,
+        //     forceTLS: true,
+        //     encrypted: true,
+        //     disableStats: true,
+        //     enabledTransports: ['ws'], // ONLY wss
+        // });
+        //
+        // console.log('Subscribing to lens channel...');
+        //
+        // window.Echo.channel('lens.chat')
+        //     .listen('.fragment-processed', (e) => {
+        //         console.log('Fragment Processed Event!', e);
+        //     })
+        //     .listen('.drift-avatar-change', (event) => {
+        //         console.log('DriftSync Avatar Update!', event);
+        //         document.querySelector('#drift-avatar').__x.$data.avatar = event.avatarPath;
+        //     });
 
-        window.Pusher = Pusher;
-
-        const isHttps = window.location.protocol === 'https:';
-
-        window.Echo = new Echo({
-            broadcaster: 'pusher',
-            key: '1cdf7afdbf274ab9e94bf2cae69839fb',
-            wsHost: 'seer.test',
-            wsPort: 6001,
-            wssPort: 6001,
-            forceTLS: true,
-            encrypted: true,
-            disableStats: true,
-            enabledTransports: ['wss'], // ONLY wss
-        });
-
-        console.log('Subscribing to lens channel...');
-
-        window.Echo.channel('lens')
-            .listen('FragmentProcessed', (e) => {
-                console.log('FragmentProcessed event received!', e);
-            });
     </script>
 
+{{--    <script>--}}
+{{--        window.addEventListener('drift-avatar-change', event => {--}}
+{{--            document.querySelector('#drift-avatar').__x.$data.avatar = event.detail.avatar;--}}
+{{--        });--}}
+{{--    </script>--}}
 
-        <script>
-        Echo.channel('lens')
-            .listen('TestLensBroadcast', (e) => {
-                console.log('Lens Realtime Event:', e);
-                // TODO: you could push to chatMessages dynamically too!
-            });
-    </script>
+
+
 </x-filament-panels::page>
 
 

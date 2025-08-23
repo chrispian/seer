@@ -75,7 +75,6 @@ class ChatInterface extends Page
     public function handleInput()
     {
         $message = trim( $this->input );
-        logger( 'HANDLE_INPUT: Captured message', [ 'message' => $message ] );
         // ✅ 1. Clear Input Immediately
         $this->input = '';
 
@@ -87,14 +86,12 @@ class ChatInterface extends Page
             'type'    => 'system',
             'message' => '⏳ Processing...',
         ];
-        logger( 'MADE IT TO SLASH DETECTION' );
+
         if ( str_starts_with( $message, '/' ) ) {
-            logger( 'INSIDE SLASH DETECTION' );
             $command                                  = app( ParseSlashCommand::class )( $message );
             $command->arguments[ '__currentSession' ] = $this->currentSession; // Inject current session
 
             try {
-                logger( 'INSIDE TRY CATCH' );
                 $handlerClass = CommandRegistry::find( $command->command );
                 $handler      = app( $handlerClass );
             } catch ( InvalidArgumentException $e ) {
@@ -107,7 +104,6 @@ class ChatInterface extends Page
                 return;
             }
 
-            logger( 'AFTER TRY CATCH' );
             /** @var \App\DTOs\CommandResponse $response */
             $response = $handler->handle( $command );
 

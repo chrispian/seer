@@ -17,7 +17,8 @@ class RecallCommand implements HandlesCommand
         if (!$type) {
             return new CommandResponse(
                 message: "⚡ Please specify a fragment type to recall (e.g. `/recall type:todo limit:5`).",
-                type: 'system'
+                type: 'system',
+                shouldResetChat: true,
             );
         }
 
@@ -30,7 +31,8 @@ class RecallCommand implements HandlesCommand
         if ($results->isEmpty()) {
             return new CommandResponse(
                 message: "⚡ No fragments found of type `{$type}`.",
-                type: 'system'
+                type: 'system',
+                shouldResetChat: true,
             );
         }
 
@@ -42,7 +44,8 @@ class RecallCommand implements HandlesCommand
         return new CommandResponse(
             message: "✅ Recalled {$results->count()} fragment(s) of type `{$type}`.",
             type: 'system',
-            fragments: $fragments
+            fragments: $fragments,
+            shouldResetChat: true,
         );
     }
 }

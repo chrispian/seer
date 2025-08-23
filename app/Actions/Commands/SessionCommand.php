@@ -19,7 +19,8 @@ class SessionCommand implements HandlesCommand
             return new CommandResponse(
                 message: "🚪 Session ended. Normal fragment logging resumed.",
                 type: 'session-end',
-                fragments: []
+                fragments: [],
+                shouldResetChat: true,
             );
         }
 
@@ -56,7 +57,8 @@ TEXT;
         return new CommandResponse(
             message: $message,
             type: 'session-start',
-            fragments: $session, // ← this is KEY!
+            fragments: $session,
+            shouldResetChat: true,
         );
     }
 
@@ -68,6 +70,7 @@ TEXT;
             return new CommandResponse(
                 message: "⚡ No active session.",
                 type: 'system',
+                shouldResetChat: true,
             );
         }
 
@@ -86,6 +89,7 @@ TEXT;
         return new CommandResponse(
             message: $message,
             type: 'system',
+            shouldResetChat: true,
         );
     }
 }

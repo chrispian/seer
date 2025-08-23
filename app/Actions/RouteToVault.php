@@ -3,11 +3,14 @@
 namespace App\Actions;
 
 use App\Models\Fragment;
+use Illuminate\Support\Facades\Log;
 
 class RouteToVault
 {
     public function __invoke(Fragment $fragment): Fragment
     {
+
+        Log::debug('RouteFragment::invoke()');
         $message = $fragment->message;
 
         // Extract `vault:xyz` from anywhere in the message
@@ -24,6 +27,7 @@ class RouteToVault
             $fragment->vault = 'default';
         }
 
+        $fragment->vault = 'debug';
         $fragment->save();
 
         return $fragment;

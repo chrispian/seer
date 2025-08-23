@@ -40,7 +40,8 @@ class BookmarkCommand implements HandlesCommand
         if ($bookmarks->isEmpty()) {
             return new CommandResponse(
                 message: "📑 No bookmarks found.",
-                type: 'system'
+                type: 'system',
+                shouldResetChat: true,
             );
         }
 
@@ -53,7 +54,8 @@ class BookmarkCommand implements HandlesCommand
 
         return new CommandResponse(
             message: $message,
-            type: 'system'
+            type: 'system',
+            shouldResetChat: true,
         );
     }
 
@@ -64,7 +66,8 @@ class BookmarkCommand implements HandlesCommand
         if (!$bookmark) {
             return new CommandResponse(
                 message: "🔎 No bookmark found matching `{$hint}`.",
-                type: 'system'
+                type: 'system',
+                shouldResetChat: true,
             );
         }
 
@@ -75,7 +78,8 @@ class BookmarkCommand implements HandlesCommand
         if ($fragments->isEmpty()) {
             return new CommandResponse(
                 message: "🔎 Bookmark `{$bookmark->name}` exists but no fragments found.",
-                type: 'system'
+                type: 'system',
+                shouldResetChat: true,
             );
         }
 
@@ -87,7 +91,8 @@ class BookmarkCommand implements HandlesCommand
 
         return new CommandResponse(
             message: trim($message),
-            type: 'system'
+            type: 'system',
+            shouldResetChat: true,
         );
     }
 
@@ -98,7 +103,8 @@ class BookmarkCommand implements HandlesCommand
         if (!$bookmark) {
             return new CommandResponse(
                 message: "❌ No bookmark found matching `{$hint}` to forget.",
-                type: 'system'
+                type: 'system',
+                shouldResetChat: true,
             );
         }
 
@@ -107,7 +113,8 @@ class BookmarkCommand implements HandlesCommand
 
         return new CommandResponse(
             message: "🗑️ Bookmark `{$name}` has been forgotten.",
-            type: 'system'
+            type: 'system',
+            shouldResetChat: true,
         );
     }
 
@@ -119,7 +126,8 @@ class BookmarkCommand implements HandlesCommand
         if (!$lastFragment) {
             return new CommandResponse(
                 message: "⚡ No fragments found to bookmark.",
-                type: 'system'
+                type: 'system',
+                shouldResetChat: true,
             );
         }
 
@@ -140,7 +148,8 @@ class BookmarkCommand implements HandlesCommand
 
         return new CommandResponse(
             message: "📌 Bookmarked as `{$title}` (" . count($fragmentIds) . " fragment" . (count($fragmentIds) > 1 ? 's' : '') . ").",
-            type: 'system'
+            type: 'system',
+            shouldResetChat: true,
         );
     }
 }

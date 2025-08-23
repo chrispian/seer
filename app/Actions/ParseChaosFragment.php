@@ -113,6 +113,7 @@ PROMPT;
                 app(Pipeline::class)
                     ->send($child)
                     ->through([
+                        \App\Actions\DriftSync::class,
                         \App\Actions\ParseAtomicFragment::class,
                         \App\Actions\EnrichFragmentWithLlama::class,
                         \App\Actions\InferFragmentType::class,
