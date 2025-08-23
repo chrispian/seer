@@ -12,10 +12,17 @@ class TodoItem extends Component
     public function toggle()
     {
         $state = $this->fragment->state ?? [];
-
-        $state['status'] = ($state['status'] ?? 'open') === 'complete'
-            ? 'open'
-            : 'complete';
+        $newStatus = ($state['status'] ?? 'open') === 'complete' ? 'open' : 'complete';
+        
+        $state['status'] = $newStatus;
+        
+        // Add completion timestamp when marking as complete
+        if ($newStatus === 'complete') {
+            $state['completed_at'] = now()->toISOString();
+        } else {
+            // Remove completion timestamp when reopening
+            unset($state['completed_at']);
+        }
 
         $this->fragment->state = $state;
         $this->fragment->save();

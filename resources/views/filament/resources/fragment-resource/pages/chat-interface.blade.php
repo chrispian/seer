@@ -33,13 +33,17 @@
                     @endforeach
 
                     @if (!empty($recalledTodos))
-                            {{-- Recalled Todos --}}
-                            <h1 class="text-red-500 text-sm">Recalled Todos Count: {{ count($recalledTodos) }}</h1>
+                        {{-- Recalled Todos --}}
+                        @php
+                            $todoFragments = $this->getTodoFragments();
+                        @endphp
 
-                            <h2 class="text-lg font-semibold text-gray-300 mb-2">Todos:</h2>
-                        <ul class="list-none space-y-1">
-                            @foreach ($recalledTodos as $entry)
-                                <livewire:todo-item :fragment="\App\Models\Fragment::find($entry['id'])" :key="$entry['id']" />
+                        <h2 class="text-lg font-semibold text-blue-400 mb-3 mt-4">📋 Todos ({{ $todoFragments->count() }})</h2>
+                        <ul class="list-none space-y-2">
+                            @foreach ($todoFragments as $fragment)
+                                <li wire:key="todo-{{ $fragment->id }}">
+                                    <livewire:todo-item :fragment="$fragment" :key="'todo-'.$fragment->id" />
+                                </li>
                             @endforeach
                         </ul>
                     @endif
