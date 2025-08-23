@@ -68,7 +68,7 @@ class ChatInterface extends Page
             ->values()
             ->toArray();
 
-        $this->recalledTodos = []; // 👈 Add this!
+        $this->recalledTodos = []; // Fragment IDs for recalled todos
 
     }
 
@@ -121,11 +121,20 @@ class ChatInterface extends Page
             }
 
             if ( ! empty( $response->fragments ) && is_array( $response->fragments ) && array_is_list( $response->fragments ) ) {
-                foreach ( $response->fragments as $fragment ) {
-                    $this->chatMessages[] = [
-                        'type'    => $fragment[ 'type' ],
-                        'message' => $fragment[ 'message' ],
-                    ];
+                // Handle different fragment types differently
+                if ( $response->type === 'recall' ) {
+                    // For recall commands, fragments are IDs - store them directly
+                    $this->recalledTodos = $response->fragments;
+                } else {
+                    // For other commands, fragments are arrays with type/message
+                    foreach ( $response->fragments as $fragment ) {
+                        if ( is_array( $fragment ) && isset( $fragment['type'], $fragment['message'] ) ) {
+                            $this->chatMessages[] = [
+                                'type'    => $fragment[ 'type' ],
+                                'message' => $fragment[ 'message' ],
+                            ];
+                        }
+                    }
                 }
             }
 
@@ -160,6 +169,18 @@ class ChatInterface extends Page
         // Reindex to fix Livewire weirdness
         $this->chatMessages = array_values( $this->chatMessages );
     }
+
+    public function getTodoFragments()
+    {
+        if (empty($this->recalledTodos)) {
+            return collect();
+        }
+
+        return Fragment::whereIn('id', $this->recalledTodos)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
 
     public function onFragmentProcessed( $payload )
     {

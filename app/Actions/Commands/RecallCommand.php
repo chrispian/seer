@@ -36,15 +36,12 @@ class RecallCommand implements HandlesCommand
             );
         }
 
-        $fragments = $results->map(fn ($f) => [
-            'type' => $f->type,
-            'message' => $f->message,
-        ])->toArray();
+        $fragmentIds = $results->pluck('id')->toArray();
 
         return new CommandResponse(
             message: "✅ Recalled {$results->count()} fragment(s) of type `{$type}`.",
-            type: 'system',
-            fragments: $fragments,
+            type: 'recall',
+            fragments: $fragmentIds,
             shouldResetChat: true,
         );
     }
