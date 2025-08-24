@@ -202,7 +202,7 @@
                                         ⋮⋮
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <div class="text-sm font-medium {{ $session['id'] === $currentChatSessionId ? 'text-text-primary' : 'text-text-secondary' }} truncate">
+                                        <div class="text-sm font-medium {{ $session['id'] === $currentChatSessionId ? 'text-text-primary' : 'text-text-secondary' }} truncate break-words" title="{{ $session['title'] }}">
                                             {{ $session['title'] }}
                                         </div>
                                         <div class="text-xs text-text-muted mt-1">
