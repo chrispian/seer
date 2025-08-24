@@ -42,7 +42,7 @@ return new class extends Migration
             $table->smallInteger('fetch_status')->nullable();
             $table->json('state')->nullable()->comment('Rich state data: read/unread, rating, etc.');
             $table->index('domain');
-            $table->index(['normalized_url(255)']);
+            // Note: normalized_url is TEXT, so we'll add a partial index via raw SQL in performance indexes migration
             $table->foreign('fragment_id')->references('id')->on('fragments')->cascadeOnDelete();
         });
 

@@ -27,6 +27,11 @@ return new class extends Migration
         if (Schema::hasTable('file_text')) {
             DB::statement('ALTER TABLE file_text ADD FULLTEXT ft_file_content (content)');
         }
+        
+        // Add partial index for normalized_url (TEXT column requires length specification)
+        if (Schema::hasTable('links')) {
+            DB::statement('ALTER TABLE links ADD INDEX idx_links_normalized_url (normalized_url(255))');
+        }
     }
 
     /**
@@ -34,6 +39,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Drop custom indexes
+        if (Schema::hasTable('links')) {
+            DB::statement('ALTER TABLE links DROP INDEX idx_links_normalized_url');
+        }
+        
         // Drop FULLTEXT indexes
         if (Schema::hasTable('file_text')) {
             DB::statement('ALTER TABLE file_text DROP INDEX ft_file_content');
