@@ -20,7 +20,7 @@ class LinkHandler {
         this.modalContainer.id = 'link-modal-container';
         this.modalContainer.className = 'fixed inset-0 z-50 hidden';
         this.modalContainer.innerHTML = `
-            <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="linkHandler.closeModal()"></div>
+            <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="event.stopPropagation(); linkHandler.closeModal()"></div>
             <div class="fixed inset-0 flex items-center justify-center p-4">
                 <div id="link-modal-content" class="relative max-w-2xl max-h-[90vh] overflow-auto">
                     <!-- Modal content will be inserted here -->
@@ -36,6 +36,11 @@ class LinkHandler {
         // Single event listener that handles both detection and prevention
         document.addEventListener('click', (e) => {
             const target = e.target;
+            
+            // Skip if click is within bookmark widget
+            if (target.closest('[x-data*="bookmarkWidget"]')) {
+                return;
+            }
             
             // Debug logging for any click
             console.log('LinkHandler: Click detected on', target.tagName, target.className, target.textContent);
@@ -177,7 +182,7 @@ class LinkHandler {
                         <button onclick="linkHandler.copyCard(this)" class="text-xs bg-neon-cyan/20 hover:bg-neon-cyan/30 text-neon-cyan px-2 py-1 rounded-pixel border border-neon-cyan/40 transition-colors">
                             📋 Copy
                         </button>
-                        <button onclick="linkHandler.closeModal()" class="text-text-muted hover:text-text-primary text-xl">✕</button>
+                        <button onclick="event.stopPropagation(); linkHandler.closeModal()" class="text-text-muted hover:text-text-primary text-xl">✕</button>
                     </div>
                 </div>
                 
@@ -273,7 +278,7 @@ class LinkHandler {
                         <button onclick="linkHandler.copyCard(this)" class="text-xs bg-neon-cyan/20 hover:bg-neon-cyan/30 text-neon-cyan px-2 py-1 rounded-pixel border border-neon-cyan/40 transition-colors">
                             📋 Copy
                         </button>
-                        <button onclick="linkHandler.closeModal()" class="text-text-muted hover:text-text-primary text-xl">✕</button>
+                        <button onclick="event.stopPropagation(); linkHandler.closeModal()" class="text-text-muted hover:text-text-primary text-xl">✕</button>
                     </div>
                 </div>
                 
@@ -356,6 +361,20 @@ class LinkHandler {
     closeModal() {
         this.modalContainer.classList.add('hidden');
         document.body.style.overflow = 'auto';
+        
+        // Temporarily disable bookmark widget clicks to prevent interference
+        const bookmarkWidget = document.querySelector('[x-data*="bookmarkWidget"]');
+        if (bookmarkWidget) {
+            bookmarkWidget.style.pointerEvents = 'none';
+            setTimeout(() => {
+                if (bookmarkWidget.style) {
+                    bookmarkWidget.style.pointerEvents = 'auto';
+                }
+            }, 300);
+        }
+        
+        // Dispatch a custom event to notify other components
+        document.dispatchEvent(new CustomEvent('modalClosed'));
     }
     
     async copyCard(button) {
