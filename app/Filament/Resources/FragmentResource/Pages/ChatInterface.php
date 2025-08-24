@@ -52,6 +52,18 @@ class ChatInterface extends Page
 
     public array $projects = [];
 
+    public bool $showVaultModal = false;
+
+    public bool $showProjectModal = false;
+
+    public string $newVaultName = '';
+
+    public string $newVaultDescription = '';
+
+    public string $newProjectName = '';
+
+    public string $newProjectDescription = '';
+
     protected $listeners = [
         'echo:lens.chat,fragment.processed' => 'onFragmentProcessed',
     ];
@@ -291,6 +303,27 @@ class ChatInterface extends Page
             $this->chatMessages = $chatSession->getAttribute('messages') ?? [];
             $this->currentSession = $chatSession->getAttribute('metadata')['currentSession'] ?? null;
 
+            // Update vault/project context if chat belongs to different vault/project
+            if ($chatSession->vault_id && $chatSession->vault_id !== $this->currentVaultId) {
+                $this->currentVaultId = $chatSession->vault_id;
+                $this->loadProjectsForVault($this->currentVaultId);
+
+                // Refresh vault list without reinitializing everything
+                $this->vaults = Vault::ordered()->get()->map(fn ($vault) => [
+                    'id' => $vault->id,
+                    'name' => $vault->name,
+                    'description' => $vault->description,
+                    'is_default' => $vault->is_default,
+                ])->toArray();
+            }
+
+            if ($chatSession->project_id && $chatSession->project_id !== $this->currentProjectId) {
+                $this->currentProjectId = $chatSession->project_id;
+            }
+
+            // Persist the vault/project selection
+            $this->persistVaultProjectSelection();
+
             // Mark as active and update activity time
             $chatSession->update(['last_activity_at' => now()]);
         }
@@ -396,16 +429,39 @@ class ChatInterface extends Page
             'is_default' => $vault->is_default,
         ])->toArray();
 
-        // Set current vault (default or first available)
-        $this->currentVaultId = Vault::getDefault()?->id;
+        // Try to restore from session first, then fall back to defaults
+        $sessionVaultId = session('seer.current_vault_id');
+        $sessionProjectId = session('seer.current_project_id');
+
+        // Check if session vault still exists
+        if ($sessionVaultId && Vault::find($sessionVaultId)) {
+            $this->currentVaultId = $sessionVaultId;
+        } else {
+            // Fall back to default vault
+            $this->currentVaultId = Vault::getDefault()?->id;
+        }
 
         if ($this->currentVaultId) {
             // Load projects for current vault
             $this->loadProjectsForVault($this->currentVaultId);
 
-            // Set current project (default for vault or first available)
-            $this->currentProjectId = Project::getDefaultForVault($this->currentVaultId)?->id;
+            // Check if session project still exists and belongs to current vault
+            if ($sessionProjectId) {
+                $project = Project::where('id', $sessionProjectId)->where('vault_id', $this->currentVaultId)->first();
+                if ($project) {
+                    $this->currentProjectId = $sessionProjectId;
+                } else {
+                    // Fall back to default project for vault
+                    $this->currentProjectId = Project::getDefaultForVault($this->currentVaultId)?->id;
+                }
+            } else {
+                // Fall back to default project for vault
+                $this->currentProjectId = Project::getDefaultForVault($this->currentVaultId)?->id;
+            }
         }
+
+        // Store in session
+        $this->persistVaultProjectSelection();
     }
 
     public function loadProjectsForVault(int $vaultId): void
@@ -419,6 +475,14 @@ class ChatInterface extends Page
         ])->toArray();
     }
 
+    public function persistVaultProjectSelection(): void
+    {
+        session([
+            'seer.current_vault_id' => $this->currentVaultId,
+            'seer.current_project_id' => $this->currentProjectId,
+        ]);
+    }
+
     public function switchVault(int $vaultId): void
     {
         $this->currentVaultId = $vaultId;
@@ -426,6 +490,9 @@ class ChatInterface extends Page
 
         // Set default project for new vault
         $this->currentProjectId = Project::getDefaultForVault($vaultId)?->id;
+
+        // Persist selection in session
+        $this->persistVaultProjectSelection();
 
         // Refresh chat sessions
         $this->loadRecentChatSessions();
@@ -438,6 +505,9 @@ class ChatInterface extends Page
     public function switchProject(int $projectId): void
     {
         $this->currentProjectId = $projectId;
+
+        // Persist selection in session
+        $this->persistVaultProjectSelection();
 
         // Refresh chat sessions
         $this->loadRecentChatSessions();
@@ -489,14 +559,44 @@ class ChatInterface extends Page
         }
     }
 
+    public function openVaultModal(): void
+    {
+        $this->newVaultName = '';
+        $this->newVaultDescription = '';
+        $this->showVaultModal = true;
+    }
+
+    public function closeVaultModal(): void
+    {
+        $this->showVaultModal = false;
+        $this->newVaultName = '';
+        $this->newVaultDescription = '';
+    }
+
+    public function openProjectModal(): void
+    {
+        $this->newProjectName = '';
+        $this->newProjectDescription = '';
+        $this->showProjectModal = true;
+    }
+
+    public function closeProjectModal(): void
+    {
+        $this->showProjectModal = false;
+        $this->newProjectName = '';
+        $this->newProjectDescription = '';
+    }
+
     public function createNewVault(): void
     {
-        $vaultCount = Vault::count();
-        $name = 'New Vault '.($vaultCount + 1);
+        // Validate required fields
+        if (empty(trim($this->newVaultName))) {
+            return;
+        }
 
         $vault = Vault::create([
-            'name' => $name,
-            'description' => 'Created from interface',
+            'name' => trim($this->newVaultName),
+            'description' => trim($this->newVaultDescription) ?: 'Created from interface',
             'sort_order' => (Vault::max('sort_order') ?? 0) + 1,
         ]);
 
@@ -509,26 +609,54 @@ class ChatInterface extends Page
             'sort_order' => 0,
         ]);
 
-        // Switch to new vault
-        $this->initializeVaultProjectContext();
-        $this->switchVault($vault->id);
+        // Refresh vault list and switch to new vault
+        $this->vaults = Vault::ordered()->get()->map(fn ($vault) => [
+            'id' => $vault->id,
+            'name' => $vault->name,
+            'description' => $vault->description,
+            'is_default' => $vault->is_default,
+        ])->toArray();
+
+        $this->currentVaultId = $vault->id;
+        $this->loadProjectsForVault($vault->id);
+        $this->currentProjectId = Project::getDefaultForVault($vault->id)?->id;
+        $this->persistVaultProjectSelection();
+
+        // Refresh chat sessions and switch to context
+        $this->loadRecentChatSessions();
+        $this->loadPinnedChatSessions();
+        $this->switchToContextChat();
+
+        // Close modal
+        $this->closeVaultModal();
     }
 
     public function createNewProject(): void
     {
-        $projectCount = Project::forVault($this->currentVaultId)->count();
-        $name = 'New Project '.($projectCount + 1);
+        // Validate required fields
+        if (empty(trim($this->newProjectName))) {
+            return;
+        }
 
         $project = Project::create([
             'vault_id' => $this->currentVaultId,
-            'name' => $name,
-            'description' => 'Created from interface',
+            'name' => trim($this->newProjectName),
+            'description' => trim($this->newProjectDescription) ?: 'Created from interface',
             'sort_order' => (Project::forVault($this->currentVaultId)->max('sort_order') ?? 0) + 1,
         ]);
 
         // Reload projects and switch to new one
         $this->loadProjectsForVault($this->currentVaultId);
-        $this->switchProject($project->id);
+        $this->currentProjectId = $project->id;
+        $this->persistVaultProjectSelection();
+
+        // Refresh chat sessions and switch to context
+        $this->loadRecentChatSessions();
+        $this->loadPinnedChatSessions();
+        $this->switchToContextChat();
+
+        // Close modal
+        $this->closeProjectModal();
     }
 
     public function updatePinnedChatOrder(array $newOrder): void
@@ -540,5 +668,29 @@ class ChatInterface extends Page
 
         // Refresh pinned chat sessions
         $this->loadPinnedChatSessions();
+    }
+
+    public function updatedCurrentVaultId($vaultId): void
+    {
+        $this->switchVault($vaultId);
+    }
+
+    public function updatedCurrentProjectId($projectId): void
+    {
+        $this->switchProject($projectId);
+    }
+
+    public function debugState(): void
+    {
+        $this->chatMessages[] = [
+            'type' => 'system',
+            'message' => "**Debug State:**\n".
+                'Current Vault ID: '.($this->currentVaultId ?: 'null')."\n".
+                'Current Project ID: '.($this->currentProjectId ?: 'null')."\n".
+                'Vaults count: '.count($this->vaults)."\n".
+                'Projects count: '.count($this->projects)."\n".
+                'Session Vault: '.(session('seer.current_vault_id') ?: 'null')."\n".
+                'Session Project: '.(session('seer.current_project_id') ?: 'null'),
+        ];
     }
 }

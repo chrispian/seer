@@ -34,7 +34,7 @@
                     class="absolute left-full ml-2 top-0 bg-surface-2 border border-hot-pink/30 rounded-pixel pixel-card p-2 space-y-1 min-w-48 z-50 glow-pink"
                 >
                     <button 
-                        wire:click="createNewVault"
+                        wire:click="openVaultModal"
                         @click="open = false"
                         class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-hot-pink/20 rounded-pixel transition-colors flex items-center space-x-2"
                     >
@@ -44,7 +44,7 @@
                         <span>New Vault</span>
                     </button>
                     <button 
-                        wire:click="createNewProject"
+                        wire:click="openProjectModal"
                         @click="open = false"
                         class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-electric-blue/20 rounded-pixel transition-colors flex items-center space-x-2"
                     >
@@ -82,11 +82,12 @@
                 <h3 class="text-sm font-medium text-text-secondary mb-2">Current Vault</h3>
                 <select 
                     wire:model.live="currentVaultId" 
-                    wire:change="switchVault($event.target.value)"
                     class="w-full bg-surface-elevated text-sm text-hot-pink rounded-pixel p-2 pixel-card border-thin border-hot-pink/30 focus:ring-2 focus:ring-hot-pink focus:border-hot-pink"
                 >
                     @foreach ($vaults as $vault)
-                        <option value="{{ $vault['id'] }}">{{ $vault['name'] }}</option>
+                        <option value="{{ $vault['id'] }}" {{ $currentVaultId == $vault['id'] ? 'selected' : '' }}>
+                            {{ $vault['name'] }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -98,11 +99,12 @@
                 <h3 class="text-sm font-medium text-text-secondary mb-2">Current Project</h3>
                 <select 
                     wire:model.live="currentProjectId"
-                    wire:change="switchProject($event.target.value)"
                     class="w-full bg-surface-elevated text-sm text-electric-blue rounded-pixel p-2 pixel-card border-thin border-electric-blue/30 focus:ring-2 focus:ring-electric-blue focus:border-electric-blue"
                 >
                     @foreach ($projects as $project)
-                        <option value="{{ $project['id'] }}">{{ $project['name'] }}</option>
+                        <option value="{{ $project['id'] }}" {{ $currentProjectId == $project['id'] ? 'selected' : '' }}>
+                            {{ $project['name'] }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -690,6 +692,108 @@
                     Close
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Create Vault Modal -->
+    <div
+        x-show="$wire.showVaultModal"
+        x-transition
+        style="display: none;"
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+    >
+        <div class="bg-surface-2 rounded-pixel p-6 w-96 shadow-xl pixel-card border-thin border-hot-pink/40 glow-pink">
+            <h3 class="text-lg font-semibold mb-4 text-center text-hot-pink">🗄️ Create New Vault</h3>
+            
+            <form wire:submit.prevent="createNewVault" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-text-secondary mb-2">Vault Name *</label>
+                    <input 
+                        type="text" 
+                        wire:model="newVaultName"
+                        class="w-full bg-surface-elevated text-text-primary rounded-pixel p-3 pixel-card border-thin border-hot-pink/30 focus:ring-2 focus:ring-hot-pink focus:border-hot-pink"
+                        placeholder="Enter vault name..."
+                        required
+                    />
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-text-secondary mb-2">Description</label>
+                    <textarea 
+                        wire:model="newVaultDescription"
+                        class="w-full bg-surface-elevated text-text-primary rounded-pixel p-3 pixel-card border-thin border-hot-pink/30 focus:ring-2 focus:ring-hot-pink focus:border-hot-pink resize-none"
+                        rows="3"
+                        placeholder="Brief description (optional)..."
+                    ></textarea>
+                </div>
+                
+                <div class="flex space-x-3 pt-4">
+                    <button
+                        type="submit"
+                        class="flex-1 bg-hot-pink text-white py-2 px-4 rounded-pixel hover:bg-hot-pink/90 transition-colors text-sm font-medium pixel-card glow-pink"
+                    >
+                        Create Vault
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="closeVaultModal"
+                        class="flex-1 bg-surface-elevated text-text-secondary py-2 px-4 rounded-pixel hover:bg-surface-card transition-colors text-sm font-medium pixel-card border-thin border-text-muted/30"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Project Modal -->
+    <div
+        x-show="$wire.showProjectModal"
+        x-transition
+        style="display: none;"
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+    >
+        <div class="bg-surface-2 rounded-pixel p-6 w-96 shadow-xl pixel-card border-thin border-electric-blue/40 glow-blue">
+            <h3 class="text-lg font-semibold mb-4 text-center text-electric-blue">📁 Create New Project</h3>
+            
+            <form wire:submit.prevent="createNewProject" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-text-secondary mb-2">Project Name *</label>
+                    <input 
+                        type="text" 
+                        wire:model="newProjectName"
+                        class="w-full bg-surface-elevated text-text-primary rounded-pixel p-3 pixel-card border-thin border-electric-blue/30 focus:ring-2 focus:ring-electric-blue focus:border-electric-blue"
+                        placeholder="Enter project name..."
+                        required
+                    />
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-text-secondary mb-2">Description</label>
+                    <textarea 
+                        wire:model="newProjectDescription"
+                        class="w-full bg-surface-elevated text-text-primary rounded-pixel p-3 pixel-card border-thin border-electric-blue/30 focus:ring-2 focus:ring-electric-blue focus:border-electric-blue resize-none"
+                        rows="3"
+                        placeholder="Brief description (optional)..."
+                    ></textarea>
+                </div>
+                
+                <div class="flex space-x-3 pt-4">
+                    <button
+                        type="submit"
+                        class="flex-1 bg-electric-blue text-white py-2 px-4 rounded-pixel hover:bg-electric-blue/90 transition-colors text-sm font-medium pixel-card glow-blue"
+                    >
+                        Create Project
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="closeProjectModal"
+                        class="flex-1 bg-surface-elevated text-text-secondary py-2 px-4 rounded-pixel hover:bg-surface-card transition-colors text-sm font-medium pixel-card border-thin border-text-muted/30"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
