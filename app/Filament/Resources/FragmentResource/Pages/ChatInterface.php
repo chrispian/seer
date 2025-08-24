@@ -62,8 +62,10 @@ class ChatInterface extends Page
             ->get()
             ->reverse()
             ->map( fn( $fragment ) => [
+                'id'      => $fragment->id,
                 'type'    => $fragment->type,
                 'message' => $fragment->message,
+                'created_at' => $fragment->created_at,
             ] )
             ->values()
             ->toArray();
@@ -154,8 +156,10 @@ class ChatInterface extends Page
             $this->removeSpinner( $spinnerKey );
 
             $this->chatMessages[] = [
+                'id'      => $fragment->id,
                 'type'    => $fragment->type,
                 'message' => $fragment->message,
+                'created_at' => $fragment->created_at,
             ];
         }
     }
@@ -185,6 +189,15 @@ class ChatInterface extends Page
     public function injectCommand($command)
     {
         $this->input = $command;
+    }
+
+    public function executeCommand($commandName)
+    {
+        // Set the command input
+        $this->input = "/{$commandName}";
+        
+        // Execute the command immediately
+        $this->handleInput();
     }
 
     public function showSession()

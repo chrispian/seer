@@ -19,6 +19,7 @@
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "hollis-labs/laravel-console": "^0.1.1",
+        "laravel/boost": "^1.0",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.41",

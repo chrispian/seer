@@ -15,3 +15,222 @@
     margin-bottom: 0;
     margin-top: 0;
 }
+
+/* Autocomplete Dropdown Styles */
+.autocomplete-dropdown {
+    background: rgb(26 26 26 / 0.95);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgb(0 212 255 / 0.4);
+    box-shadow: 
+        0 8px 32px rgba(0, 212, 255, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.autocomplete-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgb(255 255 255 / 0.05);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.selected {
+    background: rgb(255 20 147 / 0.15);
+    border-left: 3px solid rgb(255 20 147);
+    box-shadow: inset 0 0 20px rgba(255, 20, 147, 0.1);
+}
+
+.autocomplete-item.autocomplete-empty {
+    color: rgb(156 163 175);
+    font-style: italic;
+    cursor: default;
+    text-align: center;
+}
+
+.autocomplete-item.autocomplete-empty:hover {
+    background: transparent;
+    border-left: none;
+    box-shadow: none;
+}
+
+.autocomplete-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.autocomplete-display {
+    font-weight: 500;
+    color: rgb(255 255 255 / 0.9);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.autocomplete-org,
+.autocomplete-type {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.autocomplete-org {
+    background: rgb(0 212 255 / 0.2);
+    color: rgb(0 212 255);
+    border: 1px solid rgb(0 212 255 / 0.3);
+}
+
+.autocomplete-type {
+    background: rgb(147 51 234 / 0.2);
+    color: rgb(147 51 234);
+    border: 1px solid rgb(147 51 234 / 0.3);
+}
+
+.autocomplete-description {
+    font-size: 0.875rem;
+    color: rgb(156 163 175);
+    margin: 4px 0;
+    line-height: 1.4;
+}
+
+.autocomplete-meta {
+    font-size: 0.75rem;
+    color: rgb(107 114 128);
+    margin-top: 4px;
+}
+
+/* Pixel card glow effects for autocomplete */
+.autocomplete-dropdown.glow-blue {
+    animation: pulse-glow-blue 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow-blue {
+    0% {
+        box-shadow: 
+            0 8px 32px rgba(0, 212, 255, 0.3),
+            0 0 20px rgba(0, 212, 255, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    100% {
+        box-shadow: 
+            0 8px 32px rgba(0, 212, 255, 0.4),
+            0 0 25px rgba(0, 212, 255, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* Link Modal Styles */
+#link-modal-container {
+    backdrop-filter: blur(4px);
+}
+
+.contact-card-content {
+    min-width: 400px;
+}
+
+.fragment-card-content {
+    min-width: 500px;
+}
+
+/* Link styling in chat messages */
+.contact-link,
+.fragment-link {
+    color: rgb(0 212 255);
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    border: none;
+    background: none;
+}
+
+.contact-link:hover,
+.fragment-link:hover {
+    color: rgb(255 20 147);
+}
+
+/* Legacy support for any remaining URL-based links */
+.chat-message a[href*="contact:"],
+.chat-message a[href*="fragment:"] {
+    color: rgb(0 212 255);
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.chat-message a[href*="contact:"]:hover,
+.chat-message a[href*="fragment:"]:hover {
+    color: rgb(255 20 147);
+}
+
+/* Expandable content animation */
+[x-cloak] { display: none !important; }
+
+.expand-transition {
+    transition: all 0.3s ease;
+}
+
+/* Copy button feedback */
+.copy-success {
+    background-color: rgb(34 197 94 / 0.2) !important;
+    color: rgb(34 197 94) !important;
+    border-color: rgb(34 197 94 / 0.4) !important;
+}
+
+/* Chat message copy button */
+.group:hover .group-hover\:opacity-100 {
+    opacity: 1;
+}
+
+/* Ensure copy button doesn't interfere with message layout */
+.chat-message-content {
+    padding-right: 4rem; /* Space for copy button */
+}
+
+/* Copy button hover states */
+.text-green-400 {
+    color: rgb(34 197 94) !important;
+}
+
+.text-red-400 {
+    color: rgb(248 113 113) !important;
+}
+
+.border-green-400\/40 {
+    border-color: rgb(34 197 94 / 0.4) !important;
+}
+
+.border-red-400\/40 {
+    border-color: rgb(248 113 113 / 0.4) !important;
+}
+
+/* Bookmark ribbon styles */
+.bookmark-ribbon {
+    transform: translateY(-2px);
+}
+
+.bookmark-ribbon:hover {
+    transform: translateY(-4px);
+}
+
+.bookmark-flag {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bookmark-ribbon .glow-pink {
+    box-shadow: 
+        0 2px 4px rgba(255, 20, 147, 0.3),
+        0 0 8px rgba(255, 20, 147, 0.2);
+}
+
+/* Adjust copy button position when bookmark is present */
+.group:has(.bookmark-ribbon) .absolute.right-2 {
+    right: 2.5rem;
+}

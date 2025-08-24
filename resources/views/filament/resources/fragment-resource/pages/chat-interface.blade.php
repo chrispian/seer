@@ -118,7 +118,11 @@
         <div class="flex-1 p-6 overflow-y-auto space-y-4" id="chat-output">
             <!-- Chat Messages -->
             @foreach ($chatMessages as $entry)
-                <x-chat-message :type="$entry['type'] ?? 'user'">
+                <x-chat-message 
+                    :type="$entry['type'] ?? 'user'"
+                    :fragmentId="$entry['id'] ?? null"
+                    :timestamp="isset($entry['created_at']) ? $entry['created_at']->diffForHumans() : 'Just now'"
+                >
                     <x-chat-markdown :fragment="null">
                         {{ $entry['message'] }}
                     </x-chat-markdown>
@@ -151,17 +155,14 @@
                 <div class="flex space-x-3">
                     <div class="flex-1">
                         <textarea 
-                            x-data
+                            x-data="chatTextarea()"
+                            x-ref="chatTextarea"
+                            x-init="initAutocomplete()"
                             wire:model.defer="input"
-                            wire:keydown.enter.prevent="
-                                $el.value = '';
-                                $nextTick(() => {
-                                    document.getElementById('chat-form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-                                });
-                            "
+                            x-on:keydown.enter.prevent="handleEnterKey($event)"
                             class="w-full p-3 border-thin border-hot-pink/30 rounded-pixel resize-none focus:ring-2 focus:ring-hot-pink focus:border-hot-pink pixel-card bg-surface-card text-text-primary" 
                             rows="2" 
-                            placeholder="Type your message..."
+                            placeholder="Type your message... (try /, @, or [[)"
                         ></textarea>
                     </div>
                     <button type="submit" class="px-4 py-2 bg-hot-pink text-white rounded-pixel hover:bg-hot-pink/90 transition-colors self-center pixel-card glow-pink">
@@ -230,6 +231,59 @@
         </div>
     </div>
 
+    <!-- Autocomplete Scripts -->
+    @vite(['resources/js/app.js'])
+    <script>
+        function chatTextarea() {
+            return {
+                autocompleteActive: false,
+                autocompleteEngine: null,
+                
+                initAutocomplete() {
+                    if (typeof AutocompleteEngine !== 'undefined') {
+                        this.autocompleteEngine = new AutocompleteEngine(this.$refs.chatTextarea);
+                        
+                        // Monitor autocomplete state
+                        const originalShow = this.autocompleteEngine.show.bind(this.autocompleteEngine);
+                        const originalHide = this.autocompleteEngine.hide.bind(this.autocompleteEngine);
+                        
+                        this.autocompleteEngine.show = () => {
+                            this.autocompleteActive = true;
+                            originalShow();
+                        };
+                        
+                        this.autocompleteEngine.hide = () => {
+                            this.autocompleteActive = false;
+                            originalHide();
+                        };
+                    }
+                },
+                
+                handleEnterKey(event) {
+                    // If autocomplete is active, don't submit
+                    if (this.autocompleteActive) {
+                        return;
+                    }
+                    
+                    // Don't clear the textarea here - let Livewire handle it
+                    // Just trigger the form submission
+                    this.$nextTick(() => {
+                        const form = document.getElementById('chat-form');
+                        if (form) {
+                            form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                        }
+                    });
+                },
+                
+                destroy() {
+                    if (this.autocompleteEngine) {
+                        this.autocompleteEngine.destroy();
+                    }
+                }
+            };
+        }
+    </script>
+
     <!-- Command Palette Modal -->
     <div
         x-data="{ open: false }"
@@ -243,8 +297,8 @@
             <div class="space-y-2">
                 @foreach (\App\Services\CommandRegistry::all() as $cmd)
                     <button
-                        wire:click="injectCommand('/{{ $cmd }} ')"
-                        x-on:click="open = false"
+                        wire:click="executeCommand('{{ $cmd }}')"
+                        x-on:click="open = false; $nextTick(() => document.querySelector('textarea[x-ref=chatTextarea]')?.focus())"
                         class="w-full text-left bg-surface-elevated hover:bg-hot-pink/20 text-text-secondary hover:text-text-primary rounded-pixel px-3 py-2 text-sm pixel-card border-thin border-hot-pink/30 glow-pink"
                     >
                         /{{ $cmd }}

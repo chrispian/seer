@@ -95,5 +95,46 @@ class Fragment extends Model
     {
         return $this->hasOne(Meeting::class, 'fragment_id');
     }
+
+    // Search scopes for autocomplete
+    public function scopeSearchContent($query, string $searchTerm)
+    {
+        return $query->where('message', 'LIKE', "%{$searchTerm}%");
+    }
+
+    public function scopeForAutocomplete($query, int $limit = 10)
+    {
+        return $query->select(['id', 'message', 'type', 'created_at'])
+                     ->orderBy('created_at', 'desc')
+                     ->limit($limit);
+    }
+
+    public function getTitleAttribute(): string
+    {
+        // Try to extract a title from the message
+        $lines = explode("\n", $this->message);
+        $firstLine = trim($lines[0]);
+        
+        // If first line looks like a title (short, no periods at end)
+        if (strlen($firstLine) <= 50 && !str_ends_with($firstLine, '.')) {
+            return $firstLine;
+        }
+        
+        // Otherwise extract first sentence
+        $sentences = explode('.', $this->message);
+        $firstSentence = trim($sentences[0]);
+        
+        if (strlen($firstSentence) <= 60) {
+            return $firstSentence;
+        }
+        
+        // Fallback to truncated message
+        return substr($this->message, 0, 50) . (strlen($this->message) > 50 ? '...' : '');
+    }
+
+    public function getPreviewAttribute(): string
+    {
+        return substr($this->message, 0, 120) . (strlen($this->message) > 120 ? '...' : '');
+    }
 }
 

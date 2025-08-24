@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Contact Card Display Schema",
+  "description": "Schema defining how contact information is displayed in modal cards",
+  "type": "object",
+  "properties": {
+    "fragment_id": {
+      "type": "integer",
+      "description": "The ID of the fragment this contact is associated with"
+    },
+    "full_name": {
+      "type": "string",
+      "description": "Full name of the contact - displayed prominently in header"
+    },
+    "organization": {
+      "type": "string",
+      "description": "Company/organization - displayed as subtitle in condensed view"
+    },
+    "emails": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "email"
+      },
+      "description": "Email addresses - first one shown in condensed view, all shown in expanded"
+    },
+    "phones": {
+      "type": "array", 
+      "items": {
+        "type": "string"
+      },
+      "description": "Phone numbers - first one shown in condensed view, all shown in expanded"
+    },
+    "state": {
+      "type": "object",
+      "description": "Custom state data - can include roles, tags, notes, etc.",
+      "additionalProperties": true
+    },
+    "fragment": {
+      "type": "object",
+      "description": "Associated fragment information",
+      "properties": {
+        "id": { "type": "integer" },
+        "message": { "type": "string", "description": "Original fragment message" },
+        "type": { "type": "string", "description": "Fragment type (contact, log, etc.)" },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "display_rules": {
+    "condensed_view": {
+      "shows": [
+        "full_name (as heading)",
+        "organization (as subtitle)", 
+        "first email (if exists)",
+        "first phone (if exists)",
+        "expand button"
+      ]
+    },
+    "expanded_view": {
+      "shows": [
+        "all emails (if more than 1)",
+        "all phones (if more than 1)", 
+        "fragment details section",
+        "custom state data (if any)",
+        "collapse button"
+      ]
+    },
+    "styling": {
+      "avatar": "Circular with initials from full_name",
+      "colors": {
+        "primary": "electric-blue (#00d4ff)",
+        "secondary": "hot-pink (#ff1493)",
+        "accent": "neon-cyan"
+      },
+      "layout": "Pixel-card theme with glow effects"
+    }
+  },
+  "interactions": {
+    "copy_functionality": "Entire card content (minus buttons) copied to clipboard",
+    "expand_collapse": "Smooth transition between condensed and expanded views", 
+    "close_modal": "Click outside, close button, or escape key"
+  },
+  "example": {
+    "fragment_id": 739,
+    "full_name": "John Doe",
+    "organization": "ACME Corp",
+    "emails": ["john@example.com", "j.doe@work.com"],
+    "phones": ["+1-555-123-4567", "+1-555-987-6543"],
+    "state": {
+      "role": "Software Developer",
+      "tags": ["client", "technical"],
+      "notes": "Prefers email communication"
+    },
+    "fragment": {
+      "id": 739,
+      "message": "John Doe - Software Developer at ACME Corp",
+      "type": "contact",
+      "created_at": "2025-08-24T02:44:54.000000Z"
+    }
+  }
+}
