@@ -227,6 +227,71 @@
                         <button class="bg-surface-card p-2 rounded-pixel text-xs text-text-secondary hover:bg-deep-purple/20 border-thin border-deep-purple/40 pixel-card">Archive</button>
                     </div>
                 </div>
+
+                <!-- Recent Bookmarks Widget -->
+                <div 
+                    class="pixel-card pixel-card-cyan p-4 glow-cyan"
+                    x-data="bookmarkWidget()"
+                    x-init="init(); loadRecentBookmarks()"
+                >
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-medium text-neon-cyan">Recent Bookmarks</h4>
+                        <button 
+                            x-show="!searchMode"
+                            x-on:click="searchMode = true; $nextTick(() => $refs.searchInput.focus())"
+                            class="text-xs text-text-muted hover:text-neon-cyan transition-colors"
+                        >
+                            🔍
+                        </button>
+                        <button 
+                            x-show="searchMode"
+                            x-on:click="clearSearch()"
+                            class="text-xs text-text-muted hover:text-neon-cyan transition-colors"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                    
+                    <!-- Search Input -->
+                    <div x-show="searchMode" class="mb-3">
+                        <input 
+                            x-ref="searchInput"
+                            x-model="searchQuery"
+                            x-on:input.debounce.300ms="handleSearch()"
+                            placeholder="Search bookmarks..."
+                            class="w-full bg-surface-card text-text-secondary text-xs p-2 rounded-pixel border-thin border-neon-cyan/40 focus:border-neon-cyan focus:outline-none"
+                        />
+                    </div>
+                    
+                    <!-- Bookmarks List -->
+                    <div class="space-y-2 max-h-48 overflow-y-auto" x-show="!loading" :class="{ 'pointer-events-none': openingModal }">
+                        <template x-for="bookmark in bookmarks" :key="bookmark.id">
+                            <div 
+                                x-on:click.stop="openBookmark(bookmark)"
+                                class="flex items-center space-x-2 text-xs cursor-pointer hover:bg-neon-cyan/10 p-1 rounded-pixel transition-colors"
+                            >
+                                <div class="w-2 h-2 bg-neon-cyan rounded-full flex-shrink-0"></div>
+                                <span 
+                                    class="text-text-secondary flex-1 truncate"
+                                    :title="bookmark.fragment_title"
+                                    x-text="bookmark.name"
+                                ></span>
+                                <span class="text-text-muted text-xs flex-shrink-0" x-text="bookmark.updated_at"></span>
+                            </div>
+                        </template>
+                        
+                        <!-- Empty State -->
+                        <div x-show="bookmarks.length === 0 && !loading" class="text-center text-text-muted text-xs py-4">
+                            <span x-show="!searchMode">No bookmarks yet</span>
+                            <span x-show="searchMode">No results found</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading State -->
+                    <div x-show="loading" class="text-center text-neon-cyan text-xs py-4">
+                        ⏳ Loading...
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -234,6 +299,118 @@
     <!-- Autocomplete Scripts -->
     @vite(['resources/js/app.js'])
     <script>
+        function bookmarkWidget() {
+            return {
+                bookmarks: [],
+                loading: false,
+                searchMode: false,
+                searchQuery: '',
+                openingModal: false,
+                
+                init() {
+                    // Listen for modal close events to reset our state
+                    document.addEventListener('modalClosed', () => {
+                        this.openingModal = false;
+                    });
+                },
+                
+                async loadRecentBookmarks() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/bookmarks/recent?limit=8');
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.bookmarks = data.bookmarks;
+                        }
+                    } catch (error) {
+                        console.error('Failed to load recent bookmarks:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async handleSearch() {
+                    if (this.searchQuery.length < 2) {
+                        await this.loadRecentBookmarks();
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    try {
+                        const response = await fetch(`/api/bookmarks/search?q=${encodeURIComponent(this.searchQuery)}&limit=8`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.bookmarks = data.bookmarks;
+                        }
+                    } catch (error) {
+                        console.error('Failed to search bookmarks:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                clearSearch() {
+                    this.searchMode = false;
+                    this.searchQuery = '';
+                    this.loadRecentBookmarks();
+                },
+                
+                async openBookmark(bookmark) {
+                    console.log('Opening bookmark:', bookmark);
+                    
+                    // Prevent multiple simultaneous openings
+                    if (this.openingModal) {
+                        console.log('Modal already opening, ignoring click');
+                        return;
+                    }
+                    
+                    if (!bookmark || !bookmark.fragment_id) {
+                        console.warn('No fragment ID for bookmark:', bookmark);
+                        // Show user feedback for invalid bookmark
+                        alert('This bookmark references a fragment that no longer exists.');
+                        return;
+                    }
+                    
+                    this.openingModal = true;
+                    
+                    // Mark bookmark as viewed
+                    try {
+                        const response = await fetch(`/api/bookmarks/${bookmark.id}/mark-viewed`, { 
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                            }
+                        });
+                        if (!response.ok) {
+                            console.warn('Failed to mark bookmark as viewed:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Failed to mark bookmark as viewed:', error);
+                    }
+                    
+                    // Open fragment modal using existing LinkHandler
+                    try {
+                        if (window.linkHandler && window.linkHandler.showFragmentModal) {
+                            // Add a small delay to prevent event conflicts
+                            await new Promise(resolve => setTimeout(resolve, 50));
+                            await window.linkHandler.showFragmentModal(bookmark.fragment_id, bookmark.name);
+                        } else {
+                            console.error('LinkHandler not available');
+                            alert('Unable to open bookmark. Please try refreshing the page.');
+                        }
+                    } catch (error) {
+                        console.error('Failed to open fragment modal:', error);
+                        alert('Failed to load bookmark content.');
+                    } finally {
+                        // Reset the flag after a delay to prevent accidental rapid clicks
+                        setTimeout(() => {
+                            this.openingModal = false;
+                        }, 500);
+                    }
+                }
+            };
+        }
+
         function chatTextarea() {
             return {
                 autocompleteActive: false,
