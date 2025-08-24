@@ -5,6 +5,7 @@ namespace App\Filament\Resources\FragmentResource\Pages;
 use App\Actions\ParseSlashCommand;
 use App\Actions\RouteFragment;
 use App\Filament\Resources\FragmentResource;
+use App\Models\ChatSession;
 use App\Models\Fragment;
 use App\Services\CommandRegistry;
 use Filament\Resources\Pages\Page;
@@ -13,93 +14,108 @@ use InvalidArgumentException;
 
 class ChatInterface extends Page
 {
+    protected static string $resource = FragmentResource::class;
 
-    protected static string  $resource = FragmentResource::class;
-    protected static ?string $slug     = 'lens';
-    protected static string  $view     = 'filament.resources.fragment-resource.pages.chat-interface';
+    protected static ?string $slug = 'lens';
 
-    public string  $input                 = '';
-    public array   $chatMessages          = [];
-    public array   $chatHistory           = [];
-    public array   $commandHistory        = [];
-    public ?array  $currentSession        = null;
-    public         $recalledTodos         = [];
-    public ?Carbon $lastActivityAt        = null;
-    public int     $sessionTimeoutMinutes = 60; // ← default to 1 hour inactivity
+    protected static string $view = 'filament.resources.fragment-resource.pages.chat-interface';
+
+    public string $input = '';
+
+    public array $chatMessages = [];
+
+    public array $chatHistory = [];
+
+    public array $commandHistory = [];
+
+    public ?array $currentSession = null;
+
+    public $recalledTodos = [];
+
+    public ?Carbon $lastActivityAt = null;
+
+    public int $sessionTimeoutMinutes = 60; // ← default to 1 hour inactivity
+
+    public ?int $currentChatSessionId = null;
+
+    public array $recentChatSessions = [];
 
     protected $listeners = [
         'echo:lens.chat,fragment.processed' => 'onFragmentProcessed',
     ];
 
-    public static function shouldRegisterNavigation( array $parameters = [] ) : bool
+    public static function shouldRegisterNavigation(array $parameters = []): bool
     {
         return false;
     }
 
-    public function getLayout() : string
+    public function getLayout(): string
     {
         return 'layouts.chat-interface';
     }
 
-    protected static ?string $title      = null;
-    protected ?string        $heading    = null;
+    protected static ?string $title = null;
+
+    protected ?string $heading = null;
+
     protected static ?string $breadcrumb = null;
 
-    public function getTitle() : string
+    public function getTitle(): string
     {
         return '';
     }
 
-    public function getBreadcrumb() : string
+    public function getBreadcrumb(): string
     {
         return '';
     }
 
     public function mount()
     {
-        $this->chatMessages = Fragment::latest()
-            ->take( 20 )
-            ->get()
-            ->reverse()
-            ->map( fn( $fragment ) => [
-                'id'      => $fragment->id,
-                'type'    => $fragment->type,
-                'message' => $fragment->message,
-                'created_at' => $fragment->created_at,
-            ] )
-            ->values()
-            ->toArray();
+        // Load recent chat sessions for the sidebar
+        $this->loadRecentChatSessions();
+
+        // Try to resume the most recent active chat session, or create a new one
+        $latestSession = ChatSession::recent(1)->first();
+
+        if ($latestSession) {
+            $this->currentChatSessionId = $latestSession->id;
+            $this->chatMessages = $latestSession->getAttribute('messages') ?? [];
+            $this->currentSession = $latestSession->getAttribute('metadata')['currentSession'] ?? null;
+        } else {
+            // Create a new chat session if none exist
+            $this->startNewChat();
+        }
 
         $this->recalledTodos = []; // Fragment IDs for recalled todos
-
     }
 
     public function handleInput()
     {
-        $message = trim( $this->input );
+        $message = trim($this->input);
         // ✅ 1. Clear Input Immediately
         $this->input = '';
 
-        $spinnerKey = uniqid( 'spinner_', true );
+        $spinnerKey = uniqid('spinner_', true);
 
         // ✅ 2. Add Temporary "Processing..." Message
         $this->chatMessages[] = [
-            'key'     => $spinnerKey,
-            'type'    => 'system',
+            'key' => $spinnerKey,
+            'type' => 'system',
             'message' => '⏳ Processing...',
         ];
 
-        if ( str_starts_with( $message, '/' ) ) {
-            $command                                  = app( ParseSlashCommand::class )( $message );
-            $command->arguments[ '__currentSession' ] = $this->currentSession; // Inject current session
+        if (str_starts_with($message, '/')) {
+            $command = app(ParseSlashCommand::class)($message);
+            $command->arguments['__currentSession'] = $this->currentSession; // Inject current session
 
             try {
-                $handlerClass = CommandRegistry::find( $command->command );
-                $handler      = app( $handlerClass );
-            } catch ( InvalidArgumentException $e ) {
-                $this->removeSpinner( $spinnerKey ); // ❗ clean up spinner
+                $handlerClass = CommandRegistry::find($command->command);
+                $handler = app($handlerClass);
+            } catch (InvalidArgumentException $e) {
+                $this->removeSpinner($spinnerKey); // ❗ clean up spinner
                 $this->chatMessages[] = [
-                    'type'    => 'system',
+                    'type' => 'system',
                     'message' => "❌ Command `/{$command->command}` not recognized. Try `/help` for options.",
                 ];
 
@@ -107,71 +123,74 @@ class ChatInterface extends Page
             }
 
             /** @var \App\DTOs\CommandResponse $response */
-            $response = $handler->handle( $command );
+            $response = $handler->handle($command);
 
-            $this->removeSpinner( $spinnerKey );
+            $this->removeSpinner($spinnerKey);
 
-            if ( ! empty( $response->shouldResetChat ) ) {
+            if (! empty($response->shouldResetChat)) {
                 $this->chatMessages = [];
             }
 
-            if ( ! empty( $response->message ) ) {
+            if (! empty($response->message)) {
                 $this->chatMessages[] = [
-                    'type'    => $response->type ?? 'system',
+                    'type' => $response->type ?? 'system',
                     'message' => $response->message,
                 ];
             }
 
-            if ( ! empty( $response->fragments ) && is_array( $response->fragments ) && array_is_list( $response->fragments ) ) {
+            if (! empty($response->fragments) && is_array($response->fragments) && array_is_list($response->fragments)) {
                 // Handle different fragment types differently
-                if ( $response->type === 'recall' ) {
+                if ($response->type === 'recall') {
                     // For recall commands, fragments are IDs - store them directly
                     $this->recalledTodos = $response->fragments;
                 } else {
                     // For other commands, fragments are arrays with type/message
-                    foreach ( $response->fragments as $fragment ) {
-                        if ( is_array( $fragment ) && isset( $fragment['type'], $fragment['message'] ) ) {
+                    foreach ($response->fragments as $fragment) {
+                        if (is_array($fragment) && isset($fragment['type'], $fragment['message'])) {
                             $this->chatMessages[] = [
-                                'type'    => $fragment[ 'type' ],
-                                'message' => $fragment[ 'message' ],
+                                'type' => $fragment['type'],
+                                'message' => $fragment['message'],
                             ];
                         }
                     }
                 }
             }
 
-            if ( $response->type === 'session-start' ) {
+            if ($response->type === 'session-start') {
                 $this->currentSession = $response->fragments;
             }
 
-            if ( $response->type === 'session-end' ) {
+            if ($response->type === 'session-end') {
                 $this->currentSession = null;
             }
 
             $this->commandHistory[] = $command->raw;
         } else {
             // normal fragment handling
-            $fragment = app( RouteFragment::class )( $message );
+            $fragment = app(RouteFragment::class)($message);
 
-            $this->removeSpinner( $spinnerKey );
+            $this->removeSpinner($spinnerKey);
 
             $this->chatMessages[] = [
-                'id'      => $fragment->id,
-                'type'    => $fragment->type,
+                'id' => $fragment->id,
+                'type' => $fragment->type,
                 'message' => $fragment->message,
                 'created_at' => $fragment->created_at,
             ];
         }
+
+        // Save the updated chat session after any input
+        $this->saveCurrentChatSession();
     }
 
-    protected function removeSpinner( string $spinnerKey ) : void
+    protected function removeSpinner(string $spinnerKey): void
     {
-        $this->chatMessages = array_filter( $this->chatMessages, function ( $msg ) use ( $spinnerKey ) {
-            return ( $msg[ 'key' ] ?? null ) !== $spinnerKey;
-        } );
+        $this->chatMessages = array_filter($this->chatMessages, function ($msg) use ($spinnerKey) {
+            return ($msg['key'] ?? null) !== $spinnerKey;
+        });
 
         // Reindex to fix Livewire weirdness
-        $this->chatMessages = array_values( $this->chatMessages );
+        $this->chatMessages = array_values($this->chatMessages);
     }
 
     public function getTodoFragments()
@@ -185,6 +204,98 @@ class ChatInterface extends Page
             ->get();
     }
 
+    public function loadRecentChatSessions(): void
+    {
+        $this->recentChatSessions = ChatSession::recent(5)
+            ->get()
+            ->map(fn ($session) => [
+                'id' => $session->id,
+                'title' => $session->display_title,
+                'message_count' => $session->message_count,
+                'last_activity' => $this->formatTimestamp($session->last_activity_at) !== 'Just now'
+                    ? $this->formatTimestamp($session->last_activity_at)
+                    : $this->formatTimestamp($session->updated_at),
+                'preview' => $session->last_message_preview,
+            ])
+            ->toArray();
+    }
+
+    public function startNewChat(): void
+    {
+        // Save current chat session before starting new one
+        if ($this->currentChatSessionId) {
+            $this->saveCurrentChatSession();
+        }
+
+        // Create new chat session
+        $newSession = new ChatSession;
+        $newSession->setAttribute('title', 'New Chat');
+        $newSession->setAttribute('messages', []);
+        $newSession->setAttribute('metadata', []);
+        $newSession->setAttribute('message_count', 0);
+        $newSession->setAttribute('last_activity_at', now());
+        $newSession->save();
+
+        // Reset chat state
+        $this->currentChatSessionId = $newSession->id;
+        $this->chatMessages = [];
+        $this->currentSession = null;
+        $this->recalledTodos = [];
+
+        // Reload recent chat sessions
+        $this->loadRecentChatSessions();
+
+        // Add welcome message
+        $this->chatMessages[] = [
+            'type' => 'system',
+            'message' => '💬 **New chat started!** Type your message or use `/help` for commands.',
+            'created_at' => now(),
+        ];
+
+        $this->saveCurrentChatSession();
+    }
+
+    public function switchToChat(int $chatSessionId): void
+    {
+        // Save current chat session before switching
+        if ($this->currentChatSessionId) {
+            $this->saveCurrentChatSession();
+        }
+
+        // Load the selected chat session
+        $chatSession = ChatSession::find($chatSessionId);
+        if ($chatSession) {
+            $this->currentChatSessionId = $chatSession->id;
+            $this->chatMessages = $chatSession->getAttribute('messages') ?? [];
+            $this->currentSession = $chatSession->getAttribute('metadata')['currentSession'] ?? null;
+
+            // Mark as active and update activity time
+            $chatSession->update(['last_activity_at' => now()]);
+        }
+
+        // Reload recent chat sessions to reflect changes
+        $this->loadRecentChatSessions();
+    }
+
+    public function saveCurrentChatSession(): void
+    {
+        if ($this->currentChatSessionId) {
+            $chatSession = ChatSession::find($this->currentChatSessionId);
+            if ($chatSession) {
+                // Use setAttribute to ensure JSON changes are detected
+                $chatSession->setAttribute('messages', $this->chatMessages);
+                $chatSession->setAttribute('metadata', [
+                    'currentSession' => $this->currentSession,
+                    'recalledTodos' => $this->recalledTodos,
+                ]);
+                $chatSession->setAttribute('message_count', count($this->chatMessages));
+                $chatSession->setAttribute('last_activity_at', now());
+                $chatSession->save();
+
+                $chatSession->updateTitleFromMessages();
+            }
+        }
+    }
 
     public function injectCommand($command)
     {
@@ -195,7 +306,7 @@ class ChatInterface extends Page
     {
         // Set the command input
         $this->input = "/{$commandName}";
-        
+
         // Execute the command immediately
         $this->handleInput();
     }
@@ -204,36 +315,52 @@ class ChatInterface extends Page
     {
         if ($this->currentSession) {
             $sessionDetails = "Session Details:\n\n";
-            $sessionDetails .= "**Identifier:** " . ($this->currentSession['identifier'] ?? 'Unnamed Session') . "\n";
-            $sessionDetails .= "**Vault:** " . ($this->currentSession['vault'] ?? 'N/A') . "\n";
-            $sessionDetails .= "**Type:** " . ($this->currentSession['type'] ?? 'N/A') . "\n";
-            
+            $sessionDetails .= '**Identifier:** '.($this->currentSession['identifier'] ?? 'Unnamed Session')."\n";
+            $sessionDetails .= '**Vault:** '.($this->currentSession['vault'] ?? 'N/A')."\n";
+            $sessionDetails .= '**Type:** '.($this->currentSession['type'] ?? 'N/A')."\n";
+
             if (isset($this->currentSession['created_at'])) {
-                $sessionDetails .= "**Created:** " . \Carbon\Carbon::parse($this->currentSession['created_at'])->diffForHumans() . "\n";
+                $sessionDetails .= '**Created:** '.\Carbon\Carbon::parse($this->currentSession['created_at'])->diffForHumans()."\n";
             }
-            
+
             $this->chatMessages[] = [
-                'type'    => 'system',
+                'type' => 'system',
                 'message' => $sessionDetails,
             ];
         }
     }
 
-    public function onFragmentProcessed( $payload )
+    public function formatTimestamp($timestamp): string
+    {
+        if (! $timestamp) {
+            return 'Just now';
+        }
+
+        if (is_string($timestamp)) {
+            return Carbon::parse($timestamp)->diffForHumans();
+        }
+
+        if ($timestamp instanceof Carbon) {
+            return $timestamp->diffForHumans();
+        }
+
+        return 'Just now';
+    }
+
+    public function onFragmentProcessed($payload)
     {
         $message = "✅ Fragment processed (Origin ID: {$payload['fragmentId']})";
 
-        if ( ! empty( $payload[ 'children' ] ) ) {
+        if (! empty($payload['children'])) {
             $message .= "\n\nFragments created:\n";
-            foreach ( $payload[ 'children' ] as $fragment ) {
+            foreach ($payload['children'] as $fragment) {
                 $message .= "- [{$fragment['type']}] {$fragment['message']}\n";
             }
         }
 
         $this->chatMessages[] = [
-            'type'    => 'system',
+            'type' => 'system',
             'message' => $message,
         ];
     }
-
 }
