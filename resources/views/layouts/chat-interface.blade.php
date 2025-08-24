@@ -102,6 +102,7 @@
     </style>
     
     @livewireStyles
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </head>
 <body class="h-full bg-surface text-text-primary overflow-hidden">
     {{ $slot }}
@@ -122,6 +123,15 @@
             const chatContent = document.querySelector('#chat-output');
             if (chatContent) {
                 chatContent.scrollTop = chatContent.scrollHeight;
+            }
+        });
+
+        // Auto-refresh sortable on Livewire updates
+        document.addEventListener('livewire:update', function() {
+            const container = document.getElementById('pinned-chats-container');
+            if (container && window.pinnedChatsSortable) {
+                window.pinnedChatsSortable.destroy();
+                initPinnedChatsSortable();
             }
         });
     </script>
