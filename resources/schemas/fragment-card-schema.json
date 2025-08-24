@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fragment Card Display Schema", 
+  "description": "Schema defining how fragment information is displayed in modal cards",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "description": "Fragment ID"
+    },
+    "message": {
+      "type": "string",
+      "description": "Main fragment content - supports basic markdown formatting"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["log", "note", "todo", "contact", "link", "file"],
+      "description": "Fragment type - affects color scheme and layout"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Creation timestamp"
+    },
+    "updated_at": {
+      "type": "string", 
+      "format": "date-time",
+      "description": "Last modification timestamp"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Associated tags - displayed as badges"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata",
+      "additionalProperties": true
+    },
+    "state": {
+      "type": "object", 
+      "description": "State information",
+      "additionalProperties": true
+    },
+    "importance": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Importance level (0-10)"
+    },
+    "confidence": {
+      "type": "integer",
+      "minimum": 0, 
+      "maximum": 10,
+      "description": "Confidence level (0-10)"
+    },
+    "pinned": {
+      "type": "boolean",
+      "description": "Whether fragment is pinned"
+    },
+    "relationships": {
+      "type": "array",
+      "description": "Related fragments or objects"
+    },
+    "source_key": {
+      "type": "string",
+      "description": "Source system identifier"
+    },
+    "vault": {
+      "type": "string", 
+      "description": "Associated vault"
+    },
+    "todo": {
+      "type": "object",
+      "description": "Todo-specific data if fragment is a todo",
+      "properties": {
+        "title": { "type": "string" },
+        "state": { "type": "object" }
+      }
+    },
+    "contact": {
+      "type": "object",
+      "description": "Contact-specific data if fragment is a contact",
+      "properties": {
+        "full_name": { "type": "string" },
+        "organization": { "type": "string" }
+      }
+    },
+    "link": {
+      "type": "object",
+      "description": "Link-specific data if fragment is a link",
+      "properties": {
+        "url": { "type": "string" },
+        "title": { "type": "string" },
+        "domain": { "type": "string" }
+      }
+    }
+  },
+  "display_rules": {
+    "layout": {
+      "header": "Fragment type badge + copy/close buttons",
+      "main_content": "Message with markdown formatting",
+      "metadata_grid": "Creation date, ID, importance/confidence if set",
+      "tags_section": "Tag badges (if any)",
+      "typed_data": "Todo/contact/link specific info (if applicable)"
+    },
+    "formatting": {
+      "markdown_support": [
+        "**bold**",
+        "*italic*", 
+        "`code`",
+        "line breaks"
+      ]
+    },
+    "color_schemes": {
+      "log": "hot-pink primary",
+      "note": "electric-blue primary",
+      "todo": "neon-cyan primary", 
+      "contact": "deep-purple primary",
+      "link": "bright-pink primary",
+      "file": "electric-blue primary"
+    }
+  },
+  "interactions": {
+    "copy_functionality": "Entire fragment content copied to clipboard",
+    "close_modal": "Click outside, close button, or escape key",
+    "markdown_rendering": "Basic markdown converted to HTML"
+  },
+  "example": {
+    "id": 740,
+    "message": "How about @John Doe is now linked? How about a [[This is a chaos fragment]]? #testing",
+    "type": "log", 
+    "created_at": "2025-08-24T02:46:42.000000Z",
+    "updated_at": "2025-08-24T02:46:42.000000Z",
+    "tags": ["testing", "links"],
+    "metadata": {},
+    "state": {},
+    "importance": 5,
+    "confidence": 8,
+    "pinned": false,
+    "relationships": [],
+    "source_key": "chat_input",
+    "vault": "default",
+    "todo": null,
+    "contact": null,
+    "link": null
+  }
+}

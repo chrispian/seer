@@ -1,4 +1,4 @@
-@props(['message', 'type' => 'user', 'timestamp' => null])
+@props(['message', 'type' => 'user', 'timestamp' => null, 'fragmentId' => null])
 
 <div class="flex items-start space-x-3">
     <div class="w-8 h-8 {{ $type === 'user' ? 'bg-hot-pink' : ($type === 'system' ? 'bg-neon-cyan' : 'bg-electric-blue') }} rounded-full flex items-center justify-center text-white text-sm font-medium pixel-card {{ $type === 'user' ? 'glow-pink' : ($type === 'system' ? 'glow-cyan' : 'glow-blue') }}">
@@ -17,11 +17,47 @@
         @endif
     </div>
     <div class="flex-1">
-        <div class="bg-surface-card rounded-pixel p-4 pixel-card border-thin 
+        <div class="relative bg-surface-card rounded-pixel p-4 pixel-card border-thin 
             {{ $type === 'user' ? 'border-hot-pink/30 pixel-card-pink glow-pink' : 
                ($type === 'system' ? 'border-neon-cyan/30 pixel-card-cyan glow-cyan' : 
-                'border-electric-blue/30 pixel-card-blue glow-blue') }}">
-            <div class="prose prose-sm dark:prose-invert max-w-none text-text-primary">
+                'border-electric-blue/30 pixel-card-blue glow-blue') }} group"
+            @if($fragmentId) data-fragment-id="{{ $fragmentId }}" @endif>
+            
+            <!-- Bookmark Ribbon -->
+            @if($fragmentId)
+                <div 
+                    class="bookmark-ribbon absolute -top-2 -right-1 w-6 h-8 cursor-pointer opacity-50 hover:opacity-100 transition-all duration-200 z-10"
+                    onclick="toggleBookmark({{ $fragmentId }}, this)"
+                    title="Toggle bookmark"
+                    data-fragment-id="{{ $fragmentId }}"
+                    x-data="{ bookmarked: false }"
+                    x-init="checkBookmarkStatus({{ $fragmentId }}, $el)"
+                >
+                    <div class="relative">
+                        <!-- Ribbon shape -->
+                        <div class="bookmark-flag absolute top-0 right-0 w-6 h-7 transform rotate-0 transition-colors duration-200"
+                             :class="bookmarked ? 'bg-hot-pink glow-pink' : 'bg-surface-elevated hover:bg-hot-pink/20'"
+                             style="clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);">
+                        </div>
+                        <!-- Bookmark icon -->
+                        <div class="absolute top-1 right-1.5 text-xs transition-colors duration-200"
+                             :class="bookmarked ? 'text-white' : 'text-text-muted'">
+                            📎
+                        </div>
+                    </div>
+                </div>
+            @endif
+            
+            <!-- Copy Button -->
+            <button 
+                onclick="copyChatMessage(this)" 
+                class="absolute top-2 right-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-surface-elevated hover:bg-neon-cyan/20 text-neon-cyan hover:text-bright-pink px-2 py-1 rounded-pixel text-xs border border-neon-cyan/40 hover:border-bright-pink/40 pixel-card"
+                title="Copy message"
+            >
+                📋 Copy
+            </button>
+            
+            <div class="prose prose-sm dark:prose-invert max-w-none text-text-primary pr-16">
                 {{ $slot }}
             </div>
         </div>
