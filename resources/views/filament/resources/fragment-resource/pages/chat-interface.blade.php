@@ -58,24 +58,51 @@
         </div>
         @endif
 
-        <!-- Chat History Placeholder -->
+        <!-- Chat History -->
         <div class="flex-1 p-4 overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-sm font-medium text-text-secondary">Recent Chats</h3>
-                <button class="text-xs text-text-muted hover:text-text-secondary">View All</button>
+                <button wire:click="startNewChat" class="text-xs bg-electric-blue/20 hover:bg-electric-blue/30 text-electric-blue px-2 py-1 rounded-pixel border border-electric-blue/40 transition-colors pixel-card glow-blue">
+                    ✨ New Chat
+                </button>
             </div>
             
             <div class="space-y-2">
-                <!-- Current Chat Item -->
-                <div class="pixel-card pixel-card-pink p-3 bg-hot-pink/20 border-hot-pink/60 glow-pink">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="text-sm font-medium text-text-primary">Current Chat</div>
-                            <div class="text-xs text-text-muted mt-1">{{ count($chatMessages) }} messages</div>
+                @if (!empty($recentChatSessions))
+                    @foreach ($recentChatSessions as $session)
+                        <div 
+                            wire:click="switchToChat({{ $session['id'] }})"
+                            class="pixel-card p-3 cursor-pointer transition-all
+                                {{ $session['id'] === $currentChatSessionId 
+                                    ? 'pixel-card-pink bg-hot-pink/20 border-hot-pink/60 glow-pink' 
+                                    : 'pixel-card-blue bg-electric-blue/10 border-electric-blue/30 hover:bg-electric-blue/20 hover:border-electric-blue/50' 
+                                }}"
+                        >
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-medium {{ $session['id'] === $currentChatSessionId ? 'text-text-primary' : 'text-text-secondary' }} truncate">
+                                        {{ $session['title'] }}
+                                    </div>
+                                    <div class="text-xs text-text-muted mt-1">
+                                        {{ $session['message_count'] }} messages
+                                    </div>
+                                    @if (!empty($session['preview']))
+                                        <div class="text-xs text-text-muted mt-1 truncate">
+                                            {{ $session['preview'] }}
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="text-xs {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-electric-blue' }} ml-2 font-medium flex-shrink-0">
+                                    {{ $session['id'] === $currentChatSessionId ? 'Active' : $session['last_activity'] }}
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-xs text-hot-pink ml-2 font-medium">Now</div>
+                    @endforeach
+                @else
+                    <div class="text-center text-text-muted text-xs py-4">
+                        No recent chats
                     </div>
-                </div>
+                @endif
             </div>
         </div>
 
@@ -121,7 +148,7 @@
                 <x-chat-message 
                     :type="$entry['type'] ?? 'user'"
                     :fragmentId="$entry['id'] ?? null"
-                    :timestamp="isset($entry['created_at']) ? $entry['created_at']->diffForHumans() : 'Just now'"
+                    :timestamp="$this->formatTimestamp($entry['created_at'] ?? null)"
                 >
                     <x-chat-markdown :fragment="null">
                         {{ $entry['message'] }}
