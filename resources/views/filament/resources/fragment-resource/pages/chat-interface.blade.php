@@ -15,11 +15,57 @@
         
         <!-- Additional ribbon items -->
         <div class="mt-8 space-y-3">
-            <button class="w-8 h-8 bg-surface-card rounded-pixel pixel-card border-thin border-hot-pink/30 flex items-center justify-center hover:bg-hot-pink/10 transition-colors glow-pink">
-                <svg class="w-4 h-4 text-hot-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                </svg>
-            </button>
+            <!-- Create Flyout Menu -->
+            <div x-data="{ open: false }" class="relative">
+                <button 
+                    @click="open = !open"
+                    class="w-8 h-8 bg-surface-card rounded-pixel pixel-card border-thin border-hot-pink/30 flex items-center justify-center hover:bg-hot-pink/10 transition-colors glow-pink"
+                >
+                    <svg class="w-4 h-4 text-hot-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                </button>
+                
+                <!-- Flyout Menu -->
+                <div 
+                    x-show="open"
+                    x-transition
+                    @click.outside="open = false"
+                    class="absolute left-full ml-2 top-0 bg-surface-2 border border-hot-pink/30 rounded-pixel pixel-card p-2 space-y-1 min-w-48 z-50 glow-pink"
+                >
+                    <button 
+                        wire:click="createNewVault"
+                        @click="open = false"
+                        class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-hot-pink/20 rounded-pixel transition-colors flex items-center space-x-2"
+                    >
+                        <svg class="w-4 h-4 text-hot-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        <span>New Vault</span>
+                    </button>
+                    <button 
+                        wire:click="createNewProject"
+                        @click="open = false"
+                        class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-electric-blue/20 rounded-pixel transition-colors flex items-center space-x-2"
+                    >
+                        <svg class="w-4 h-4 text-electric-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                        <span>New Project</span>
+                    </button>
+                    <button 
+                        wire:click="startNewChat"
+                        @click="open = false"
+                        class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-neon-cyan/20 rounded-pixel transition-colors flex items-center space-x-2"
+                    >
+                        <svg class="w-4 h-4 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        <span>New Chat</span>
+                    </button>
+                </div>
+            </div>
+            
             <button class="w-8 h-8 bg-surface-card rounded-pixel pixel-card border-thin border-electric-blue/30 flex items-center justify-center hover:bg-electric-blue/10 transition-colors glow-blue">
                 <svg class="w-4 h-4 text-electric-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -30,21 +76,64 @@
 
     <!-- Left Column 2: Navigation -->
     <div class="w-72 bg-surface-2 border-r border-thin border-electric-blue/30 flex flex-col">
-        <!-- Projects/Context Sessions -->
+        <!-- Vault Selection -->
         <div class="p-4 border-b border-thin border-hot-pink/20">
             <div class="pixel-card pixel-card-pink p-3 glow-pink">
-                <h3 class="text-sm font-medium text-text-secondary mb-2">Active Project</h3>
-                <div class="bg-surface-elevated rounded-pixel p-2 pixel-card border-thin border-hot-pink/30">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-hot-pink">Seer Interface</span>
-                        <span class="text-xs text-electric-blue">v2.0</span>
-                    </div>
-                    <div class="text-xs text-text-muted mt-1">Chat Interface Redesign</div>
-                </div>
+                <h3 class="text-sm font-medium text-text-secondary mb-2">Current Vault</h3>
+                <select 
+                    wire:model.live="currentVaultId" 
+                    wire:change="switchVault($event.target.value)"
+                    class="w-full bg-surface-elevated text-sm text-hot-pink rounded-pixel p-2 pixel-card border-thin border-hot-pink/30 focus:ring-2 focus:ring-hot-pink focus:border-hot-pink"
+                >
+                    @foreach ($vaults as $vault)
+                        <option value="{{ $vault['id'] }}">{{ $vault['name'] }}</option>
+                    @endforeach
+                </select>
             </div>
         </div>
 
-        <!-- Session Indicator -->
+        <!-- Project Selection -->
+        <div class="p-4 border-b border-thin border-electric-blue/20">
+            <div class="pixel-card pixel-card-blue p-3 glow-blue">
+                <h3 class="text-sm font-medium text-text-secondary mb-2">Current Project</h3>
+                <select 
+                    wire:model.live="currentProjectId"
+                    wire:change="switchProject($event.target.value)"
+                    class="w-full bg-surface-elevated text-sm text-electric-blue rounded-pixel p-2 pixel-card border-thin border-electric-blue/30 focus:ring-2 focus:ring-electric-blue focus:border-electric-blue"
+                >
+                    @foreach ($projects as $project)
+                        <option value="{{ $project['id'] }}">{{ $project['name'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <!-- Active Session (Current Chat) -->
+        @if ($currentChatSessionId)
+            @php
+                $activeSession = collect($recentChatSessions)->firstWhere('id', $currentChatSessionId) 
+                    ?? collect($pinnedChatSessions)->firstWhere('id', $currentChatSessionId);
+            @endphp
+            @if ($activeSession)
+            <div class="p-4 border-b border-thin border-neon-cyan/20">
+                <div class="pixel-card pixel-card-cyan p-3 glow-cyan">
+                    <h3 class="text-sm font-medium text-text-secondary mb-2">Active Chat</h3>
+                    <div 
+                        wire:click="switchToChat({{ $activeSession['id'] }})"
+                        class="bg-surface-elevated rounded-pixel p-2 pixel-card border-thin border-neon-cyan/30 cursor-pointer hover:bg-neon-cyan/10 transition-colors"
+                    >
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-neon-cyan truncate">{{ $activeSession['title'] }}</span>
+                            <span class="text-xs text-bright-pink ml-2">Active</span>
+                        </div>
+                        <div class="text-xs text-text-muted mt-1">{{ $activeSession['message_count'] }} messages</div>
+                    </div>
+                </div>
+            </div>
+            @endif
+        @endif
+
+        <!-- Legacy Session Indicator -->
         @if ($currentSession)
         <div class="p-4 border-b border-thin border-neon-cyan/20">
             <div class="pixel-card pixel-card-cyan p-3 glow-cyan">
@@ -60,40 +149,124 @@
 
         <!-- Chat History -->
         <div class="flex-1 p-4 overflow-y-auto">
-            <div class="flex items-center justify-between mb-4">
+            <!-- Pinned Chats -->
+            @if (!empty($pinnedChatSessions))
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-medium text-text-secondary">📌 Pinned Chats</h3>
+                </div>
+                
+                <div 
+                    x-data="{
+                        sortable: null,
+                        initSortable() {
+                            const container = document.getElementById('pinned-chats-container');
+                            if (container) {
+                                this.sortable = Sortable.create(container, {
+                                    handle: '.drag-handle',
+                                    animation: 150,
+                                    ghostClass: 'opacity-50',
+                                    onEnd: (evt) => {
+                                        const items = Array.from(container.children);
+                                        const newOrder = items.map((item, index) => ({
+                                            id: parseInt(item.dataset.id),
+                                            sortOrder: index + 1
+                                        }));
+                                        
+                                        // Call Livewire method to update sort order
+                                        @this.call('updatePinnedChatOrder', newOrder);
+                                    }
+                                });
+                            }
+                        }
+                    }"
+                    x-init="initSortable()"
+                    class="space-y-2"
+                    id="pinned-chats-container"
+                >
+                    @foreach ($pinnedChatSessions as $session)
+                        <div 
+                            data-id="{{ $session['id'] }}"
+                            wire:click="switchToChat({{ $session['id'] }})"
+                            class="pixel-card p-3 cursor-pointer transition-all sortable-item
+                                {{ $session['id'] === $currentChatSessionId 
+                                    ? 'pixel-card-pink bg-hot-pink/20 border-hot-pink/60 glow-pink' 
+                                    : 'pixel-card-cyan bg-neon-cyan/10 border-neon-cyan/30 hover:bg-neon-cyan/20 hover:border-neon-cyan/50' 
+                                }}"
+                        >
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center">
+                                    <div class="drag-handle cursor-move mr-2 text-text-muted hover:text-neon-cyan transition-colors">
+                                        ⋮⋮
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-sm font-medium {{ $session['id'] === $currentChatSessionId ? 'text-text-primary' : 'text-text-secondary' }} truncate">
+                                            {{ $session['title'] }}
+                                        </div>
+                                        <div class="text-xs text-text-muted mt-1">
+                                            {{ $session['message_count'] }} messages
+                                        </div>
+                                        @if (!empty($session['preview']))
+                                            <div class="text-xs text-text-muted mt-1 truncate">
+                                                {{ $session['preview'] }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end space-y-1">
+                                    <button 
+                                        wire:click.stop="togglePinChat({{ $session['id'] }})"
+                                        class="text-xs text-neon-cyan hover:text-bright-pink transition-colors"
+                                        title="Unpin chat"
+                                    >
+                                        📌
+                                    </button>
+                                    <div class="text-xs {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-neon-cyan' }} font-medium">
+                                        {{ $session['id'] === $currentChatSessionId ? 'Active' : $session['last_activity'] }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            <!-- Recent Chats -->
+            <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-medium text-text-secondary">Recent Chats</h3>
                 <button wire:click="startNewChat" class="text-xs bg-electric-blue/20 hover:bg-electric-blue/30 text-electric-blue px-2 py-1 rounded-pixel border border-electric-blue/40 transition-colors pixel-card glow-blue">
                     ✨ New Chat
                 </button>
             </div>
             
-            <div class="space-y-2">
+            <div class="space-y-1">
                 @if (!empty($recentChatSessions))
                     @foreach ($recentChatSessions as $session)
                         <div 
                             wire:click="switchToChat({{ $session['id'] }})"
-                            class="pixel-card p-3 cursor-pointer transition-all
+                            class="px-3 py-2 cursor-pointer transition-all rounded-pixel text-sm
                                 {{ $session['id'] === $currentChatSessionId 
-                                    ? 'pixel-card-pink bg-hot-pink/20 border-hot-pink/60 glow-pink' 
-                                    : 'pixel-card-blue bg-electric-blue/10 border-electric-blue/30 hover:bg-electric-blue/20 hover:border-electric-blue/50' 
+                                    ? 'bg-hot-pink/20 text-hot-pink border-l-2 border-hot-pink' 
+                                    : 'hover:bg-electric-blue/10 text-text-secondary hover:text-electric-blue' 
                                 }}"
                         >
-                            <div class="flex items-start justify-between">
+                            <div class="flex items-center justify-between">
                                 <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-medium {{ $session['id'] === $currentChatSessionId ? 'text-text-primary' : 'text-text-secondary' }} truncate">
-                                        {{ $session['title'] }}
-                                    </div>
-                                    <div class="text-xs text-text-muted mt-1">
-                                        {{ $session['message_count'] }} messages
-                                    </div>
-                                    @if (!empty($session['preview']))
-                                        <div class="text-xs text-text-muted mt-1 truncate">
-                                            {{ $session['preview'] }}
-                                        </div>
-                                    @endif
+                                    <div class="truncate font-medium">{{ $session['title'] }}</div>
+                                    <div class="text-xs text-text-muted">{{ $session['message_count'] }} messages</div>
                                 </div>
-                                <div class="text-xs {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-electric-blue' }} ml-2 font-medium flex-shrink-0">
-                                    {{ $session['id'] === $currentChatSessionId ? 'Active' : $session['last_activity'] }}
+                                <div class="flex items-center space-x-2">
+                                    <button 
+                                        wire:click.stop="togglePinChat({{ $session['id'] }})"
+                                        class="text-xs text-text-muted hover:text-electric-blue transition-colors"
+                                        title="Pin chat"
+                                    >
+                                        📌
+                                    </button>
+                                    <div class="text-xs {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-text-muted' }}">
+                                        {{ $session['id'] === $currentChatSessionId ? 'Active' : $session['last_activity'] }}
+                                    </div>
                                 </div>
                             </div>
                         </div>

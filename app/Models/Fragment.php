@@ -14,6 +14,7 @@ class Fragment extends Model
     use SoftDeletes;
 
     protected $casts = [
+        'project_id' => 'integer',
         'pinned' => 'boolean',
         'importance' => 'integer',
         'confidence' => 'integer',
@@ -40,6 +41,16 @@ class Fragment extends Model
     public function source(): BelongsTo
     {
         return $this->belongsTo(Source::class, 'source_key', 'key');
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
+    public function vaultModel(): BelongsTo
+    {
+        return $this->belongsTo(Vault::class, 'vault');
     }
 
     // Tag relationships
@@ -105,8 +116,29 @@ class Fragment extends Model
     public function scopeForAutocomplete($query, int $limit = 10)
     {
         return $query->select(['id', 'message', 'type', 'created_at'])
-                     ->orderBy('created_at', 'desc')
-                     ->limit($limit);
+            ->orderBy('created_at', 'desc')
+            ->limit($limit);
+    }
+
+    public function scopeForVault($query, $vault)
+    {
+        return $query->where('vault', $vault);
+    }
+
+    public function scopeForProject($query, $projectId)
+    {
+        return $query->where('project_id', $projectId);
+    }
+
+    public function scopeForVaultAndProject($query, $vault, $projectId = null)
+    {
+        $query = $query->where('vault', $vault);
+
+        if ($projectId) {
+            $query->where('project_id', $projectId);
+        }
+
+        return $query;
     }
 
     public function getTitleAttribute(): string
@@ -114,27 +146,26 @@ class Fragment extends Model
         // Try to extract a title from the message
         $lines = explode("\n", $this->message);
         $firstLine = trim($lines[0]);
-        
+
         // If first line looks like a title (short, no periods at end)
-        if (strlen($firstLine) <= 50 && !str_ends_with($firstLine, '.')) {
+        if (strlen($firstLine) <= 50 && ! str_ends_with($firstLine, '.')) {
             return $firstLine;
         }
-        
+
         // Otherwise extract first sentence
         $sentences = explode('.', $this->message);
         $firstSentence = trim($sentences[0]);
-        
+
         if (strlen($firstSentence) <= 60) {
             return $firstSentence;
         }
-        
+
         // Fallback to truncated message
-        return substr($this->message, 0, 50) . (strlen($this->message) > 50 ? '...' : '');
+        return substr($this->message, 0, 50).(strlen($this->message) > 50 ? '...' : '');
     }
 
     public function getPreviewAttribute(): string
     {
-        return substr($this->message, 0, 120) . (strlen($this->message) > 120 ? '...' : '');
+        return substr($this->message, 0, 120).(strlen($this->message) > 120 ? '...' : '');
     }
 }
-

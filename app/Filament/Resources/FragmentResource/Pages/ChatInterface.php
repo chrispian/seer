@@ -7,6 +7,8 @@ use App\Actions\RouteFragment;
 use App\Filament\Resources\FragmentResource;
 use App\Models\ChatSession;
 use App\Models\Fragment;
+use App\Models\Project;
+use App\Models\Vault;
 use App\Services\CommandRegistry;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Carbon;
@@ -40,6 +42,16 @@ class ChatInterface extends Page
 
     public array $recentChatSessions = [];
 
+    public array $pinnedChatSessions = [];
+
+    public ?int $currentVaultId = null;
+
+    public ?int $currentProjectId = null;
+
+    public array $vaults = [];
+
+    public array $projects = [];
+
     protected $listeners = [
         'echo:lens.chat,fragment.processed' => 'onFragmentProcessed',
     ];
@@ -72,11 +84,17 @@ class ChatInterface extends Page
 
     public function mount()
     {
+        // Initialize vault/project context
+        $this->initializeVaultProjectContext();
+
         // Load recent chat sessions for the sidebar
         $this->loadRecentChatSessions();
+        $this->loadPinnedChatSessions();
 
         // Try to resume the most recent active chat session, or create a new one
-        $latestSession = ChatSession::recent(1)->first();
+        $latestSession = ChatSession::forVaultAndProject($this->currentVaultId, $this->currentProjectId)
+            ->recent(1)
+            ->first();
 
         if ($latestSession) {
             $this->currentChatSessionId = $latestSession->id;
@@ -206,7 +224,9 @@ class ChatInterface extends Page
 
     public function loadRecentChatSessions(): void
     {
-        $this->recentChatSessions = ChatSession::recent(5)
+        $this->recentChatSessions = ChatSession::forVaultAndProject($this->currentVaultId, $this->currentProjectId)
+            ->where('is_pinned', false)
+            ->recent(5)
             ->get()
             ->map(fn ($session) => [
                 'id' => $session->id,
@@ -227,8 +247,10 @@ class ChatInterface extends Page
             $this->saveCurrentChatSession();
         }
 
-        // Create new chat session
+        // Create new chat session with current vault/project context
         $newSession = new ChatSession;
+        $newSession->setAttribute('vault_id', $this->currentVaultId);
+        $newSession->setAttribute('project_id', $this->currentProjectId);
         $newSession->setAttribute('title', 'New Chat');
         $newSession->setAttribute('messages', []);
         $newSession->setAttribute('metadata', []);
@@ -362,5 +384,161 @@ class ChatInterface extends Page
             'type' => 'system',
             'message' => $message,
         ];
+    }
+
+    public function initializeVaultProjectContext(): void
+    {
+        // Load all vaults and projects
+        $this->vaults = Vault::ordered()->get()->map(fn ($vault) => [
+            'id' => $vault->id,
+            'name' => $vault->name,
+            'description' => $vault->description,
+            'is_default' => $vault->is_default,
+        ])->toArray();
+
+        // Set current vault (default or first available)
+        $this->currentVaultId = Vault::getDefault()?->id;
+
+        if ($this->currentVaultId) {
+            // Load projects for current vault
+            $this->loadProjectsForVault($this->currentVaultId);
+
+            // Set current project (default for vault or first available)
+            $this->currentProjectId = Project::getDefaultForVault($this->currentVaultId)?->id;
+        }
+    }
+
+    public function loadProjectsForVault(int $vaultId): void
+    {
+        $this->projects = Project::forVault($vaultId)->ordered()->get()->map(fn ($project) => [
+            'id' => $project->id,
+            'vault_id' => $project->vault_id,
+            'name' => $project->name,
+            'description' => $project->description,
+            'is_default' => $project->is_default,
+        ])->toArray();
+    }
+
+    public function switchVault(int $vaultId): void
+    {
+        $this->currentVaultId = $vaultId;
+        $this->loadProjectsForVault($vaultId);
+
+        // Set default project for new vault
+        $this->currentProjectId = Project::getDefaultForVault($vaultId)?->id;
+
+        // Refresh chat sessions
+        $this->loadRecentChatSessions();
+        $this->loadPinnedChatSessions();
+
+        // Switch to most recent chat in new context or create new one
+        $this->switchToContextChat();
+    }
+
+    public function switchProject(int $projectId): void
+    {
+        $this->currentProjectId = $projectId;
+
+        // Refresh chat sessions
+        $this->loadRecentChatSessions();
+        $this->loadPinnedChatSessions();
+
+        // Switch to most recent chat in new context or create new one
+        $this->switchToContextChat();
+    }
+
+    public function switchToContextChat(): void
+    {
+        $latestSession = ChatSession::forVaultAndProject($this->currentVaultId, $this->currentProjectId)
+            ->recent(1)
+            ->first();
+
+        if ($latestSession) {
+            $this->switchToChat($latestSession->id);
+        } else {
+            $this->startNewChat();
+        }
+    }
+
+    public function loadPinnedChatSessions(): void
+    {
+        $this->pinnedChatSessions = ChatSession::forVaultAndProject($this->currentVaultId, $this->currentProjectId)
+            ->pinned()
+            ->get()
+            ->map(fn ($session) => [
+                'id' => $session->id,
+                'title' => $session->display_title,
+                'message_count' => $session->message_count,
+                'last_activity' => $this->formatTimestamp($session->last_activity_at) !== 'Just now'
+                    ? $this->formatTimestamp($session->last_activity_at)
+                    : $this->formatTimestamp($session->updated_at),
+                'preview' => $session->last_message_preview,
+                'is_pinned' => $session->is_pinned,
+                'sort_order' => $session->sort_order,
+            ])
+            ->toArray();
+    }
+
+    public function togglePinChat(int $chatSessionId): void
+    {
+        $session = ChatSession::find($chatSessionId);
+        if ($session) {
+            $session->togglePin();
+            $this->loadPinnedChatSessions();
+            $this->loadRecentChatSessions();
+        }
+    }
+
+    public function createNewVault(): void
+    {
+        $vaultCount = Vault::count();
+        $name = 'New Vault '.($vaultCount + 1);
+
+        $vault = Vault::create([
+            'name' => $name,
+            'description' => 'Created from interface',
+            'sort_order' => (Vault::max('sort_order') ?? 0) + 1,
+        ]);
+
+        // Create default project for new vault
+        Project::create([
+            'vault_id' => $vault->id,
+            'name' => 'Default Project',
+            'description' => 'Default project for this vault',
+            'is_default' => true,
+            'sort_order' => 0,
+        ]);
+
+        // Switch to new vault
+        $this->initializeVaultProjectContext();
+        $this->switchVault($vault->id);
+    }
+
+    public function createNewProject(): void
+    {
+        $projectCount = Project::forVault($this->currentVaultId)->count();
+        $name = 'New Project '.($projectCount + 1);
+
+        $project = Project::create([
+            'vault_id' => $this->currentVaultId,
+            'name' => $name,
+            'description' => 'Created from interface',
+            'sort_order' => (Project::forVault($this->currentVaultId)->max('sort_order') ?? 0) + 1,
+        ]);
+
+        // Reload projects and switch to new one
+        $this->loadProjectsForVault($this->currentVaultId);
+        $this->switchProject($project->id);
+    }
+
+    public function updatePinnedChatOrder(array $newOrder): void
+    {
+        foreach ($newOrder as $item) {
+            ChatSession::where('id', $item['id'])
+                ->update(['sort_order' => $item['sortOrder']]);
+        }
+
+        // Refresh pinned chat sessions
+        $this->loadPinnedChatSessions();
     }
 }
