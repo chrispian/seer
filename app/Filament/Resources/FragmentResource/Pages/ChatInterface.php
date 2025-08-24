@@ -38,7 +38,7 @@ class ChatInterface extends Page
 
     public function getLayout() : string
     {
-        return 'vendor.filament-panels.components.layout.base'; // basic Filament layout
+        return 'layouts.chat-interface';
     }
 
     protected static ?string $title      = null;
@@ -181,6 +181,30 @@ class ChatInterface extends Page
             ->get();
     }
 
+
+    public function injectCommand($command)
+    {
+        $this->input = $command;
+    }
+
+    public function showSession()
+    {
+        if ($this->currentSession) {
+            $sessionDetails = "Session Details:\n\n";
+            $sessionDetails .= "**Identifier:** " . ($this->currentSession['identifier'] ?? 'Unnamed Session') . "\n";
+            $sessionDetails .= "**Vault:** " . ($this->currentSession['vault'] ?? 'N/A') . "\n";
+            $sessionDetails .= "**Type:** " . ($this->currentSession['type'] ?? 'N/A') . "\n";
+            
+            if (isset($this->currentSession['created_at'])) {
+                $sessionDetails .= "**Created:** " . \Carbon\Carbon::parse($this->currentSession['created_at'])->diffForHumans() . "\n";
+            }
+            
+            $this->chatMessages[] = [
+                'type'    => 'system',
+                'message' => $sessionDetails,
+            ];
+        }
+    }
 
     public function onFragmentProcessed( $payload )
     {
