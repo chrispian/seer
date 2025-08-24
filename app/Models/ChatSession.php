@@ -80,6 +80,13 @@ class ChatSession extends Model
         return $this->title ?: 'Untitled Chat';
     }
 
+    public function getSidebarTitleAttribute(): string
+    {
+        $title = $this->title ?: 'Untitled Chat';
+
+        return Str::limit($title, 25, '...');
+    }
+
     public function getLastMessagePreviewAttribute(): string
     {
         $messages = $this->getAttribute('messages') ?? [];

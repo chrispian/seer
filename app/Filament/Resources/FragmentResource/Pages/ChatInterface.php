@@ -242,7 +242,7 @@ class ChatInterface extends Page
             ->get()
             ->map(fn ($session) => [
                 'id' => $session->id,
-                'title' => $session->display_title,
+                'title' => $session->sidebar_title,
                 'message_count' => $session->message_count,
                 'last_activity' => $this->formatTimestamp($session->last_activity_at) !== 'Just now'
                     ? $this->formatTimestamp($session->last_activity_at)
@@ -537,7 +537,7 @@ class ChatInterface extends Page
             ->get()
             ->map(fn ($session) => [
                 'id' => $session->id,
-                'title' => $session->display_title,
+                'title' => $session->sidebar_title,
                 'message_count' => $session->message_count,
                 'last_activity' => $this->formatTimestamp($session->last_activity_at) !== 'Just now'
                     ? $this->formatTimestamp($session->last_activity_at)
