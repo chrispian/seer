@@ -25,8 +25,16 @@ class AppServiceProvider extends ServiceProvider
         // Individual models can still override with $guarded property if needed
         Model::unguard();
         
-        // Alternative: You can set specific protection if needed in the future
-        // Model::preventLazyLoading(! app()->isProduction());
-        // Model::preventSilentlyDiscardingAttributes(! app()->isProduction());
+        // Enable strict model behavior in local development
+        if (! app()->isProduction()) {
+            // Prevent lazy loading to catch N+1 query problems early
+            Model::preventLazyLoading();
+            
+            // Prevent silently discarding attributes to catch typos/issues
+            Model::preventSilentlyDiscardingAttributes();
+            
+            // Prevent accessing missing attributes to catch issues early
+            Model::preventAccessingMissingAttributes();
+        }
     }
 }
