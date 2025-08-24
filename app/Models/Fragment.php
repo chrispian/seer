@@ -12,8 +12,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Fragment extends Model
 {
     use SoftDeletes;
-    
-    protected $guarded = [];
 
     protected $casts = [
         'pinned' => 'boolean',

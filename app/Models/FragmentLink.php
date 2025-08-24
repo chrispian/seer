@@ -10,11 +10,6 @@ class FragmentLink extends Model
 {
     protected $table = 'fragment_links';
     
-    protected $fillable = [
-        'from_id',
-        'to_id',
-        'relation',
-    ];
 
     protected $casts = [
         'relation' => RelationType::class,

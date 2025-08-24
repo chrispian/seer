@@ -9,12 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Article extends Model
 {
-    protected $fillable = [
-        'workspace_id',
-        'title',
-        'status',
-        'meta',
-    ];
 
     protected $casts = [
         'status' => ArticleStatus::class,

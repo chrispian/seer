@@ -11,10 +11,6 @@ class FragmentTag extends Model
     
     public $timestamps = false;
     
-    protected $fillable = [
-        'fragment_id',
-        'tag',
-    ];
 
     public function fragment(): BelongsTo
     {

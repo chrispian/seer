@@ -15,11 +15,6 @@ class Todo extends Model
     
     public $timestamps = false;
     
-    protected $fillable = [
-        'fragment_id',
-        'title',
-        'state',
-    ];
 
     protected $casts = [
         'state' => 'array',
