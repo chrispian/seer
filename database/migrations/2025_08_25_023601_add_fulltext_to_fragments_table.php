@@ -12,8 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Add FULLTEXT index for search
-        DB::statement('ALTER TABLE fragments ADD FULLTEXT fulltext_search (title, message)');
+        // Add FULLTEXT index for search (MySQL only)
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE fragments ADD FULLTEXT fulltext_search (title, message)');
+        }
 
         // Add index for hybrid ranking components
         Schema::table('fragments', function (Blueprint $table) {
@@ -28,8 +30,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop FULLTEXT index
-        DB::statement('ALTER TABLE fragments DROP INDEX fulltext_search');
+        // Drop FULLTEXT index (MySQL only)
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE fragments DROP INDEX fulltext_search');
+        }
 
         // Drop other indexes
         Schema::table('fragments', function (Blueprint $table) {

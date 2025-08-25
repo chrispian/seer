@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\FragmentResource\Pages;
 
+use App\Actions\LogRecallDecision;
 use App\Actions\ParseSearchGrammar;
 use App\Actions\ParseSlashCommand;
 use App\Actions\RouteFragment;
@@ -860,8 +861,20 @@ class ChatInterface extends Page
         $this->loadRecallSuggestions();
     }
     
-    public function closeRecallPalette(): void
+    public function closeRecallPalette(bool $logDismissal = true): void
     {
+        // Log dismissal if requested and we have query/results
+        if ($logDismissal && !empty($this->recallQuery) && !empty($this->recallResults)) {
+            $logDecision = app(LogRecallDecision::class);
+            $logDecision(
+                query: $this->recallQuery,
+                results: $this->recallResults,
+                selectedFragment: null,
+                selectedIndex: null,
+                action: 'dismiss'
+            );
+        }
+        
         $this->showRecallPalette = false;
         $this->recallQuery = '';
         $this->recallResults = [];
@@ -955,11 +968,24 @@ class ChatInterface extends Page
         
         $fragment = $this->recallResults[$index];
         
+        // Log the recall decision for analytics
+        $logDecision = app(LogRecallDecision::class);
+        if (isset($fragment['id'])) {
+            $selectedFragment = Fragment::find($fragment['id']);
+            $logDecision(
+                query: $this->recallQuery,
+                results: $this->recallResults,
+                selectedFragment: $selectedFragment,
+                selectedIndex: $index,
+                action: 'select'
+            );
+        }
+        
         // Add the recalled fragment to chat
         $this->addRecallResultToChat($fragment);
         
-        // Close the palette
-        $this->closeRecallPalette();
+        // Close the palette (without logging dismissal since we already logged selection)
+        $this->closeRecallPalette(false);
     }
     
     public function selectCurrentRecallResult(): void
