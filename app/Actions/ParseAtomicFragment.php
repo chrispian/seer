@@ -12,10 +12,10 @@ class ParseAtomicFragment
 
         Log::debug('ParseAtomicFragment::invoke()');
 
-        // Match `type` as first word
-        preg_match('/^(\w+)\s+(.*)$/s', trim($fragment->message), $matches);
+        // Match `type` as first word (with optional colon)
+        preg_match('/^(\w+):?\s+(.*)$/s', trim($fragment->message), $matches);
         $type = strtolower(trim($matches[1] ?? 'note'));
-        $body = trim($matches[2] ?? '');
+        $body = trim($matches[2] ?? $fragment->message); // Fallback to full message if no match
 
         // Extract tags and clean message
         preg_match_all('/#(\w+)/', $body, $tagMatches);
