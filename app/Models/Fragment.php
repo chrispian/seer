@@ -21,6 +21,7 @@ class Fragment extends Model
         'tags' => 'array',
         'relationships' => 'array',
         'metadata' => 'array',
+        'parsed_entities' => 'array',
         'state' => 'array',
         'state_json' => 'array',
         'type' => FragmentType::class,

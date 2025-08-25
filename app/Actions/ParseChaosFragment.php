@@ -3,16 +3,16 @@
 namespace App\Actions;
 
 use App\Models\Fragment;
+use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Pipeline\Pipeline;
 
 class ParseChaosFragment
 {
     public function __invoke(Fragment $fragment): array
     {
 
-Log::debug('Made it to parse chaos fragment');
+        Log::debug('Made it to parse chaos fragment');
         $prompt = <<<PROMPT
 The following text contains multiple different tasks or thoughts mixed together.
 
@@ -39,7 +39,6 @@ Input:
 ONLY return an array of JSON objects. No explanation, no markdown, no prose.
 PROMPT;
 
-
         $response = Http::timeout(20)->post('http://localhost:11434/api/generate', [
             'model' => 'llama3',
             'prompt' => $prompt,
@@ -48,11 +47,10 @@ PROMPT;
 
         if (! $response->ok()) {
             Log::error('Chaos parse HTTP failed', ['fragment_id' => $fragment->id]);
+
             return [
                 'error' => $response->json('error'),
             ];
-
-
 
         }
 
@@ -72,11 +70,12 @@ PROMPT;
         }
 
         // Step 3: Ensure it's an array now
-        if (!is_array($raw)) {
+        if (! is_array($raw)) {
             Log::error('Chaos fragment parse failed', [
                 'fragment_id' => $fragment->id,
                 'raw' => $raw,
             ]);
+
             return $fragment;
         }
 
@@ -89,7 +88,9 @@ PROMPT;
         ]);
 
         foreach ($atomicFragments as $entry) {
-            if (!isset($entry['message'])) continue;
+            if (! isset($entry['message'])) {
+                continue;
+            }
 
             $child = Fragment::create([
                 'message' => $entry['message'],
@@ -115,6 +116,8 @@ PROMPT;
                     ->through([
                         \App\Actions\DriftSync::class,
                         \App\Actions\ParseAtomicFragment::class,
+                        \App\Actions\ExtractMetadataEntities::class,
+                        \App\Actions\GenerateAutoTitle::class,
                         \App\Actions\EnrichFragmentWithLlama::class,
                         \App\Actions\InferFragmentType::class,
                         \App\Actions\SuggestTags::class,
@@ -140,16 +143,14 @@ PROMPT;
         $fragment->metadata = $metadata;
         $fragment->save();
 
-
         return [
             'status' => 'chaos_parsed',
             'fragment_id' => $fragment->id,
             'child_count' => count($children),
             'child_ids' => $children,
             'vault' => $fragment->vault,
-            'summary' => "Chaos fragment was split into " . count($children) . " atomic fragments and routed to vault `{$fragment->vault}`.",
+            'summary' => 'Chaos fragment was split into '.count($children)." atomic fragments and routed to vault `{$fragment->vault}`.",
         ];
 
     }
 }
-
