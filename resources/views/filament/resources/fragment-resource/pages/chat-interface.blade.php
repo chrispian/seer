@@ -1,5 +1,7 @@
-<!-- Main 4-Column Layout -->
-<div class="h-screen flex">
+<!-- Livewire Component Root -->
+<div>
+    <!-- Main 4-Column Layout -->
+    <div class="h-screen flex">
     
     <!-- Left Column 1: Ribbon -->
     <div class="w-16 bg-surface-2 border-r border-thin border-hot-pink/30 flex flex-col items-center py-4">
@@ -350,6 +352,12 @@
             @endif
         </div>
 
+        <!-- Undo Toast Row (slides up from below) -->
+        <x-undo-toast />
+        
+        <!-- Error Toast Row (slides up from below) -->
+        <x-error-toast />
+
         <!-- Row 3: Input Area -->
         <div class="bg-surface-2 border-t border-thin border-hot-pink/30">                
             <!-- Chat Input -->
@@ -514,6 +522,26 @@
                     document.addEventListener('modalClosed', () => {
                         this.openingModal = false;
                     });
+                    
+                    // Listen for fragment deletion events
+                    window.addEventListener('show-undo-toast', () => {
+                        this.loadRecentBookmarks();
+                    });
+                    
+                    // Listen for fragment restoration events  
+                    Livewire.on('undo-fragment', () => {
+                        setTimeout(() => this.loadRecentBookmarks(), 100);
+                    });
+                    
+                    // Listen for bookmark toggle events
+                    window.addEventListener('bookmark-toggled', () => {
+                        this.loadRecentBookmarks();
+                    });
+                    
+                    // Listen for fragment restoration events
+                    window.addEventListener('fragment-restored', () => {
+                        this.loadRecentBookmarks();
+                    });
                 },
                 
                 async loadRecentBookmarks() {
@@ -523,9 +551,11 @@
                         if (response.ok) {
                             const data = await response.json();
                             this.bookmarks = data.bookmarks;
+                        } else if (response.status !== 404) {
+                            console.warn('Failed to load recent bookmarks:', response.status);
                         }
                     } catch (error) {
-                        console.error('Failed to load recent bookmarks:', error);
+                        console.log('Failed to load recent bookmarks (this is normal for new systems):', error.message);
                     } finally {
                         this.loading = false;
                     }
@@ -543,9 +573,11 @@
                         if (response.ok) {
                             const data = await response.json();
                             this.bookmarks = data.bookmarks;
+                        } else if (response.status !== 404) {
+                            console.warn('Failed to search bookmarks:', response.status);
                         }
                     } catch (error) {
-                        console.error('Failed to search bookmarks:', error);
+                        console.log('Failed to search bookmarks (this is normal for new systems):', error.message);
                     } finally {
                         this.loading = false;
                     }
@@ -796,4 +828,70 @@
             </form>
         </div>
     </div>
+    </div>
+
+    <script>
+        // Listen for undo toast events
+        document.addEventListener('livewire:init', function() {
+            Livewire.on('show-undo-toast', function(event) {
+                console.log('Received undo toast event:', event);
+                console.log('All arguments:', Array.from(arguments));
+                
+                // In Livewire 3, named parameters are passed as properties of the event object
+                let fragmentId = event.fragmentId || event.detail?.fragmentId;
+                let message = event.message || event.detail?.message;
+                
+                // Fallback: check if data is in arguments
+                if (!fragmentId && arguments.length > 1) {
+                    fragmentId = arguments[0]?.fragmentId || arguments[1];
+                    message = arguments[0]?.message || arguments[2];
+                }
+                
+                console.log('Extracted values:', { fragmentId, message });
+                
+                if (!fragmentId) {
+                    console.error('No fragmentId found in event data');
+                    return;
+                }
+                
+                // Find the undo toast by ID and trigger display
+                const toastElement = document.getElementById('undo-toast');
+                console.log('Toast element found:', !!toastElement);
+                
+                if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
+                    console.log('Calling display with:', fragmentId, message);
+                    toastElement._x_dataStack[0].display(fragmentId, message);
+                } else {
+                    console.error('Could not find undo toast Alpine component');
+                }
+            });
+            
+            // Also listen for custom browser events as fallback
+            window.addEventListener('show-undo-toast', function(event) {
+                console.log('Received custom undo toast event:', event.detail);
+                
+                const fragmentId = event.detail.fragmentId;
+                const message = event.detail.message;
+                
+                console.log('Custom event values:', { fragmentId, message });
+                
+                if (fragmentId) {
+                    const toastElement = document.getElementById('undo-toast');
+                    if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
+                        console.log('Calling display via custom event with:', fragmentId, message);
+                        toastElement._x_dataStack[0].display(fragmentId, message);
+                    }
+                }
+            });
+            
+            Livewire.on('show-error-toast', function(data) {
+                // Find the error toast by ID and trigger display
+                const errorToastElement = document.getElementById('error-toast');
+                if (errorToastElement && errorToastElement._x_dataStack && errorToastElement._x_dataStack[0]) {
+                    errorToastElement._x_dataStack[0].display(data.message);
+                }
+            });
+            
+        });
+    </script>
 </div>

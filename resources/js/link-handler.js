@@ -432,9 +432,17 @@ window.contactCard = contactCard;
 
 // Bookmark functionality
 window.checkBookmarkStatus = async function(fragmentId, element) {
+    // Silently skip bookmark checks for invalid fragment IDs
+    if (!fragmentId || fragmentId <= 0) {
+        return;
+    }
+    
     try {
         const response = await fetch(`/api/fragments/${fragmentId}/bookmark`);
-        if (!response.ok) return;
+        if (!response.ok) {
+            // Silently ignore 404s - fragment doesn't exist or is deleted
+            return;
+        }
         
         const data = await response.json();
         const alpineComponent = Alpine.$data(element);
@@ -442,7 +450,8 @@ window.checkBookmarkStatus = async function(fragmentId, element) {
             alpineComponent.bookmarked = data.is_bookmarked;
         }
     } catch (error) {
-        console.error('Failed to check bookmark status:', error);
+        // Silently ignore network errors
+        return;
     }
 };
 
@@ -472,9 +481,18 @@ window.toggleBookmark = async function(fragmentId, element) {
         const action = data.action === 'added' ? 'Bookmarked!' : 'Removed bookmark';
         showBookmarkFeedback(element, action, data.action === 'added');
         
+        // Dispatch event to notify bookmark widget to refresh
+        window.dispatchEvent(new CustomEvent('bookmark-toggled', {
+            detail: { fragmentId, action: data.action, isBookmarked: data.is_bookmarked }
+        }));
+        
     } catch (error) {
-        console.error('Failed to toggle bookmark:', error);
-        showBookmarkFeedback(element, 'Failed!', false, true);
+        console.log('Failed to toggle bookmark (this is normal if fragment was just deleted):', error.message);
+        if (error.message.includes('404')) {
+            showBookmarkFeedback(element, 'Fragment not found', false, true);
+        } else {
+            showBookmarkFeedback(element, 'Failed!', false, true);
+        }
     }
 };
 
