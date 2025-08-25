@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('object_types', function (Blueprint $table) {
-            $table->smallInteger('id', false, true)->primary()->autoIncrement();
+            $table->smallIncrements('id');
             $table->string('key', 64)->unique()->comment('Object type key: todo, contact, event, etc.');
             $table->smallInteger('version', false, true)->default(1)->comment('Schema version for migrations');
             $table->timestamps();

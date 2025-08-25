@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('fragment_links', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+            $table->id();
             $table->bigInteger('from_id', false, true)->comment('Source fragment ID');
             $table->bigInteger('to_id', false, true)->comment('Target fragment ID');
             $table->enum('relation', [

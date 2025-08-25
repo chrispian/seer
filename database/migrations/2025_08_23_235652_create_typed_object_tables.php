@@ -105,9 +105,9 @@ return new class extends Migration
             $table->foreign('calendar_event_id')->references('fragment_id')->on('calendar_events')->nullOnDelete();
         });
 
-        // Sessions - chat sessions/context
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+        // Chat Sessions - chat sessions/context
+        Schema::create('chat_sessions', function (Blueprint $table) {
+            $table->id();
             $table->bigInteger('user_id', false, true);
             $table->bigInteger('workspace_id', false, true)->nullable();
             $table->bigInteger('agent_id', false, true)->nullable();
@@ -122,7 +122,7 @@ return new class extends Migration
 
         // Vaults - storage containers
         Schema::create('vaults', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+            $table->id();
             $table->string('key', 128)->unique();
             $table->string('label', 255);
             $table->text('root_uri')->nullable();
@@ -132,7 +132,7 @@ return new class extends Migration
 
         // Projects - project/workspace organization
         Schema::create('projects', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+            $table->id();
             $table->bigInteger('workspace_id', false, true)->nullable();
             $table->string('key', 128)->unique();
             $table->string('name', 255);
@@ -143,7 +143,7 @@ return new class extends Migration
 
         // Collections - playlists/boards/bundles
         Schema::create('collections', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+            $table->id();
             $table->bigInteger('workspace_id', false, true)->nullable();
             $table->string('title', 255);
             $table->json('meta')->nullable();
@@ -164,7 +164,7 @@ return new class extends Migration
 
         // Reminders - simple schedulers
         Schema::create('reminders', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+            $table->id();
             $table->bigInteger('fragment_id', false, true)->nullable();
             $table->bigInteger('user_id', false, true);
             $table->datetime('due_at');
@@ -178,7 +178,7 @@ return new class extends Migration
 
         // Triggers - event-based schedulers
         Schema::create('triggers', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+            $table->id();
             $table->bigInteger('user_id', false, true);
             $table->enum('kind', ['cron', 'interval', 'event']);
             $table->string('spec', 255)->nullable()->comment('Cron string or rule key');
@@ -203,7 +203,7 @@ return new class extends Migration
         Schema::dropIfExists('collections');
         Schema::dropIfExists('projects');
         Schema::dropIfExists('vaults');
-        Schema::dropIfExists('sessions');
+        Schema::dropIfExists('chat_sessions');
         Schema::dropIfExists('meetings');
         Schema::dropIfExists('calendar_events');
         Schema::dropIfExists('thumbnails');

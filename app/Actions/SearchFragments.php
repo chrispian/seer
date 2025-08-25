@@ -144,6 +144,9 @@ class SearchFragments
                 '*, MATCH(title, message) AGAINST(? IN NATURAL LANGUAGE MODE) as relevance',
                 [$searchTerms]
             );
+        } else {
+            // When no search terms, add a placeholder relevance score for ranking
+            $query->selectRaw('*, 1.0 as relevance');
         }
 
         // Apply type filter
@@ -204,6 +207,11 @@ class SearchFragments
 
         // Include relationships
         $query->with(['category', 'project']);
+        
+        // Add default ordering for non-FULLTEXT queries
+        if (empty($parsedQuery['search_terms'])) {
+            $query->orderBy('created_at', 'desc');
+        }
 
         return $query;
     }
