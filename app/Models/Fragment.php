@@ -122,6 +122,90 @@ class Fragment extends Model
             ->limit($limit);
     }
 
+    // FULLTEXT search scope
+    public function scopeFulltextSearch($query, string $searchTerm)
+    {
+        return $query->whereRaw(
+            'MATCH(title, message) AGAINST(? IN NATURAL LANGUAGE MODE)',
+            [$searchTerm]
+        )->selectRaw(
+            '*, MATCH(title, message) AGAINST(? IN NATURAL LANGUAGE MODE) as relevance',
+            [$searchTerm]
+        )->orderByDesc('relevance');
+    }
+
+    // Boolean mode FULLTEXT search for exact matches
+    public function scopeFulltextSearchBoolean($query, string $searchTerm)
+    {
+        // Prepare search term for boolean mode (add + for required words)
+        $booleanTerm = collect(explode(' ', $searchTerm))
+            ->map(fn ($word) => '+'.$word)
+            ->implode(' ');
+
+        return $query->whereRaw(
+            'MATCH(title, message) AGAINST(? IN BOOLEAN MODE)',
+            [$booleanTerm]
+        );
+    }
+
+    // Search by tags
+    public function scopeWithTag($query, string $tag)
+    {
+        return $query->whereJsonContains('tags', $tag);
+    }
+
+    // Search by multiple tags (AND)
+    public function scopeWithAllTags($query, array $tags)
+    {
+        foreach ($tags as $tag) {
+            $query->whereJsonContains('tags', $tag);
+        }
+
+        return $query;
+    }
+
+    // Search by multiple tags (OR)
+    public function scopeWithAnyTag($query, array $tags)
+    {
+        return $query->where(function ($q) use ($tags) {
+            foreach ($tags as $tag) {
+                $q->orWhereJsonContains('tags', $tag);
+            }
+        });
+    }
+
+    // Search by entity presence
+    public function scopeHasEntity($query, string $entityType)
+    {
+        return $query->whereJsonLength("parsed_entities->{$entityType}", '>', 0);
+    }
+
+    // Search by person mention
+    public function scopeWithMention($query, string $person)
+    {
+        return $query->where(function ($q) use ($person) {
+            $q->whereJsonContains('metadata->people', $person)
+                ->orWhereJsonContains('parsed_entities->people', $person);
+        });
+    }
+
+    // Date range scopes
+    public function scopeCreatedBetween($query, $startDate, $endDate)
+    {
+        return $query->whereBetween('created_at', [$startDate, $endDate]);
+    }
+
+    public function scopeRecent($query, int $days = 7)
+    {
+        return $query->where('created_at', '>=', now()->subDays($days));
+    }
+
+    // Session scope
+    public function scopeInSession($query, string $sessionId)
+    {
+        return $query->whereJsonContains('metadata->session_id', $sessionId);
+    }
+
     public function scopeForVault($query, $vault)
     {
         return $query->where('vault', $vault);
