@@ -24,7 +24,7 @@
             @if($fragmentId) data-fragment-id="{{ $fragmentId }}" @endif>
             
             <!-- Bookmark Ribbon -->
-            @if($fragmentId)
+            @if($fragmentId && is_numeric($fragmentId) && $fragmentId > 0)
                 <div 
                     class="bookmark-ribbon absolute -top-2 -right-1 w-6 h-8 cursor-pointer opacity-50 hover:opacity-100 transition-all duration-200 z-10"
                     onclick="toggleBookmark({{ $fragmentId }}, this)"
@@ -48,14 +48,29 @@
                 </div>
             @endif
             
-            <!-- Copy Button -->
-            <button 
-                onclick="copyChatMessage(this)" 
-                class="absolute top-2 right-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-surface-elevated hover:bg-neon-cyan/20 text-neon-cyan hover:text-bright-pink px-2 py-1 rounded-pixel text-xs border border-neon-cyan/40 hover:border-bright-pink/40 pixel-card"
-                title="Copy message"
-            >
-                📋 Copy
-            </button>
+            <!-- Action Buttons -->
+            <div class="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                @if($fragmentId && is_numeric($fragmentId) && $fragmentId > 0)
+                    <!-- Delete Button (only for fragments) -->
+                    <button 
+                        wire:click="deleteFragment({{ $fragmentId }})" 
+                        class="bg-surface-elevated hover:bg-hot-pink/20 text-hot-pink hover:text-bright-pink px-2 py-1 rounded-pixel text-xs border border-hot-pink/40 hover:border-bright-pink/40 pixel-card"
+                        title="Delete message"
+                        onclick="event.stopPropagation();"
+                    >
+                        🗑️
+                    </button>
+                @endif
+                
+                <!-- Copy Button -->
+                <button 
+                    onclick="copyChatMessage(this)" 
+                    class="bg-surface-elevated hover:bg-neon-cyan/20 text-neon-cyan hover:text-bright-pink px-2 py-1 rounded-pixel text-xs border border-neon-cyan/40 hover:border-bright-pink/40 pixel-card"
+                    title="Copy message"
+                >
+                    📋
+                </button>
+            </div>
             
             <div class="prose prose-sm dark:prose-invert max-w-none text-text-primary pr-16">
                 {{ $slot }}

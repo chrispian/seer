@@ -12,6 +12,7 @@ use App\Models\Vault;
 use App\Services\CommandRegistry;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 class ChatInterface extends Page
@@ -66,6 +67,7 @@ class ChatInterface extends Page
 
     protected $listeners = [
         'echo:lens.chat,fragment.processed' => 'onFragmentProcessed',
+        'undo-fragment' => 'handleUndoFragment',
     ];
 
     public static function shouldRegisterNavigation(array $parameters = []): bool
@@ -110,7 +112,22 @@ class ChatInterface extends Page
 
         if ($latestSession) {
             $this->currentChatSessionId = $latestSession->id;
-            $this->chatMessages = $latestSession->getAttribute('messages') ?? [];
+            $rawMessages = $latestSession->getAttribute('messages') ?? [];
+
+            // Filter out messages with invalid fragment IDs
+            $this->chatMessages = array_filter($rawMessages, function ($msg) {
+                // Keep system messages and messages without IDs
+                if (! isset($msg['id']) || empty($msg['id'])) {
+                    return true;
+                }
+
+                // Verify fragment still exists (including soft deleted)
+                return Fragment::withTrashed()->where('id', $msg['id'])->exists();
+            });
+
+            // Reindex array
+            $this->chatMessages = array_values($this->chatMessages);
+
             $this->currentSession = $latestSession->getAttribute('metadata')['currentSession'] ?? null;
         } else {
             // Create a new chat session if none exist
@@ -691,6 +708,127 @@ class ChatInterface extends Page
                 'Projects count: '.count($this->projects)."\n".
                 'Session Vault: '.(session('seer.current_vault_id') ?: 'null')."\n".
                 'Session Project: '.(session('seer.current_project_id') ?: 'null'),
+        ];
+    }
+
+    public function deleteFragment(int $fragmentId): void
+    {
+        Log::debug('Attempting to delete fragment', ['fragment_id' => $fragmentId]);
+
+        $fragment = Fragment::find($fragmentId);
+
+        if (! $fragment) {
+            Log::warning('Fragment not found for deletion', ['fragment_id' => $fragmentId]);
+            $this->dispatch('show-error-toast', [
+                'message' => "Fragment not found (ID: {$fragmentId})",
+            ]);
+
+            return;
+        }
+
+        Log::debug('Fragment found, proceeding with soft delete', [
+            'fragment_id' => $fragmentId,
+            'message' => $fragment->message,
+            'type' => $fragment->type->value,
+        ]);
+
+        // Store message before deletion for toast
+        $fragmentMessage = $fragment->message;
+
+        // Soft delete the fragment
+        $fragment->delete();
+
+        // Remove from chat messages display
+        $this->chatMessages = array_filter($this->chatMessages, function ($msg) use ($fragmentId) {
+            return ($msg['id'] ?? null) !== $fragmentId;
+        });
+
+        // Reindex the array to avoid gaps
+        $this->chatMessages = array_values($this->chatMessages);
+
+        // Save the updated chat session
+        $this->saveCurrentChatSession();
+
+        // Trigger undo toast
+        $this->dispatch('show-undo-toast',
+            fragmentId: $fragmentId,
+            message: $fragmentMessage
+        );
+
+        // Also dispatch a browser event as fallback
+        $this->js("
+            window.dispatchEvent(new CustomEvent('show-undo-toast', {
+                detail: { fragmentId: {$fragmentId}, message: ".json_encode($fragmentMessage).' }
+            }));
+        ');
+
+        Log::info('Fragment soft deleted successfully', [
+            'fragment_id' => $fragmentId,
+            'message' => $fragmentMessage,
+        ]);
+    }
+
+    public function undoFragmentDelete(int $fragmentId): void
+    {
+        $restoredFragment = app(\App\Actions\UndoFragmentDelete::class)($fragmentId);
+
+        if ($restoredFragment) {
+            // Add back to chat messages
+            $this->chatMessages[] = [
+                'id' => $restoredFragment->id,
+                'type' => $restoredFragment->type,
+                'message' => $restoredFragment->message,
+                'created_at' => $restoredFragment->created_at,
+            ];
+
+            // Save the updated chat session
+            $this->saveCurrentChatSession();
+
+            // Dispatch event to refresh bookmark widget
+            $this->js("
+                window.dispatchEvent(new CustomEvent('fragment-restored', {
+                    detail: { fragmentId: {$restoredFragment->id} }
+                }));
+            ");
+
+            $this->addChatMessage('system', 'Fragment restored successfully');
+        } else {
+            $this->addChatMessage('system', 'Could not restore fragment - undo window expired or fragment not found');
+        }
+    }
+
+    public function handleUndoFragment(...$args): void
+    {
+        Log::debug('Undo fragment args received', ['args' => $args]);
+
+        $fragmentId = null;
+
+        // Handle different parameter formats
+        if (count($args) === 1) {
+            $arg = $args[0];
+            if (is_array($arg) && isset($arg['fragmentId'])) {
+                $fragmentId = $arg['fragmentId'];
+            } elseif (is_numeric($arg)) {
+                $fragmentId = $arg;
+            }
+        } elseif (count($args) > 1 && is_numeric($args[0])) {
+            $fragmentId = $args[0];
+        }
+
+        if ($fragmentId) {
+            Log::debug('Handling undo fragment event', ['fragment_id' => $fragmentId]);
+            $this->undoFragmentDelete((int) $fragmentId);
+        } else {
+            Log::warning('No valid fragmentId received in undo event', ['args' => $args]);
+        }
+    }
+
+    protected function addChatMessage(string $type, string $message): void
+    {
+        $this->chatMessages[] = [
+            'type' => $type,
+            'message' => $message,
+            'created_at' => now(),
         ];
     }
 }
