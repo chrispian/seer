@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('sources', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+            $table->id();
             $table->string('key', 64)->unique()->comment('Source key: obsidian, web, clipboard, youtube, etc.');
             $table->string('label', 128)->comment('Human readable label');
             $table->json('meta')->nullable()->comment('Source-specific metadata');

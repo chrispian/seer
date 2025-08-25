@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\FragmentResource\Pages;
 
+use App\Actions\LogRecallDecision;
+use App\Actions\ParseSearchGrammar;
 use App\Actions\ParseSlashCommand;
 use App\Actions\RouteFragment;
+use App\Actions\SearchFragments;
 use App\Filament\Resources\FragmentResource;
 use App\Models\ChatSession;
 use App\Models\Fragment;
@@ -48,6 +51,21 @@ class ChatInterface extends Page
     public ?int $currentVaultId = null;
 
     public ?int $currentProjectId = null;
+
+    // Recall palette state
+    public bool $showRecallPalette = false;
+    
+    public string $recallQuery = '';
+    
+    public array $recallResults = [];
+    
+    public array $recallSuggestions = [];
+    
+    public array $recallAutocomplete = [];
+    
+    public bool $recallLoading = false;
+    
+    public int $selectedRecallIndex = 0;
 
     public array $vaults = [];
 
@@ -830,5 +848,206 @@ class ChatInterface extends Page
             'message' => $message,
             'created_at' => now(),
         ];
+    }
+
+    // ===== RECALL PALETTE METHODS =====
+    
+    public function openRecallPalette(): void
+    {
+        $this->showRecallPalette = true;
+        $this->recallQuery = '';
+        $this->recallResults = [];
+        $this->selectedRecallIndex = 0;
+        $this->loadRecallSuggestions();
+    }
+    
+    public function closeRecallPalette(bool $logDismissal = true): void
+    {
+        // Log dismissal if requested and we have query/results
+        if ($logDismissal && !empty($this->recallQuery) && !empty($this->recallResults)) {
+            $logDecision = app(LogRecallDecision::class);
+            $logDecision(
+                query: $this->recallQuery,
+                results: $this->recallResults,
+                selectedFragment: null,
+                selectedIndex: null,
+                action: 'dismiss'
+            );
+        }
+        
+        $this->showRecallPalette = false;
+        $this->recallQuery = '';
+        $this->recallResults = [];
+        $this->recallSuggestions = [];
+        $this->recallAutocomplete = [];
+        $this->selectedRecallIndex = 0;
+        $this->recallLoading = false;
+    }
+    
+    public function updatedRecallQuery(): void
+    {
+        if (strlen($this->recallQuery) >= 2) {
+            $this->performRecallSearch();
+        } else {
+            $this->recallResults = [];
+            $this->loadRecallSuggestions();
+        }
+        $this->selectedRecallIndex = 0;
+    }
+    
+    public function performRecallSearch(): void
+    {
+        $this->recallLoading = true;
+        
+        try {
+            // Parse the search query
+            $grammarParser = app(ParseSearchGrammar::class);
+            $parsedGrammar = $grammarParser($this->recallQuery);
+            
+            // Perform the search
+            $searchAction = app(SearchFragments::class);
+            
+            // Get the vault name for searching
+            $vaultName = null;
+            if ($this->currentVaultId) {
+                $vault = \App\Models\Vault::find($this->currentVaultId);
+                $vaultName = $vault?->name;
+            }
+            
+            $results = $searchAction(
+                query: $this->recallQuery,
+                vault: $vaultName,
+                projectId: $this->currentProjectId,
+                sessionId: $this->currentChatSessionId ? "session-{$this->currentChatSessionId}" : null,
+                limit: 10
+            );
+            
+            // Format results for display
+            $this->recallResults = $results->map(function ($fragment) {
+                return [
+                    'id' => $fragment->id,
+                    'type' => $fragment->type instanceof \BackedEnum ? $fragment->type->value : $fragment->type,
+                    'title' => $fragment->title ?: $this->truncateText($fragment->message, 80),
+                    'message' => $fragment->message,
+                    'created_at' => $fragment->created_at->diffForHumans(),
+                    'tags' => $fragment->tags ?? [],
+                    'search_score' => $fragment->search_score ?? 0,
+                    'preview' => $this->truncateText($fragment->message, 120),
+                ];
+            })->toArray();
+            
+            // Update suggestions and autocomplete
+            $this->recallSuggestions = $parsedGrammar['suggestions'];
+            $this->recallAutocomplete = $parsedGrammar['autocomplete'];
+            
+        } catch (\Exception $e) {
+            Log::error('Recall search failed', [
+                'query' => $this->recallQuery,
+                'error' => $e->getMessage(),
+            ]);
+            $this->recallResults = [];
+        }
+        
+        $this->recallLoading = false;
+    }
+    
+    public function loadRecallSuggestions(): void
+    {
+        // Load default suggestions when no search query
+        $grammarParser = app(ParseSearchGrammar::class);
+        $parsed = $grammarParser('');
+        $this->recallSuggestions = $parsed['suggestions'];
+        $this->recallAutocomplete = $parsed['autocomplete'];
+    }
+    
+    public function selectRecallResult(int $index): void
+    {
+        if (!isset($this->recallResults[$index])) {
+            return;
+        }
+        
+        $fragment = $this->recallResults[$index];
+        
+        // Log the recall decision for analytics
+        $logDecision = app(LogRecallDecision::class);
+        if (isset($fragment['id'])) {
+            $selectedFragment = Fragment::find($fragment['id']);
+            $logDecision(
+                query: $this->recallQuery,
+                results: $this->recallResults,
+                selectedFragment: $selectedFragment,
+                selectedIndex: $index,
+                action: 'select'
+            );
+        }
+        
+        // Add the recalled fragment to chat
+        $this->addRecallResultToChat($fragment);
+        
+        // Close the palette (without logging dismissal since we already logged selection)
+        $this->closeRecallPalette(false);
+    }
+    
+    public function selectCurrentRecallResult(): void
+    {
+        // Don't select if still loading
+        if ($this->recallLoading) {
+            return;
+        }
+        
+        // Only select if we have results - DON'T close palette if no results
+        if (count($this->recallResults) > 0) {
+            $this->selectRecallResult($this->selectedRecallIndex);
+        }
+    }
+    
+    public function moveRecallSelection(string $direction): void
+    {
+        $maxIndex = max(0, count($this->recallResults) - 1);
+        
+        if ($direction === 'up') {
+            $this->selectedRecallIndex = $this->selectedRecallIndex > 0 
+                ? $this->selectedRecallIndex - 1 
+                : $maxIndex;
+        } elseif ($direction === 'down') {
+            $this->selectedRecallIndex = $this->selectedRecallIndex < $maxIndex 
+                ? $this->selectedRecallIndex + 1 
+                : 0;
+        }
+    }
+    
+    public function applySuggestion(array $suggestion): void
+    {
+        if ($suggestion['type'] === 'filter') {
+            // Append filter to query
+            $this->recallQuery = trim($this->recallQuery . ' ' . $suggestion['text']);
+            $this->performRecallSearch();
+        }
+    }
+    
+    public function applyAutocomplete(array $autocomplete): void
+    {
+        // Replace or append autocomplete value
+        $this->recallQuery = $autocomplete['value'];
+        $this->performRecallSearch();
+    }
+    
+    private function addRecallResultToChat(array $fragment): void
+    {
+        // Add system message showing the recalled fragment
+        $this->chatMessages[] = [
+            'type' => 'recall',
+            'message' => "🔍 **Recalled:** [{$fragment['type']}] {$fragment['title']}",
+            'created_at' => now(),
+            'recalled_fragment' => $fragment,
+        ];
+        
+        // Save the updated chat session
+        $this->saveCurrentChatSession();
+    }
+    
+    private function truncateText(string $text, int $length): string
+    {
+        return strlen($text) > $length ? substr($text, 0, $length) . '...' : $text;
     }
 }

@@ -105,45 +105,48 @@ return new class extends Migration
             $table->foreign('calendar_event_id')->references('fragment_id')->on('calendar_events')->nullOnDelete();
         });
 
-        // Sessions - chat sessions/context
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
-            $table->bigInteger('user_id', false, true);
-            $table->bigInteger('workspace_id', false, true)->nullable();
-            $table->bigInteger('agent_id', false, true)->nullable();
-            $table->string('title', 255)->nullable();
-            $table->char('context_hash', 64)->nullable()->comment('Baked context contract hash');
-            $table->datetime('started_at');
-            $table->datetime('ended_at')->nullable();
-            $table->json('meta')->nullable();
-            $table->index(['user_id', 'started_at']);
-            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
-        });
+        // Chat Sessions - chat sessions/context
+        // Note: chat_sessions table already exists from earlier migration
+        // Schema::create('chat_sessions', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->bigInteger('user_id', false, true);
+        //     $table->bigInteger('workspace_id', false, true)->nullable();
+        //     $table->bigInteger('agent_id', false, true)->nullable();
+        //     $table->string('title', 255)->nullable();
+        //     $table->char('context_hash', 64)->nullable()->comment('Baked context contract hash');
+        //     $table->datetime('started_at');
+        //     $table->datetime('ended_at')->nullable();
+        //     $table->json('meta')->nullable();
+        //     $table->index(['user_id', 'started_at']);
+        //     $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
+        // });
 
         // Vaults - storage containers
-        Schema::create('vaults', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
-            $table->string('key', 128)->unique();
-            $table->string('label', 255);
-            $table->text('root_uri')->nullable();
-            $table->json('meta')->nullable();
-            $table->timestamps();
-        });
+        // Note: vaults table already exists from earlier migration
+        // Schema::create('vaults', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->string('key', 128)->unique();
+        //     $table->string('label', 255);
+        //     $table->text('root_uri')->nullable();
+        //     $table->json('meta')->nullable();
+        //     $table->timestamps();
+        // });
 
         // Projects - project/workspace organization
-        Schema::create('projects', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
-            $table->bigInteger('workspace_id', false, true)->nullable();
-            $table->string('key', 128)->unique();
-            $table->string('name', 255);
-            $table->json('meta')->nullable();
-            $table->timestamps();
-            $table->index('workspace_id');
-        });
+        // Note: projects table already exists from earlier migration
+        // Schema::create('projects', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->bigInteger('workspace_id', false, true)->nullable();
+        //     $table->string('key', 128)->unique();
+        //     $table->string('name', 255);
+        //     $table->json('meta')->nullable();
+        //     $table->timestamps();
+        //     $table->index('workspace_id');
+        // });
 
         // Collections - playlists/boards/bundles
         Schema::create('collections', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+            $table->id();
             $table->bigInteger('workspace_id', false, true)->nullable();
             $table->string('title', 255);
             $table->json('meta')->nullable();
@@ -164,7 +167,7 @@ return new class extends Migration
 
         // Reminders - simple schedulers
         Schema::create('reminders', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+            $table->id();
             $table->bigInteger('fragment_id', false, true)->nullable();
             $table->bigInteger('user_id', false, true);
             $table->datetime('due_at');
@@ -178,7 +181,7 @@ return new class extends Migration
 
         // Triggers - event-based schedulers
         Schema::create('triggers', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+            $table->id();
             $table->bigInteger('user_id', false, true);
             $table->enum('kind', ['cron', 'interval', 'event']);
             $table->string('spec', 255)->nullable()->comment('Cron string or rule key');
@@ -201,9 +204,9 @@ return new class extends Migration
         Schema::dropIfExists('reminders');
         Schema::dropIfExists('collection_items');
         Schema::dropIfExists('collections');
-        Schema::dropIfExists('projects');
-        Schema::dropIfExists('vaults');
-        Schema::dropIfExists('sessions');
+        // Schema::dropIfExists('projects'); // Table managed by earlier migration
+        // Schema::dropIfExists('vaults'); // Table managed by earlier migration
+        // Schema::dropIfExists('chat_sessions'); // Table managed by earlier migration
         Schema::dropIfExists('meetings');
         Schema::dropIfExists('calendar_events');
         Schema::dropIfExists('thumbnails');

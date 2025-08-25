@@ -13,7 +13,7 @@ return new class extends Migration
     {
         // Articles - draft assembly system
         Schema::create('articles', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+            $table->id();
             $table->bigInteger('workspace_id', false, true)->nullable();
             $table->string('title', 255)->nullable();
             $table->enum('status', ['draft', 'review', 'published'])->default('draft');
@@ -40,7 +40,7 @@ return new class extends Migration
 
         // Builds - daily logs/automatic summaries
         Schema::create('builds', function (Blueprint $table) {
-            $table->bigInteger('id', false, true)->primary()->autoIncrement();
+            $table->id();
             $table->bigInteger('article_id', false, true)->comment('The rendered brief/log');
             $table->bigInteger('workspace_id', false, true)->nullable();
             $table->datetime('range_start');

@@ -12,8 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Add FULLTEXT indexes for search
-        DB::statement('ALTER TABLE fragments ADD FULLTEXT ft_frag_message (message)');
+        // Add FULLTEXT indexes for search (MySQL only)
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE fragments ADD FULLTEXT ft_frag_message (message)');
+        }
         
         // Add compound indexes for common query patterns
         Schema::table('fragments', function (Blueprint $table) {
@@ -23,13 +25,13 @@ return new class extends Migration
             $table->index(['importance', 'created_at'], 'idx_frag_importance_created');
         });
         
-        // Add FULLTEXT index to file_text content if table exists
-        if (Schema::hasTable('file_text')) {
+        // Add FULLTEXT index to file_text content if table exists (MySQL only)
+        if (DB::getDriverName() === 'mysql' && Schema::hasTable('file_text')) {
             DB::statement('ALTER TABLE file_text ADD FULLTEXT ft_file_content (content)');
         }
         
-        // Add partial index for normalized_url (TEXT column requires length specification)
-        if (Schema::hasTable('links')) {
+        // Add partial index for normalized_url (MySQL only - TEXT column requires length specification)
+        if (DB::getDriverName() === 'mysql' && Schema::hasTable('links')) {
             DB::statement('ALTER TABLE links ADD INDEX idx_links_normalized_url (normalized_url(255))');
         }
     }
@@ -39,13 +41,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop custom indexes
-        if (Schema::hasTable('links')) {
+        // Drop custom indexes (MySQL only)
+        if (DB::getDriverName() === 'mysql' && Schema::hasTable('links')) {
             DB::statement('ALTER TABLE links DROP INDEX idx_links_normalized_url');
         }
         
-        // Drop FULLTEXT indexes
-        if (Schema::hasTable('file_text')) {
+        // Drop FULLTEXT indexes (MySQL only)
+        if (DB::getDriverName() === 'mysql' && Schema::hasTable('file_text')) {
             DB::statement('ALTER TABLE file_text DROP INDEX ft_file_content');
         }
         
@@ -56,6 +58,9 @@ return new class extends Migration
             $table->dropIndex('idx_frag_vault_type_created');
         });
         
-        DB::statement('ALTER TABLE fragments DROP INDEX ft_frag_message');
+        // Drop FULLTEXT index (MySQL only)
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE fragments DROP INDEX ft_frag_message');
+        }
     }
 };
