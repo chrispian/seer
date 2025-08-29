@@ -44,18 +44,15 @@ class AutocompleteEngine {
     
     createDropdown() {
         const dropdown = document.createElement('div');
-        dropdown.className = 'autocomplete-dropdown pixel-card pixel-card-blue glow-blue';
+        dropdown.className = 'autocomplete-dropdown';
         dropdown.style.cssText = `
             position: absolute;
             display: none;
             z-index: 1000;
-            max-height: 300px;
+            max-height: 240px;
             overflow-y: auto;
-            min-width: 280px;
-            background: var(--surface-card, #1a1a1a);
-            border: 2px solid var(--electric-blue, #00d4ff);
-            border-radius: 4px;
-            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.3);
+            transition: all 0.2s ease-out;
+            transform-origin: bottom center;
         `;
         return dropdown;
     }
@@ -155,15 +152,21 @@ class AutocompleteEngine {
         
         this.dropdown.innerHTML = this.results.map((result, index) => {
             const isSelected = index === this.selectedIndex;
+            
+            // For fragments, remove [[]] from display
+            let displayText = result.display;
+            if (result.type === 'fragment' && displayText.startsWith('[[') && displayText.endsWith(']]')) {
+                displayText = displayText.slice(2, -2);
+            }
+            
             return `
                 <div class="autocomplete-item ${isSelected ? 'selected' : ''}" data-index="${index}">
                     <div class="autocomplete-main">
-                        <span class="autocomplete-display">${this.escapeHtml(result.display)}</span>
+                        <span class="autocomplete-display">${this.escapeHtml(displayText)}</span>
                         ${result.organization ? `<span class="autocomplete-org">${this.escapeHtml(result.organization)}</span>` : ''}
-                        ${result.fragment_type ? `<span class="autocomplete-type">[${result.fragment_type}]</span>` : ''}
+                        ${result.fragment_type ? `<span class="autocomplete-type">${result.fragment_type}</span>` : ''}
                     </div>
-                    ${result.description ? `<div class="autocomplete-description">${this.escapeHtml(result.description)}</div>` : ''}
-                    ${result.created_at ? `<div class="autocomplete-meta">${result.created_at}</div>` : ''}
+                    ${result.description && result.type !== 'fragment' ? `<div class="autocomplete-description">${this.escapeHtml(result.description)}</div>` : ''}
                 </div>
             `;
         }).join('');
@@ -280,19 +283,40 @@ class AutocompleteEngine {
     show() {
         if (this.results.length === 0) return;
         
-        // Position dropdown near textarea
+        // Position dropdown directly attached to textarea
         const rect = this.textarea.getBoundingClientRect();
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
         
-        this.dropdown.style.top = (rect.bottom + scrollTop + 5) + 'px';
-        this.dropdown.style.left = (rect.left + scrollLeft) + 'px';
+        // Match the width of the textarea exactly
+        this.dropdown.style.width = rect.width + 'px';
+        this.dropdown.style.position = 'fixed';
+        this.dropdown.style.bottom = (window.innerHeight - rect.top) + 'px'; // Directly attached, no gap
+        this.dropdown.style.left = rect.left + 'px';
+        
+        // Add animation classes
         this.dropdown.style.display = 'block';
+        this.dropdown.style.opacity = '0';
+        this.dropdown.style.transform = 'translateY(10px)';
+        
+        // Trigger animation
+        setTimeout(() => {
+            this.dropdown.style.opacity = '1';
+            this.dropdown.style.transform = 'translateY(0)';
+        }, 10);
+        
         this.isActive = true;
     }
     
     hide() {
-        this.dropdown.style.display = 'none';
+        // Animate out
+        this.dropdown.style.opacity = '0';
+        this.dropdown.style.transform = 'translateY(10px)';
+        
+        setTimeout(() => {
+            this.dropdown.style.display = 'none';
+        }, 200);
+        
         this.isActive = false;
         this.currentTrigger = null;
         this.results = [];

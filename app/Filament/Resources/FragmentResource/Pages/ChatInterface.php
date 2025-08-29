@@ -284,7 +284,10 @@ class ChatInterface extends Page
     {
         $this->recentChatSessions = ChatSession::forVaultAndProject($this->currentVaultId, $this->currentProjectId)
             ->where('is_pinned', false)
-            ->recent(5)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('updated_at', 'desc') // Fallback for items without sort_order
+            ->limit(5)
             ->get()
             ->map(fn ($session) => [
                 'id' => $session->id,
@@ -758,6 +761,17 @@ class ChatInterface extends Page
         $this->loadPinnedChatSessions();
     }
 
+    public function updateRecentChatOrder(array $newOrder): void
+    {
+        foreach ($newOrder as $item) {
+            ChatSession::where('id', $item['id'])
+                ->update(['sort_order' => $item['sortOrder']]);
+        }
+
+        // Refresh recent chat sessions to reflect new order
+        $this->loadRecentChatSessions();
+    }
+
     public function updatedCurrentVaultId($vaultId): void
     {
         $this->switchVault($vaultId);
@@ -787,7 +801,7 @@ class ChatInterface extends Page
     {
         Log::debug('Attempting to delete fragment', ['fragment_id' => $fragmentId]);
 
-        $fragment = Fragment::find($fragmentId);
+        $fragment = Fragment::with('type')->find($fragmentId);
 
         if (! $fragment) {
             Log::warning('Fragment not found for deletion', ['fragment_id' => $fragmentId]);
@@ -801,7 +815,7 @@ class ChatInterface extends Page
         Log::debug('Fragment found, proceeding with soft delete', [
             'fragment_id' => $fragmentId,
             'message' => $fragment->message,
-            'type' => $fragment->type->value,
+            'type' => $fragment->type?->value ?? $fragment->getAttribute('type'),
         ]);
 
         // Store message before deletion for toast
@@ -1041,7 +1055,7 @@ class ChatInterface extends Page
             $this->recallResults = $results->map(function ($fragment) {
                 return [
                     'id' => $fragment->id,
-                    'type' => $fragment->type instanceof \BackedEnum ? $fragment->type->value : $fragment->type,
+                    'type' => $fragment->type instanceof \App\Models\Type ? $fragment->type->value : ($fragment->type instanceof \BackedEnum ? $fragment->type->value : $fragment->type),
                     'title' => $fragment->title ?: $this->truncateText($fragment->message, 80),
                     'message' => $fragment->message,
                     'created_at' => $fragment->created_at->diffForHumans(),

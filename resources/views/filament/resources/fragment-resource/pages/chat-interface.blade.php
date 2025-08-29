@@ -223,17 +223,48 @@
                 </h3>
             </div>
 
-            <div class="space-y-1">
+            <div
+                x-data="{
+                    sortable: null,
+                    initSortable() {
+                        const container = document.getElementById('recent-chats-container');
+                        if (container) {
+                            this.sortable = Sortable.create(container, {
+                                handle: '.drag-handle',
+                                animation: 150,
+                                ghostClass: 'opacity-50',
+                                onEnd: (evt) => {
+                                    const items = Array.from(container.children);
+                                    const newOrder = items.map((item, index) => ({
+                                        id: parseInt(item.dataset.id),
+                                        sortOrder: index + 1
+                                    }));
+
+                                    // Call Livewire method to update sort order
+                                    @this.call('updateRecentChatOrder', newOrder);
+                                }
+                            });
+                        }
+                    }
+                }"
+                x-init="initSortable()"
+                class="space-y-1"
+                id="recent-chats-container"
+            >
                 @if (!empty($recentChatSessions))
                     @foreach ($recentChatSessions as $session)
                         <div
+                            data-id="{{ $session['id'] }}"
                             wire:click="switchToChat({{ $session['id'] }})"
-                            class="flex items-center p-2 rounded-pixel cursor-pointer transition-all
+                            class="flex items-center p-2 rounded-pixel cursor-pointer transition-all sortable-item
                                 {{ $session['id'] === $currentChatSessionId
                                     ? 'bg-hot-pink/20 border-l-2 border-hot-pink'
                                     : 'bg-gray-800 hover:bg-electric-blue/10'
                                 }}"
                         >
+                            <div class="drag-handle cursor-move mr-2 text-gray-500 hover:text-electric-blue transition-colors">
+                                <x-heroicon-o-bars-2 class="w-3 h-3"/>
+                            </div>
                             <div class="flex-1 min-w-0 mr-2">
                                 <span class="text-sm {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-gray-300' }} truncate block" title="{{ $session['title'] }}">
                                     {{ $session['title'] }}
@@ -296,7 +327,7 @@
             <div class="flex items-center space-x-4">
                 <div
                     id="drift-avatar"
-                    x-data="{ avatar: '/interface/avatars/default/pink-1.png' }"
+                    x-data="{ avatar: '/interface/avatars/default/test2.png' }"
                     x-init="$watch('avatar', value => {
         $el.querySelector('img').src = value;
       })"
@@ -320,14 +351,14 @@
 
             <!-- Right: Search Input -->
             <div class="flex items-center space-x-4">
-                <div class="relative" x-data="{ searchOpen: false, searchQuery: '' }">
+                <div class="relative" x-data="headerSearch()">
                     <div class="flex items-center">
                         <input
                             x-model="searchQuery"
-                            x-on:focus="searchOpen = true"
-                            x-on:blur.delay="searchOpen = false"
-                            x-on:input="searchChat"
-                            placeholder="Search chat..."
+                            x-on:focus="searchOpen = true; console.log('Header search: Input focused')"
+                            x-on:blur="setTimeout(() => { if (!$refs.dropdown?.matches(':hover')) { searchOpen = false; console.log('Header search: Input blurred, closing dropdown'); } }, 200)"
+                            x-on:input.debounce.300ms="handleSearch()"
+                            placeholder="Search fragments..."
                             class="text-sm bg-gray-800 border border-gray-700 rounded-l-md px-3 py-2 text-text-primary placeholder-text-muted focus:outline-none focus:border-hot-pink w-64"
                         >
                         <div class="bg-hot-pink h-10 w-1 rounded-r-md flex items-center justify-center">
@@ -337,13 +368,65 @@
 
                     <!-- Search Dropdown -->
                     <div
+                        x-ref="dropdown"
                         x-show="searchOpen && searchQuery.length > 0"
                         x-cloak
-                        class="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-hot-pink/30 rounded-md shadow-lg z-50 max-h-64 overflow-y-auto"
+                        class="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-hot-pink/30 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto"
+                        style="pointer-events: auto;"
+                        x-on:mouseenter="console.log('Header search: Mouse entered dropdown')"
+                        x-on:mouseleave="console.log('Header search: Mouse left dropdown')"
                     >
-                        <div class="p-2 text-xs text-text-muted">
-                            Search results will appear here...
+                        <div x-show="$wire.recallLoading" class="p-3 text-xs text-text-muted text-center">
+                            <x-heroicon-o-arrow-path class="w-4 h-4 animate-spin inline mr-1"/>
+                            Searching...
                         </div>
+
+                        <div x-show="!$wire.recallLoading && $wire.recallResults.length === 0 && searchQuery.length >= 2" class="p-3 text-xs text-text-muted text-center">
+                            No fragments found
+                        </div>
+
+                        <template x-for="(result, index) in $wire.recallResults" :key="result.id">
+                            <div
+                                class="p-3 hover:bg-gray-700 cursor-pointer border-b border-gray-600 last:border-b-0 transition-colors"
+                                x-on:mousedown.prevent.stop="selectResult(index)"
+                                x-on:click.prevent.stop="selectResult(index)"
+                            >
+                                <div class="flex items-start space-x-2">
+                                    <!-- Type Badge -->
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 mt-0.5"
+                                        :class="{
+                                            'bg-green-900/20 text-green-400 border border-green-500/20': result.type === 'todo' || result.type === 'task',
+                                            'bg-purple-900/20 text-purple-400 border border-purple-500/20': result.type === 'meeting',
+                                            'bg-yellow-900/20 text-yellow-400 border border-yellow-500/20': result.type === 'idea' || result.type === 'insight',
+                                            'bg-gray-700 text-gray-300 border border-gray-500/20': result.type === 'note',
+                                            'bg-blue-900/20 text-blue-400 border border-blue-500/20': !['todo', 'task', 'meeting', 'idea', 'insight', 'note'].includes(result.type)
+                                        }"
+                                        x-text="result.type">
+                                    </span>
+
+                                    <!-- Content -->
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-sm font-medium text-gray-200 truncate" x-text="result.title"></div>
+                                        <div class="text-xs text-gray-400 line-clamp-2 mt-1" x-text="result.preview"></div>
+
+                                        <!-- Tags and Date -->
+                                        <div class="flex items-center space-x-2 mt-2">
+                                            <template x-if="result.tags && result.tags.length > 0">
+                                                <div class="flex flex-wrap gap-1">
+                                                    <template x-for="tag in result.tags.slice(0, 2)" :key="tag">
+                                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-700 text-gray-300" x-text="'#' + tag"></span>
+                                                    </template>
+                                                    <template x-if="result.tags.length > 2">
+                                                        <span class="text-xs text-gray-400" x-text="'+' + (result.tags.length - 2)"></span>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <div class="text-xs text-gray-400" x-text="result.created_at"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -533,7 +616,7 @@
     </div>
 
     <!-- Autocomplete Scripts -->
-    @vite(['resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
         function bookmarkWidget() {
             return {
@@ -661,6 +744,88 @@
                     } catch (error) {
                         console.error('Failed to open fragment modal:', error);
                         alert('Failed to load bookmark content.');
+                    } finally {
+                        // Reset the flag after a delay to prevent accidental rapid clicks
+                        setTimeout(() => {
+                            this.openingModal = false;
+                        }, 500);
+                    }
+                }
+            };
+        }
+
+        function headerSearch() {
+            return {
+                searchOpen: false,
+                searchQuery: '',
+                openingModal: false,
+
+                handleSearch() {
+                    console.log('Header search: handleSearch called with query:', this.searchQuery);
+
+                    if (this.searchQuery.length < 2) {
+                        console.log('Header search: Query too short, clearing results');
+                        this.$wire.set('recallResults', []);
+                        return;
+                    }
+
+                    console.log('Header search: Setting recallQuery and calling performRecallSearch');
+                    // Use existing recall search functionality
+                    this.$wire.set('recallQuery', this.searchQuery);
+                    this.$wire.call('performRecallSearch').then(() => {
+                        console.log('Header search: performRecallSearch completed, results:', this.$wire.recallResults);
+                    }).catch(error => {
+                        console.error('Header search: performRecallSearch failed:', error);
+                    });
+                },
+
+                async selectResult(index) {
+                    console.log('Header search: selectResult called with index:', index);
+                    console.log('Header search: recallResults:', this.$wire.recallResults);
+
+                    const result = this.$wire.recallResults[index];
+                    console.log('Header search: selected result:', result);
+
+                    if (!result || !result.id) {
+                        console.warn('Header search: No fragment ID for result:', result);
+                        return;
+                    }
+
+                    // Prevent multiple simultaneous openings
+                    if (this.openingModal) {
+                        console.log('Header search: Modal already opening, ignoring click');
+                        return;
+                    }
+
+                    this.openingModal = true;
+                    this.searchOpen = false;
+                    this.searchQuery = '';
+
+                    console.log('Header search: Checking LinkHandler availability...');
+                    console.log('Header search: window.linkHandler:', window.linkHandler);
+
+                    // Wait for LinkHandler to be available if needed
+                    let attempts = 0;
+                    while ((!window.linkHandler || !window.linkHandler.showFragmentModal) && attempts < 10) {
+                        console.log('Header search: LinkHandler not ready, waiting... attempt', attempts + 1);
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
+
+                    // Open fragment modal using existing LinkHandler
+                    try {
+                        if (window.linkHandler && window.linkHandler.showFragmentModal) {
+                            console.log('Header search: Calling showFragmentModal with ID:', result.id, 'title:', result.title);
+                            await window.linkHandler.showFragmentModal(result.id, result.title);
+                            console.log('Header search: showFragmentModal completed');
+                        } else {
+                            console.error('Header search: LinkHandler still not available after waiting');
+                            console.error('Header search: window.linkHandler:', window.linkHandler);
+                            alert('Unable to open fragment. Please try refreshing the page.');
+                        }
+                    } catch (error) {
+                        console.error('Header search: Failed to open fragment modal:', error);
+                        alert('Failed to load fragment content: ' + error.message);
                     } finally {
                         // Reset the flag after a delay to prevent accidental rapid clicks
                         setTimeout(() => {

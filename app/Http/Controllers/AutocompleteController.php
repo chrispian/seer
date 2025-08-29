@@ -46,11 +46,14 @@ class AutocompleteController extends Controller
             ->get();
         
         $results = $contacts->map(function($contact) {
+            $displayName = $contact->full_name ?: 'Unknown';
+            $primaryEmail = is_array($contact->emails) && !empty($contact->emails) ? $contact->emails[0] : null;
+            
             return [
                 'type' => 'contact',
-                'value' => $contact->display_name,
-                'display' => "@{$contact->display_name}",
-                'description' => $contact->primary_email ? "({$contact->primary_email})" : null,
+                'value' => $displayName,
+                'display' => "@{$displayName}",
+                'description' => $primaryEmail ? "({$primaryEmail})" : null,
                 'organization' => $contact->organization,
                 'fragment_id' => $contact->fragment_id
             ];
@@ -65,22 +68,33 @@ class AutocompleteController extends Controller
         $limit = min((int) $request->get('limit', 10), 50);
         
         $fragments = Fragment::query()
-            ->forAutocomplete($limit)
+            ->with('type')
             ->when($query, function($q) use ($query) {
-                $q->searchContent($query);
+                $q->where('message', 'like', "%{$query}%");
             })
+            ->limit($limit)
+            ->orderBy('created_at', 'desc')
             ->get();
         
         $results = $fragments->map(function($fragment) {
-            $title = $fragment->title;
-            $preview = $fragment->preview;
+            // Use first 80 chars of message as title
+            $title = mb_substr($fragment->message, 0, 80);
+            if (mb_strlen($fragment->message) > 80) {
+                $title .= '...';
+            }
+            
+            // Use first 150 chars as preview
+            $preview = mb_substr($fragment->message, 0, 150);
+            if (mb_strlen($fragment->message) > 150) {
+                $preview .= '...';
+            }
             
             return [
                 'type' => 'fragment',
                 'value' => $title,
                 'display' => "[[{$title}]]",
                 'description' => $preview !== $title ? $preview : null,
-                'fragment_type' => $fragment->type?->value,
+                'fragment_type' => $fragment->type instanceof \App\Models\Type ? $fragment->type->value : $fragment->type,
                 'fragment_id' => $fragment->id,
                 'created_at' => $fragment->created_at->format('M j, Y')
             ];
