@@ -11,6 +11,7 @@ use App\Filament\Resources\FragmentResource;
 use App\Models\ChatSession;
 use App\Models\Fragment;
 use App\Models\Project;
+use App\Models\Type;
 use App\Models\Vault;
 use App\Services\CommandRegistry;
 use Filament\Resources\Pages\Page;
@@ -168,6 +169,7 @@ class ChatInterface extends Page
         $this->chatMessages[] = [
             'key' => $spinnerKey,
             'type' => 'system',
+            'type_id' => $this->getSystemTypeId(),
             'message' => '⏳ Processing...',
         ];
 
@@ -182,6 +184,7 @@ class ChatInterface extends Page
                 $this->removeSpinner($spinnerKey); // ❗ clean up spinner
                 $this->chatMessages[] = [
                     'type' => 'system',
+                    'type_id' => $this->getSystemTypeId(),
                     'message' => "❌ Command `/{$command->command}` not recognized. Try `/help` for options.",
                 ];
 
@@ -239,7 +242,8 @@ class ChatInterface extends Page
 
             $this->chatMessages[] = [
                 'id' => $fragment->id,
-                'type' => $fragment->type,
+                'type' => $fragment->type?->value ?? 'log',
+                'type_id' => $fragment->type_id,
                 'message' => $fragment->message,
                 'created_at' => $fragment->created_at,
             ];
@@ -248,6 +252,12 @@ class ChatInterface extends Page
         // Save the updated chat session after any input
         $this->saveCurrentChatSession();
     }
+
+    protected function getSystemTypeId(): int
+    {
+        return Type::where('value', 'system')->first()?->id ?? Type::where('value', 'log')->first()->id;
+    }
+
 
     protected function removeSpinner(string $spinnerKey): void
     {
@@ -318,6 +328,7 @@ class ChatInterface extends Page
         // Add welcome message
         $this->chatMessages[] = [
             'type' => 'system',
+            'type_id' => $this->getSystemTypeId(),
             'message' => '💬 **New chat started!** Type your message or use `/help` for commands.',
             'created_at' => now(),
         ];
@@ -416,6 +427,7 @@ class ChatInterface extends Page
 
             $this->chatMessages[] = [
                 'type' => 'system',
+                'type_id' => $this->getSystemTypeId(),
                 'message' => $sessionDetails,
             ];
         }
@@ -451,6 +463,7 @@ class ChatInterface extends Page
 
         $this->chatMessages[] = [
             'type' => 'system',
+            'type_id' => $this->getSystemTypeId(),
             'message' => $message,
         ];
     }
@@ -759,6 +772,7 @@ class ChatInterface extends Page
     {
         $this->chatMessages[] = [
             'type' => 'system',
+            'type_id' => $this->getSystemTypeId(),
             'message' => "**Debug State:**\n".
                 'Current Vault ID: '.($this->currentVaultId ?: 'null')."\n".
                 'Current Project ID: '.($this->currentProjectId ?: 'null')."\n".

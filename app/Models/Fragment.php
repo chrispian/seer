@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\FragmentType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -25,12 +24,16 @@ class Fragment extends Model
         'selection_stats' => 'array',
         'state' => 'array',
         'state_json' => 'array',
-        'type' => FragmentType::class,
         'deleted_at' => 'datetime',
         'hash_bucket' => 'integer',
     ];
 
     // Relationships
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(Type::class);
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);

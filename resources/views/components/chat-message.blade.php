@@ -1,16 +1,18 @@
-@props(['message', 'type' => 'user', 'timestamp' => null, 'fragmentId' => null])
+@props(['message', 'type' => 'user', 'type_id' => null, 'timestamp' => null, 'fragmentId' => null])
 
-<div class="group py-3 px-4 transition-colors duration-200 rounded-pixel
-    {{ $type === 'user' ? 'bg-hot-pink/5 border border-hot-pink/20 hover:bg-hot-pink/10' : 'hover:bg-gray-800/30' }}"
-    @if($fragmentId) data-fragment-id="{{ $fragmentId }}" @endif>
+@php
+    // All messages are user messages unless explicitly marked as system
+    $isUserMessage = $type !== 'system' && (!$type_id || \App\Models\Type::find($type_id)?->value !== 'system');
+@endphp
+
+<div 
+     class="group py-3 px-4 transition-colors duration-200 rounded-md @if($isUserMessage) bg-gray-900/60 hover:bg-gray-900/40 @else hover:bg-gray-800/30 @endif"
+     @if($fragmentId) data-fragment-id="{{ $fragmentId }}" @endif>
     
     <div class="flex items-start justify-between">
         <div class="flex-1 mr-4">
             <div class="prose prose-sm dark:prose-invert max-w-none text-text-primary">
                 {{ $slot }}
-            </div>
-            <div class="text-xs text-text-muted mt-1">
-                {{ $timestamp ?? 'Just now' }}
             </div>
         </div>
         
