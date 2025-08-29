@@ -4,7 +4,7 @@
     <div class="h-screen flex">
     
     <!-- Left Column 1: Ribbon -->
-    <div class="w-16 bg-surface-2 border-r border-thin border-hot-pink/30 flex flex-col items-center py-4">
+    <div class="w-16 bg-gray-900 border-r border-thin border-hot-pink/20 flex flex-col items-center py-4">
         <!-- Fe Periodic Element -->
         <div class="relative">
             <!-- Main hot pink square -->
@@ -33,36 +33,30 @@
                     x-show="open"
                     x-transition
                     @click.outside="open = false"
-                    class="absolute left-full ml-2 top-0 bg-surface-2 border border-hot-pink/30 rounded-pixel pixel-card p-2 space-y-1 min-w-48 z-50 glow-pink"
+                    class="absolute left-full ml-2 top-0 bg-gray-900 border border-hot-pink/20 rounded-pixel p-2 space-y-1 min-w-48 z-50 shadow-lg shadow-hot-pink/10"
                 >
                     <button 
                         wire:click="openVaultModal"
                         @click="open = false"
-                        class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-hot-pink/20 rounded-pixel transition-colors flex items-center space-x-2"
+                        class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-hot-pink/20 hover:text-hot-pink rounded-pixel transition-colors flex items-center space-x-2"
                     >
-                        <svg class="w-4 h-4 text-hot-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                        </svg>
+                        <x-heroicon-o-archive-box class="w-4 h-4 text-hot-pink"/>
                         <span>New Vault</span>
                     </button>
                     <button 
                         wire:click="openProjectModal"
                         @click="open = false"
-                        class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-electric-blue/20 rounded-pixel transition-colors flex items-center space-x-2"
+                        class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-electric-blue/20 hover:text-electric-blue rounded-pixel transition-colors flex items-center space-x-2"
                     >
-                        <svg class="w-4 h-4 text-electric-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-                        </svg>
+                        <x-heroicon-o-folder class="w-4 h-4 text-electric-blue"/>
                         <span>New Project</span>
                     </button>
                     <button 
                         wire:click="startNewChat"
                         @click="open = false"
-                        class="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-neon-cyan/20 rounded-pixel transition-colors flex items-center space-x-2"
+                        class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan rounded-pixel transition-colors flex items-center space-x-2"
                     >
-                        <svg class="w-4 h-4 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                        </svg>
+                        <x-heroicon-o-chat-bubble-left-right class="w-4 h-4 text-neon-cyan"/>
                         <span>New Chat</span>
                     </button>
                 </div>
@@ -77,61 +71,80 @@
     </div>
 
     <!-- Left Column 2: Navigation -->
-    <div class="w-72 bg-surface-2 border-r border-thin border-electric-blue/30 flex flex-col">
+    <div class="w-72 bg-gray-900/95 border-r border-thin border-electric-blue/20 flex flex-col">
         <!-- Vault Selection -->
-        <div class="p-4 border-b border-thin border-hot-pink/20">
-            <div class="pixel-card pixel-card-pink p-3 glow-pink">
-                <h3 class="text-sm font-medium text-text-secondary mb-2">Current Vault</h3>
-                <select 
-                    wire:model.live="currentVaultId" 
-                    class="w-full bg-surface-elevated text-sm text-hot-pink rounded-pixel p-2 pixel-card border-thin border-hot-pink/30 focus:ring-2 focus:ring-hot-pink focus:border-hot-pink"
-                >
-                    @foreach ($vaults as $vault)
-                        <option value="{{ $vault['id'] }}" {{ $currentVaultId == $vault['id'] ? 'selected' : '' }}>
-                            {{ $vault['name'] }}
-                        </option>
-                    @endforeach
-                </select>
+        <div class="p-4 border-b border-thin border-hot-pink/10">
+            <div>
+                <h3 class="text-xs font-medium text-hot-pink/80 mb-2">Vault</h3>
+                <div class="flex space-x-1">
+                    <select 
+                        wire:model.live="currentVaultId" 
+                        class="flex-1 bg-gray-800 text-sm text-hot-pink rounded-l-pixel p-2 border-thin border-hot-pink/20 focus:ring-1 focus:ring-hot-pink focus:border-hot-pink appearance-none cursor-pointer"
+                        style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27 fill=%27%23f97316%27%3e%3cpath fill-rule=%27evenodd%27 d=%27M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z%27 clip-rule=%27evenodd%27/%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1.5em 1.5em; padding-right: 2.5rem;"
+                    >
+                        @foreach ($vaults as $vault)
+                            <option value="{{ $vault['id'] }}" {{ $currentVaultId == $vault['id'] ? 'selected' : '' }} class="bg-gray-800 text-gray-300">
+                                {{ $vault['name'] }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button 
+                        wire:click="openVaultModal"
+                        class="px-3 bg-gray-800 border-thin border-hot-pink/20 rounded-r-pixel hover:bg-hot-pink/20 transition-colors text-hot-pink"
+                        title="Create new vault"
+                    >
+                        <x-heroicon-o-plus class="w-4 h-4"/>
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Project Selection -->
-        <div class="p-4 border-b border-thin border-electric-blue/20">
-            <div class="pixel-card pixel-card-blue p-3 glow-blue">
-                <h3 class="text-sm font-medium text-text-secondary mb-2">Current Project</h3>
-                <select 
-                    wire:model.live="currentProjectId"
-                    class="w-full bg-surface-elevated text-sm text-electric-blue rounded-pixel p-2 pixel-card border-thin border-electric-blue/30 focus:ring-2 focus:ring-electric-blue focus:border-electric-blue"
-                >
-                    @foreach ($projects as $project)
-                        <option value="{{ $project['id'] }}" {{ $currentProjectId == $project['id'] ? 'selected' : '' }}>
-                            {{ $project['name'] }}
-                        </option>
-                    @endforeach
-                </select>
+        <div class="p-4 border-b border-thin border-electric-blue/10">
+            <div>
+                <h3 class="text-xs font-medium text-electric-blue/80 mb-2">Project</h3>
+                <div class="flex space-x-1">
+                    <select 
+                        wire:model.live="currentProjectId"
+                        class="flex-1 bg-gray-800 text-sm text-electric-blue rounded-l-pixel p-2 border-thin border-electric-blue/20 focus:ring-1 focus:ring-electric-blue focus:border-electric-blue appearance-none cursor-pointer"
+                        style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27 fill=%27%2306b6d4%27%3e%3cpath fill-rule=%27evenodd%27 d=%27M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z%27 clip-rule=%27evenodd%27/%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1.5em 1.5em; padding-right: 2.5rem;"
+                    >
+                        @foreach ($projects as $project)
+                            <option value="{{ $project['id'] }}" {{ $currentProjectId == $project['id'] ? 'selected' : '' }} class="bg-gray-800 text-gray-300">
+                                {{ $project['name'] }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button 
+                        wire:click="openProjectModal"
+                        class="px-3 bg-gray-800 border-thin border-electric-blue/20 rounded-r-pixel hover:bg-electric-blue/20 transition-colors text-electric-blue"
+                        title="Create new project"
+                    >
+                        <x-heroicon-o-plus class="w-4 h-4"/>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Active Session (Current Chat) -->
-        @if ($currentChatSessionId)
+        <!-- Active Chat (Top Recent Chat) -->
+        @if (!empty($recentChatSessions))
             @php
-                $activeSession = collect($recentChatSessions)->firstWhere('id', $currentChatSessionId) 
-                    ?? collect($pinnedChatSessions)->firstWhere('id', $currentChatSessionId);
+                $activeSession = collect($recentChatSessions)->first();
             @endphp
             @if ($activeSession)
-            <div class="p-4 border-b border-thin border-neon-cyan/20">
-                <div class="pixel-card pixel-card-cyan p-3 glow-cyan">
-                    <h3 class="text-sm font-medium text-text-secondary mb-2">Active Chat</h3>
-                    <div 
-                        wire:click="switchToChat({{ $activeSession['id'] }})"
-                        class="bg-surface-elevated rounded-pixel p-2 pixel-card border-thin border-neon-cyan/30 cursor-pointer hover:bg-neon-cyan/10 transition-colors"
-                    >
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-neon-cyan truncate">{{ $activeSession['title'] }}</span>
+            <div class="p-4 border-b border-thin border-neon-cyan/10">
+                <h3 class="text-xs font-medium text-neon-cyan/80 mb-2">Active Chat</h3>
+                <div 
+                    wire:click="switchToChat({{ $activeSession['id'] }})"
+                    class="bg-gray-800 rounded-pixel p-2 border-thin border-neon-cyan/20 cursor-pointer hover:bg-neon-cyan/10 transition-colors"
+                >
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-neon-cyan truncate">{{ $activeSession['title'] }}</span>
+                        @if ($activeSession['id'] === $currentChatSessionId)
                             <span class="text-xs text-bright-pink ml-2">Active</span>
-                        </div>
-                        <div class="text-xs text-text-muted mt-1">{{ $activeSession['message_count'] }} messages</div>
+                        @endif
                     </div>
+                    <div class="text-xs text-text-muted mt-1">{{ $activeSession['message_count'] }} messages</div>
                 </div>
             </div>
             @endif
@@ -157,7 +170,10 @@
             @if (!empty($pinnedChatSessions))
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-sm font-medium text-text-secondary">📌 Pinned Chats</h3>
+                    <h3 class="text-xs font-medium text-hot-pink/80">
+                        <x-heroicon-o-bookmark class="inline w-3 h-3 mr-1"/>
+                        Pinned Chats
+                    </h3>
                 </div>
                 
                 <div 
@@ -185,51 +201,37 @@
                         }
                     }"
                     x-init="initSortable()"
-                    class="space-y-2"
+                    class="space-y-1"
                     id="pinned-chats-container"
                 >
                     @foreach ($pinnedChatSessions as $session)
                         <div 
                             data-id="{{ $session['id'] }}"
                             wire:click="switchToChat({{ $session['id'] }})"
-                            class="pixel-card p-3 cursor-pointer transition-all sortable-item
+                            class="flex items-center p-2 rounded-pixel cursor-pointer transition-all sortable-item
                                 {{ $session['id'] === $currentChatSessionId 
-                                    ? 'pixel-card-pink bg-hot-pink/20 border-hot-pink/60 glow-pink' 
-                                    : 'pixel-card-cyan bg-neon-cyan/10 border-neon-cyan/30 hover:bg-neon-cyan/20 hover:border-neon-cyan/50' 
+                                    ? 'bg-hot-pink/20 border-l-2 border-hot-pink' 
+                                    : 'bg-gray-800 hover:bg-neon-cyan/10' 
                                 }}"
                         >
-                            <div class="flex items-start justify-between">
-                                <div class="flex items-center">
-                                    <div class="drag-handle cursor-move mr-2 text-text-muted hover:text-neon-cyan transition-colors">
-                                        ⋮⋮
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="text-sm font-medium {{ $session['id'] === $currentChatSessionId ? 'text-text-primary' : 'text-text-secondary' }} truncate break-words" title="{{ $session['title'] }}">
-                                            {{ $session['title'] }}
-                                        </div>
-                                        <div class="text-xs text-text-muted mt-1">
-                                            {{ $session['message_count'] }} messages
-                                        </div>
-                                        @if (!empty($session['preview']))
-                                            <div class="text-xs text-text-muted mt-1 truncate">
-                                                {{ $session['preview'] }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="flex flex-col items-end space-y-1">
-                                    <button 
-                                        wire:click.stop="togglePinChat({{ $session['id'] }})"
-                                        class="text-xs text-neon-cyan hover:text-bright-pink transition-colors"
-                                        title="Unpin chat"
-                                    >
-                                        📌
-                                    </button>
-                                    <div class="text-xs {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-neon-cyan' }} font-medium">
-                                        {{ $session['id'] === $currentChatSessionId ? 'Active' : $session['last_activity'] }}
-                                    </div>
-                                </div>
+                            <div class="drag-handle cursor-move mr-2 text-gray-500 hover:text-neon-cyan transition-colors">
+                                <x-heroicon-o-bars-2 class="w-3 h-3"/>
                             </div>
+                            <div class="flex-1 min-w-0 mr-2">
+                                <span class="text-sm {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-gray-300' }} truncate block" title="{{ $session['title'] }}">
+                                    {{ $session['title'] }}
+                                </span>
+                            </div>
+                            <span class="px-1.5 py-0.5 text-xs rounded-full {{ $session['id'] === $currentChatSessionId ? 'bg-hot-pink/30 text-hot-pink' : 'bg-neon-cyan/20 text-neon-cyan' }} font-medium">
+                                {{ $session['message_count'] }}
+                            </span>
+                            <button 
+                                wire:click.stop="togglePinChat({{ $session['id'] }})"
+                                class="ml-2 text-gray-500 hover:text-bright-pink transition-colors"
+                                title="Unpin chat"
+                            >
+                                <x-heroicon-o-x-mark class="w-3 h-3"/>
+                            </button>
                         </div>
                     @endforeach
                 </div>
@@ -238,10 +240,10 @@
 
             <!-- Recent Chats -->
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-medium text-text-secondary">Recent Chats</h3>
-                <button wire:click="startNewChat" class="text-xs bg-electric-blue/20 hover:bg-electric-blue/30 text-electric-blue px-2 py-1 rounded-pixel border border-electric-blue/40 transition-colors pixel-card glow-blue">
-                    ✨ New Chat
-                </button>
+                <h3 class="text-xs font-medium text-electric-blue/80">
+                    <x-heroicon-o-chat-bubble-left-right class="inline w-3 h-3 mr-1"/>
+                    Recent Chats
+                </h3>
             </div>
             
             <div class="space-y-1">
@@ -249,34 +251,31 @@
                     @foreach ($recentChatSessions as $session)
                         <div 
                             wire:click="switchToChat({{ $session['id'] }})"
-                            class="px-3 py-2 cursor-pointer transition-all rounded-pixel text-sm
+                            class="flex items-center p-2 rounded-pixel cursor-pointer transition-all
                                 {{ $session['id'] === $currentChatSessionId 
-                                    ? 'bg-hot-pink/20 text-hot-pink border-l-2 border-hot-pink' 
-                                    : 'hover:bg-electric-blue/10 text-text-secondary hover:text-electric-blue' 
+                                    ? 'bg-hot-pink/20 border-l-2 border-hot-pink' 
+                                    : 'bg-gray-800 hover:bg-electric-blue/10' 
                                 }}"
                         >
-                            <div class="flex items-center justify-between">
-                                <div class="flex-1 min-w-0">
-                                    <div class="truncate font-medium">{{ $session['title'] }}</div>
-                                    <div class="text-xs text-text-muted">{{ $session['message_count'] }} messages</div>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <button 
-                                        wire:click.stop="togglePinChat({{ $session['id'] }})"
-                                        class="text-xs text-text-muted hover:text-electric-blue transition-colors"
-                                        title="Pin chat"
-                                    >
-                                        📌
-                                    </button>
-                                    <div class="text-xs {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-text-muted' }}">
-                                        {{ $session['id'] === $currentChatSessionId ? 'Active' : $session['last_activity'] }}
-                                    </div>
-                                </div>
+                            <div class="flex-1 min-w-0 mr-2">
+                                <span class="text-sm {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-gray-300' }} truncate block" title="{{ $session['title'] }}">
+                                    {{ $session['title'] }}
+                                </span>
                             </div>
+                            <span class="px-1.5 py-0.5 text-xs rounded-full {{ $session['id'] === $currentChatSessionId ? 'bg-hot-pink/30 text-hot-pink' : 'bg-electric-blue/20 text-electric-blue' }} font-medium">
+                                {{ $session['message_count'] }}
+                            </span>
+                            <button 
+                                wire:click.stop="togglePinChat({{ $session['id'] }})"
+                                class="ml-2 text-gray-500 hover:text-hot-pink transition-colors"
+                                title="Pin chat"
+                            >
+                                <x-heroicon-o-bookmark class="w-3 h-3"/>
+                            </button>
                         </div>
                     @endforeach
                 @else
-                    <div class="text-center text-text-muted text-xs py-4">
+                    <div class="text-center text-gray-500 text-xs py-4">
                         No recent chats
                     </div>
                 @endif
@@ -284,13 +283,21 @@
         </div>
 
         <!-- New Chat & Commands -->
-        <div class="p-4 border-t border-thin border-electric-blue/20 space-y-3">
+        <div class="p-4 border-t border-thin border-electric-blue/20 space-y-2">
+            <button 
+                wire:click="startNewChat"
+                class="w-full bg-electric-blue/20 hover:bg-electric-blue/30 text-electric-blue py-2 px-4 rounded-pixel transition-colors text-sm font-medium border border-electric-blue/40"
+            >
+                <x-heroicon-o-plus class="inline w-4 h-4 mr-1"/>
+                New Chat
+            </button>
             <button 
                 x-data
                 x-on:click="$dispatch('open-command-palette')"
-                class="w-full bg-hot-pink text-white py-2 px-4 rounded-pixel hover:bg-hot-pink/90 transition-colors text-sm font-medium pixel-card glow-pink"
+                class="w-full bg-hot-pink text-white py-2 px-4 rounded-pixel hover:bg-hot-pink/90 transition-colors text-sm font-medium"
             >
-                ⚡ Commands
+                <x-heroicon-o-command-line class="inline w-4 h-4 mr-1"/>
+                Commands
             </button>
         </div>
     </div>
@@ -298,10 +305,10 @@
     <!-- Middle Column: Chat Interface -->
     <div class="flex-1 flex flex-col bg-surface">
         <!-- Row 1: Header -->
-        <div class="h-16 bg-surface-2 border-b border-thin border-hot-pink/30 flex items-center justify-between px-6 sticky top-0 z-10">
+        <div class="h-14 bg-gray-900/50 border-b border-thin border-hot-pink/20 flex items-center justify-between px-6 sticky top-0 z-10 backdrop-blur-sm">
             <div class="flex items-center space-x-3">
-                <h2 class="text-lg font-medium text-text-primary">Chat Interface</h2>
-                <span class="bg-neon-cyan/20 text-bright-pink text-xs px-2 py-1 rounded-pixel border-thin border-neon-cyan/40 font-medium">Active</span>
+                <h2 class="text-base font-medium text-gray-300">Chat Interface</h2>
+                <span class="bg-hot-pink/20 text-hot-pink text-xs px-2 py-0.5 rounded-full font-medium">Active</span>
             </div>
             
             <div class="flex items-center space-x-2">
@@ -340,7 +347,10 @@
                 @endphp
                 
                 <div class="pixel-card pixel-card-cyan p-4 glow-cyan">
-                    <h2 class="text-lg font-semibold text-neon-cyan mb-3">📋 Todos ({{ $todoFragments->count() }})</h2>
+                    <h2 class="text-lg font-semibold text-neon-cyan mb-3">
+                        <x-heroicon-o-clipboard-document-list class="inline w-5 h-5 mr-1"/>
+                        Todos ({{ $todoFragments->count() }})
+                    </h2>
                     <div class="space-y-2">
                         @foreach ($todoFragments as $fragment)
                             <div wire:key="todo-{{ $fragment->id }}" class="bg-surface-elevated rounded-pixel p-2 pixel-card border-thin border-neon-cyan/30">
@@ -399,16 +409,16 @@
     </div>
 
     <!-- Right Column: Widgets & Search -->
-    <div class="w-80 bg-surface-2 border-l border-thin border-electric-blue/30 flex flex-col">
+    <div class="w-80 bg-gray-900/95 border-l border-thin border-electric-blue/20 flex flex-col">
         <!-- Widgets Section -->
         <div class="flex-1 p-4 overflow-y-auto">
-            <h3 class="text-sm font-medium text-text-secondary mb-4">Widgets</h3>
+            <h3 class="text-xs font-medium text-neon-cyan/80 mb-4">Widgets</h3>
             
             <!-- System Widgets -->
             <div class="space-y-4 mb-6">
                 <!-- Stats Widget -->
-                <div class="pixel-card pixel-card-pink p-4 glow-pink">
-                    <h4 class="text-sm font-medium text-hot-pink mb-3">Today's Activity</h4>
+                <div class="bg-gray-800 rounded-pixel p-3 border border-hot-pink/20">
+                    <h4 class="text-xs font-medium text-hot-pink mb-2">Today's Activity</h4>
                     <div class="space-y-2">
                         <div class="flex justify-between items-center">
                             <span class="text-xs text-text-muted">Messages</span>
@@ -428,24 +438,24 @@
                 </div>
 
                 <!-- Quick Actions Widget -->
-                <div class="pixel-card pixel-card-blue p-4 glow-blue">
-                    <h4 class="text-sm font-medium text-electric-blue mb-3">Quick Actions</h4>
+                <div class="bg-gray-800 rounded-pixel p-3 border border-electric-blue/20">
+                    <h4 class="text-xs font-medium text-electric-blue mb-2">Quick Actions</h4>
                     <div class="grid grid-cols-2 gap-2">
-                        <button class="bg-surface-card p-2 rounded-pixel text-xs text-text-secondary hover:bg-hot-pink/20 border-thin border-hot-pink/40 pixel-card glow-pink">Export</button>
-                        <button class="bg-surface-card p-2 rounded-pixel text-xs text-text-secondary hover:bg-electric-blue/20 border-thin border-electric-blue/40 pixel-card glow-blue">Search</button>
-                        <button class="bg-surface-card p-2 rounded-pixel text-xs text-text-secondary hover:bg-neon-cyan/20 border-thin border-neon-cyan/40 pixel-card glow-cyan">Filter</button>
-                        <button class="bg-surface-card p-2 rounded-pixel text-xs text-text-secondary hover:bg-deep-purple/20 border-thin border-deep-purple/40 pixel-card">Archive</button>
+                        <button class="bg-gray-900 p-2 rounded-pixel text-xs text-gray-400 hover:bg-hot-pink/20 hover:text-hot-pink border border-gray-700 hover:border-hot-pink/40 transition-colors">Export</button>
+                        <button class="bg-gray-900 p-2 rounded-pixel text-xs text-gray-400 hover:bg-electric-blue/20 hover:text-electric-blue border border-gray-700 hover:border-electric-blue/40 transition-colors">Search</button>
+                        <button class="bg-gray-900 p-2 rounded-pixel text-xs text-gray-400 hover:bg-neon-cyan/20 hover:text-neon-cyan border border-gray-700 hover:border-neon-cyan/40 transition-colors">Filter</button>
+                        <button class="bg-gray-900 p-2 rounded-pixel text-xs text-gray-400 hover:bg-deep-purple/20 hover:text-deep-purple border border-gray-700 hover:border-deep-purple/40 transition-colors">Archive</button>
                     </div>
                 </div>
 
                 <!-- Recent Bookmarks Widget -->
                 <div 
-                    class="pixel-card pixel-card-cyan p-4 glow-cyan"
+                    class="bg-gray-800 rounded-pixel p-3 border border-neon-cyan/20"
                     x-data="bookmarkWidget()"
                     x-init="init(); loadRecentBookmarks()"
                 >
-                    <div class="flex items-center justify-between mb-3">
-                        <h4 class="text-sm font-medium text-neon-cyan">Recent Bookmarks</h4>
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-medium text-neon-cyan">Recent Bookmarks</h4>
                         <button 
                             x-show="!searchMode"
                             x-on:click="searchMode = true; $nextTick(() => $refs.searchInput.focus())"
@@ -703,14 +713,17 @@
         style="display: none;"
         class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
     >
-        <div class="bg-surface-card rounded-pixel p-6 w-96 shadow-xl pixel-card border-thin border-electric-blue/40 glow-blue">
-            <h3 class="text-lg font-semibold mb-4 text-center text-electric-blue">⚡ Command Palette</h3>
+        <div class="bg-gray-900 rounded-pixel p-6 w-96 shadow-xl border border-electric-blue/30">
+            <h3 class="text-lg font-semibold mb-4 text-center text-electric-blue">
+                <x-heroicon-o-command-line class="inline w-5 h-5 mr-1"/>
+                Command Palette
+            </h3>
             <div class="space-y-2">
                 @foreach (\App\Services\CommandRegistry::all() as $cmd)
                     <button
                         wire:click="executeCommand('{{ $cmd }}')"
                         x-on:click="open = false; $nextTick(() => document.querySelector('textarea[x-ref=chatTextarea]')?.focus())"
-                        class="w-full text-left bg-surface-elevated hover:bg-hot-pink/20 text-text-secondary hover:text-text-primary rounded-pixel px-3 py-2 text-sm pixel-card border-thin border-hot-pink/30 glow-pink"
+                        class="w-full text-left bg-gray-800 hover:bg-hot-pink/20 text-gray-300 hover:text-hot-pink rounded-pixel px-3 py-2 text-sm border border-hot-pink/20 transition-colors"
                     >
                         /{{ $cmd }}
                     </button>
@@ -734,8 +747,11 @@
         style="display: none;"
         class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
     >
-        <div class="bg-surface-2 rounded-pixel p-6 w-96 shadow-xl pixel-card border-thin border-hot-pink/40 glow-pink">
-            <h3 class="text-lg font-semibold mb-4 text-center text-hot-pink">🗄️ Create New Vault</h3>
+        <div class="bg-gray-900 rounded-pixel p-6 w-96 shadow-xl border border-hot-pink/30">
+            <h3 class="text-lg font-semibold mb-4 text-center text-hot-pink">
+                <x-heroicon-o-archive-box class="inline w-5 h-5 mr-1"/>
+                Create New Vault
+            </h3>
             
             <form wire:submit.prevent="createNewVault" class="space-y-4">
                 <div>
@@ -743,7 +759,7 @@
                     <input 
                         type="text" 
                         wire:model="newVaultName"
-                        class="w-full bg-surface-elevated text-text-primary rounded-pixel p-3 pixel-card border-thin border-hot-pink/30 focus:ring-2 focus:ring-hot-pink focus:border-hot-pink"
+                        class="w-full bg-gray-800 text-gray-200 rounded-pixel p-3 border border-hot-pink/20 focus:ring-1 focus:ring-hot-pink focus:border-hot-pink"
                         placeholder="Enter vault name..."
                         required
                     />
@@ -753,7 +769,7 @@
                     <label class="block text-sm font-medium text-text-secondary mb-2">Description</label>
                     <textarea 
                         wire:model="newVaultDescription"
-                        class="w-full bg-surface-elevated text-text-primary rounded-pixel p-3 pixel-card border-thin border-hot-pink/30 focus:ring-2 focus:ring-hot-pink focus:border-hot-pink resize-none"
+                        class="w-full bg-gray-800 text-gray-200 rounded-pixel p-3 border border-hot-pink/20 focus:ring-1 focus:ring-hot-pink focus:border-hot-pink resize-none"
                         rows="3"
                         placeholder="Brief description (optional)..."
                     ></textarea>
@@ -762,14 +778,14 @@
                 <div class="flex space-x-3 pt-4">
                     <button
                         type="submit"
-                        class="flex-1 bg-hot-pink text-white py-2 px-4 rounded-pixel hover:bg-hot-pink/90 transition-colors text-sm font-medium pixel-card glow-pink"
+                        class="flex-1 bg-hot-pink text-white py-2 px-4 rounded-pixel hover:bg-hot-pink/90 transition-colors text-sm font-medium"
                     >
                         Create Vault
                     </button>
                     <button
                         type="button"
                         wire:click="closeVaultModal"
-                        class="flex-1 bg-surface-elevated text-text-secondary py-2 px-4 rounded-pixel hover:bg-surface-card transition-colors text-sm font-medium pixel-card border-thin border-text-muted/30"
+                        class="flex-1 bg-gray-800 text-gray-400 py-2 px-4 rounded-pixel hover:bg-gray-700 transition-colors text-sm font-medium border border-gray-600"
                     >
                         Cancel
                     </button>
@@ -785,8 +801,11 @@
         style="display: none;"
         class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
     >
-        <div class="bg-surface-2 rounded-pixel p-6 w-96 shadow-xl pixel-card border-thin border-electric-blue/40 glow-blue">
-            <h3 class="text-lg font-semibold mb-4 text-center text-electric-blue">📁 Create New Project</h3>
+        <div class="bg-gray-900 rounded-pixel p-6 w-96 shadow-xl border border-electric-blue/30">
+            <h3 class="text-lg font-semibold mb-4 text-center text-electric-blue">
+                <x-heroicon-o-folder class="inline w-5 h-5 mr-1"/>
+                Create New Project
+            </h3>
             
             <form wire:submit.prevent="createNewProject" class="space-y-4">
                 <div>
@@ -794,7 +813,7 @@
                     <input 
                         type="text" 
                         wire:model="newProjectName"
-                        class="w-full bg-surface-elevated text-text-primary rounded-pixel p-3 pixel-card border-thin border-electric-blue/30 focus:ring-2 focus:ring-electric-blue focus:border-electric-blue"
+                        class="w-full bg-gray-800 text-gray-200 rounded-pixel p-3 border border-electric-blue/20 focus:ring-1 focus:ring-electric-blue focus:border-electric-blue"
                         placeholder="Enter project name..."
                         required
                     />
@@ -804,7 +823,7 @@
                     <label class="block text-sm font-medium text-text-secondary mb-2">Description</label>
                     <textarea 
                         wire:model="newProjectDescription"
-                        class="w-full bg-surface-elevated text-text-primary rounded-pixel p-3 pixel-card border-thin border-electric-blue/30 focus:ring-2 focus:ring-electric-blue focus:border-electric-blue resize-none"
+                        class="w-full bg-gray-800 text-gray-200 rounded-pixel p-3 border border-electric-blue/20 focus:ring-1 focus:ring-electric-blue focus:border-electric-blue resize-none"
                         rows="3"
                         placeholder="Brief description (optional)..."
                     ></textarea>
@@ -813,14 +832,14 @@
                 <div class="flex space-x-3 pt-4">
                     <button
                         type="submit"
-                        class="flex-1 bg-electric-blue text-white py-2 px-4 rounded-pixel hover:bg-electric-blue/90 transition-colors text-sm font-medium pixel-card glow-blue"
+                        class="flex-1 bg-electric-blue text-white py-2 px-4 rounded-pixel hover:bg-electric-blue/90 transition-colors text-sm font-medium"
                     >
                         Create Project
                     </button>
                     <button
                         type="button"
                         wire:click="closeProjectModal"
-                        class="flex-1 bg-surface-elevated text-text-secondary py-2 px-4 rounded-pixel hover:bg-surface-card transition-colors text-sm font-medium pixel-card border-thin border-text-muted/30"
+                        class="flex-1 bg-gray-800 text-gray-400 py-2 px-4 rounded-pixel hover:bg-gray-700 transition-colors text-sm font-medium border border-gray-600"
                     >
                         Cancel
                     </button>
