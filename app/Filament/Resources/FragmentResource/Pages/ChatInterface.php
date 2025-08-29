@@ -849,9 +849,30 @@ class ChatInterface extends Page
                 }));
             ");
 
-            $this->addChatMessage('system', 'Fragment restored successfully');
+            // Show success toast instead of chat message
+            $this->dispatch('show-success-toast', [
+                'message' => 'Fragment restored successfully',
+                'objectType' => 'fragment'
+            ]);
+            
+            // Also dispatch browser event as fallback
+            $this->js("
+                window.dispatchEvent(new CustomEvent('show-success-toast', {
+                    detail: { message: 'Fragment restored successfully', objectType: 'fragment' }
+                }));
+            ");
         } else {
-            $this->addChatMessage('system', 'Could not restore fragment - undo window expired or fragment not found');
+            // Show error toast for failed restoration
+            $this->dispatch('show-success-toast', [
+                'message' => 'Could not restore fragment - undo window expired or fragment not found',
+                'objectType' => 'fragment'
+            ]);
+            
+            $this->js("
+                window.dispatchEvent(new CustomEvent('show-success-toast', {
+                    detail: { message: 'Could not restore fragment - undo window expired or fragment not found', objectType: 'fragment' }
+                }));
+            ");
         }
     }
 
@@ -896,6 +917,18 @@ class ChatInterface extends Page
                         'chat_session_id' => $chatSessionId,
                         'session_title' => $session->title
                     ]);
+                    
+                    // Show success toast for chat restoration
+                    $this->dispatch('show-success-toast', [
+                        'message' => "Chat \"{$session->title}\" restored successfully",
+                        'objectType' => 'chat'
+                    ]);
+                    
+                    $this->js("
+                        window.dispatchEvent(new CustomEvent('show-success-toast', {
+                            detail: { message: 'Chat \"{$session->title}\" restored successfully', objectType: 'chat' }
+                        }));
+                    ");
                 } else {
                     Log::warning('Chat session not found for restoration', ['chat_session_id' => $chatSessionId]);
                 }

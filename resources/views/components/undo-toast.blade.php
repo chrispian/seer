@@ -9,12 +9,30 @@
         objectType: 'fragment',
         countdownInterval: null,
         
-        display(fragmentId, message, objectType = 'fragment') {
-            console.log('Undo toast display called with:', { fragmentId, message, objectType });
+        display(fragmentId, message, objectType = 'fragment', duration = 60) {
+            console.log('Undo toast display called with:', { fragmentId, message, objectType, duration });
             this.fragmentId = fragmentId;
             this.message = message;
             this.objectType = objectType;
-            this.timeLeft = 60;
+            this.timeLeft = duration;
+            this.show = true;
+            
+            // Start countdown
+            this.countdownInterval = setInterval(() => {
+                this.timeLeft--;
+                
+                if (this.timeLeft <= 0) {
+                    this.hide();
+                }
+            }, 1000);
+        },
+        
+        displaySuccess(message, objectType = 'fragment', duration = 10) {
+            console.log('Undo toast success called with:', { message, objectType, duration });
+            this.fragmentId = null; // No undo action for success messages
+            this.message = message;
+            this.objectType = objectType;
+            this.timeLeft = duration;
             this.show = true;
             
             // Start countdown
@@ -28,11 +46,25 @@
         },
         
         getTitle() {
+            if (!this.fragmentId) {
+                // Success message - no undo action
+                return this.objectType === 'chat' ? 'Chat restored' : 'Fragment restored';
+            }
+            // Delete message - with undo action
             return this.objectType === 'chat' ? 'Chat deleted' : 'Fragment deleted';
         },
         
         getIcon() {
+            if (!this.fragmentId) {
+                // Success message - use checkmark
+                return '✅';
+            }
+            // Delete message - use type-specific icon
             return this.objectType === 'chat' ? '💬' : '🗑️';
+        },
+        
+        showUndoButton() {
+            return this.fragmentId !== null;
         },
         
         hide() {
@@ -72,6 +104,7 @@
                 </div>
                 
                 <button 
+                        x-show="showUndoButton()"
                         @click="
                             console.log('Undo clicked for fragment:', fragmentId);
                             if (fragmentId) {

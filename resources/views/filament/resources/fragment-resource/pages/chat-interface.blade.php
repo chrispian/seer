@@ -32,6 +32,7 @@
                 <div 
                     x-show="open"
                     x-transition
+                    x-cloak
                     @click.outside="open = false"
                     class="absolute left-full ml-2 top-0 bg-gray-900 border border-hot-pink/20 rounded-pixel p-2 space-y-1 min-w-48 z-50 shadow-lg shadow-hot-pink/10"
                 >
@@ -304,6 +305,7 @@
         $el.querySelector('img').src = value;
       })"
                     class="w-8 h-8 bg-surface-card rounded-full shadow-lg border-2 border-electric-blue/30 transition-all"
+                    x-cloak
                 >
                     <img :src="avatar" alt="Drift Avatar" class="rounded-full w-full h-full object-cover">
                 </div>
@@ -438,27 +440,30 @@
                     class="bg-gray-800 rounded-pixel p-3 border border-neon-cyan/20"
                     x-data="bookmarkWidget()"
                     x-init="init(); loadRecentBookmarks()"
+                    x-cloak
                 >
                     <div class="flex items-center justify-between mb-2">
                         <h4 class="text-xs font-medium text-neon-cyan">Recent Bookmarks</h4>
                         <button 
                             x-show="!searchMode"
+                            x-cloak
                             x-on:click="searchMode = true; $nextTick(() => $refs.searchInput.focus())"
                             class="text-xs text-text-muted hover:text-neon-cyan transition-colors"
                         >
-                            🔍
+                            <x-heroicon-o-magnifying-glass class="w-3 h-3"/>
                         </button>
                         <button 
                             x-show="searchMode"
+                            x-cloak
                             x-on:click="clearSearch()"
                             class="text-xs text-text-muted hover:text-neon-cyan transition-colors"
                         >
-                            ✕
+                            <x-heroicon-o-x-mark class="w-3 h-3"/>
                         </button>
                     </div>
                     
                     <!-- Search Input -->
-                    <div x-show="searchMode" class="mb-3">
+                    <div x-show="searchMode" x-cloak class="mb-3">
                         <input 
                             x-ref="searchInput"
                             x-model="searchQuery"
@@ -1053,6 +1058,40 @@
                     if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
                         console.log('Calling display via custom event with:', fragmentId, message, objectType);
                         toastElement._x_dataStack[0].display(fragmentId, message, objectType);
+                    }
+                }
+            });
+            
+            // Listen for success toast events
+            Livewire.on('show-success-toast', function(event) {
+                console.log('Received success toast event:', event);
+                
+                let message = event.message || event.detail?.message;
+                let objectType = event.objectType || event.detail?.objectType || 'fragment';
+                
+                console.log('Success toast values:', { message, objectType });
+                
+                if (message) {
+                    const toastElement = document.getElementById('undo-toast');
+                    if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
+                        console.log('Calling displaySuccess with:', message, objectType);
+                        toastElement._x_dataStack[0].displaySuccess(message, objectType, 10);
+                    }
+                }
+            });
+            
+            // Listen for browser success toast events
+            window.addEventListener('show-success-toast', function(event) {
+                console.log('Received custom success toast event:', event.detail);
+                
+                const message = event.detail.message;
+                const objectType = event.detail.objectType || 'fragment';
+                
+                if (message) {
+                    const toastElement = document.getElementById('undo-toast');
+                    if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
+                        console.log('Calling displaySuccess via custom event with:', message, objectType);
+                        toastElement._x_dataStack[0].displaySuccess(message, objectType, 10);
                     }
                 }
             });
