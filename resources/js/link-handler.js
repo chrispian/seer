@@ -22,7 +22,7 @@ class LinkHandler {
         this.modalContainer.innerHTML = `
             <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="event.stopPropagation(); linkHandler.closeModal()"></div>
             <div class="fixed inset-0 flex items-center justify-center p-4">
-                <div id="link-modal-content" class="relative max-w-2xl max-h-[90vh] overflow-auto">
+                <div id="link-modal-content" class="relative max-w-4xl max-h-[90vh] overflow-auto">
                     <!-- Modal content will be inserted here -->
                 </div>
             </div>
@@ -182,7 +182,11 @@ class LinkHandler {
                         <button onclick="linkHandler.copyCard(this)" class="text-xs bg-neon-cyan/20 hover:bg-neon-cyan/30 text-neon-cyan px-2 py-1 rounded-pixel border border-neon-cyan/40 transition-colors">
                             📋 Copy
                         </button>
-                        <button onclick="event.stopPropagation(); linkHandler.closeModal()" class="text-text-muted hover:text-text-primary text-xl">✕</button>
+                        <button onclick="event.stopPropagation(); linkHandler.closeModal()" class="p-1 rounded bg-gray-900 border border-gray-700 text-gray-400 hover:bg-hot-pink/20 hover:text-hot-pink hover:border-hot-pink/40 transition-all">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 
@@ -278,7 +282,11 @@ class LinkHandler {
                         <button onclick="linkHandler.copyCard(this)" class="text-xs bg-neon-cyan/20 hover:bg-neon-cyan/30 text-neon-cyan px-2 py-1 rounded-pixel border border-neon-cyan/40 transition-colors">
                             📋 Copy
                         </button>
-                        <button onclick="event.stopPropagation(); linkHandler.closeModal()" class="text-text-muted hover:text-text-primary text-xl">✕</button>
+                        <button onclick="event.stopPropagation(); linkHandler.closeModal()" class="p-1 rounded bg-gray-900 border border-gray-700 text-gray-400 hover:bg-hot-pink/20 hover:text-hot-pink hover:border-hot-pink/40 transition-all">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 

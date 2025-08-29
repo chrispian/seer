@@ -2,7 +2,7 @@
 <div>
     <!-- Main 4-Column Layout -->
     <div class="h-screen flex">
-    
+
     <!-- Left Column 1: Ribbon -->
     <div class="w-16 bg-gray-900 border-r border-thin border-hot-pink/20 flex flex-col items-center py-4">
         <!-- Fe Periodic Element -->
@@ -14,12 +14,12 @@
             <!-- Offset outline -->
             <div class="absolute -top-0.5 -left-0.5 w-11 h-11 border-thin border-electric-blue rounded-pixel"></div>
         </div>
-        
+
         <!-- Additional ribbon items -->
         <div class="mt-8 space-y-3">
             <!-- Create Flyout Menu -->
             <div x-data="{ open: false }" class="relative">
-                <button 
+                <button
                     @click="open = !open"
                     class="w-8 h-8 bg-surface-card rounded-pixel pixel-card border-thin border-hot-pink/30 flex items-center justify-center hover:bg-hot-pink/10 transition-colors glow-pink"
                 >
@@ -27,16 +27,16 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                     </svg>
                 </button>
-                
+
                 <!-- Flyout Menu -->
-                <div 
+                <div
                     x-show="open"
                     x-transition
                     x-cloak
                     @click.outside="open = false"
                     class="absolute left-full ml-2 top-0 bg-gray-900 border border-hot-pink/20 rounded-pixel p-2 space-y-1 min-w-48 z-50 shadow-lg shadow-hot-pink/10"
                 >
-                    <button 
+                    <button
                         wire:click="openVaultModal"
                         @click="open = false"
                         class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-hot-pink/20 hover:text-hot-pink rounded-pixel transition-colors flex items-center space-x-2"
@@ -44,7 +44,7 @@
                         <x-heroicon-o-archive-box class="w-4 h-4 text-hot-pink"/>
                         <span>New Vault</span>
                     </button>
-                    <button 
+                    <button
                         wire:click="openProjectModal"
                         @click="open = false"
                         class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-electric-blue/20 hover:text-electric-blue rounded-pixel transition-colors flex items-center space-x-2"
@@ -52,7 +52,7 @@
                         <x-heroicon-o-folder class="w-4 h-4 text-electric-blue"/>
                         <span>New Project</span>
                     </button>
-                    <button 
+                    <button
                         wire:click="startNewChat"
                         @click="open = false"
                         class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-neon-cyan/20 hover:text-neon-cyan rounded-pixel transition-colors flex items-center space-x-2"
@@ -62,7 +62,7 @@
                     </button>
                 </div>
             </div>
-            
+
             <button class="w-8 h-8 bg-surface-card rounded-pixel pixel-card border-thin border-electric-blue/30 flex items-center justify-center hover:bg-electric-blue/10 transition-colors glow-blue">
                 <svg class="w-4 h-4 text-electric-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -78,8 +78,8 @@
             <div>
                 <h3 class="text-xs font-medium text-hot-pink/80 mb-2">Vault</h3>
                 <div class="flex space-x-1">
-                    <select 
-                        wire:model.live="currentVaultId" 
+                    <select
+                        wire:model.live="currentVaultId"
                         class="flex-1 bg-gray-800 text-sm text-hot-pink rounded-l-pixel p-2 border-thin border-hot-pink/20 focus:ring-1 focus:ring-hot-pink focus:border-hot-pink appearance-none cursor-pointer"
                         style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27 fill=%27%23f97316%27%3e%3cpath fill-rule=%27evenodd%27 d=%27M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z%27 clip-rule=%27evenodd%27/%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1.5em 1.5em; padding-right: 2.5rem;"
                     >
@@ -89,7 +89,7 @@
                             </option>
                         @endforeach
                     </select>
-                    <button 
+                    <button
                         wire:click="openVaultModal"
                         class="px-3 bg-gray-800 border-thin border-hot-pink/20 rounded-r-pixel hover:bg-hot-pink/20 transition-colors text-hot-pink"
                         title="Create new vault"
@@ -105,7 +105,7 @@
             <div>
                 <h3 class="text-xs font-medium text-electric-blue/80 mb-2">Project</h3>
                 <div class="flex space-x-1">
-                    <select 
+                    <select
                         wire:model.live="currentProjectId"
                         class="flex-1 bg-gray-800 text-sm text-electric-blue rounded-l-pixel p-2 border-thin border-electric-blue/20 focus:ring-1 focus:ring-electric-blue focus:border-electric-blue appearance-none cursor-pointer"
                         style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27 fill=%27%2306b6d4%27%3e%3cpath fill-rule=%27evenodd%27 d=%27M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z%27 clip-rule=%27evenodd%27/%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1.5em 1.5em; padding-right: 2.5rem;"
@@ -116,7 +116,7 @@
                             </option>
                         @endforeach
                     </select>
-                    <button 
+                    <button
                         wire:click="openProjectModal"
                         class="px-3 bg-gray-800 border-thin border-electric-blue/20 rounded-r-pixel hover:bg-electric-blue/20 transition-colors text-electric-blue"
                         title="Create new project"
@@ -152,8 +152,8 @@
                         Pinned Chats
                     </h3>
                 </div>
-                
-                <div 
+
+                <div
                     x-data="{
                         sortable: null,
                         initSortable() {
@@ -169,7 +169,7 @@
                                             id: parseInt(item.dataset.id),
                                             sortOrder: index + 1
                                         }));
-                                        
+
                                         // Call Livewire method to update sort order
                                         @this.call('updatePinnedChatOrder', newOrder);
                                     }
@@ -182,13 +182,13 @@
                     id="pinned-chats-container"
                 >
                     @foreach ($pinnedChatSessions as $session)
-                        <div 
+                        <div
                             data-id="{{ $session['id'] }}"
                             wire:click="switchToChat({{ $session['id'] }})"
                             class="flex items-center p-2 rounded-pixel cursor-pointer transition-all sortable-item
-                                {{ $session['id'] === $currentChatSessionId 
-                                    ? 'bg-hot-pink/20 border-l-2 border-hot-pink' 
-                                    : 'bg-gray-800 hover:bg-neon-cyan/10' 
+                                {{ $session['id'] === $currentChatSessionId
+                                    ? 'bg-hot-pink/20 border-l-2 border-hot-pink'
+                                    : 'bg-gray-800 hover:bg-neon-cyan/10'
                                 }}"
                         >
                             <div class="drag-handle cursor-move mr-2 text-gray-500 hover:text-neon-cyan transition-colors">
@@ -202,7 +202,7 @@
                             <span class="px-1.5 py-0.5 text-xs rounded-full {{ $session['id'] === $currentChatSessionId ? 'bg-hot-pink/30 text-hot-pink' : 'bg-neon-cyan/20 text-neon-cyan' }} font-medium">
                                 {{ $session['message_count'] }}
                             </span>
-                            <button 
+                            <button
                                 wire:click.stop="togglePinChat({{ $session['id'] }})"
                                 class="ml-2 p-0.5 rounded bg-gray-700/50 text-gray-500 hover:bg-hot-pink/20 hover:text-hot-pink hover:shadow-sm hover:shadow-hot-pink/20 transition-all"
                                 title="Unpin chat"
@@ -222,16 +222,16 @@
                     Recent Chats
                 </h3>
             </div>
-            
+
             <div class="space-y-1">
                 @if (!empty($recentChatSessions))
                     @foreach ($recentChatSessions as $session)
-                        <div 
+                        <div
                             wire:click="switchToChat({{ $session['id'] }})"
                             class="flex items-center p-2 rounded-pixel cursor-pointer transition-all
-                                {{ $session['id'] === $currentChatSessionId 
-                                    ? 'bg-hot-pink/20 border-l-2 border-hot-pink' 
-                                    : 'bg-gray-800 hover:bg-electric-blue/10' 
+                                {{ $session['id'] === $currentChatSessionId
+                                    ? 'bg-hot-pink/20 border-l-2 border-hot-pink'
+                                    : 'bg-gray-800 hover:bg-electric-blue/10'
                                 }}"
                         >
                             <div class="flex-1 min-w-0 mr-2">
@@ -243,14 +243,14 @@
                                 {{ $session['message_count'] }}
                             </span>
                             <div class="flex items-center space-x-1 ml-2">
-                                <button 
+                                <button
                                     wire:click.stop="togglePinChat({{ $session['id'] }})"
                                     class="p-0.5 rounded bg-gray-700/50 text-gray-500 hover:bg-electric-blue/20 hover:text-electric-blue hover:shadow-sm hover:shadow-electric-blue/20 transition-all"
                                     title="Pin chat"
                                 >
                                     <x-heroicon-o-bookmark class="w-2.5 h-2.5"/>
                                 </button>
-                                <button 
+                                <button
                                     wire:click.stop="deleteChat({{ $session['id'] }})"
                                     class="p-0.5 rounded bg-gray-700/50 text-gray-500 hover:bg-hot-pink/20 hover:text-hot-pink hover:shadow-sm hover:shadow-hot-pink/20 transition-all"
                                     title="Delete chat"
@@ -270,14 +270,14 @@
 
         <!-- New Chat & Commands -->
         <div class="p-4 border-t border-thin border-electric-blue/20 space-y-2">
-            <button 
+            <button
                 wire:click="startNewChat"
                 class="w-full bg-electric-blue/20 hover:bg-electric-blue/30 text-electric-blue py-2 px-4 rounded-pixel transition-colors text-sm font-medium border border-electric-blue/40"
             >
                 <x-heroicon-o-plus class="inline w-4 h-4 mr-1"/>
                 New Chat
             </button>
-            <button 
+            <button
                 x-data
                 x-on:click="$dispatch('open-command-palette')"
                 class="w-full bg-hot-pink text-white py-2 px-4 rounded-pixel hover:bg-hot-pink/90 transition-colors text-sm font-medium"
@@ -292,22 +292,59 @@
     <div class="flex-1 flex flex-col bg-surface">
         <!-- Row 1: Header -->
         <div class="h-14 bg-gray-900/50 border-b border-thin border-hot-pink/20 flex items-center justify-between px-6 sticky top-0 z-10 backdrop-blur-sm">
-            <div class="flex items-center space-x-3">
-                <h2 class="text-base font-medium text-gray-300">Chat Interface</h2>
-                <span class="bg-hot-pink/20 text-hot-pink text-xs px-2 py-0.5 rounded-full font-medium">Active</span>
-            </div>
-            
-            <div class="flex items-center space-x-2">
+            <!-- Left: Contact Card Style Layout -->
+            <div class="flex items-center space-x-4">
                 <div
                     id="drift-avatar"
-                    x-data="{ avatar: '/interface/avatars/default/default.png' }"
+                    x-data="{ avatar: '/interface/avatars/default/pink-1.png' }"
                     x-init="$watch('avatar', value => {
         $el.querySelector('img').src = value;
       })"
-                    class="w-8 h-8 bg-surface-card rounded-full shadow-lg border-2 border-electric-blue/30 transition-all"
+                    class="w-12 h-12 bg-hot-pink/20 rounded-full shadow-lg border-2 border-electric-blue/30 transition-all"
+                    style="box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);"
                     x-cloak
                 >
-                    <img :src="avatar" alt="Drift Avatar" class="rounded-full w-full h-full object-cover">
+                    <img :src="avatar" alt="Holis Avatar" class="rounded-full w-full h-full object-cover">
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm font-medium text-electric-blue/80">EN-L2</span>
+                            <h2 class="text-base font-medium text-gray-300">Chat Interface</h2>
+                            <span class="bg-electric-blue/20 text-electric-blue/80 text-xs px-2 py-0.5 rounded-full font-medium">v1.1.2</span>
+                        </div>
+                        <div class="text-xs text-text-muted">Agent • Role: Chat Assistant</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Search Input -->
+            <div class="flex items-center space-x-4">
+                <div class="relative" x-data="{ searchOpen: false, searchQuery: '' }">
+                    <div class="flex items-center">
+                        <input
+                            x-model="searchQuery"
+                            x-on:focus="searchOpen = true"
+                            x-on:blur.delay="searchOpen = false"
+                            x-on:input="searchChat"
+                            placeholder="Search chat..."
+                            class="text-sm bg-gray-800 border border-gray-700 rounded-l-md px-3 py-2 text-text-primary placeholder-text-muted focus:outline-none focus:border-hot-pink w-64"
+                        >
+                        <div class="bg-hot-pink h-10 w-1 rounded-r-md flex items-center justify-center">
+                            <x-heroicon-o-magnifying-glass class="w-4 h-4 text-gray-900"/>
+                        </div>
+                    </div>
+
+                    <!-- Search Dropdown -->
+                    <div
+                        x-show="searchOpen && searchQuery.length > 0"
+                        x-cloak
+                        class="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-hot-pink/30 rounded-md shadow-lg z-50 max-h-64 overflow-y-auto"
+                    >
+                        <div class="p-2 text-xs text-text-muted">
+                            Search results will appear here...
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -316,7 +353,7 @@
         <div class="flex-1 p-6 overflow-y-auto space-y-4" id="chat-output">
             <!-- Chat Messages -->
             @foreach ($chatMessages as $entry)
-                <x-chat-message 
+                <x-chat-message
                     :type="$entry['type'] ?? 'user'"
                     :fragmentId="$entry['id'] ?? null"
                     :timestamp="$this->formatTimestamp($entry['created_at'] ?? null)"
@@ -332,7 +369,7 @@
                 @php
                     $todoFragments = $this->getTodoFragments();
                 @endphp
-                
+
                 <div class="pixel-card pixel-card-cyan p-4 glow-cyan">
                     <h2 class="text-lg font-semibold text-neon-cyan mb-3">
                         <x-heroicon-o-clipboard-document-list class="inline w-5 h-5 mr-1"/>
@@ -351,24 +388,24 @@
 
         <!-- Undo Toast Row (slides up from below) -->
         <x-undo-toast />
-        
+
         <!-- Error Toast Row (slides up from below) -->
         <x-error-toast />
 
         <!-- Row 3: Input Area -->
-        <div class="bg-surface-2 border-t border-thin border-hot-pink/30">                
+        <div class="bg-surface-2 border-t border-thin border-hot-pink/30">
             <!-- Chat Input -->
             <form id="chat-form" x-data wire:submit.prevent="handleInput" class="p-4">
                 <div class="flex space-x-3">
                     <div class="flex-1">
-                        <textarea 
+                        <textarea
                             x-data="chatTextarea()"
                             x-ref="chatTextarea"
                             x-init="initAutocomplete()"
                             wire:model.defer="input"
                             x-on:keydown.enter.prevent="handleEnterKey($event)"
-                            class="w-full p-3 border-thin border-hot-pink/30 rounded-pixel resize-none focus:ring-2 focus:ring-hot-pink focus:border-hot-pink pixel-card bg-surface-card text-text-primary" 
-                            rows="2" 
+                            class="w-full p-3 border-thin border-hot-pink/30 rounded-pixel resize-none focus:ring-2 focus:ring-hot-pink focus:border-hot-pink pixel-card bg-surface-card text-text-primary"
+                            rows="2"
                             placeholder="Type your message... (try /, @, or [[)"
                         ></textarea>
                     </div>
@@ -376,7 +413,7 @@
                         Send
                     </button>
                 </div>
-                
+
                 <!-- Command History -->
                 @if (!empty($commandHistory))
                     <div class="mt-3 flex flex-wrap gap-2">
@@ -399,8 +436,7 @@
     <div class="w-80 bg-gray-900/95 border-l border-thin border-electric-blue/20 flex flex-col">
         <!-- Widgets Section -->
         <div class="flex-1 p-4 overflow-y-auto">
-            <h3 class="text-xs font-medium text-neon-cyan/80 mb-4">Widgets</h3>
-            
+
             <!-- System Widgets -->
             <div class="space-y-4 mb-6">
                 <!-- Stats Widget -->
@@ -424,19 +460,9 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions Widget -->
-                <div class="bg-gray-800 rounded-pixel p-3 border border-electric-blue/20">
-                    <h4 class="text-xs font-medium text-electric-blue mb-2">Quick Actions</h4>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button class="bg-gray-900 p-2 rounded-pixel text-xs text-gray-400 hover:bg-hot-pink/20 hover:text-hot-pink border border-gray-700 hover:border-hot-pink/40 transition-colors">Export</button>
-                        <button class="bg-gray-900 p-2 rounded-pixel text-xs text-gray-400 hover:bg-electric-blue/20 hover:text-electric-blue border border-gray-700 hover:border-electric-blue/40 transition-colors">Search</button>
-                        <button class="bg-gray-900 p-2 rounded-pixel text-xs text-gray-400 hover:bg-neon-cyan/20 hover:text-neon-cyan border border-gray-700 hover:border-neon-cyan/40 transition-colors">Filter</button>
-                        <button class="bg-gray-900 p-2 rounded-pixel text-xs text-gray-400 hover:bg-deep-purple/20 hover:text-deep-purple border border-gray-700 hover:border-deep-purple/40 transition-colors">Archive</button>
-                    </div>
-                </div>
 
                 <!-- Recent Bookmarks Widget -->
-                <div 
+                <div
                     class="bg-gray-800 rounded-pixel p-3 border border-neon-cyan/20"
                     x-data="bookmarkWidget()"
                     x-init="init(); loadRecentBookmarks()"
@@ -444,7 +470,7 @@
                 >
                     <div class="flex items-center justify-between mb-2">
                         <h4 class="text-xs font-medium text-neon-cyan">Recent Bookmarks</h4>
-                        <button 
+                        <button
                             x-show="!searchMode"
                             x-cloak
                             x-on:click="searchMode = true; $nextTick(() => $refs.searchInput.focus())"
@@ -452,7 +478,7 @@
                         >
                             <x-heroicon-o-magnifying-glass class="w-3 h-3"/>
                         </button>
-                        <button 
+                        <button
                             x-show="searchMode"
                             x-cloak
                             x-on:click="clearSearch()"
@@ -461,10 +487,10 @@
                             <x-heroicon-o-x-mark class="w-3 h-3"/>
                         </button>
                     </div>
-                    
+
                     <!-- Search Input -->
                     <div x-show="searchMode" x-cloak class="mb-3">
-                        <input 
+                        <input
                             x-ref="searchInput"
                             x-model="searchQuery"
                             x-on:input.debounce.300ms="handleSearch()"
@@ -472,16 +498,16 @@
                             class="w-full bg-surface-card text-text-secondary text-xs p-2 rounded-pixel border-thin border-neon-cyan/40 focus:border-neon-cyan focus:outline-none"
                         />
                     </div>
-                    
+
                     <!-- Bookmarks List -->
                     <div class="space-y-2 max-h-48 overflow-y-auto" x-show="!loading" :class="{ 'pointer-events-none': openingModal }">
                         <template x-for="bookmark in bookmarks" :key="bookmark.id">
-                            <div 
+                            <div
                                 x-on:click.stop="openBookmark(bookmark)"
                                 class="flex items-center space-x-2 text-xs cursor-pointer hover:bg-neon-cyan/10 p-1 rounded-pixel transition-colors"
                             >
                                 <div class="w-2 h-2 bg-neon-cyan rounded-full flex-shrink-0"></div>
-                                <span 
+                                <span
                                     class="text-text-secondary flex-1 truncate"
                                     :title="bookmark.fragment_title"
                                     x-text="bookmark.name"
@@ -489,14 +515,14 @@
                                 <span class="text-text-muted text-xs flex-shrink-0" x-text="bookmark.updated_at"></span>
                             </div>
                         </template>
-                        
+
                         <!-- Empty State -->
                         <div x-show="bookmarks.length === 0 && !loading" class="text-center text-text-muted text-xs py-4">
                             <span x-show="!searchMode">No bookmarks yet</span>
                             <span x-show="searchMode">No results found</span>
                         </div>
                     </div>
-                    
+
                     <!-- Loading State -->
                     <div x-show="loading" class="text-center text-neon-cyan text-xs py-4">
                         ⏳ Loading...
@@ -516,34 +542,34 @@
                 searchMode: false,
                 searchQuery: '',
                 openingModal: false,
-                
+
                 init() {
                     // Listen for modal close events to reset our state
                     document.addEventListener('modalClosed', () => {
                         this.openingModal = false;
                     });
-                    
+
                     // Listen for fragment deletion events
                     window.addEventListener('show-undo-toast', () => {
                         this.loadRecentBookmarks();
                     });
-                    
-                    // Listen for fragment restoration events  
+
+                    // Listen for fragment restoration events
                     Livewire.on('undo-fragment', () => {
                         setTimeout(() => this.loadRecentBookmarks(), 100);
                     });
-                    
+
                     // Listen for bookmark toggle events
                     window.addEventListener('bookmark-toggled', () => {
                         this.loadRecentBookmarks();
                     });
-                    
+
                     // Listen for fragment restoration events
                     window.addEventListener('fragment-restored', () => {
                         this.loadRecentBookmarks();
                     });
                 },
-                
+
                 async loadRecentBookmarks() {
                     this.loading = true;
                     try {
@@ -560,13 +586,13 @@
                         this.loading = false;
                     }
                 },
-                
+
                 async handleSearch() {
                     if (this.searchQuery.length < 2) {
                         await this.loadRecentBookmarks();
                         return;
                     }
-                    
+
                     this.loading = true;
                     try {
                         const response = await fetch(`/api/bookmarks/search?q=${encodeURIComponent(this.searchQuery)}&limit=8`);
@@ -582,34 +608,34 @@
                         this.loading = false;
                     }
                 },
-                
+
                 clearSearch() {
                     this.searchMode = false;
                     this.searchQuery = '';
                     this.loadRecentBookmarks();
                 },
-                
+
                 async openBookmark(bookmark) {
                     console.log('Opening bookmark:', bookmark);
-                    
+
                     // Prevent multiple simultaneous openings
                     if (this.openingModal) {
                         console.log('Modal already opening, ignoring click');
                         return;
                     }
-                    
+
                     if (!bookmark || !bookmark.fragment_id) {
                         console.warn('No fragment ID for bookmark:', bookmark);
                         // Show user feedback for invalid bookmark
                         alert('This bookmark references a fragment that no longer exists.');
                         return;
                     }
-                    
+
                     this.openingModal = true;
-                    
+
                     // Mark bookmark as viewed
                     try {
-                        const response = await fetch(`/api/bookmarks/${bookmark.id}/mark-viewed`, { 
+                        const response = await fetch(`/api/bookmarks/${bookmark.id}/mark-viewed`, {
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
@@ -621,7 +647,7 @@
                     } catch (error) {
                         console.error('Failed to mark bookmark as viewed:', error);
                     }
-                    
+
                     // Open fragment modal using existing LinkHandler
                     try {
                         if (window.linkHandler && window.linkHandler.showFragmentModal) {
@@ -649,33 +675,33 @@
             return {
                 autocompleteActive: false,
                 autocompleteEngine: null,
-                
+
                 initAutocomplete() {
                     if (typeof AutocompleteEngine !== 'undefined') {
                         this.autocompleteEngine = new AutocompleteEngine(this.$refs.chatTextarea);
-                        
+
                         // Monitor autocomplete state
                         const originalShow = this.autocompleteEngine.show.bind(this.autocompleteEngine);
                         const originalHide = this.autocompleteEngine.hide.bind(this.autocompleteEngine);
-                        
+
                         this.autocompleteEngine.show = () => {
                             this.autocompleteActive = true;
                             originalShow();
                         };
-                        
+
                         this.autocompleteEngine.hide = () => {
                             this.autocompleteActive = false;
                             originalHide();
                         };
                     }
                 },
-                
+
                 handleEnterKey(event) {
                     // If autocomplete is active, don't submit
                     if (this.autocompleteActive) {
                         return;
                     }
-                    
+
                     // Don't clear the textarea here - let Livewire handle it
                     // Just trigger the form submission
                     this.$nextTick(() => {
@@ -685,7 +711,7 @@
                         }
                     });
                 },
-                
+
                 destroy() {
                     if (this.autocompleteEngine) {
                         this.autocompleteEngine.destroy();
@@ -742,29 +768,29 @@
                 <x-heroicon-o-archive-box class="inline w-5 h-5 mr-1"/>
                 Create New Vault
             </h3>
-            
+
             <form wire:submit.prevent="createNewVault" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-text-secondary mb-2">Vault Name *</label>
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         wire:model="newVaultName"
                         class="w-full bg-gray-800 text-gray-200 rounded-pixel p-3 border border-hot-pink/20 focus:ring-1 focus:ring-hot-pink focus:border-hot-pink"
                         placeholder="Enter vault name..."
                         required
                     />
                 </div>
-                
+
                 <div>
                     <label class="block text-sm font-medium text-text-secondary mb-2">Description</label>
-                    <textarea 
+                    <textarea
                         wire:model="newVaultDescription"
                         class="w-full bg-gray-800 text-gray-200 rounded-pixel p-3 border border-hot-pink/20 focus:ring-1 focus:ring-hot-pink focus:border-hot-pink resize-none"
                         rows="3"
                         placeholder="Brief description (optional)..."
                     ></textarea>
                 </div>
-                
+
                 <div class="flex space-x-3 pt-4">
                     <button
                         type="submit"
@@ -796,29 +822,29 @@
                 <x-heroicon-o-folder class="inline w-5 h-5 mr-1"/>
                 Create New Project
             </h3>
-            
+
             <form wire:submit.prevent="createNewProject" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-text-secondary mb-2">Project Name *</label>
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         wire:model="newProjectName"
                         class="w-full bg-gray-800 text-gray-200 rounded-pixel p-3 border border-electric-blue/20 focus:ring-1 focus:ring-electric-blue focus:border-electric-blue"
                         placeholder="Enter project name..."
                         required
                     />
                 </div>
-                
+
                 <div>
                     <label class="block text-sm font-medium text-text-secondary mb-2">Description</label>
-                    <textarea 
+                    <textarea
                         wire:model="newProjectDescription"
                         class="w-full bg-gray-800 text-gray-200 rounded-pixel p-3 border border-electric-blue/20 focus:ring-1 focus:ring-electric-blue focus:border-electric-blue resize-none"
                         rows="3"
                         placeholder="Brief description (optional)..."
                     ></textarea>
                 </div>
-                
+
                 <div class="flex space-x-3 pt-4">
                     <button
                         type="submit"
@@ -839,9 +865,9 @@
     </div>
 
     <!-- Recall Palette (Ctrl+K Search) - Inline -->
-    <div 
+    <div
         x-data="recallPalette"
-        x-show="$wire.showRecallPalette" 
+        x-show="$wire.showRecallPalette"
         x-cloak
         x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0"
@@ -855,11 +881,11 @@
     >
         {{-- Backdrop --}}
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75"></div>
-        
+
         {{-- Modal Container --}}
         <div class="flex min-h-full items-start justify-center p-4 text-center sm:p-0">
             <div class="relative mt-20 w-full max-w-2xl transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all">
-                
+
                 {{-- Search Input --}}
                 <div class="border-b border-gray-200 dark:border-gray-700 px-4 py-4">
                     <div class="relative">
@@ -868,9 +894,9 @@
                                 <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <input 
+                        <input
                             wire:model.live="recallQuery"
-                            type="text" 
+                            type="text"
                             class="w-full pl-10 pr-4 py-3 border-0 text-lg text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 bg-transparent focus:ring-0 focus:outline-none"
                             placeholder="Search fragments... (type:todo #urgent @john has:link)"
                             x-ref="searchInput"
@@ -891,7 +917,7 @@
 
                 {{-- Results Container --}}
                 <div class="max-h-96 overflow-y-auto">
-                    
+
                     {{-- Search Results --}}
                     @if(count($recallResults ?? []) > 0)
                         <div class="py-2">
@@ -899,7 +925,7 @@
                                 Search Results ({{ count($recallResults ?? []) }})
                             </div>
                             @foreach($recallResults as $index => $result)
-                                <div 
+                                <div
                                     class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-l-4 {{ $selectedRecallIndex === $index ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500' : 'border-transparent' }}"
                                     wire:click="selectRecallResult({{ $index }})"
                                 >
@@ -916,7 +942,7 @@
                                                 {{ $result['type'] }}
                                             </span>
                                         </div>
-                                        
+
                                         {{-- Content --}}
                                         <div class="flex-1 min-w-0">
                                             <div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
@@ -925,7 +951,7 @@
                                             <div class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">
                                                 {{ $result['preview'] }}
                                             </div>
-                                            
+
                                             {{-- Tags and Metadata --}}
                                             <div class="flex items-center space-x-2 mt-2">
                                                 @if(!empty($result['tags']))
@@ -940,11 +966,11 @@
                                                         @endif
                                                     </div>
                                                 @endif
-                                                
+
                                                 <div class="text-xs text-gray-400">
                                                     {{ $result['created_at'] }}
                                                 </div>
-                                                
+
                                                 @if(isset($result['search_score']) && $result['search_score'] > 0)
                                                     <div class="text-xs text-gray-400">
                                                         Score: {{ number_format($result['search_score'], 1) }}
@@ -1011,30 +1037,30 @@
             Livewire.on('show-undo-toast', function(event) {
                 console.log('Received undo toast event:', event);
                 console.log('All arguments:', Array.from(arguments));
-                
+
                 // In Livewire 3, named parameters are passed as properties of the event object
                 let fragmentId = event.fragmentId || event.detail?.fragmentId;
                 let message = event.message || event.detail?.message;
                 let objectType = event.objectType || event.detail?.objectType || 'fragment';
-                
+
                 // Fallback: check if data is in arguments
                 if (!fragmentId && arguments.length > 1) {
                     fragmentId = arguments[0]?.fragmentId || arguments[1];
                     message = arguments[0]?.message || arguments[2];
                     objectType = arguments[0]?.objectType || arguments[3] || 'fragment';
                 }
-                
+
                 console.log('Extracted values:', { fragmentId, message, objectType });
-                
+
                 if (!fragmentId) {
                     console.error('No fragmentId found in event data');
                     return;
                 }
-                
+
                 // Find the undo toast by ID and trigger display
                 const toastElement = document.getElementById('undo-toast');
                 console.log('Toast element found:', !!toastElement);
-                
+
                 if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
                     console.log('Calling display with:', fragmentId, message, objectType);
                     toastElement._x_dataStack[0].display(fragmentId, message, objectType);
@@ -1042,17 +1068,17 @@
                     console.error('Could not find undo toast Alpine component');
                 }
             });
-            
+
             // Also listen for custom browser events as fallback
             window.addEventListener('show-undo-toast', function(event) {
                 console.log('Received custom undo toast event:', event.detail);
-                
+
                 const fragmentId = event.detail.fragmentId;
                 const message = event.detail.message;
                 const objectType = event.detail.objectType || 'fragment';
-                
+
                 console.log('Custom event values:', { fragmentId, message, objectType });
-                
+
                 if (fragmentId) {
                     const toastElement = document.getElementById('undo-toast');
                     if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
@@ -1061,16 +1087,16 @@
                     }
                 }
             });
-            
+
             // Listen for success toast events
             Livewire.on('show-success-toast', function(event) {
                 console.log('Received success toast event:', event);
-                
+
                 let message = event.message || event.detail?.message;
                 let objectType = event.objectType || event.detail?.objectType || 'fragment';
-                
+
                 console.log('Success toast values:', { message, objectType });
-                
+
                 if (message) {
                     const toastElement = document.getElementById('undo-toast');
                     if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
@@ -1079,14 +1105,14 @@
                     }
                 }
             });
-            
+
             // Listen for browser success toast events
             window.addEventListener('show-success-toast', function(event) {
                 console.log('Received custom success toast event:', event.detail);
-                
+
                 const message = event.detail.message;
                 const objectType = event.detail.objectType || 'fragment';
-                
+
                 if (message) {
                     const toastElement = document.getElementById('undo-toast');
                     if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
@@ -1095,7 +1121,7 @@
                     }
                 }
             });
-            
+
             Livewire.on('show-error-toast', function(data) {
                 // Find the error toast by ID and trigger display
                 const errorToastElement = document.getElementById('error-toast');
@@ -1103,7 +1129,7 @@
                     errorToastElement._x_dataStack[0].display(data.message);
                 }
             });
-            
+
         });
     </script>
 </div>
