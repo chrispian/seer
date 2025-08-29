@@ -6,12 +6,14 @@
         timeLeft: 60,
         message: '',
         fragmentId: null,
+        objectType: 'fragment',
         countdownInterval: null,
         
-        display(fragmentId, message) {
-            console.log('Undo toast display called with:', { fragmentId, message });
+        display(fragmentId, message, objectType = 'fragment') {
+            console.log('Undo toast display called with:', { fragmentId, message, objectType });
             this.fragmentId = fragmentId;
             this.message = message;
+            this.objectType = objectType;
             this.timeLeft = 60;
             this.show = true;
             
@@ -23,6 +25,14 @@
                     this.hide();
                 }
             }, 1000);
+        },
+        
+        getTitle() {
+            return this.objectType === 'chat' ? 'Chat deleted' : 'Fragment deleted';
+        },
+        
+        getIcon() {
+            return this.objectType === 'chat' ? '💬' : '🗑️';
         },
         
         hide() {
@@ -48,10 +58,10 @@
         <div class="flex items-center justify-between w-full max-w-2xl">
             <div class="flex items-center space-x-3">
                 <div class="w-6 h-6 bg-hot-pink rounded-pixel flex items-center justify-center">
-                    <span class="text-white text-sm">🗑️</span>
+                    <span class="text-white text-sm" x-text="getIcon()"></span>
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-text-primary">Fragment deleted</p>
+                    <p class="text-sm font-medium text-text-primary" x-text="getTitle()"></p>
                     <p class="text-xs text-text-muted truncate" x-text="message" style="max-width: 300px;"></p>
                 </div>
             </div>

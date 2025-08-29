@@ -126,30 +126,6 @@
             </div>
         </div>
 
-        <!-- Active Chat (Top Recent Chat) -->
-        @if (!empty($recentChatSessions))
-            @php
-                $activeSession = collect($recentChatSessions)->first();
-            @endphp
-            @if ($activeSession)
-            <div class="p-4 border-b border-thin border-neon-cyan/10">
-                <h3 class="text-xs font-medium text-neon-cyan/80 mb-2">Active Chat</h3>
-                <div 
-                    wire:click="switchToChat({{ $activeSession['id'] }})"
-                    class="bg-gray-800 rounded-pixel p-2 border-thin border-neon-cyan/20 cursor-pointer hover:bg-neon-cyan/10 transition-colors"
-                >
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-neon-cyan truncate">{{ $activeSession['title'] }}</span>
-                        @if ($activeSession['id'] === $currentChatSessionId)
-                            <span class="text-xs text-bright-pink ml-2">Active</span>
-                        @endif
-                    </div>
-                    <div class="text-xs text-text-muted mt-1">{{ $activeSession['message_count'] }} messages</div>
-                </div>
-            </div>
-            @endif
-        @endif
-
         <!-- Legacy Session Indicator -->
         @if ($currentSession)
         <div class="p-4 border-b border-thin border-neon-cyan/20">
@@ -227,10 +203,10 @@
                             </span>
                             <button 
                                 wire:click.stop="togglePinChat({{ $session['id'] }})"
-                                class="ml-2 text-gray-500 hover:text-bright-pink transition-colors"
+                                class="ml-2 p-0.5 rounded bg-gray-700/50 text-gray-500 hover:bg-hot-pink/20 hover:text-hot-pink hover:shadow-sm hover:shadow-hot-pink/20 transition-all"
                                 title="Unpin chat"
                             >
-                                <x-heroicon-o-x-mark class="w-3 h-3"/>
+                                <x-heroicon-o-x-mark class="w-2.5 h-2.5"/>
                             </button>
                         </div>
                     @endforeach
@@ -265,13 +241,22 @@
                             <span class="px-1.5 py-0.5 text-xs rounded-full {{ $session['id'] === $currentChatSessionId ? 'bg-hot-pink/30 text-hot-pink' : 'bg-electric-blue/20 text-electric-blue' }} font-medium">
                                 {{ $session['message_count'] }}
                             </span>
-                            <button 
-                                wire:click.stop="togglePinChat({{ $session['id'] }})"
-                                class="ml-2 text-gray-500 hover:text-hot-pink transition-colors"
-                                title="Pin chat"
-                            >
-                                <x-heroicon-o-bookmark class="w-3 h-3"/>
-                            </button>
+                            <div class="flex items-center space-x-1 ml-2">
+                                <button 
+                                    wire:click.stop="togglePinChat({{ $session['id'] }})"
+                                    class="p-0.5 rounded bg-gray-700/50 text-gray-500 hover:bg-electric-blue/20 hover:text-electric-blue hover:shadow-sm hover:shadow-electric-blue/20 transition-all"
+                                    title="Pin chat"
+                                >
+                                    <x-heroicon-o-bookmark class="w-2.5 h-2.5"/>
+                                </button>
+                                <button 
+                                    wire:click.stop="deleteChat({{ $session['id'] }})"
+                                    class="p-0.5 rounded bg-gray-700/50 text-gray-500 hover:bg-hot-pink/20 hover:text-hot-pink hover:shadow-sm hover:shadow-hot-pink/20 transition-all"
+                                    title="Delete chat"
+                                >
+                                    <x-heroicon-o-trash class="w-2.5 h-2.5"/>
+                                </button>
+                            </div>
                         </div>
                     @endforeach
                 @else
@@ -1025,14 +1010,16 @@
                 // In Livewire 3, named parameters are passed as properties of the event object
                 let fragmentId = event.fragmentId || event.detail?.fragmentId;
                 let message = event.message || event.detail?.message;
+                let objectType = event.objectType || event.detail?.objectType || 'fragment';
                 
                 // Fallback: check if data is in arguments
                 if (!fragmentId && arguments.length > 1) {
                     fragmentId = arguments[0]?.fragmentId || arguments[1];
                     message = arguments[0]?.message || arguments[2];
+                    objectType = arguments[0]?.objectType || arguments[3] || 'fragment';
                 }
                 
-                console.log('Extracted values:', { fragmentId, message });
+                console.log('Extracted values:', { fragmentId, message, objectType });
                 
                 if (!fragmentId) {
                     console.error('No fragmentId found in event data');
@@ -1044,8 +1031,8 @@
                 console.log('Toast element found:', !!toastElement);
                 
                 if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
-                    console.log('Calling display with:', fragmentId, message);
-                    toastElement._x_dataStack[0].display(fragmentId, message);
+                    console.log('Calling display with:', fragmentId, message, objectType);
+                    toastElement._x_dataStack[0].display(fragmentId, message, objectType);
                 } else {
                     console.error('Could not find undo toast Alpine component');
                 }
@@ -1057,14 +1044,15 @@
                 
                 const fragmentId = event.detail.fragmentId;
                 const message = event.detail.message;
+                const objectType = event.detail.objectType || 'fragment';
                 
-                console.log('Custom event values:', { fragmentId, message });
+                console.log('Custom event values:', { fragmentId, message, objectType });
                 
                 if (fragmentId) {
                     const toastElement = document.getElementById('undo-toast');
                     if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
-                        console.log('Calling display via custom event with:', fragmentId, message);
-                        toastElement._x_dataStack[0].display(fragmentId, message);
+                        console.log('Calling display via custom event with:', fragmentId, message, objectType);
+                        toastElement._x_dataStack[0].display(fragmentId, message, objectType);
                     }
                 }
             });
