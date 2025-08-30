@@ -324,10 +324,10 @@
         <!-- Row 1: Header -->
         <div class="h-14 bg-gray-900/50 border-b border-thin border-hot-pink/20 flex items-center justify-between px-6 sticky top-0 z-10 backdrop-blur-sm">
             <!-- Left: Contact Card Style Layout -->
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
                 <div
                     id="drift-avatar"
-                    x-data="{ avatar: '/interface/avatars/default/test2.png' }"
+                    x-data="{ avatar: '/interface/avatars/default/avatar-1.png' }"
                     x-init="$watch('avatar', value => {
         $el.querySelector('img').src = value;
       })"
@@ -340,11 +340,15 @@
                 <div class="flex items-center space-x-4">
                     <div>
                         <div class="flex items-center space-x-3">
-                            <span class="text-sm font-medium text-electric-blue/80">EN-L2</span>
-                            <h2 class="text-base font-medium text-gray-300">Chat Interface</h2>
+                            <h2 class="text-base font-medium text-gray-300">Agent ID: </h2>
+                            <span class="text-sm font-medium text-electric-blue/80">C1-13</span>
+
                             <span class="bg-electric-blue/20 text-electric-blue/80 text-xs px-2 py-0.5 rounded-full font-medium">v1.1.2</span>
                         </div>
-                        <div class="text-xs text-text-muted">Agent • Role: Chat Assistant</div>
+                        <div class="text-xs font-medium text-gray-300">
+                            <span>Role:</span>
+                            <span class="text-hot-pink/80">Chat Assistant</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -656,7 +660,7 @@
                 async loadRecentBookmarks() {
                     this.loading = true;
                     try {
-                        const response = await fetch('/api/bookmarks/recent?limit=8');
+                        const response = await fetch('/api/bookmarks/recent?limit=6');
                         if (response.ok) {
                             const data = await response.json();
                             this.bookmarks = data.bookmarks;
