@@ -9,7 +9,7 @@ class FragmentDetailController extends Controller
 {
     public function show($id)
     {
-        $fragment = Fragment::with(['fragmentTags', 'todo', 'contact', 'link'])
+        $fragment = Fragment::with(['fragmentTags', 'todo', 'contact', 'link', 'type'])
             ->find($id);
         
         if (!$fragment) {
@@ -27,7 +27,7 @@ class FragmentDetailController extends Controller
         return response()->json([
             'id' => $fragment->id,
             'message' => $fragment->message,
-            'type' => $fragment->type?->value,
+            'type' => $fragment->type?->value ?? $fragment->getAttribute('type'),
             'created_at' => $fragment->created_at->toISOString(),
             'updated_at' => $fragment->updated_at->toISOString(),
             'tags' => array_unique($tags),

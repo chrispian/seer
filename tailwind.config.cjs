@@ -7,7 +7,7 @@ module.exports = {
     ],
     safelist: [
         {
-            pattern: /mb-\[.*\]/, // allows mb-[30px] and other dynamic margin-bottoms
+            pattern: /mb-\[.*]/, // allows mb-[30px] and other dynamic margin-bottoms
             // pattern: /mt-\[.*\]/, // allows mb-[30px] and other dynamic margin-bottoms
         },
     ],

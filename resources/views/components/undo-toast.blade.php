@@ -6,13 +6,15 @@
         timeLeft: 60,
         message: '',
         fragmentId: null,
+        objectType: 'fragment',
         countdownInterval: null,
         
-        display(fragmentId, message) {
-            console.log('Undo toast display called with:', { fragmentId, message });
+        display(fragmentId, message, objectType = 'fragment', duration = 60) {
+            console.log('Undo toast display called with:', { fragmentId, message, objectType, duration });
             this.fragmentId = fragmentId;
             this.message = message;
-            this.timeLeft = 60;
+            this.objectType = objectType;
+            this.timeLeft = duration;
             this.show = true;
             
             // Start countdown
@@ -23,6 +25,46 @@
                     this.hide();
                 }
             }, 1000);
+        },
+        
+        displaySuccess(message, objectType = 'fragment', duration = 10) {
+            console.log('Undo toast success called with:', { message, objectType, duration });
+            this.fragmentId = null; // No undo action for success messages
+            this.message = message;
+            this.objectType = objectType;
+            this.timeLeft = duration;
+            this.show = true;
+            
+            // Start countdown
+            this.countdownInterval = setInterval(() => {
+                this.timeLeft--;
+                
+                if (this.timeLeft <= 0) {
+                    this.hide();
+                }
+            }, 1000);
+        },
+        
+        getTitle() {
+            if (!this.fragmentId) {
+                // Success message - no undo action
+                return this.objectType === 'chat' ? 'Chat restored' : 'Fragment restored';
+            }
+            // Delete message - with undo action
+            return this.objectType === 'chat' ? 'Chat deleted' : 'Fragment deleted';
+        },
+        
+        getIcon() {
+            if (!this.fragmentId) {
+                // Success message - use checkmark
+                return '✅';
+            }
+            // Delete message - use type-specific icon
+            return this.objectType === 'chat' ? '💬' : '🗑️';
+        },
+        
+        showUndoButton() {
+            return this.fragmentId !== null;
         },
         
         hide() {
@@ -48,10 +90,10 @@
         <div class="flex items-center justify-between w-full max-w-2xl">
             <div class="flex items-center space-x-3">
                 <div class="w-6 h-6 bg-hot-pink rounded-pixel flex items-center justify-center">
-                    <span class="text-white text-sm">🗑️</span>
+                    <span class="text-white text-sm" x-text="getIcon()"></span>
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-text-primary">Fragment deleted</p>
+                    <p class="text-sm font-medium text-text-primary" x-text="getTitle()"></p>
                     <p class="text-xs text-text-muted truncate" x-text="message" style="max-width: 300px;"></p>
                 </div>
             </div>
@@ -62,6 +104,7 @@
                 </div>
                 
                 <button 
+                        x-show="showUndoButton()"
                         @click="
                             console.log('Undo clicked for fragment:', fragmentId);
                             if (fragmentId) {

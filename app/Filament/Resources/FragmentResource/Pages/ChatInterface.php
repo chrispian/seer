@@ -11,12 +11,14 @@ use App\Filament\Resources\FragmentResource;
 use App\Models\ChatSession;
 use App\Models\Fragment;
 use App\Models\Project;
+use App\Models\Type;
 use App\Models\Vault;
 use App\Services\CommandRegistry;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
+use Livewire\Attributes\On;
 
 class ChatInterface extends Page
 {
@@ -85,7 +87,7 @@ class ChatInterface extends Page
 
     protected $listeners = [
         'echo:lens.chat,fragment.processed' => 'onFragmentProcessed',
-        'undo-fragment' => 'handleUndoFragment',
+        'undo-fragment' => 'handleUndoDeleteObject',
     ];
 
     public static function shouldRegisterNavigation(array $parameters = []): bool
@@ -167,6 +169,7 @@ class ChatInterface extends Page
         $this->chatMessages[] = [
             'key' => $spinnerKey,
             'type' => 'system',
+            'type_id' => $this->getSystemTypeId(),
             'message' => '⏳ Processing...',
         ];
 
@@ -181,6 +184,7 @@ class ChatInterface extends Page
                 $this->removeSpinner($spinnerKey); // ❗ clean up spinner
                 $this->chatMessages[] = [
                     'type' => 'system',
+                    'type_id' => $this->getSystemTypeId(),
                     'message' => "❌ Command `/{$command->command}` not recognized. Try `/help` for options.",
                 ];
 
@@ -238,7 +242,8 @@ class ChatInterface extends Page
 
             $this->chatMessages[] = [
                 'id' => $fragment->id,
-                'type' => $fragment->type,
+                'type' => $fragment->type?->value ?? 'log',
+                'type_id' => $fragment->type_id,
                 'message' => $fragment->message,
                 'created_at' => $fragment->created_at,
             ];
@@ -247,6 +252,12 @@ class ChatInterface extends Page
         // Save the updated chat session after any input
         $this->saveCurrentChatSession();
     }
+
+    protected function getSystemTypeId(): int
+    {
+        return Type::where('value', 'system')->first()?->id ?? Type::where('value', 'log')->first()->id;
+    }
+
 
     protected function removeSpinner(string $spinnerKey): void
     {
@@ -273,7 +284,10 @@ class ChatInterface extends Page
     {
         $this->recentChatSessions = ChatSession::forVaultAndProject($this->currentVaultId, $this->currentProjectId)
             ->where('is_pinned', false)
-            ->recent(5)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('updated_at', 'desc') // Fallback for items without sort_order
+            ->limit(5)
             ->get()
             ->map(fn ($session) => [
                 'id' => $session->id,
@@ -317,6 +331,7 @@ class ChatInterface extends Page
         // Add welcome message
         $this->chatMessages[] = [
             'type' => 'system',
+            'type_id' => $this->getSystemTypeId(),
             'message' => '💬 **New chat started!** Type your message or use `/help` for commands.',
             'created_at' => now(),
         ];
@@ -415,6 +430,7 @@ class ChatInterface extends Page
 
             $this->chatMessages[] = [
                 'type' => 'system',
+                'type_id' => $this->getSystemTypeId(),
                 'message' => $sessionDetails,
             ];
         }
@@ -450,6 +466,7 @@ class ChatInterface extends Page
 
         $this->chatMessages[] = [
             'type' => 'system',
+            'type_id' => $this->getSystemTypeId(),
             'message' => $message,
         ];
     }
@@ -594,6 +611,45 @@ class ChatInterface extends Page
         }
     }
 
+    public function deleteChat(int $chatSessionId): void
+    {
+        $session = ChatSession::find($chatSessionId);
+        if ($session) {
+            // Store session info for undo
+            $sessionTitle = $session->title ?? 'Untitled Chat';
+            $sessionMessage = "Chat \"{$sessionTitle}\" deleted";
+            
+            // Soft delete the chat session
+            $session->delete();
+            
+            // If we deleted the current chat, switch to a new one
+            if ($this->currentChatSessionId === $chatSessionId) {
+                $this->startNewChat();
+            }
+            
+            // Reload the chat lists
+            $this->loadPinnedChatSessions();
+            $this->loadRecentChatSessions();
+            
+            // Use a special prefix for chat sessions
+            $undoId = 'chat-' . $chatSessionId;
+            
+            // Trigger undo toast using the same pattern as fragment deletion
+            $this->dispatch('show-undo-toast',
+                fragmentId: $undoId,
+                message: $sessionMessage,
+                objectType: 'chat'
+            );
+            
+            // Also dispatch a browser event as fallback
+            $this->js("
+                window.dispatchEvent(new CustomEvent('show-undo-toast', {
+                    detail: { fragmentId: '{$undoId}', message: ".json_encode($sessionMessage).", objectType: 'chat' }
+                }));
+            ");
+        }
+    }
+
     public function openVaultModal(): void
     {
         $this->newVaultName = '';
@@ -705,6 +761,17 @@ class ChatInterface extends Page
         $this->loadPinnedChatSessions();
     }
 
+    public function updateRecentChatOrder(array $newOrder): void
+    {
+        foreach ($newOrder as $item) {
+            ChatSession::where('id', $item['id'])
+                ->update(['sort_order' => $item['sortOrder']]);
+        }
+
+        // Refresh recent chat sessions to reflect new order
+        $this->loadRecentChatSessions();
+    }
+
     public function updatedCurrentVaultId($vaultId): void
     {
         $this->switchVault($vaultId);
@@ -719,6 +786,7 @@ class ChatInterface extends Page
     {
         $this->chatMessages[] = [
             'type' => 'system',
+            'type_id' => $this->getSystemTypeId(),
             'message' => "**Debug State:**\n".
                 'Current Vault ID: '.($this->currentVaultId ?: 'null')."\n".
                 'Current Project ID: '.($this->currentProjectId ?: 'null')."\n".
@@ -733,7 +801,7 @@ class ChatInterface extends Page
     {
         Log::debug('Attempting to delete fragment', ['fragment_id' => $fragmentId]);
 
-        $fragment = Fragment::find($fragmentId);
+        $fragment = Fragment::with('type')->find($fragmentId);
 
         if (! $fragment) {
             Log::warning('Fragment not found for deletion', ['fragment_id' => $fragmentId]);
@@ -747,7 +815,7 @@ class ChatInterface extends Page
         Log::debug('Fragment found, proceeding with soft delete', [
             'fragment_id' => $fragmentId,
             'message' => $fragment->message,
-            'type' => $fragment->type->value,
+            'type' => $fragment->type?->value ?? $fragment->getAttribute('type'),
         ]);
 
         // Store message before deletion for toast
@@ -809,35 +877,96 @@ class ChatInterface extends Page
                 }));
             ");
 
-            $this->addChatMessage('system', 'Fragment restored successfully');
+            // Show success toast instead of chat message
+            $this->dispatch('show-success-toast', [
+                'message' => 'Fragment restored successfully',
+                'objectType' => 'fragment'
+            ]);
+            
+            // Also dispatch browser event as fallback
+            $this->js("
+                window.dispatchEvent(new CustomEvent('show-success-toast', {
+                    detail: { message: 'Fragment restored successfully', objectType: 'fragment' }
+                }));
+            ");
         } else {
-            $this->addChatMessage('system', 'Could not restore fragment - undo window expired or fragment not found');
+            // Show error toast for failed restoration
+            $this->dispatch('show-success-toast', [
+                'message' => 'Could not restore fragment - undo window expired or fragment not found',
+                'objectType' => 'fragment'
+            ]);
+            
+            $this->js("
+                window.dispatchEvent(new CustomEvent('show-success-toast', {
+                    detail: { message: 'Could not restore fragment - undo window expired or fragment not found', objectType: 'fragment' }
+                }));
+            ");
         }
     }
 
-    public function handleUndoFragment(...$args): void
+    public function handleUndoDeleteObject(...$args): void
     {
-        Log::debug('Undo fragment args received', ['args' => $args]);
+        Log::debug('Undo delete object args received', ['args' => $args]);
 
-        $fragmentId = null;
+        $objectId = null;
 
         // Handle different parameter formats
         if (count($args) === 1) {
             $arg = $args[0];
             if (is_array($arg) && isset($arg['fragmentId'])) {
-                $fragmentId = $arg['fragmentId'];
-            } elseif (is_numeric($arg)) {
-                $fragmentId = $arg;
+                $objectId = $arg['fragmentId'];
+            } elseif (is_numeric($arg) || is_string($arg)) {
+                $objectId = $arg;
             }
-        } elseif (count($args) > 1 && is_numeric($args[0])) {
-            $fragmentId = $args[0];
+        } elseif (count($args) > 1) {
+            $objectId = $args[0];
         }
 
-        if ($fragmentId) {
-            Log::debug('Handling undo fragment event', ['fragment_id' => $fragmentId]);
-            $this->undoFragmentDelete((int) $fragmentId);
+        if ($objectId) {
+            // Determine object type for logging
+            $objectType = (is_string($objectId) && str_starts_with($objectId, 'chat-')) ? 'chat' : 'fragment';
+            Log::debug('Handling undo delete event', [
+                'object_id' => $objectId, 
+                'object_type' => $objectType
+            ]);
+            
+            // Check if this is a chat session undo (prefixed with 'chat-')
+            if ($objectType === 'chat') {
+                $chatSessionId = (int) str_replace('chat-', '', $objectId);
+                $session = ChatSession::withTrashed()->find($chatSessionId);
+                if ($session) {
+                    $session->restore();
+                    
+                    // Reload the chat lists
+                    $this->loadPinnedChatSessions();
+                    $this->loadRecentChatSessions();
+                    
+                    Log::debug('Chat session restored successfully', [
+                        'chat_session_id' => $chatSessionId,
+                        'session_title' => $session->title
+                    ]);
+                    
+                    // Show success toast for chat restoration
+                    $this->dispatch('show-success-toast', [
+                        'message' => "Chat \"{$session->title}\" restored successfully",
+                        'objectType' => 'chat'
+                    ]);
+                    
+                    $this->js("
+                        window.dispatchEvent(new CustomEvent('show-success-toast', {
+                            detail: { message: 'Chat \"{$session->title}\" restored successfully', objectType: 'chat' }
+                        }));
+                    ");
+                } else {
+                    Log::warning('Chat session not found for restoration', ['chat_session_id' => $chatSessionId]);
+                }
+            } else {
+                // Handle regular fragment undo
+                Log::debug('Processing fragment undo', ['fragment_id' => $objectId]);
+                $this->undoFragmentDelete((int) $objectId);
+            }
         } else {
-            Log::warning('No valid fragmentId received in undo event', ['args' => $args]);
+            Log::warning('No valid object ID received in undo event', ['args' => $args]);
         }
     }
 
@@ -926,7 +1055,7 @@ class ChatInterface extends Page
             $this->recallResults = $results->map(function ($fragment) {
                 return [
                     'id' => $fragment->id,
-                    'type' => $fragment->type instanceof \BackedEnum ? $fragment->type->value : $fragment->type,
+                    'type' => $fragment->type instanceof \App\Models\Type ? $fragment->type->value : ($fragment->type instanceof \BackedEnum ? $fragment->type->value : $fragment->type),
                     'title' => $fragment->title ?: $this->truncateText($fragment->message, 80),
                     'message' => $fragment->message,
                     'created_at' => $fragment->created_at->diffForHumans(),

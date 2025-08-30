@@ -22,7 +22,7 @@ class LinkHandler {
         this.modalContainer.innerHTML = `
             <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="event.stopPropagation(); linkHandler.closeModal()"></div>
             <div class="fixed inset-0 flex items-center justify-center p-4">
-                <div id="link-modal-content" class="relative max-w-2xl max-h-[90vh] overflow-auto">
+                <div id="link-modal-content" class="relative max-w-6xl max-h-[90vh] overflow-auto">
                     <!-- Modal content will be inserted here -->
                 </div>
             </div>
@@ -182,7 +182,11 @@ class LinkHandler {
                         <button onclick="linkHandler.copyCard(this)" class="text-xs bg-neon-cyan/20 hover:bg-neon-cyan/30 text-neon-cyan px-2 py-1 rounded-pixel border border-neon-cyan/40 transition-colors">
                             📋 Copy
                         </button>
-                        <button onclick="event.stopPropagation(); linkHandler.closeModal()" class="text-text-muted hover:text-text-primary text-xl">✕</button>
+                        <button onclick="event.stopPropagation(); linkHandler.closeModal()" class="p-1 rounded bg-gray-900 border border-gray-700 text-gray-400 hover:bg-hot-pink/20 hover:text-hot-pink hover:border-hot-pink/40 transition-all">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 
@@ -268,47 +272,53 @@ class LinkHandler {
         const typeColor = typeColors[fragmentType] || 'text-muted';
         
         modalContent.innerHTML = `
-            <div class="pixel-card pixel-card-pink glow-pink bg-surface-card p-6 rounded-pixel border-2 border-hot-pink/40">
+            <div class="bg-surface-2 p-6 rounded-pixel border border-thin border-hot-pink/30" style="min-width: 750px;">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center space-x-3">
-                        <h2 class="text-xl font-bold text-hot-pink">Fragment</h2>
+                        <h2 class="text-lg font-medium text-text-primary">Fragment</h2>
                         <span class="text-xs bg-${typeColor}/20 text-${typeColor} px-2 py-1 rounded-pixel border border-${typeColor}/40">${fragmentType.toUpperCase()}</span>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <button onclick="linkHandler.copyCard(this)" class="text-xs bg-neon-cyan/20 hover:bg-neon-cyan/30 text-neon-cyan px-2 py-1 rounded-pixel border border-neon-cyan/40 transition-colors">
-                            📋 Copy
+                        <button onclick="linkHandler.copyCard(this)" class="p-1.5 bg-gray-700 hover:bg-neon-cyan/20 text-gray-400 hover:text-neon-cyan rounded border border-gray-600 hover:border-neon-cyan/40 hover:shadow-sm hover:shadow-neon-cyan/20 transition-all" title="Copy fragment">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
                         </button>
-                        <button onclick="event.stopPropagation(); linkHandler.closeModal()" class="text-text-muted hover:text-text-primary text-xl">✕</button>
+                        <button onclick="event.stopPropagation(); linkHandler.closeModal()" class="p-1.5 bg-gray-700 hover:bg-hot-pink/20 text-gray-400 hover:text-hot-pink rounded border border-gray-600 hover:border-hot-pink/40 hover:shadow-sm hover:shadow-hot-pink/20 transition-all" title="Close">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 
                 <div class="fragment-card-content space-y-4">
                     <!-- Main message -->
                     <div class="bg-surface-elevated p-4 rounded-pixel">
-                        <div class="prose prose-sm max-w-none text-text-primary">
+                        <div class="text-sm font-medium text-text-primary">
                             ${this.formatFragmentMessage(fragmentData.message)}
                         </div>
                     </div>
                     
                     <!-- Metadata -->
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span class="text-xs text-text-muted font-medium">CREATED:</span>
-                            <div class="text-text-secondary">${new Date(fragmentData.created_at).toLocaleDateString()}</div>
+                    <div class="flex justify-between text-xs text-text-muted">
+                        <div class="flex items-center space-x-2">
+                            <span>Created:</span>
+                            <span>${new Date(fragmentData.created_at).toLocaleDateString()}</span>
                         </div>
-                        <div>
-                            <span class="text-xs text-text-muted font-medium">ID:</span>
-                            <div class="text-text-secondary font-mono">${fragmentData.id}</div>
+                        <div class="flex items-center space-x-2">
+                            <span>ID:</span>
+                            <span class="font-mono">${fragmentData.id}</span>
                         </div>
                     </div>
                     
                     <!-- Tags if any -->
                     ${fragmentData.tags && fragmentData.tags.length ? `
-                        <div>
-                            <span class="text-xs text-text-muted font-medium block mb-2">TAGS:</span>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="text-text-muted">Tags:</span>
                             <div class="flex flex-wrap gap-1">
                                 ${fragmentData.tags.map(tag => `
-                                    <span class="text-xs bg-electric-blue/20 text-electric-blue px-2 py-1 rounded-pixel border border-electric-blue/40">${tag}</span>
+                                    <span class="bg-electric-blue/20 text-electric-blue px-2 py-0.5 rounded border border-electric-blue/40">${tag}</span>
                                 `).join('')}
                             </div>
                         </div>
