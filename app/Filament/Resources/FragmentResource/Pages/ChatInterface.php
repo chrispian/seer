@@ -295,7 +295,10 @@ class ChatInterface extends Page
 
             $this->chatMessages[] = [
                 'id' => $fragment->id,
-                'type' => $fragment->type?->value ?? 'log',
+                'type' => [
+                    'value' => $fragment->type?->value ?? 'log',
+                    'label' => $fragment->type?->label ?? ucfirst($fragment->type?->value ?? 'log'),
+                ],
                 'type_id' => $fragment->type_id,
                 'message' => $fragment->message,
                 'created_at' => $fragment->created_at,
@@ -903,7 +906,10 @@ class ChatInterface extends Page
             // Add back to chat messages
             $this->chatMessages[] = [
                 'id' => $restoredFragment->id,
-                'type' => $restoredFragment->type,
+                'type' => [
+                    'value' => $restoredFragment->type?->value ?? 'log',
+                    'label' => $restoredFragment->type?->label ?? ucfirst($restoredFragment->type?->value ?? 'log'),
+                ],
                 'message' => $restoredFragment->message,
                 'created_at' => $restoredFragment->created_at,
             ];

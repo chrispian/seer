@@ -5,8 +5,8 @@
         <h3 class="text-sm font-medium text-electric-blue capitalize">
             {{ ucfirst(str_replace('_', ' ', $type ?? 'command')) }} Result
         </h3>
-        <button 
-            wire:click="exitCommandMode()" 
+        <button
+            wire:click="exitCommandMode()"
             class="text-xs text-text-muted hover:text-electric-blue transition-colors"
             title="Exit command mode"
         >
@@ -72,9 +72,10 @@
             @if (isset($data['action']) && $data['action'] === 'show' && isset($data['fragments']) && count($data['fragments']) > 0)
                 <div class="space-y-3">
                     @foreach ($data['fragments'] as $fragment)
-                        <x-fragment-card 
-                            :fragment="$fragment" 
+                        <x-search-result-card
+                            :fragment="$fragment"
                             :show-timestamp="true"
+                            :show-score="false"
                             :highlight="true"
                         />
                     @endforeach
@@ -143,8 +144,8 @@
             @if (isset($data['fragments']) && count($data['fragments']) > 0)
                 <div class="space-y-3">
                     @foreach ($data['fragments'] as $fragment)
-                        <x-search-result-card 
-                            :fragment="$fragment" 
+                        <x-search-result-card
+                            :fragment="$fragment"
                             :show-timestamp="true"
                             :show-score="true"
                             :highlight="true"
