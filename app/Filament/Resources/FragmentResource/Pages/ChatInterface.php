@@ -187,12 +187,10 @@ class ChatInterface extends Page
                 $handler = app($handlerClass);
             } catch (InvalidArgumentException $e) {
                 $this->removeSpinner($spinnerKey); // ❗ clean up spinner
-                $this->chatMessages[] = [
-                    'type' => 'system',
-                    'type_id' => $this->getSystemTypeId(),
-                    'message' => "❌ Command `/{$command->command}` not recognized. Try `/help` for options.",
-                ];
-
+                
+                // Show error toast instead of adding to chat
+                $this->showErrorToast("Command `/{$command->command}` not recognized. Try `/help` for options.");
+                
                 return;
             }
 
@@ -216,6 +214,12 @@ class ChatInterface extends Page
                     $response->toastData['fragmentType'] ?? 'fragment',
                     $response->toastData['fragmentId'] ?? null
                 );
+                return;
+            }
+
+            // Handle error toast notifications
+            if ($response->shouldShowErrorToast) {
+                $this->showErrorToast($response->message ?? 'An error occurred.');
                 return;
             }
 
@@ -1357,6 +1361,14 @@ class ChatInterface extends Page
             'message' => $message,
             'fragmentType' => $fragmentType,
             'fragmentId' => $fragmentId,
+        ]);
+    }
+
+    private function showErrorToast(string $message): void
+    {
+        // Dispatch browser event to show error toast
+        $this->dispatch('show-error-toast', [
+            'message' => $message,
         ]);
     }
 

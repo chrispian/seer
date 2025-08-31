@@ -18,11 +18,8 @@ class ChaosCommand implements HandlesCommand
         if (empty($message)) {
             return new CommandResponse(
                 type: 'chaos',
-                shouldOpenPanel: true,
-                panelData: [
-                    'error' => true,
-                    'message' => "❌ No valid chaos fragment detected. Please try `/chaos Your mixed thoughts here...`",
-                ]
+                shouldShowErrorToast: true,
+                message: "No valid chaos fragment detected. Please try `/chaos Your mixed thoughts here...`",
             );
         }
 

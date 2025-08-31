@@ -1543,10 +1543,10 @@
             });
 
             Livewire.on('show-error-toast', function(data) {
-                // Find the error toast by ID and trigger display
-                const errorToastElement = document.getElementById('error-toast');
-                if (errorToastElement && errorToastElement._x_dataStack && errorToastElement._x_dataStack[0]) {
-                    errorToastElement._x_dataStack[0].display(data.message);
+                // Use the unified undo-toast for error messages
+                const toastElement = document.getElementById('undo-toast');
+                if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
+                    toastElement._x_dataStack[0].displayError(data.message, 5);
                 }
             });
 

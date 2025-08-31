@@ -18,11 +18,8 @@ class FragCommand implements HandlesCommand
         if (empty($message)) {
             return new CommandResponse(
                 type: 'frag',
-                shouldOpenPanel: true,
-                panelData: [
-                    'error' => true,
-                    'message' => "❌ No valid fragment detected. Please try `/frag Your message here...`",
-                ]
+                shouldShowErrorToast: true,
+                message: "No valid fragment detected. Please try `/frag Your message here...`",
             );
         }
 

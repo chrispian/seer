@@ -19,11 +19,8 @@ class SearchCommand implements HandlesCommand
         if (empty($query)) {
             return new CommandResponse(
                 type: 'search',
-                shouldOpenPanel: true,
-                panelData: [
-                    'error' => true,
-                    'message' => "❌ No search query provided. Please try `/search your query here` or `/s your query here`",
-                ]
+                shouldShowErrorToast: true,
+                message: "No search query provided. Please try `/search your query here` or `/s your query here`",
             );
         }
 
@@ -72,11 +69,8 @@ class SearchCommand implements HandlesCommand
         } catch (\Exception $e) {
             return new CommandResponse(
                 type: 'search',
-                shouldOpenPanel: true,
-                panelData: [
-                    'error' => true,
-                    'message' => "❌ Search failed: " . $e->getMessage(),
-                ]
+                shouldShowErrorToast: true,
+                message: "Search failed: " . $e->getMessage(),
             );
         }
     }
