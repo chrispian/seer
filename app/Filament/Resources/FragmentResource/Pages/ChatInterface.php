@@ -414,13 +414,17 @@ class ChatInterface extends Page
         if ($this->currentChatSessionId) {
             $chatSession = ChatSession::find($this->currentChatSessionId);
             if ($chatSession) {
+                // Use the original chat messages if in command mode, otherwise use current messages
+                $messagesToSave = $this->inCommandMode ? $this->originalFragments : $this->chatMessages;
+                $messageCount = count($messagesToSave);
+
                 // Use setAttribute to ensure JSON changes are detected
-                $chatSession->setAttribute('messages', $this->chatMessages);
+                $chatSession->setAttribute('messages', $messagesToSave);
                 $chatSession->setAttribute('metadata', [
                     'currentSession' => $this->currentSession,
                     'recalledTodos' => $this->recalledTodos,
                 ]);
-                $chatSession->setAttribute('message_count', count($this->chatMessages));
+                $chatSession->setAttribute('message_count', $messageCount);
                 $chatSession->setAttribute('last_activity_at', now());
                 $chatSession->save();
 
@@ -1338,6 +1342,9 @@ class ChatInterface extends Page
             $this->chatMessages = $this->originalFragments;
             $this->originalFragments = [];
             $this->inCommandMode = false;
+            
+            // Refresh recent chats to ensure count badges are correct
+            $this->loadRecentChatSessions();
         }
     }
 

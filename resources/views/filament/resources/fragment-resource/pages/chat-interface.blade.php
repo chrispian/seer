@@ -734,7 +734,6 @@
 
                     if (!bookmark || !bookmark.fragment_id) {
                         console.warn('No fragment ID for bookmark:', bookmark);
-                        // Show user feedback for invalid bookmark
                         alert('This bookmark references a fragment that no longer exists.');
                         return;
                     }
@@ -794,7 +793,7 @@
                         // Reset the flag after a delay to prevent accidental rapid clicks
                         setTimeout(() => {
                             this.openingModal = false;
-                        }, 500);
+                        }, 300);
                     }
                 }
             };
