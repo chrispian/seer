@@ -14,11 +14,14 @@ class RecallCommand implements HandlesCommand
         $type = $command->arguments['type'] ?? null;
         $limit = (int) ($command->arguments['limit'] ?? 5);
 
-        if (!$type) {
+        if (! $type) {
             return new CommandResponse(
-                message: "⚡ Please specify a fragment type to recall (e.g. `/recall type:todo limit:5`).",
+                message: '⚡ Please specify a fragment type to recall (e.g. `/recall type:todo limit:5`).',
                 type: 'system',
-                shouldResetChat: true,
+                shouldOpenPanel: true,
+                panelData: [
+                    'message' => "⚡ Please specify a fragment type to recall.\n\nExample: `/recall type:todo limit:5`\n\nAvailable types: todo, note, idea, meeting, task",
+                ],
             );
         }
 
@@ -31,18 +34,23 @@ class RecallCommand implements HandlesCommand
         if ($results->isEmpty()) {
             return new CommandResponse(
                 message: "⚡ No fragments found of type `{$type}`.",
-                type: 'system',
-                shouldResetChat: true,
+                type: 'recall',
+                shouldOpenPanel: true,
+                panelData: [
+                    'message' => "No fragments found of type `{$type}`.",
+                    'type' => $type,
+                    'fragments' => [],
+                ],
             );
         }
 
-        $fragmentIds = $results->pluck('id')->toArray();
-
         return new CommandResponse(
-            message: "✅ Recalled {$results->count()} fragment(s) of type `{$type}`.",
             type: 'recall',
-            fragments: $fragmentIds,
-            shouldResetChat: true,
+            shouldOpenPanel: true,
+            panelData: [
+                'type' => $type,
+                'fragments' => $results->toArray(),
+            ],
         );
     }
 }

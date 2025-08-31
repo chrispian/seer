@@ -56,17 +56,22 @@ class ChatInterface extends Page
 
     // Recall palette state
     public bool $showRecallPalette = false;
-    
+
+    // Command injection state
+    public bool $inCommandMode = false;
+
+    public array $originalFragments = [];
+
     public string $recallQuery = '';
-    
+
     public array $recallResults = [];
-    
+
     public array $recallSuggestions = [];
-    
+
     public array $recallAutocomplete = [];
-    
+
     public bool $recallLoading = false;
-    
+
     public int $selectedRecallIndex = 0;
 
     public array $vaults = [];
@@ -196,6 +201,30 @@ class ChatInterface extends Page
 
             $this->removeSpinner($spinnerKey);
 
+            // Handle command injection
+            if ($response->shouldOpenPanel && isset($response->panelData)) {
+                $this->enterCommandMode();
+                $this->injectCommandResults($response);
+                return;
+            }
+
+            // Handle clear command (exit command mode)
+            if ($response->type === 'clear') {
+                if ($this->inCommandMode) {
+                    $this->exitCommandMode();
+                } else {
+                    // Add message to chat if not in command mode
+                    if (! empty($response->message)) {
+                        $this->chatMessages[] = [
+                            'type' => 'system',
+                            'message' => $response->message,
+                        ];
+                    }
+                }
+                return;
+            }
+
+            // Legacy behavior for commands that haven't been updated yet
             if (! empty($response->shouldResetChat)) {
                 $this->chatMessages = [];
             }
@@ -257,7 +286,6 @@ class ChatInterface extends Page
     {
         return Type::where('value', 'system')->first()?->id ?? Type::where('value', 'log')->first()->id;
     }
-
 
     protected function removeSpinner(string $spinnerKey): void
     {
@@ -617,29 +645,29 @@ class ChatInterface extends Page
             // Store session info for undo
             $sessionTitle = $session->title ?? 'Untitled Chat';
             $sessionMessage = "Chat \"{$sessionTitle}\" deleted";
-            
+
             // Soft delete the chat session
             $session->delete();
-            
+
             // If we deleted the current chat, switch to a new one
             if ($this->currentChatSessionId === $chatSessionId) {
                 $this->startNewChat();
             }
-            
+
             // Reload the chat lists
             $this->loadPinnedChatSessions();
             $this->loadRecentChatSessions();
-            
+
             // Use a special prefix for chat sessions
-            $undoId = 'chat-' . $chatSessionId;
-            
+            $undoId = 'chat-'.$chatSessionId;
+
             // Trigger undo toast using the same pattern as fragment deletion
             $this->dispatch('show-undo-toast',
                 fragmentId: $undoId,
                 message: $sessionMessage,
                 objectType: 'chat'
             );
-            
+
             // Also dispatch a browser event as fallback
             $this->js("
                 window.dispatchEvent(new CustomEvent('show-undo-toast', {
@@ -879,9 +907,9 @@ class ChatInterface extends Page
             // Show success toast instead of chat message
             $this->dispatch('show-success-toast', [
                 'message' => 'Fragment restored successfully',
-                'objectType' => 'fragment'
+                'objectType' => 'fragment',
             ]);
-            
+
             // Also dispatch browser event as fallback
             $this->js("
                 window.dispatchEvent(new CustomEvent('show-success-toast', {
@@ -892,9 +920,9 @@ class ChatInterface extends Page
             // Show error toast for failed restoration
             $this->dispatch('show-success-toast', [
                 'message' => 'Could not restore fragment - undo window expired or fragment not found',
-                'objectType' => 'fragment'
+                'objectType' => 'fragment',
             ]);
-            
+
             $this->js("
                 window.dispatchEvent(new CustomEvent('show-success-toast', {
                     detail: { message: 'Could not restore fragment - undo window expired or fragment not found', objectType: 'fragment' }
@@ -925,32 +953,32 @@ class ChatInterface extends Page
             // Determine object type for logging
             $objectType = (is_string($objectId) && str_starts_with($objectId, 'chat-')) ? 'chat' : 'fragment';
             Log::debug('Handling undo delete event', [
-                'object_id' => $objectId, 
-                'object_type' => $objectType
+                'object_id' => $objectId,
+                'object_type' => $objectType,
             ]);
-            
+
             // Check if this is a chat session undo (prefixed with 'chat-')
             if ($objectType === 'chat') {
                 $chatSessionId = (int) str_replace('chat-', '', $objectId);
                 $session = ChatSession::withTrashed()->find($chatSessionId);
                 if ($session) {
                     $session->restore();
-                    
+
                     // Reload the chat lists
                     $this->loadPinnedChatSessions();
                     $this->loadRecentChatSessions();
-                    
+
                     Log::debug('Chat session restored successfully', [
                         'chat_session_id' => $chatSessionId,
-                        'session_title' => $session->title
+                        'session_title' => $session->title,
                     ]);
-                    
+
                     // Show success toast for chat restoration
                     $this->dispatch('show-success-toast', [
                         'message' => "Chat \"{$session->title}\" restored successfully",
-                        'objectType' => 'chat'
+                        'objectType' => 'chat',
                     ]);
-                    
+
                     $this->js("
                         window.dispatchEvent(new CustomEvent('show-success-toast', {
                             detail: { message: 'Chat \"{$session->title}\" restored successfully', objectType: 'chat' }
@@ -979,7 +1007,7 @@ class ChatInterface extends Page
     }
 
     // ===== RECALL PALETTE METHODS =====
-    
+
     public function openRecallPalette(): void
     {
         $this->showRecallPalette = true;
@@ -988,11 +1016,11 @@ class ChatInterface extends Page
         $this->selectedRecallIndex = 0;
         $this->loadRecallSuggestions();
     }
-    
+
     public function closeRecallPalette(bool $logDismissal = true): void
     {
         // Log dismissal if requested and we have query/results
-        if ($logDismissal && !empty($this->recallQuery) && !empty($this->recallResults)) {
+        if ($logDismissal && ! empty($this->recallQuery) && ! empty($this->recallResults)) {
             $logDecision = app(LogRecallDecision::class);
             $logDecision(
                 query: $this->recallQuery,
@@ -1002,7 +1030,7 @@ class ChatInterface extends Page
                 action: 'dismiss'
             );
         }
-        
+
         $this->showRecallPalette = false;
         $this->recallQuery = '';
         $this->recallResults = [];
@@ -1011,7 +1039,7 @@ class ChatInterface extends Page
         $this->selectedRecallIndex = 0;
         $this->recallLoading = false;
     }
-    
+
     public function updatedRecallQuery(): void
     {
         if (strlen($this->recallQuery) >= 2) {
@@ -1022,15 +1050,15 @@ class ChatInterface extends Page
         }
         $this->selectedRecallIndex = 0;
     }
-    
+
     public function performRecallSearch(): void
     {
         $this->recallLoading = true;
-        
+
         try {
             // Use hybrid search if available and query is simple (no advanced filters)
             $useHybrid = $this->shouldUseHybridSearch($this->recallQuery);
-            
+
             if ($useHybrid) {
                 // Use the new hybrid search for better results
                 $this->performHybridSearch();
@@ -1038,7 +1066,7 @@ class ChatInterface extends Page
                 // Fall back to standard search for complex queries with filters
                 $this->performStandardSearch();
             }
-            
+
         } catch (\Exception $e) {
             Log::error('Recall search failed', [
                 'query' => $this->recallQuery,
@@ -1048,48 +1076,48 @@ class ChatInterface extends Page
             $this->recallLoading = false;
         }
     }
-    
+
     protected function shouldUseHybridSearch(string $query): bool
     {
         // Use hybrid search for simple queries without advanced filters
         // Advanced filters are things like type:, has:, @mentions, etc.
         $hasAdvancedFilters = preg_match('/\b(type:|has:|@|#|vault:|project:)/', $query);
-        
+
         // Also check if embeddings are configured
         $embeddingsConfigured = config('fragments.embeddings.provider') !== null;
-        
-        return !$hasAdvancedFilters && $embeddingsConfigured && strlen($query) >= 2;
+
+        return ! $hasAdvancedFilters && $embeddingsConfigured && strlen($query) >= 2;
     }
-    
+
     protected function performHybridSearch(): void
     {
         try {
             // Call the hybrid search API endpoint
             $httpClient = \Illuminate\Support\Facades\Http::baseUrl(url('/'));
-            
+
             // Disable SSL verification in local environment
             if (app()->environment('local')) {
                 $httpClient = $httpClient->withoutVerifying();
             }
-            
+
             $response = $httpClient->get('api/search/hybrid', [
                 'q' => $this->recallQuery,
                 'limit' => 10,
                 'provider' => config('fragments.embeddings.provider'),
             ]);
-            
+
             if ($response->successful()) {
                 $results = $response->json();
-                
+
                 // Format hybrid search results for display
                 $this->recallResults = collect($results)->map(function ($result) {
                     // Load the full fragment to get additional data
                     $fragment = Fragment::find($result['id']);
-                    
-                    if (!$fragment) {
+
+                    if (! $fragment) {
                         return null;
                     }
-                    
+
                     return [
                         'id' => $fragment->id,
                         'type' => $fragment->type instanceof \App\Models\Type ? $fragment->type->value : ($fragment->type instanceof \BackedEnum ? $fragment->type->value : $fragment->type),
@@ -1104,11 +1132,11 @@ class ChatInterface extends Page
                         'txt_rank' => $result['txt_rank'] ?? 0,
                     ];
                 })->filter()->values()->toArray();
-                
+
                 // Clear suggestions for hybrid search
                 $this->recallSuggestions = [];
                 $this->recallAutocomplete = [];
-                
+
             } else {
                 // Fall back to standard search on API failure
                 $this->performStandardSearch();
@@ -1118,31 +1146,31 @@ class ChatInterface extends Page
                 'query' => $this->recallQuery,
                 'error' => $e->getMessage(),
             ]);
-            
+
             // Fall back to standard search
             $this->performStandardSearch();
         }
-        
+
         $this->recallLoading = false;
     }
-    
+
     protected function performStandardSearch(): void
     {
         try {
             // Parse the search query
             $grammarParser = app(ParseSearchGrammar::class);
             $parsedGrammar = $grammarParser($this->recallQuery);
-            
+
             // Perform the search
             $searchAction = app(SearchFragments::class);
-            
+
             // Get the vault name for searching
             $vaultName = null;
             if ($this->currentVaultId) {
                 $vault = \App\Models\Vault::find($this->currentVaultId);
                 $vaultName = $vault?->name;
             }
-            
+
             $results = $searchAction(
                 query: $this->recallQuery,
                 vault: $vaultName,
@@ -1150,7 +1178,7 @@ class ChatInterface extends Page
                 sessionId: $this->currentChatSessionId ? "session-{$this->currentChatSessionId}" : null,
                 limit: 10
             );
-            
+
             // Format results for display
             $this->recallResults = $results->map(function ($fragment) {
                 return [
@@ -1164,11 +1192,11 @@ class ChatInterface extends Page
                     'preview' => $this->truncateText($fragment->message, 120),
                 ];
             })->toArray();
-            
+
             // Update suggestions and autocomplete
             $this->recallSuggestions = $parsedGrammar['suggestions'];
             $this->recallAutocomplete = $parsedGrammar['autocomplete'];
-            
+
         } catch (\Exception $e) {
             Log::error('Standard search failed', [
                 'query' => $this->recallQuery,
@@ -1176,10 +1204,10 @@ class ChatInterface extends Page
             ]);
             $this->recallResults = [];
         }
-        
+
         $this->recallLoading = false;
     }
-    
+
     public function loadRecallSuggestions(): void
     {
         // Load default suggestions when no search query
@@ -1188,15 +1216,15 @@ class ChatInterface extends Page
         $this->recallSuggestions = $parsed['suggestions'];
         $this->recallAutocomplete = $parsed['autocomplete'];
     }
-    
+
     public function selectRecallResult(int $index): void
     {
-        if (!isset($this->recallResults[$index])) {
+        if (! isset($this->recallResults[$index])) {
             return;
         }
-        
+
         $fragment = $this->recallResults[$index];
-        
+
         // Log the recall decision for analytics
         $logDecision = app(LogRecallDecision::class);
         if (isset($fragment['id'])) {
@@ -1209,58 +1237,58 @@ class ChatInterface extends Page
                 action: 'select'
             );
         }
-        
+
         // Add the recalled fragment to chat
         $this->addRecallResultToChat($fragment);
-        
+
         // Close the palette (without logging dismissal since we already logged selection)
         $this->closeRecallPalette(false);
     }
-    
+
     public function selectCurrentRecallResult(): void
     {
         // Don't select if still loading
         if ($this->recallLoading) {
             return;
         }
-        
+
         // Only select if we have results - DON'T close palette if no results
         if (count($this->recallResults) > 0) {
             $this->selectRecallResult($this->selectedRecallIndex);
         }
     }
-    
+
     public function moveRecallSelection(string $direction): void
     {
         $maxIndex = max(0, count($this->recallResults) - 1);
-        
+
         if ($direction === 'up') {
-            $this->selectedRecallIndex = $this->selectedRecallIndex > 0 
-                ? $this->selectedRecallIndex - 1 
+            $this->selectedRecallIndex = $this->selectedRecallIndex > 0
+                ? $this->selectedRecallIndex - 1
                 : $maxIndex;
         } elseif ($direction === 'down') {
-            $this->selectedRecallIndex = $this->selectedRecallIndex < $maxIndex 
-                ? $this->selectedRecallIndex + 1 
+            $this->selectedRecallIndex = $this->selectedRecallIndex < $maxIndex
+                ? $this->selectedRecallIndex + 1
                 : 0;
         }
     }
-    
+
     public function applySuggestion(array $suggestion): void
     {
         if ($suggestion['type'] === 'filter') {
             // Append filter to query
-            $this->recallQuery = trim($this->recallQuery . ' ' . $suggestion['text']);
+            $this->recallQuery = trim($this->recallQuery.' '.$suggestion['text']);
             $this->performRecallSearch();
         }
     }
-    
+
     public function applyAutocomplete(array $autocomplete): void
     {
         // Replace or append autocomplete value
         $this->recallQuery = $autocomplete['value'];
         $this->performRecallSearch();
     }
-    
+
     private function addRecallResultToChat(array $fragment): void
     {
         // Add system message showing the recalled fragment
@@ -1270,13 +1298,47 @@ class ChatInterface extends Page
             'created_at' => now(),
             'recalled_fragment' => $fragment,
         ];
-        
+
         // Save the updated chat session
         $this->saveCurrentChatSession();
     }
-    
+
     private function truncateText(string $text, int $length): string
     {
-        return strlen($text) > $length ? substr($text, 0, $length) . '...' : $text;
+        return strlen($text) > $length ? substr($text, 0, $length).'...' : $text;
     }
+
+    // Command Injection Methods
+
+    private function enterCommandMode(): void
+    {
+        // Back up original chat messages
+        $this->originalFragments = $this->chatMessages;
+        $this->inCommandMode = true;
+    }
+
+    private function injectCommandResults(\App\DTOs\CommandResponse $response): void
+    {
+        // Create a single "fragment" representing the command result
+        $commandFragment = [
+            'type' => 'command_result',
+            'command_type' => $response->type,
+            'data' => $response->panelData,
+            'message' => $response->message ?? null,
+        ];
+
+        // Replace chat messages with just this command result
+        $this->chatMessages = [$commandFragment];
+    }
+
+    public function exitCommandMode(): void
+    {
+        if ($this->inCommandMode) {
+            // Restore original chat messages
+            $this->chatMessages = $this->originalFragments;
+            $this->originalFragments = [];
+            $this->inCommandMode = false;
+        }
+    }
+
 }

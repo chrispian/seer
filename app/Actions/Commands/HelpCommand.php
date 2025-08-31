@@ -10,9 +10,7 @@ class HelpCommand implements HandlesCommand
 {
     public function handle(CommandRequest $command): CommandResponse
     {
-        return new CommandResponse(
-
-            message:  <<<MARKDOWN
+        $message = <<<MARKDOWN
 ### Commands Cheat Sheet
 
 Here are the commands you can use in the chat:
@@ -52,10 +50,14 @@ Example:
 
 ---
 All fragments are stored and processed. Bookmarks and sessions give you quick access to curated memories and grouped ideas.
-MARKDOWN,
-            type: 'system',
-            shouldResetChat: true,
+MARKDOWN;
 
+        return new CommandResponse(
+            type: 'help',
+            shouldOpenPanel: true,
+            panelData: [
+                'message' => $message,
+            ],
         );
     }
 }

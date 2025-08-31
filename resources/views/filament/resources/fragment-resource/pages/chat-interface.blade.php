@@ -452,15 +452,24 @@
         <div class="flex-1 p-6 overflow-y-auto space-y-4" id="chat-output">
             <!-- Chat Messages -->
             @foreach ($chatMessages as $entry)
-                <x-chat-message
-                    :type="$entry['type'] ?? 'user'"
-                    :fragmentId="$entry['id'] ?? null"
-                    :timestamp="$this->formatTimestamp($entry['created_at'] ?? null)"
-                >
-                    <x-chat-markdown :fragment="null">
-                        {{ $entry['message'] }}
-                    </x-chat-markdown>
-                </x-chat-message>
+                @if (($entry['type'] ?? '') === 'command_result')
+                    <!-- Command Result Injection -->
+                    @include('livewire.command-result', [
+                        'type' => $entry['command_type'],
+                        'data' => $entry['data'],
+                        'message' => $entry['message']
+                    ])
+                @else
+                    <x-chat-message
+                        :type="$entry['type'] ?? 'user'"
+                        :fragmentId="$entry['id'] ?? null"
+                        :timestamp="$this->formatTimestamp($entry['created_at'] ?? null)"
+                    >
+                        <x-chat-markdown :fragment="null">
+                            {{ $entry['message'] }}
+                        </x-chat-markdown>
+                    </x-chat-message>
+                @endif
             @endforeach
 
             <!-- Todos Section -->
@@ -1002,6 +1011,10 @@
                         const originalHide = this.autocompleteEngine.hide.bind(this.autocompleteEngine);
 
                         this.autocompleteEngine.show = () => {
+                            // Don't show autocomplete if in command mode
+                            if (this.$wire.inCommandMode) {
+                                return;
+                            }
                             this.autocompleteActive = true;
                             originalShow();
                         };
@@ -1010,6 +1023,13 @@
                             this.autocompleteActive = false;
                             originalHide();
                         };
+
+                        // Watch for command mode changes
+                        this.$watch('$wire.inCommandMode', (isInCommandMode) => {
+                            if (isInCommandMode && this.autocompleteActive) {
+                                this.autocompleteEngine.hide();
+                            }
+                        });
                     }
                 },
 
@@ -1459,4 +1479,5 @@
 
         });
     </script>
+
 </div>
