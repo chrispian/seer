@@ -1301,8 +1301,11 @@ class ChatInterface extends Page
 
     private function enterCommandMode(): void
     {
-        // Back up original chat messages
-        $this->originalFragments = $this->chatMessages;
+        // Only back up original chat messages if not already in command mode
+        // This preserves the true original chat when switching between commands
+        if (!$this->inCommandMode) {
+            $this->originalFragments = $this->chatMessages;
+        }
         $this->inCommandMode = true;
     }
 
