@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Actions\Commands\BookmarkCommand;
+use App\Actions\Commands\ChaosCommand;
 use App\Actions\Commands\ClearCommand;
 use App\Actions\Commands\FragCommand;
 use App\Actions\Commands\HelpCommand;
@@ -18,7 +19,7 @@ class CommandRegistry
         'help' => HelpCommand::class,
         'clear' => ClearCommand::class,
         'frag' => FragCommand::class,
-        'chaos' => FragCommand::class,
+        'chaos' => ChaosCommand::class,
         // 'export' => ExportCommand::class (future)
     ];
 

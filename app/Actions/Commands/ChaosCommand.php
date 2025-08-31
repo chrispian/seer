@@ -9,7 +9,7 @@ use App\Jobs\ProcessFragmentJob;
 use App\Models\Fragment;
 use Illuminate\Support\Str;
 
-class FragCommand implements HandlesCommand
+class ChaosCommand implements HandlesCommand
 {
     public function handle(CommandRequest $command): CommandResponse
     {
@@ -17,35 +17,35 @@ class FragCommand implements HandlesCommand
 
         if (empty($message)) {
             return new CommandResponse(
-                type: 'frag',
+                type: 'chaos',
                 shouldOpenPanel: true,
                 panelData: [
                     'error' => true,
-                    'message' => "❌ No valid fragment detected. Please try `/frag Your message here...`",
+                    'message' => "❌ No valid chaos fragment detected. Please try `/chaos Your mixed thoughts here...`",
                 ]
             );
         }
 
-        // Create base fragment (marked as aside to exclude from chat flow)
+        // Create base chaos fragment (marked as aside to exclude from chat flow)
         $fragment = Fragment::create([
             'vault' => 'default',
-            'type' => 'log',
+            'type' => 'chaos',
             'message' => $message,
             'source' => 'chat',
             'metadata' => ['aside' => true], // Mark as aside to exclude from main chat
         ]);
 
-        // Dispatch async processing
+        // Dispatch async processing - chaos fragments will be parsed into atomic fragments
         ProcessFragmentJob::dispatch($fragment)->onQueue('fragments');
 
         // Respond with success toast (no panel needed)
         return new CommandResponse(
-            type: 'frag',
+            type: 'chaos',
             shouldShowSuccessToast: true,
             toastData: [
-                'title' => 'Fragment Saved',
-                'message' => Str::limit($message, 80),
-                'fragmentType' => 'fragment',
+                'title' => 'Chaos Fragment Processing',
+                'message' => 'Mixed thoughts will be parsed and organized automatically',
+                'fragmentType' => 'chaos',
                 'fragmentId' => $fragment->id,
             ],
             fragments: [], // Don't add to chat flow

@@ -500,6 +500,9 @@
         <!-- Error Toast Row (slides up from below) -->
         <x-error-toast />
 
+        <!-- Success Toast Row (slides up from below) -->
+        <x-success-toast />
+
         <!-- Row 3: Input Area -->
         <div class="bg-surface-2 border-t border-thin border-hot-pink/30">
             <!-- Chat Input -->
@@ -1503,20 +1506,22 @@
                 }
             });
 
-            // Listen for success toast events
+            // Listen for success toast events (for /frag and /chaos commands)
             Livewire.on('show-success-toast', function(event) {
                 console.log('Received success toast event:', event);
 
+                let title = event.title || event.detail?.title || 'Success';
                 let message = event.message || event.detail?.message;
-                let objectType = event.objectType || event.detail?.objectType || 'fragment';
+                let fragmentType = event.fragmentType || event.detail?.fragmentType || 'fragment';
+                let fragmentId = event.fragmentId || event.detail?.fragmentId || null;
 
-                console.log('Success toast values:', { message, objectType });
+                console.log('Success toast values:', { title, message, fragmentType, fragmentId });
 
                 if (message) {
-                    const toastElement = document.getElementById('undo-toast');
+                    const toastElement = document.getElementById('success-toast');
                     if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
-                        console.log('Calling displaySuccess with:', message, objectType);
-                        toastElement._x_dataStack[0].displaySuccess(message, objectType, 10);
+                        console.log('Calling display with:', title, message, fragmentType, fragmentId);
+                        toastElement._x_dataStack[0].display(title, message, fragmentType, fragmentId, 5);
                     }
                 }
             });

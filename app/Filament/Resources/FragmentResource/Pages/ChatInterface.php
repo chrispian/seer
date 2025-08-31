@@ -208,6 +208,17 @@ class ChatInterface extends Page
                 return;
             }
 
+            // Handle success toast notifications (for /frag and /chaos)
+            if ($response->shouldShowSuccessToast && isset($response->toastData)) {
+                $this->showSuccessToast(
+                    $response->toastData['title'] ?? 'Success',
+                    $response->toastData['message'] ?? '',
+                    $response->toastData['fragmentType'] ?? 'fragment',
+                    $response->toastData['fragmentId'] ?? null
+                );
+                return;
+            }
+
             // Handle clear command (exit command mode)
             if ($response->type === 'clear') {
                 if ($this->inCommandMode) {
@@ -1334,6 +1345,17 @@ class ChatInterface extends Page
             // Refresh recent chats to ensure count badges are correct
             $this->loadRecentChatSessions();
         }
+    }
+
+    private function showSuccessToast(string $title, string $message, string $fragmentType = 'fragment', ?int $fragmentId = null): void
+    {
+        // Dispatch browser event to show success toast
+        $this->dispatch('show-success-toast', [
+            'title' => $title,
+            'message' => $message,
+            'fragmentType' => $fragmentType,
+            'fragmentId' => $fragmentId,
+        ]);
     }
 
 }
