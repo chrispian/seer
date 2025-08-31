@@ -478,8 +478,17 @@ window.checkBookmarkStatus = async function(fragmentId, element) {
         
         const data = await response.json();
         const alpineComponent = Alpine.$data(element);
-        if (alpineComponent) {
+        if (alpineComponent && typeof alpineComponent.bookmarked !== 'undefined') {
             alpineComponent.bookmarked = data.is_bookmarked;
+        }
+        
+        // Also update classes directly as a fallback for initial state
+        if (data.is_bookmarked) {
+            element.classList.add('text-hot-pink', 'border-hot-pink/40');
+            element.classList.remove('text-gray-400');
+        } else {
+            element.classList.remove('text-hot-pink', 'border-hot-pink/40');
+            element.classList.add('text-gray-400');
         }
     } catch (error) {
         // Silently ignore network errors
@@ -503,15 +512,22 @@ window.toggleBookmark = async function(fragmentId, element) {
         
         const data = await response.json();
         
-        // Update Alpine.js component state
+        // Update Alpine.js component state and classes directly
         const alpineComponent = Alpine.$data(element);
-        if (alpineComponent) {
+        if (alpineComponent && typeof alpineComponent.bookmarked !== 'undefined') {
             alpineComponent.bookmarked = data.is_bookmarked;
         }
         
-        // Show feedback
-        const action = data.action === 'added' ? 'Bookmarked!' : 'Removed bookmark';
-        showBookmarkFeedback(element, action, data.action === 'added');
+        // Update classes directly since we removed :class binding
+        if (data.is_bookmarked) {
+            element.classList.add('text-hot-pink', 'border-hot-pink/40');
+            element.classList.remove('text-gray-400');
+        } else {
+            element.classList.remove('text-hot-pink', 'border-hot-pink/40');
+            element.classList.add('text-gray-400');
+        }
+        
+        // No toast/feedback - the icon color change is the indicator
         
         // Dispatch event to notify bookmark widget to refresh
         window.dispatchEvent(new CustomEvent('bookmark-toggled', {
@@ -520,11 +536,7 @@ window.toggleBookmark = async function(fragmentId, element) {
         
     } catch (error) {
         console.log('Failed to toggle bookmark (this is normal if fragment was just deleted):', error.message);
-        if (error.message.includes('404')) {
-            showBookmarkFeedback(element, 'Fragment not found', false, true);
-        } else {
-            showBookmarkFeedback(element, 'Failed!', false, true);
-        }
+        // No error toast - fail silently
     }
 };
 

@@ -86,16 +86,15 @@
 
                     <!-- Bookmark Button -->
                     <button
-                        @click="window.toggleBookmark && window.toggleBookmark({{ $fragmentId }}, $el)"
-                        class="p-1.5 bg-gray-700 hover:bg-hot-pink/20 rounded border border-gray-600 hover:border-hot-pink/40 hover:shadow-sm hover:shadow-hot-pink/20 transition-all"
-                        :class="bookmarked ? 'text-hot-pink border-hot-pink/40 !opacity-100' : 'text-gray-400 hover:text-hot-pink'"
+                        onclick="event.stopPropagation(); window.toggleBookmark && window.toggleBookmark({{ $fragmentId }}, this)"
+                        class="p-1.5 bg-gray-700 hover:bg-hot-pink/20 rounded border border-gray-600 hover:border-hot-pink/40 hover:shadow-sm hover:shadow-hot-pink/20 transition-all text-gray-400 hover:text-hot-pink"
                         title="Toggle bookmark"
                         data-fragment-id="{{ $fragmentId }}"
                         x-data="{ bookmarked: false }"
                         x-init="window.checkBookmarkStatus && window.checkBookmarkStatus({{ $fragmentId }}, $el)"
                         x-cloak
                     >
-                        <x-heroicon-o-bookmark class="w-3.5 h-3.5"/>
+                        <x-heroicon-o-bookmark class="w-3.5 h-3.5 pointer-events-none"/>
                     </button>
                 </div>
             @endif
