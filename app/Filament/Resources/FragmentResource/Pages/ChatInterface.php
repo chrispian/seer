@@ -280,6 +280,9 @@ class ChatInterface extends Page
 
         // Save the updated chat session after any input
         $this->saveCurrentChatSession();
+        
+        // Refresh recent chat sessions to update count badges
+        $this->loadRecentChatSessions();
     }
 
     protected function getSystemTypeId(): int

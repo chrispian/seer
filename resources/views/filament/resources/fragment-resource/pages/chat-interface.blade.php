@@ -755,46 +755,115 @@
                         console.error('Failed to mark bookmark as viewed:', error);
                     }
 
-                    // Wait for LinkHandler to be available
-                    let attempts = 0;
-                    while ((!window.linkHandler || !window.linkHandler.showFragmentModal) && attempts < 50) {
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        attempts++;
-                    }
-                    
-                    // Open fragment modal using existing LinkHandler
+                    // Create modal directly using the same pattern as header search
                     try {
-                        if (window.linkHandler && window.linkHandler.showFragmentModal) {
-                            // Add a small delay to prevent event conflicts
-                            await new Promise(resolve => setTimeout(resolve, 50));
-                            await window.linkHandler.showFragmentModal(bookmark.fragment_id, bookmark.name);
-                        } else {
-                            console.error('LinkHandler not available');
-                            
-                            // Try to initialize LinkHandler manually as a fallback
-                            if (typeof LinkHandler !== 'undefined') {
-                                console.log('Bookmark widget: Initializing LinkHandler manually');
-                                window.linkHandler = new LinkHandler();
-                                await new Promise(resolve => setTimeout(resolve, 100));
-                                
-                                if (window.linkHandler && window.linkHandler.showFragmentModal) {
-                                    await window.linkHandler.showFragmentModal(bookmark.fragment_id, bookmark.name);
-                                } else {
-                                    alert('Unable to open bookmark. Please try refreshing the page.');
-                                }
-                            } else {
-                                alert('Unable to open bookmark. Please try refreshing the page.');
-                            }
+                        console.log('Bookmark widget: Opening fragment modal for ID:', bookmark.fragment_id);
+                        
+                        // Fetch fragment data
+                        const response = await fetch(`/api/fragments/${bookmark.fragment_id}`);
+                        if (!response.ok) {
+                            throw new Error(`Failed to load fragment: HTTP ${response.status}`);
                         }
+                        
+                        const fragmentData = await response.json();
+                        console.log('Bookmark widget: Fragment data loaded:', fragmentData);
+                        
+                        // Show the fragment using direct modal creation (same as header search)
+                        this.showFragmentInModal(fragmentData);
+                        
                     } catch (error) {
-                        console.error('Failed to open fragment modal:', error);
-                        alert('Failed to load bookmark content.');
+                        console.error('Bookmark widget: Failed to load fragment:', error);
+                        alert('Failed to load bookmark: ' + error.message);
                     } finally {
                         // Reset the flag after a delay to prevent accidental rapid clicks
                         setTimeout(() => {
                             this.openingModal = false;
                         }, 300);
                     }
+                },
+                
+                showFragmentInModal(fragmentData) {
+                    // Create or get modal container
+                    let modalContainer = document.getElementById('bookmark-result-modal');
+                    if (!modalContainer) {
+                        modalContainer = document.createElement('div');
+                        modalContainer.id = 'bookmark-result-modal';
+                        modalContainer.className = 'fixed inset-0 z-50 hidden';
+                        document.body.appendChild(modalContainer);
+                    }
+                    
+                    const fragmentType = fragmentData.type || 'unknown';
+                    
+                    modalContainer.innerHTML = `
+                        <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="document.getElementById('bookmark-result-modal').classList.add('hidden'); document.body.style.overflow = 'auto';"></div>
+                        <div class="fixed inset-0 flex items-center justify-center p-4">
+                            <div class="relative max-w-4xl max-h-[90vh] overflow-auto bg-surface-2 p-6 rounded-pixel border border-thin border-hot-pink/30" style="min-width: 750px;">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-3">
+                                        <h2 class="text-lg font-medium text-text-primary">Fragment #${fragmentData.id}</h2>
+                                        <span class="text-xs bg-hot-pink/20 text-hot-pink px-2 py-1 rounded-pixel border border-hot-pink/40">${fragmentType.toUpperCase()}</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <button onclick="window.copyFragmentFromModal(event, '${this.escapeHtml(fragmentData.message)}')" class="p-1.5 bg-gray-700 hover:bg-neon-cyan/20 text-gray-400 hover:text-neon-cyan rounded border border-gray-600 hover:border-neon-cyan/40 hover:shadow-sm hover:shadow-neon-cyan/20 transition-all" title="Copy fragment">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                            </svg>
+                                        </button>
+                                        <button onclick="document.getElementById('bookmark-result-modal').classList.add('hidden'); document.body.style.overflow = 'auto';" class="p-1.5 bg-gray-700 hover:bg-hot-pink/20 text-gray-400 hover:text-hot-pink rounded border border-gray-600 hover:border-hot-pink/40 hover:shadow-sm hover:shadow-hot-pink/20 transition-all" title="Close">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-4">
+                                    <div class="bg-surface-elevated p-4 rounded-pixel">
+                                        <div class="text-sm text-text-primary whitespace-pre-wrap">${this.escapeHtml(fragmentData.message)}</div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between text-xs text-text-muted">
+                                        <span>Created: ${new Date(fragmentData.created_at).toLocaleDateString()}</span>
+                                        <span>ID: ${fragmentData.id}</span>
+                                    </div>
+                                    
+                                    ${fragmentData.tags && fragmentData.tags.length ? `
+                                        <div class="flex items-center gap-2 text-xs">
+                                            <span class="text-text-muted">Tags:</span>
+                                            ${fragmentData.tags.map(tag => `
+                                                <span class="bg-electric-blue/20 text-electric-blue px-2 py-0.5 rounded border border-electric-blue/40">${tag}</span>
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Show the modal
+                    modalContainer.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                    
+                    // Add ESC key handler
+                    const escHandler = (e) => {
+                        if (e.key === 'Escape') {
+                            modalContainer.classList.add('hidden');
+                            document.body.style.overflow = 'auto';
+                            document.removeEventListener('keydown', escHandler);
+                        }
+                    };
+                    document.addEventListener('keydown', escHandler);
+                },
+                
+                escapeHtml(text) {
+                    const map = {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#039;'
+                    };
+                    return text.replace(/[&<>"']/g, m => map[m]);
                 }
             };
         }
