@@ -18,16 +18,18 @@ class LinkHandler {
     createModalContainer() {
         this.modalContainer = document.createElement('div');
         this.modalContainer.id = 'link-modal-container';
-        this.modalContainer.className = 'fixed inset-0 z-50 hidden';
+        this.modalContainer.className = 'fixed inset-0 hidden';
+        this.modalContainer.style.zIndex = '9999'; // Use explicit z-index instead of Tailwind class
         this.modalContainer.innerHTML = `
-            <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="event.stopPropagation(); linkHandler.closeModal()"></div>
-            <div class="fixed inset-0 flex items-center justify-center p-4">
-                <div id="link-modal-content" class="relative max-w-6xl max-h-[90vh] overflow-auto">
+            <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="event.stopPropagation(); window.linkHandler.closeModal()" style="z-index: 9999;"></div>
+            <div class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 10000;">
+                <div id="link-modal-content" class="relative max-w-6xl max-h-[90vh] overflow-auto" style="z-index: 10001;">
                     <!-- Modal content will be inserted here -->
                 </div>
             </div>
         `;
         document.body.appendChild(this.modalContainer);
+        console.log('LinkHandler: Modal container created and appended to body');
     }
     
     attachLinkListeners() {
@@ -36,11 +38,6 @@ class LinkHandler {
         // Single event listener that handles both detection and prevention
         document.addEventListener('click', (e) => {
             const target = e.target;
-            
-            // Skip if click is within bookmark widget
-            if (target.closest('[x-data*="bookmarkWidget"]')) {
-                return;
-            }
             
             // Debug logging for any click
             console.log('LinkHandler: Click detected on', target.tagName, target.className, target.textContent);
@@ -182,7 +179,7 @@ class LinkHandler {
                         <button onclick="linkHandler.copyCard(this)" class="text-xs bg-neon-cyan/20 hover:bg-neon-cyan/30 text-neon-cyan px-2 py-1 rounded-pixel border border-neon-cyan/40 transition-colors">
                             📋 Copy
                         </button>
-                        <button onclick="event.stopPropagation(); linkHandler.closeModal()" class="p-1 rounded bg-gray-900 border border-gray-700 text-gray-400 hover:bg-hot-pink/20 hover:text-hot-pink hover:border-hot-pink/40 transition-all">
+                        <button onclick="event.stopPropagation(); window.linkHandler.closeModal()" class="p-1 rounded bg-gray-900 border border-gray-700 text-gray-400 hover:bg-hot-pink/20 hover:text-hot-pink hover:border-hot-pink/40 transition-all">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
@@ -364,13 +361,38 @@ class LinkHandler {
     }
     
     showModal() {
+        console.log('LinkHandler: Opening modal');
+        console.log('LinkHandler: Modal container exists:', !!this.modalContainer);
+        console.log('LinkHandler: Modal content:', document.getElementById('link-modal-content')?.innerHTML?.substring(0, 200));
+        
         this.modalContainer.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
+        
+        // Force a reflow to ensure the modal is visible
+        this.modalContainer.offsetHeight;
+        
+        // Add ESC key handler
+        this.escHandler = (e) => {
+            if (e.key === 'Escape') {
+                console.log('LinkHandler: ESC key pressed, closing modal');
+                this.closeModal();
+            }
+        };
+        document.addEventListener('keydown', this.escHandler);
+        
+        console.log('LinkHandler: Modal should now be visible');
     }
     
     closeModal() {
+        console.log('LinkHandler: Closing modal');
         this.modalContainer.classList.add('hidden');
         document.body.style.overflow = 'auto';
+        
+        // Remove ESC key handler
+        if (this.escHandler) {
+            document.removeEventListener('keydown', this.escHandler);
+            this.escHandler = null;
+        }
         
         // Temporarily disable bookmark widget clicks to prevent interference
         const bookmarkWidget = document.querySelector('[x-data*="bookmarkWidget"]');

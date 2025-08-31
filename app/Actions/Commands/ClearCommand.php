@@ -11,12 +11,13 @@ class ClearCommand implements HandlesCommand
 {
     public function handle(CommandRequest $command): CommandResponse
     {
-        Log::debug('Chat Cleared....');
+        Log::debug('Clear command - closing command panel');
 
+        // /clear now just closes the command panel
+        // We'll handle this with a special dispatch in the frontend
         return new CommandResponse(
-            message: "🧹 Chat cleared. Ready for new ideas.",
-            type: 'system',
-            shouldResetChat: true // 👈 YES!
+            type: 'clear',
+            message: '🧹 Panel closed.',
         );
     }
 }
