@@ -17,8 +17,12 @@ class FragCommand implements HandlesCommand
 
         if (empty($message)) {
             return new CommandResponse(
-                message: "❌ No valid fragment detected. Please try `/frag Your message here...`",
-                type: 'system'
+                type: 'frag',
+                shouldOpenPanel: true,
+                panelData: [
+                    'error' => true,
+                    'message' => "❌ No valid fragment detected. Please try `/frag Your message here...`",
+                ]
             );
         }
 
@@ -33,18 +37,19 @@ class FragCommand implements HandlesCommand
         // Dispatch async processing
         ProcessFragmentJob::dispatch($fragment)->onQueue('fragments');
 
-        // Respond immediately to user
+        // Respond with panel showing success
         return new CommandResponse(
-            message: "Fragment received and queued for processing!\n\n`{$fragment->message}`",
-            type: 'system',
-            fragments: [
-                [
+            type: 'frag',
+            shouldOpenPanel: true,
+            panelData: [
+                'success' => true,
+                'message' => "Fragment received and queued for processing!",
+                'fragment' => [
                     'id' => $fragment->id,
                     'type' => $fragment->type,
                     'message' => $fragment->message,
                 ]
             ],
-            shouldResetChat: true,
         );
     }
 }

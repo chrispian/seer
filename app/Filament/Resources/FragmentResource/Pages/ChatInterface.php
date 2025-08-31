@@ -212,15 +212,8 @@ class ChatInterface extends Page
             if ($response->type === 'clear') {
                 if ($this->inCommandMode) {
                     $this->exitCommandMode();
-                } else {
-                    // Add message to chat if not in command mode
-                    if (! empty($response->message)) {
-                        $this->chatMessages[] = [
-                            'type' => 'system',
-                            'message' => $response->message,
-                        ];
-                    }
                 }
+                // No message added - just exit silently
                 return;
             }
 
@@ -229,12 +222,8 @@ class ChatInterface extends Page
                 $this->chatMessages = [];
             }
 
-            if (! empty($response->message)) {
-                $this->chatMessages[] = [
-                    'type' => $response->type ?? 'system',
-                    'message' => $response->message,
-                ];
-            }
+            // Don't add system messages to chat anymore
+            // Commands should use shouldOpenPanel for feedback
 
             if (! empty($response->fragments) && is_array($response->fragments) && array_is_list($response->fragments)) {
                 // Handle different fragment types differently
@@ -359,14 +348,7 @@ class ChatInterface extends Page
         // Reload recent chat sessions
         $this->loadRecentChatSessions();
 
-        // Add welcome message
-        $this->chatMessages[] = [
-            'type' => 'system',
-            'type_id' => $this->getSystemTypeId(),
-            'message' => '💬 **New chat started!** Type your message or use `/help` for commands.',
-            'created_at' => now(),
-        ];
-
+        // No welcome message - clean start
         $this->saveCurrentChatSession();
     }
 
