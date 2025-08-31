@@ -29,7 +29,7 @@
             }, 1000);
         },
         
-        displaySuccess(message, objectType = 'fragment', duration = 10) {
+        displaySuccess(message, objectType = 'fragment', duration = 2) {
             console.log('Undo toast success called with:', { message, objectType, duration });
             this.fragmentId = null; // No undo action for success messages
             this.message = message;
@@ -48,7 +48,7 @@
             }, 1000);
         },
         
-        displayError(message, duration = 5) {
+        displayError(message, duration = 2) {
             console.log('Undo toast error called with:', { message, duration });
             this.fragmentId = null; // No undo action for error messages
             this.message = message;
@@ -93,14 +93,20 @@
         
         getIconBgClass() {
             if (this.messageType === 'error') {
-                return 'bg-red-500';
+                return 'bg-bright-pink';
+            }
+            if (this.messageType === 'success') {
+                return 'bg-electric-blue';
             }
             return 'bg-hot-pink';
         },
         
         getProgressBarClass() {
             if (this.messageType === 'error') {
-                return 'bg-red-400';
+                return 'bg-bright-pink';
+            }
+            if (this.messageType === 'success') {
+                return 'bg-electric-blue';
             }
             return 'bg-hot-pink';
         },
@@ -173,7 +179,7 @@
         <div class="h-1 bg-surface rounded-pixel overflow-hidden">
             <div class="h-full transition-all duration-1000 ease-linear rounded-pixel" 
                  :class="getProgressBarClass()"
-                 :style="{ width: (timeLeft / (messageType === 'error' ? 5 : 60) * 100) + '%' }"></div>
+                 :style="{ width: (timeLeft / (messageType === 'error' || messageType === 'success' ? 2 : 60) * 100) + '%' }"></div>
         </div>
     </div>
 </div>

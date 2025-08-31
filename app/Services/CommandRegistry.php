@@ -30,7 +30,7 @@ class CommandRegistry
     {
         logger('COMMAND_REGISTRY_LOOKUP', ['commandName' => $commandName]);
         if (!array_key_exists($commandName, self::$commands)) {
-            throw new \InvalidArgumentException("Unknown command: {$commandName}");
+            throw new \InvalidArgumentException("Command not recognized: {$commandName}");
         }
 
         return self::$commands[$commandName];

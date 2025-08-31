@@ -65,13 +65,13 @@
                 
                 <!-- Bookmark Button - Independent visibility -->
                 <button 
-                    onclick="toggleBookmark({{ $fragmentId }}, this)"
+                    @click="window.toggleBookmark && window.toggleBookmark({{ $fragmentId }}, $el)"
                     class="p-1.5 bg-gray-700 hover:bg-hot-pink/20 rounded border border-gray-600 hover:border-hot-pink/40 hover:shadow-sm hover:shadow-hot-pink/20 transition-all opacity-0 group-hover:opacity-100"
                     :class="bookmarked ? 'text-hot-pink border-hot-pink/40 !opacity-100' : 'text-gray-400 hover:text-hot-pink'"
                     title="Toggle bookmark"
                     data-fragment-id="{{ $fragmentId }}"
                     x-data="{ bookmarked: false }"
-                    x-init="checkBookmarkStatus({{ $fragmentId }}, $el)"
+                    x-init="window.checkBookmarkStatus && window.checkBookmarkStatus({{ $fragmentId }}, $el)"
                     x-cloak
                 >
                     <x-heroicon-o-bookmark class="w-4 h-4"/>

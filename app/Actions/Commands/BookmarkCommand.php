@@ -40,12 +40,8 @@ class BookmarkCommand implements HandlesCommand
         if ($bookmarks->isEmpty()) {
             return new CommandResponse(
                 type: 'bookmark',
-                shouldOpenPanel: true,
-                panelData: [
-                    'action' => 'list',
-                    'message' => "📑 No bookmarks found.",
-                    'bookmarks' => [],
-                ],
+                message: 'No bookmarks found',
+                shouldShowErrorToast: true,
             );
         }
 
@@ -74,12 +70,8 @@ class BookmarkCommand implements HandlesCommand
         if (!$bookmark) {
             return new CommandResponse(
                 type: 'bookmark',
-                shouldOpenPanel: true,
-                panelData: [
-                    'action' => 'show',
-                    'error' => true,
-                    'message' => "🔎 No bookmark found matching `{$hint}`.",
-                ],
+                message: "No bookmark found matching `{$hint}`",
+                shouldShowErrorToast: true,
             );
         }
 
@@ -90,12 +82,8 @@ class BookmarkCommand implements HandlesCommand
         if ($fragments->isEmpty()) {
             return new CommandResponse(
                 type: 'bookmark',
-                shouldOpenPanel: true,
-                panelData: [
-                    'action' => 'show',
-                    'error' => true,
-                    'message' => "🔎 Bookmark `{$bookmark->name}` exists but no fragments found.",
-                ],
+                message: "Bookmark `{$bookmark->name}` exists but no fragments found",
+                shouldShowErrorToast: true,
             );
         }
 
@@ -124,12 +112,8 @@ class BookmarkCommand implements HandlesCommand
         if (!$bookmark) {
             return new CommandResponse(
                 type: 'bookmark',
-                shouldOpenPanel: true,
-                panelData: [
-                    'action' => 'forget',
-                    'error' => true,
-                    'message' => "❌ No bookmark found matching `{$hint}` to forget.",
-                ],
+                message: "No bookmark found matching `{$hint}`",
+                shouldShowErrorToast: true,
             );
         }
 
@@ -138,12 +122,8 @@ class BookmarkCommand implements HandlesCommand
 
         return new CommandResponse(
             type: 'bookmark',
-            shouldOpenPanel: true,
-            panelData: [
-                'action' => 'forget',
-                'success' => true,
-                'message' => "🗑️ Bookmark `{$name}` has been forgotten.",
-            ],
+            message: "Bookmark `{$name}` deleted",
+            shouldShowSuccessToast: true,
         );
     }
 
@@ -155,12 +135,8 @@ class BookmarkCommand implements HandlesCommand
         if (!$lastFragment) {
             return new CommandResponse(
                 type: 'bookmark',
-                shouldOpenPanel: true,
-                panelData: [
-                    'action' => 'create',
-                    'error' => true,
-                    'message' => "⚡ No fragments found to bookmark.",
-                ],
+                message: 'No fragments found to bookmark',
+                shouldShowErrorToast: true,
             );
         }
 
@@ -181,14 +157,8 @@ class BookmarkCommand implements HandlesCommand
 
         return new CommandResponse(
             type: 'bookmark',
-            shouldOpenPanel: true,
-            panelData: [
-                'action' => 'create',
-                'success' => true,
-                'message' => "📌 Bookmarked as `{$title}` (" . count($fragmentIds) . " fragment" . (count($fragmentIds) > 1 ? 's' : '') . ").",
-                'bookmark_name' => $title,
-                'fragment_count' => count($fragmentIds),
-            ],
+            message: "Bookmarked as `{$title}`",
+            shouldShowSuccessToast: true,
         );
     }
 }

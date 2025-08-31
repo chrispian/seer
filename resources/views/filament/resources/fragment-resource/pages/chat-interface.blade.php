@@ -1546,11 +1546,135 @@
                 // Use the unified undo-toast for error messages
                 const toastElement = document.getElementById('undo-toast');
                 if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
-                    toastElement._x_dataStack[0].displayError(data.message, 5);
+                    toastElement._x_dataStack[0].displayError(data.message, 2);
+                }
+            });
+
+            Livewire.on('show-success-toast', function(data) {
+                // Use the unified undo-toast for success messages
+                const toastElement = document.getElementById('undo-toast');
+                if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
+                    toastElement._x_dataStack[0].displaySuccess(data.message, 'fragment', 2);
                 }
             });
 
         });
+
+        // Bookmark and copy functionality (fallback if link-handler.js not loaded)
+        if (!window.checkBookmarkStatus) {
+            window.checkBookmarkStatus = async function(fragmentId, element) {
+                console.log('checkBookmarkStatus called:', fragmentId, element);
+                if (!fragmentId || fragmentId <= 0) return;
+                try {
+                    const response = await fetch(`/api/fragments/${fragmentId}/bookmark`);
+                    if (!response.ok) return;
+                    const data = await response.json();
+                    console.log('Initial bookmark status data:', data);
+                    
+                    // Try different ways to access Alpine component
+                    let alpineComponent;
+                    if (window.Alpine && Alpine.$data) {
+                        alpineComponent = Alpine.$data(element);
+                    }
+                    
+                    console.log('Alpine component for status check:', alpineComponent);
+                    
+                    if (alpineComponent && typeof alpineComponent.bookmarked !== 'undefined') {
+                        alpineComponent.bookmarked = data.is_bookmarked;
+                        console.log('Set initial bookmarked to:', data.is_bookmarked);
+                    } else {
+                        console.warn('Could not access Alpine component data for bookmark status');
+                        // Fallback: set data attribute for visual state
+                        element.setAttribute('data-bookmarked', data.is_bookmarked);
+                    }
+                } catch (error) {
+                    console.error('checkBookmarkStatus error:', error);
+                    return;
+                }
+            };
+        }
+
+        if (!window.toggleBookmark) {
+            window.toggleBookmark = async function(fragmentId, element) {
+                console.log('toggleBookmark called:', fragmentId, element);
+                try {
+                    const response = await fetch(`/api/fragments/${fragmentId}/bookmark`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                        }
+                    });
+                    console.log('Bookmark toggle response status:', response.status);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const data = await response.json();
+                    console.log('Bookmark toggle data:', data);
+                    
+                    // Update Alpine component state
+                    const alpineComponent = Alpine.$data(element);
+                    console.log('Alpine component for toggle:', alpineComponent);
+                    if (alpineComponent) {
+                        alpineComponent.bookmarked = data.is_bookmarked;
+                        console.log('Updated bookmarked state to:', data.is_bookmarked);
+                    }
+
+                    // Dispatch event to notify bookmark widget to refresh (CRITICAL for real-time updates)
+                    window.dispatchEvent(new CustomEvent('bookmark-toggled', {
+                        detail: { fragmentId, action: data.action, isBookmarked: data.is_bookmarked }
+                    }));
+
+                } catch (error) {
+                    console.error('Failed to toggle bookmark:', error.message);
+                }
+            };
+        }
+
+        if (!window.copyChatMessage) {
+            window.copyChatMessage = async function(button) {
+                try {
+                    let messageContainer = button.parentElement;
+                    while (messageContainer && !messageContainer.classList.contains('relative')) {
+                        messageContainer = messageContainer.parentElement;
+                    }
+                    if (!messageContainer) {
+                        messageContainer = button.closest('div.flex-1, div[class*="bg-surface-card"]');
+                    }
+                    if (!messageContainer) throw new Error('Could not find message container');
+
+                    const clonedContainer = messageContainer.cloneNode(true);
+                    const copyButton = clonedContainer.querySelector('button');
+                    if (copyButton) copyButton.remove();
+
+                    let text = clonedContainer.textContent || clonedContainer.innerText;
+                    text = text.replace(/📋\s*Copy/g, '').replace(/✅\s*Copied!/g, '').replace(/❌\s*Failed/g, '').trim();
+                    
+                    if (!text || text.length === 0) throw new Error('No text content found');
+
+                    await navigator.clipboard.writeText(text);
+
+                    const originalHtml = button.innerHTML;
+                    button.innerHTML = '✅ Copied!';
+                    button.classList.add('text-green-400', 'border-green-400/40');
+                    button.classList.remove('text-neon-cyan', 'border-neon-cyan/40');
+
+                    setTimeout(() => {
+                        button.innerHTML = originalHtml;
+                        button.classList.remove('text-green-400', 'border-green-400/40');
+                        button.classList.add('text-neon-cyan', 'border-neon-cyan/40');
+                    }, 2000);
+
+                } catch (error) {
+                    console.error('Failed to copy message:', error);
+                    const originalHtml = button.innerHTML;
+                    button.innerHTML = '❌ Failed';
+                    button.classList.add('text-red-400', 'border-red-400/40');
+                    setTimeout(() => {
+                        button.innerHTML = originalHtml;
+                        button.classList.remove('text-red-400', 'border-red-400/40');
+                    }, 2000);
+                }
+            };
+        }
     </script>
 
 </div>

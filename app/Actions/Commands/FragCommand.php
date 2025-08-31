@@ -38,13 +38,8 @@ class FragCommand implements HandlesCommand
         // Respond with success toast (no panel needed)
         return new CommandResponse(
             type: 'frag',
+            message: 'Fragment saved',
             shouldShowSuccessToast: true,
-            toastData: [
-                'title' => 'Fragment Saved',
-                'message' => Str::limit($message, 80),
-                'fragmentType' => 'fragment',
-                'fragmentId' => $fragment->id,
-            ],
             fragments: [], // Don't add to chat flow
         );
     }

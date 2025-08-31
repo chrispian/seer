@@ -38,13 +38,8 @@ class ChaosCommand implements HandlesCommand
         // Respond with success toast (no panel needed)
         return new CommandResponse(
             type: 'chaos',
+            message: 'Fragment saved',
             shouldShowSuccessToast: true,
-            toastData: [
-                'title' => 'Chaos Fragment Processing',
-                'message' => 'Mixed thoughts will be parsed and organized automatically',
-                'fragmentType' => 'chaos',
-                'fragmentId' => $fragment->id,
-            ],
             fragments: [], // Don't add to chat flow
         );
     }

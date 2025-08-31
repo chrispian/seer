@@ -165,6 +165,13 @@ class ChatInterface extends Page
     public function handleInput()
     {
         $message = trim($this->input);
+        
+        // Early return for empty messages - fail silently
+        if (empty($message)) {
+            $this->input = '';
+            return;
+        }
+        
         // ✅ 1. Clear Input Immediately
         $this->input = '';
 
@@ -220,6 +227,17 @@ class ChatInterface extends Page
             // Handle error toast notifications
             if ($response->shouldShowErrorToast) {
                 $this->showErrorToast($response->message ?? 'An error occurred.');
+                return;
+            }
+
+            // Handle success toast notifications
+            if ($response->shouldShowSuccessToast) {
+                $this->showSuccessToast(
+                    'Success',
+                    $response->message ?? 'Command completed successfully.',
+                    'fragment',
+                    null
+                );
                 return;
             }
 
@@ -1371,5 +1389,6 @@ class ChatInterface extends Page
             'message' => $message,
         ]);
     }
+
 
 }

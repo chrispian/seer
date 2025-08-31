@@ -18,11 +18,8 @@ class SessionCommand implements HandlesCommand
         if (!empty($command->arguments['identifier']) && $command->arguments['identifier'] === 'end') {
             return new CommandResponse(
                 type: 'session-end',
-                shouldOpenPanel: true,
-                panelData: [
-                    'action' => 'end',
-                    'message' => "🚪 Session ended. Normal fragment logging resumed.",
-                ],
+                message: 'Session ended',
+                shouldShowSuccessToast: true,
                 fragments: [],
             );
         }
@@ -59,12 +56,8 @@ TEXT;
 
         return new CommandResponse(
             type: 'session-start',
-            shouldOpenPanel: true,
-            panelData: [
-                'action' => 'start',
-                'message' => $message,
-                'session' => $session,
-            ],
+            message: 'Session started',
+            shouldShowSuccessToast: true,
             fragments: $session,
         );
     }
@@ -76,12 +69,8 @@ TEXT;
         if (!$session) {
             return new CommandResponse(
                 type: 'session',
-                shouldOpenPanel: true,
-                panelData: [
-                    'action' => 'show',
-                    'error' => true,
-                    'message' => "⚡ No active session.",
-                ],
+                message: 'No active session',
+                shouldShowErrorToast: true,
             );
         }
 
