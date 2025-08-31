@@ -224,6 +224,8 @@ class ChatInterface extends Page
                 if ($this->inCommandMode) {
                     $this->exitCommandMode();
                 }
+                // Clear the input field to prevent modal from showing /clear
+                $this->input = '';
                 // No message added - just exit silently
                 return;
             }

@@ -8,6 +8,7 @@ use App\Actions\Commands\ClearCommand;
 use App\Actions\Commands\FragCommand;
 use App\Actions\Commands\HelpCommand;
 use App\Actions\Commands\RecallCommand;
+use App\Actions\Commands\SearchCommand;
 use App\Actions\Commands\SessionCommand;
 
 class CommandRegistry
@@ -20,6 +21,8 @@ class CommandRegistry
         'clear' => ClearCommand::class,
         'frag' => FragCommand::class,
         'chaos' => ChaosCommand::class,
+        'search' => SearchCommand::class,
+        's' => SearchCommand::class, // alias for search
         // 'export' => ExportCommand::class (future)
     ];
 
