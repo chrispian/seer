@@ -136,12 +136,12 @@ class SearchFragments
         if (! empty($parsedQuery['search_terms'])) {
             $searchTerms = $parsedQuery['search_terms'];
 
-            // Use FULLTEXT search with relevance score
+            // Use PostgreSQL full-text search
             $query->whereRaw(
-                'MATCH(title, message) AGAINST(? IN NATURAL LANGUAGE MODE)',
+                "to_tsvector('english', coalesce(title, '') || ' ' || coalesce(message, '')) @@ plainto_tsquery('english', ?)",
                 [$searchTerms]
             )->selectRaw(
-                '*, MATCH(title, message) AGAINST(? IN NATURAL LANGUAGE MODE) as relevance',
+                "*, ts_rank(to_tsvector('english', coalesce(title, '') || ' ' || coalesce(message, '')), plainto_tsquery('english', ?)) as relevance",
                 [$searchTerms]
             );
         } else {

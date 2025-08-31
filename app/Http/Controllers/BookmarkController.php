@@ -92,8 +92,8 @@ class BookmarkController extends Controller
                     'fragment_id' => $firstFragment?->id,
                     'fragment_title' => $firstFragment ? Str::limit($firstFragment->message, 50) : 'Fragment not found',
                     'last_viewed_at' => $bookmark->last_viewed_at?->format('M j, Y g:i A'),
-                    'created_at' => $bookmark->created_at->format('M j, Y'),
-                    'updated_at' => $bookmark->updated_at->diffForHumans(),
+                    'created_at' => $bookmark->created_at?->format('M j, Y'),
+                    'updated_at' => $bookmark->updated_at?->diffForHumans(),
                 ];
             })
             ->filter(function ($bookmark) {

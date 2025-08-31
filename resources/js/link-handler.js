@@ -650,6 +650,9 @@ window.copyChatMessage = async function(button) {
     }
 };
 
+// Make LinkHandler available globally
+window.LinkHandler = LinkHandler;
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     console.log('LinkHandler: Initializing...');
@@ -670,3 +673,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
 });
+
+// Also try to initialize immediately if the DOM is already loaded
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    if (!window.linkHandler) {
+        console.log('LinkHandler: DOM already loaded, initializing immediately...');
+        window.linkHandler = new LinkHandler();
+    }
+}

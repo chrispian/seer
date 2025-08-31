@@ -77,7 +77,7 @@ class ProcessFragmentJob implements ShouldQueue
             $this->fragment->id,
             count($fragments),
             $fragments
-        );
+        )->onQueue('fragments');
 
         return [
             'messages' => $messages,
