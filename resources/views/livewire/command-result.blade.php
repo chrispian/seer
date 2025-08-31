@@ -28,7 +28,7 @@
             @if (isset($data['fragments']) && count($data['fragments']) > 0)
                 <div class="space-y-3">
                     @foreach ($data['fragments'] as $fragment)
-                        @if (($fragment['type']['name'] ?? '') === 'todo')
+                        @if (($fragment['type']['value'] ?? '') === 'todo')
                             {{-- Use Livewire TodoItem for todos --}}
                             @livewire('todo-item', ['fragment' => \App\Models\Fragment::find($fragment['id'])], key('todo-'.$fragment['id']))
                         @else
@@ -36,7 +36,7 @@
                             <div class="bg-surface border border-electric-blue/20 rounded-lg p-3">
                                 <div class="flex items-start justify-between mb-2">
                                     <div class="text-sm font-medium text-electric-blue">
-                                        {{ $fragment['type']['name'] ?? 'Fragment' }}
+                                        {{ $fragment['type']['value'] ?? 'Fragment' }}
                                     </div>
                                     <div class="text-xs text-text-muted">
                                         {{ \Carbon\Carbon::parse($fragment['created_at'])->format('M j, g:i A') }}

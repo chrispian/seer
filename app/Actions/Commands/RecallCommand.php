@@ -27,6 +27,7 @@ class RecallCommand implements HandlesCommand
 
         $results = Fragment::query()
             ->where('type', $type)
+            ->with('type')
             ->latest()
             ->limit($limit)
             ->get();

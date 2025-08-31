@@ -12,9 +12,9 @@ class InferFragmentType
 
         Log::debug('EnrichFragmentWithLlama::invoke()');
 
-        if ($fragment->type !== 'note') {
-            return $fragment; // already has a type from ParseAtomicFragment
-        }
+//        if ($fragment->type !== 'note') {
+//            return $fragment; // already has a type from ParseAtomicFragment
+//        }
 
         // Simple rules or send to GPT/LLaMA if needed
         if (str_starts_with(strtolower($fragment->message), 'http')) {
