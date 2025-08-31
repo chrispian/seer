@@ -11,7 +11,15 @@
     $fragmentId = is_array($fragment) ? ($fragment['id'] ?? null) : ($fragment->id ?? null);
     $message = is_array($fragment) ? ($fragment['message'] ?? '') : ($fragment->message ?? '');
     $createdAt = is_array($fragment) ? ($fragment['created_at'] ?? null) : ($fragment->created_at ?? null);
-    $typeValue = is_array($fragment) ? ($fragment['type']['value'] ?? 'fragment') : ($fragment->type->value ?? 'fragment');
+    
+    // Handle type display - prefer 'name' over 'value' for better UX
+    if (is_array($fragment)) {
+        $typeName = $fragment['type']['name'] ?? ucfirst($fragment['type']['value'] ?? 'fragment');
+        $typeValue = $fragment['type']['value'] ?? 'fragment';
+    } else {
+        $typeName = $fragment->type?->label ?? ucfirst($fragment->type?->value ?? 'fragment');
+        $typeValue = $fragment->type?->value ?? 'fragment';
+    }
 @endphp
 
 <div 
@@ -22,8 +30,9 @@
         <div class="flex-1 {{ $showActions ? 'mr-4' : '' }}">
             @if($showTimestamp && $createdAt)
                 <div class="flex items-center justify-between mb-2">
-                    <div class="text-sm font-medium text-electric-blue">
-                        {{ ucfirst($typeValue) }}
+                    <div class="text-sm font-medium">
+                        <span class="text-white">Type:</span> 
+                        <span class="text-electric-blue">{{ $typeName }}</span>
                     </div>
                     <div class="text-xs text-text-muted">
                         {{ \Carbon\Carbon::parse($createdAt)->format('M j, g:i A') }}

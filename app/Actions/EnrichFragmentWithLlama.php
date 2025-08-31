@@ -65,7 +65,12 @@ PROMPT;
         ]);
 
         if (!empty($parsed['type'])) {
-            $fragment->type = $parsed['type'];
+            // Find type by value and set both type string and type_id
+            $typeModel = \App\Models\Type::where('value', $parsed['type'])->first();
+            if ($typeModel) {
+                $fragment->type = $parsed['type'];
+                $fragment->type_id = $typeModel->id;
+            }
         }
 
         $fragment->save();

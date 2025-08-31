@@ -812,16 +812,6 @@ class ChatInterface extends Page
         $this->loadPinnedChatSessions();
     }
 
-    public function updateRecentChatOrder(array $newOrder): void
-    {
-        foreach ($newOrder as $item) {
-            ChatSession::where('id', $item['id'])
-                ->update(['sort_order' => $item['sortOrder']]);
-        }
-
-        // Refresh recent chat sessions to reflect new order
-        $this->loadRecentChatSessions();
-    }
 
     public function updatedCurrentVaultId($vaultId): void
     {

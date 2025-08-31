@@ -53,7 +53,7 @@ class ProcessFragmentJob implements ShouldQueue
 
             $fragments[] = [
                 'id' => $this->fragment->id,
-                'type' => $this->fragment->type,
+                'type' => $this->fragment->type?->value ?? 'log',
                 'message' => $this->fragment->message,
             ];
 

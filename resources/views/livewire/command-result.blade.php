@@ -143,18 +143,12 @@
             @if (isset($data['fragments']) && count($data['fragments']) > 0)
                 <div class="space-y-3">
                     @foreach ($data['fragments'] as $fragment)
-                        <div class="relative">
-                            <x-fragment-card 
-                                :fragment="$fragment" 
-                                :show-timestamp="true"
-                                :highlight="true"
-                            />
-                            @if (isset($fragment['score']) && $fragment['score'] > 0)
-                                <div class="absolute top-2 right-2 text-xs text-electric-blue/70 bg-electric-blue/10 px-2 py-0.5 rounded">
-                                    Score: {{ number_format($fragment['score'], 3) }}
-                                </div>
-                            @endif
-                        </div>
+                        <x-search-result-card 
+                            :fragment="$fragment" 
+                            :show-timestamp="true"
+                            :show-score="true"
+                            :highlight="true"
+                        />
                     @endforeach
                 </div>
             @endif

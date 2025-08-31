@@ -106,7 +106,7 @@ class FragmentController extends Controller
             $results->map(function ($fragment) {
                 return [
                     'id' => $fragment->id,
-                    'type' => $fragment->type,
+                    'type' => $fragment->type?->value ?? 'log',
                     'title' => $fragment->title,
                     'message' => $fragment->message,
                     'tags' => $fragment->tags,

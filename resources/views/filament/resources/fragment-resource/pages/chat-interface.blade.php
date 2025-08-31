@@ -148,7 +148,7 @@
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-xs font-medium text-hot-pink/80">
-                        <x-heroicon-o-bookmark class="inline w-3 h-3 mr-1"/>
+                        <x-heroicon-o-paper-clip class="inline w-3 h-3 mr-1"/>
                         Pinned Chats
                     </h3>
                 </div>
@@ -233,15 +233,9 @@
                                 handle: '.drag-handle',
                                 animation: 150,
                                 ghostClass: 'opacity-50',
+                                disabled: true, // Disable sorting but keep structure
                                 onEnd: (evt) => {
-                                    const items = Array.from(container.children);
-                                    const newOrder = items.map((item, index) => ({
-                                        id: parseInt(item.dataset.id),
-                                        sortOrder: index + 1
-                                    }));
-
-                                    // Call Livewire method to update sort order
-                                    @this.call('updateRecentChatOrder', newOrder);
+                                    // No-op since sorting is disabled
                                 }
                             });
                         }
@@ -254,17 +248,13 @@
                 @if (!empty($recentChatSessions))
                     @foreach ($recentChatSessions as $session)
                         <div
-                            data-id="{{ $session['id'] }}"
                             wire:click="switchToChat({{ $session['id'] }})"
-                            class="flex items-center p-2 rounded-pixel cursor-pointer transition-all sortable-item
+                            class="flex items-center p-2 rounded-pixel cursor-pointer transition-all
                                 {{ $session['id'] === $currentChatSessionId
                                     ? 'bg-hot-pink/20 border-l-2 border-hot-pink'
                                     : 'bg-gray-800 hover:bg-electric-blue/10'
                                 }}"
                         >
-                            <div class="drag-handle cursor-move mr-2 text-gray-500 hover:text-electric-blue transition-colors">
-                                <x-heroicon-o-bars-2 class="w-3 h-3"/>
-                            </div>
                             <div class="flex-1 min-w-0 mr-2">
                                 <span class="text-sm {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-gray-300' }} truncate block" title="{{ $session['title'] }}">
                                     {{ $session['title'] }}
@@ -279,7 +269,7 @@
                                     class="p-0.5 rounded bg-gray-700/50 text-gray-500 hover:bg-electric-blue/20 hover:text-electric-blue hover:shadow-sm hover:shadow-electric-blue/20 transition-all"
                                     title="Pin chat"
                                 >
-                                    <x-heroicon-o-bookmark class="w-2.5 h-2.5"/>
+                                    <x-heroicon-o-paper-clip class="w-2.5 h-2.5"/>
                                 </button>
                                 <button
                                     wire:click.stop="deleteChat({{ $session['id'] }})"
@@ -617,7 +607,7 @@
                                 x-on:click.stop="openBookmark(bookmark)"
                                 class="flex items-center space-x-2 text-xs cursor-pointer hover:bg-neon-cyan/10 p-1 rounded-pixel transition-colors"
                             >
-                                <div class="w-2 h-2 bg-neon-cyan rounded-full flex-shrink-0"></div>
+                                <x-heroicon-o-bookmark class="w-3 h-3 text-hot-pink flex-shrink-0"/>
                                 <span
                                     class="text-text-secondary flex-1 truncate"
                                     :title="bookmark.fragment_title"

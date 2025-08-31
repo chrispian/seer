@@ -123,9 +123,7 @@ class CalculateSearchRanking
             'idea' => 0.8,
         ];
 
-        $type = $fragment->type instanceof \App\Enums\FragmentType
-            ? $fragment->type->value
-            : $fragment->type;
+        $type = $fragment->type?->value ?? 'log';
 
         return $typeWeights[$type] ?? 0.4;
     }

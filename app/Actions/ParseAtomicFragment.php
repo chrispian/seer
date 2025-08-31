@@ -15,10 +15,25 @@ class ParseAtomicFragment
             'original_message' => $fragment->message,
         ]);
 
-        // Match `type` as first word (with optional colon)
-        preg_match('/^(\w+):?\s+(.*)$/s', trim($fragment->message), $matches);
-        $type = strtolower(trim($matches[1] ?? 'note'));
-        $body = trim($matches[2] ?? $fragment->message); // Fallback to full message if no match
+        // Check if message starts with an explicit type prefix (word followed by colon)
+        if (preg_match('/^(\w+):\s+(.*)$/s', trim($fragment->message), $matches)) {
+            // Explicit type specified (e.g., "todo: pick up laundry")
+            $type = strtolower(trim($matches[1]));
+            $body = trim($matches[2]);
+            
+            Log::debug('ParseAtomicFragment - Explicit type found', [
+                'type' => $type,
+                'body' => $body,
+            ]);
+        } else {
+            // No explicit type, use full message and let AI infer the type later
+            $type = 'note'; // Default, will be overridden by AI inference
+            $body = trim($fragment->message);
+            
+            Log::debug('ParseAtomicFragment - No explicit type, using full message', [
+                'body' => $body,
+            ]);
+        }
 
         Log::debug('ParseAtomicFragment - Type extraction', [
             'type' => $type,
@@ -62,7 +77,17 @@ class ParseAtomicFragment
             'tags_to_save' => array_unique($tags),
         ]);
 
-        $fragment->type = $type;
+        // Find type by value and set both type string and type_id
+        $typeModel = \App\Models\Type::where('value', $type)->first();
+        if ($typeModel) {
+            $fragment->type = $type;
+            $fragment->type_id = $typeModel->id;
+        } else {
+            // Default to log if type doesn't exist
+            $logType = \App\Models\Type::where('value', 'log')->first();
+            $fragment->type = 'log';
+            $fragment->type_id = $logType?->id;
+        }
         $fragment->tags = array_unique($tags);
         $fragment->message = trim($cleanMessage);
 

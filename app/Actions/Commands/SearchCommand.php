@@ -42,13 +42,16 @@ class SearchCommand implements HandlesCommand
             // Convert search results to fragment-like objects for display
             $fragmentData = [];
             foreach ($results as $result) {
-                $fragment = Fragment::find($result->id);
+                $fragment = Fragment::with('type')->find($result->id);
                 if ($fragment) {
                     $fragmentData[] = [
                         'id' => $fragment->id,
                         'message' => $fragment->message,
                         'created_at' => $fragment->created_at,
-                        'type' => ['value' => $fragment->type?->value ?? 'fragment'],
+                        'type' => [
+                            'name' => $fragment->type?->label ?? ucfirst($fragment->type?->value ?? 'fragment'),
+                            'value' => $fragment->type?->value ?? 'fragment'
+                        ],
                         'snippet' => $result->snippet ?? '',
                         'score' => $result->score ?? 0,
                         'vec_sim' => $result->vec_sim ?? 0,
