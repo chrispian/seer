@@ -411,9 +411,16 @@
                                     <!-- Content -->
                                     <div class="flex-1 min-w-0">
                                         <div class="text-sm font-medium text-gray-200 truncate" x-text="result.title"></div>
-                                        <div class="text-xs text-gray-400 line-clamp-2 mt-1" x-text="result.preview"></div>
+                                        <div class="text-xs text-gray-400 line-clamp-2 mt-1">
+                                            <template x-if="result.snippet">
+                                                <span x-html="result.snippet"></span>
+                                            </template>
+                                            <template x-if="!result.snippet">
+                                                <span x-text="result.preview"></span>
+                                            </template>
+                                        </div>
 
-                                        <!-- Tags and Date -->
+                                        <!-- Tags, Scores and Date -->
                                         <div class="flex items-center space-x-2 mt-2">
                                             <template x-if="result.tags && result.tags.length > 0">
                                                 <div class="flex flex-wrap gap-1">
@@ -424,6 +431,11 @@
                                                         <span class="text-xs text-gray-400" x-text="'+' + (result.tags.length - 2)"></span>
                                                     </template>
                                                 </div>
+                                            </template>
+                                            <template x-if="result.vec_sim > 0">
+                                                <span class="text-xs text-electric-blue/60" :title="'Vector: ' + result.vec_sim.toFixed(3) + ' | Text: ' + result.txt_rank.toFixed(3)">
+                                                    AI Match
+                                                </span>
                                             </template>
                                             <div class="text-xs text-gray-400" x-text="result.created_at"></div>
                                         </div>
@@ -735,6 +747,13 @@
                         console.error('Failed to mark bookmark as viewed:', error);
                     }
 
+                    // Wait for LinkHandler to be available
+                    let attempts = 0;
+                    while ((!window.linkHandler || !window.linkHandler.showFragmentModal) && attempts < 50) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
+                    
                     // Open fragment modal using existing LinkHandler
                     try {
                         if (window.linkHandler && window.linkHandler.showFragmentModal) {
@@ -743,7 +762,21 @@
                             await window.linkHandler.showFragmentModal(bookmark.fragment_id, bookmark.name);
                         } else {
                             console.error('LinkHandler not available');
-                            alert('Unable to open bookmark. Please try refreshing the page.');
+                            
+                            // Try to initialize LinkHandler manually as a fallback
+                            if (typeof LinkHandler !== 'undefined') {
+                                console.log('Bookmark widget: Initializing LinkHandler manually');
+                                window.linkHandler = new LinkHandler();
+                                await new Promise(resolve => setTimeout(resolve, 100));
+                                
+                                if (window.linkHandler && window.linkHandler.showFragmentModal) {
+                                    await window.linkHandler.showFragmentModal(bookmark.fragment_id, bookmark.name);
+                                } else {
+                                    alert('Unable to open bookmark. Please try refreshing the page.');
+                                }
+                            } else {
+                                alert('Unable to open bookmark. Please try refreshing the page.');
+                            }
                         }
                     } catch (error) {
                         console.error('Failed to open fragment modal:', error);
@@ -805,39 +838,154 @@
                     this.searchOpen = false;
                     this.searchQuery = '';
 
-                    console.log('Header search: Checking LinkHandler availability...');
-                    console.log('Header search: window.linkHandler:', window.linkHandler);
-
-                    // Wait for LinkHandler to be available if needed
-                    let attempts = 0;
-                    while ((!window.linkHandler || !window.linkHandler.showFragmentModal) && attempts < 10) {
-                        console.log('Header search: LinkHandler not ready, waiting... attempt', attempts + 1);
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        attempts++;
-                    }
-
-                    // Open fragment modal using existing LinkHandler
+                    // Simple direct approach - just open the modal with the fragment ID
                     try {
-                        if (window.linkHandler && window.linkHandler.showFragmentModal) {
-                            console.log('Header search: Calling showFragmentModal with ID:', result.id, 'title:', result.title);
-                            await window.linkHandler.showFragmentModal(result.id, result.title);
-                            console.log('Header search: showFragmentModal completed');
-                        } else {
-                            console.error('Header search: LinkHandler still not available after waiting');
-                            console.error('Header search: window.linkHandler:', window.linkHandler);
-                            alert('Unable to open fragment. Please try refreshing the page.');
+                        console.log('Header search: Opening fragment modal for ID:', result.id);
+                        
+                        // Create a simple modal directly without waiting for LinkHandler
+                        const response = await fetch(`/api/fragments/${result.id}`);
+                        if (!response.ok) {
+                            throw new Error(`Failed to load fragment: HTTP ${response.status}`);
                         }
+                        
+                        const fragmentData = await response.json();
+                        console.log('Header search: Fragment data loaded:', fragmentData);
+                        
+                        // Show the fragment using a simple modal
+                        this.showFragmentInModal(fragmentData);
+                        
                     } catch (error) {
-                        console.error('Header search: Failed to open fragment modal:', error);
-                        alert('Failed to load fragment content: ' + error.message);
+                        console.error('Header search: Failed to load fragment:', error);
+                        alert('Failed to load fragment: ' + error.message);
                     } finally {
-                        // Reset the flag after a delay to prevent accidental rapid clicks
+                        // Reset the flag after a delay
                         setTimeout(() => {
                             this.openingModal = false;
                         }, 500);
                     }
+                },
+                
+                showFragmentInModal(fragmentData) {
+                    // Create or get modal container
+                    let modalContainer = document.getElementById('search-result-modal');
+                    if (!modalContainer) {
+                        modalContainer = document.createElement('div');
+                        modalContainer.id = 'search-result-modal';
+                        modalContainer.className = 'fixed inset-0 z-50 hidden';
+                        document.body.appendChild(modalContainer);
+                    }
+                    
+                    const fragmentType = fragmentData.type || 'unknown';
+                    
+                    modalContainer.innerHTML = `
+                        <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="document.getElementById('search-result-modal').classList.add('hidden')"></div>
+                        <div class="fixed inset-0 flex items-center justify-center p-4">
+                            <div class="relative max-w-4xl max-h-[90vh] overflow-auto bg-surface-2 p-6 rounded-pixel border border-thin border-hot-pink/30" style="min-width: 750px;">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-3">
+                                        <h2 class="text-lg font-medium text-text-primary">Fragment #${fragmentData.id}</h2>
+                                        <span class="text-xs bg-hot-pink/20 text-hot-pink px-2 py-1 rounded-pixel border border-hot-pink/40">${fragmentType.toUpperCase()}</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <button onclick="window.copyFragmentFromModal(event, '${this.escapeHtml(fragmentData.message)}')" class="p-1.5 bg-gray-700 hover:bg-neon-cyan/20 text-gray-400 hover:text-neon-cyan rounded border border-gray-600 hover:border-neon-cyan/40 hover:shadow-sm hover:shadow-neon-cyan/20 transition-all" title="Copy fragment">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                            </svg>
+                                        </button>
+                                        <button onclick="document.getElementById('search-result-modal').classList.add('hidden'); document.body.style.overflow = 'auto';" class="p-1.5 bg-gray-700 hover:bg-hot-pink/20 text-gray-400 hover:text-hot-pink rounded border border-gray-600 hover:border-hot-pink/40 hover:shadow-sm hover:shadow-hot-pink/20 transition-all" title="Close">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-4">
+                                    <div class="bg-surface-elevated p-4 rounded-pixel">
+                                        <div class="text-sm text-text-primary whitespace-pre-wrap">${this.escapeHtml(fragmentData.message)}</div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between text-xs text-text-muted">
+                                        <span>Created: ${new Date(fragmentData.created_at).toLocaleDateString()}</span>
+                                        <span>ID: ${fragmentData.id}</span>
+                                    </div>
+                                    
+                                    ${fragmentData.tags && fragmentData.tags.length ? `
+                                        <div class="flex items-center gap-2 text-xs">
+                                            <span class="text-text-muted">Tags:</span>
+                                            ${fragmentData.tags.map(tag => `
+                                                <span class="bg-electric-blue/20 text-electric-blue px-2 py-0.5 rounded border border-electric-blue/40">${tag}</span>
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    modalContainer.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                    
+                    // Close modal on escape key
+                    const escapeHandler = (e) => {
+                        if (e.key === 'Escape') {
+                            modalContainer.classList.add('hidden');
+                            document.body.style.overflow = 'auto';
+                            document.removeEventListener('keydown', escapeHandler);
+                        }
+                    };
+                    document.addEventListener('keydown', escapeHandler);
+                },
+                
+                escapeHtml(text) {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
                 }
             };
+        }
+        
+        // Global function for copying fragment content from modal
+        window.copyFragmentFromModal = async function(event, text) {
+            try {
+                // Unescape HTML entities
+                const textarea = document.createElement('textarea');
+                textarea.innerHTML = text;
+                const unescapedText = textarea.value;
+                
+                // Copy to clipboard
+                await navigator.clipboard.writeText(unescapedText);
+                
+                // Visual feedback on the button
+                const button = event.target.closest('button');
+                if (button) {
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = '<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                    button.classList.add('text-green-400', 'border-green-400/40');
+                    button.classList.remove('text-gray-400', 'border-gray-600');
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('text-green-400', 'border-green-400/40');
+                        button.classList.add('text-gray-400', 'border-gray-600');
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Failed to copy fragment:', error);
+                
+                // Error feedback
+                const button = event.target.closest('button');
+                if (button) {
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = '<svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+                    button.classList.add('text-red-400', 'border-red-400/40');
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('text-red-400', 'border-red-400/40');
+                    }, 2000);
+                }
+            }
         }
 
         function chatTextarea() {
@@ -1118,7 +1266,11 @@
                                                 {{ $result['title'] }}
                                             </div>
                                             <div class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">
-                                                {{ $result['preview'] }}
+                                                @if(!empty($result['snippet']))
+                                                    {!! $result['snippet'] !!}
+                                                @else
+                                                    {{ $result['preview'] }}
+                                                @endif
                                             </div>
 
                                             {{-- Tags and Metadata --}}
@@ -1136,11 +1288,17 @@
                                                     </div>
                                                 @endif
 
+                                                @if(isset($result['vec_sim']) && $result['vec_sim'] > 0)
+                                                    <span class="text-xs text-blue-500 dark:text-blue-400" title="Vector: {{ number_format($result['vec_sim'], 3) }} | Text: {{ number_format($result['txt_rank'] ?? 0, 3) }}">
+                                                        AI Match
+                                                    </span>
+                                                @endif
+
                                                 <div class="text-xs text-gray-400">
                                                     {{ $result['created_at'] }}
                                                 </div>
 
-                                                @if(isset($result['search_score']) && $result['search_score'] > 0)
+                                                @if(isset($result['search_score']) && $result['search_score'] > 0 && !isset($result['vec_sim']))
                                                     <div class="text-xs text-gray-400">
                                                         Score: {{ number_format($result['search_score'], 1) }}
                                                     </div>

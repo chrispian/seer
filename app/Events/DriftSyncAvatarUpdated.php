@@ -16,20 +16,21 @@ class DriftSyncAvatarUpdated implements ShouldBroadcast
 
     public string $avatarPath;
 
+    // 👇 ensure it uses Redis + the broadcasts queue
+    public $connection = 'redis';
+    public $queue = 'broadcasts';
+
     public function __construct(string $avatarPath)
     {
-        Log::debug('DriftSyncAvatarUpdated::construct');
+        \Log::debug('DriftSyncAvatarUpdated::construct');
         $this->avatarPath = $avatarPath;
     }
 
-    public function broadcastOn()
-    {
-        Log::debug('DriftSyncAvatarUpdated:broadcastOn');
-        return new Channel('lens.chat'); // Or whatever your main Lens channel is
+    public function broadcastOn() {
+        return new \Illuminate\Broadcasting\Channel('lens.chat');
+    }
+    public function broadcastAs() {
+        return 'drift-avatar-change';
     }
 
-    public function broadcastAs()
-    {
-        return 'drift-avatar-change'; // Match the browser listener you already have
-    }
 }

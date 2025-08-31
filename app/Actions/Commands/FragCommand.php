@@ -31,11 +31,11 @@ class FragCommand implements HandlesCommand
         ]);
 
         // Dispatch async processing
-        ProcessFragmentJob::dispatch($fragment);
+        ProcessFragmentJob::dispatch($fragment)->onQueue('fragments');
 
         // Respond immediately to user
         return new CommandResponse(
-            message: "📦 Fragment received and queued for processing!\n\n`{$fragment->message}`",
+            message: "Fragment received and queued for processing!\n\n`{$fragment->message}`",
             type: 'system',
             fragments: [
                 [

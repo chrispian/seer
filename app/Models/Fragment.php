@@ -12,6 +12,8 @@ class Fragment extends Model
 {
     use SoftDeletes;
 
+    protected $guarded = [];
+
     protected $casts = [
         'project_id' => 'integer',
         'pinned' => 'boolean',
@@ -258,4 +260,10 @@ class Fragment extends Model
     {
         return substr($this->message, 0, 120).(strlen($this->message) > 120 ? '...' : '');
     }
+
+    public function getBodyAttribute(): string
+    {
+        return $this->edited_message ?? $this->message ?? '';
+    }
+
 }

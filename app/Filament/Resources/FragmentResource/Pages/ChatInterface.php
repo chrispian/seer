@@ -378,8 +378,7 @@ class ChatInterface extends Page
             $chatSession->update(['last_activity_at' => now()]);
         }
 
-        // Reload recent chat sessions to reflect changes
-        $this->loadRecentChatSessions();
+        // Don't reload chat sessions when switching - sidebar should stay stable
     }
 
     public function saveCurrentChatSession(): void
@@ -1029,6 +1028,107 @@ class ChatInterface extends Page
         $this->recallLoading = true;
         
         try {
+            // Use hybrid search if available and query is simple (no advanced filters)
+            $useHybrid = $this->shouldUseHybridSearch($this->recallQuery);
+            
+            if ($useHybrid) {
+                // Use the new hybrid search for better results
+                $this->performHybridSearch();
+            } else {
+                // Fall back to standard search for complex queries with filters
+                $this->performStandardSearch();
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Recall search failed', [
+                'query' => $this->recallQuery,
+                'error' => $e->getMessage(),
+            ]);
+            $this->recallResults = [];
+            $this->recallLoading = false;
+        }
+    }
+    
+    protected function shouldUseHybridSearch(string $query): bool
+    {
+        // Use hybrid search for simple queries without advanced filters
+        // Advanced filters are things like type:, has:, @mentions, etc.
+        $hasAdvancedFilters = preg_match('/\b(type:|has:|@|#|vault:|project:)/', $query);
+        
+        // Also check if embeddings are configured
+        $embeddingsConfigured = config('fragments.embeddings.provider') !== null;
+        
+        return !$hasAdvancedFilters && $embeddingsConfigured && strlen($query) >= 2;
+    }
+    
+    protected function performHybridSearch(): void
+    {
+        try {
+            // Call the hybrid search API endpoint
+            $httpClient = \Illuminate\Support\Facades\Http::baseUrl(url('/'));
+            
+            // Disable SSL verification in local environment
+            if (app()->environment('local')) {
+                $httpClient = $httpClient->withoutVerifying();
+            }
+            
+            $response = $httpClient->get('api/search/hybrid', [
+                'q' => $this->recallQuery,
+                'limit' => 10,
+                'provider' => config('fragments.embeddings.provider'),
+            ]);
+            
+            if ($response->successful()) {
+                $results = $response->json();
+                
+                // Format hybrid search results for display
+                $this->recallResults = collect($results)->map(function ($result) {
+                    // Load the full fragment to get additional data
+                    $fragment = Fragment::find($result['id']);
+                    
+                    if (!$fragment) {
+                        return null;
+                    }
+                    
+                    return [
+                        'id' => $fragment->id,
+                        'type' => $fragment->type instanceof \App\Models\Type ? $fragment->type->value : ($fragment->type instanceof \BackedEnum ? $fragment->type->value : $fragment->type),
+                        'title' => $result['title'] ?: $this->truncateText($fragment->message, 80),
+                        'message' => $fragment->message,
+                        'created_at' => $fragment->created_at->diffForHumans(),
+                        'tags' => $fragment->tags ?? [],
+                        'search_score' => $result['score'] ?? 0,
+                        'preview' => strip_tags($result['snippet'] ?? $this->truncateText($fragment->message, 120)),
+                        'snippet' => $result['snippet'] ?? null,
+                        'vec_sim' => $result['vec_sim'] ?? 0,
+                        'txt_rank' => $result['txt_rank'] ?? 0,
+                    ];
+                })->filter()->values()->toArray();
+                
+                // Clear suggestions for hybrid search
+                $this->recallSuggestions = [];
+                $this->recallAutocomplete = [];
+                
+            } else {
+                // Fall back to standard search on API failure
+                $this->performStandardSearch();
+            }
+        } catch (\Exception $e) {
+            Log::error('Hybrid search failed', [
+                'query' => $this->recallQuery,
+                'error' => $e->getMessage(),
+            ]);
+            
+            // Fall back to standard search
+            $this->performStandardSearch();
+        }
+        
+        $this->recallLoading = false;
+    }
+    
+    protected function performStandardSearch(): void
+    {
+        try {
             // Parse the search query
             $grammarParser = app(ParseSearchGrammar::class);
             $parsedGrammar = $grammarParser($this->recallQuery);
@@ -1070,7 +1170,7 @@ class ChatInterface extends Page
             $this->recallAutocomplete = $parsedGrammar['autocomplete'];
             
         } catch (\Exception $e) {
-            Log::error('Recall search failed', [
+            Log::error('Standard search failed', [
                 'query' => $this->recallQuery,
                 'error' => $e->getMessage(),
             ]);

@@ -30,3 +30,6 @@ Route::post('/fragments/{id}/bookmark', [BookmarkController::class, 'toggleBookm
 Route::get('/bookmarks/recent', [BookmarkController::class, 'getRecent']);
 Route::get('/bookmarks/search', [BookmarkController::class, 'search']);
 Route::post('/bookmarks/{id}/mark-viewed', [BookmarkController::class, 'markAsViewed']);
+
+// Search endpoints
+Route::get('/search/hybrid', [\App\Http\Controllers\FragmentController::class, 'hybridSearch'])->name('fragments.hybrid-search');

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class ParseChaosFragment
 {
-    public function __invoke(Fragment $fragment): array
+    public function __invoke(Fragment $fragment): Fragment|array
     {
 
         Log::debug('Made it to parse chaos fragment');
@@ -122,6 +122,7 @@ PROMPT;
                         \App\Actions\InferFragmentType::class,
                         \App\Actions\SuggestTags::class,
                         \App\Actions\RouteToVault::class,
+                        \App\Actions\EmbedFragmentAction::class,
                     ])
                     ->thenReturn();
             })->onQueue('fragments');
