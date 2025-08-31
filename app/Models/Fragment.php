@@ -33,7 +33,17 @@ class Fragment extends Model
     // Relationships
     public function type(): BelongsTo
     {
-        return $this->belongsTo(Type::class);
+        return $this->belongsTo(Type::class, 'type_id');
+    }
+
+    // Override type access to return relationship when loaded
+    public function __get($key)
+    {
+        if ($key === 'type' && $this->relationLoaded('type')) {
+            return $this->getRelation('type');
+        }
+        
+        return parent::__get($key);
     }
 
     public function category(): BelongsTo

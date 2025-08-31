@@ -7,6 +7,7 @@
         message: '',
         fragmentId: null,
         objectType: 'fragment',
+        messageType: 'delete', // 'delete', 'success', 'error'
         countdownInterval: null,
         
         display(fragmentId, message, objectType = 'fragment', duration = 60) {
@@ -14,6 +15,7 @@
             this.fragmentId = fragmentId;
             this.message = message;
             this.objectType = objectType;
+            this.messageType = 'delete';
             this.timeLeft = duration;
             this.show = true;
             
@@ -27,11 +29,31 @@
             }, 1000);
         },
         
-        displaySuccess(message, objectType = 'fragment', duration = 10) {
+        displaySuccess(message, objectType = 'fragment', duration = 2) {
             console.log('Undo toast success called with:', { message, objectType, duration });
             this.fragmentId = null; // No undo action for success messages
             this.message = message;
             this.objectType = objectType;
+            this.messageType = 'success';
+            this.timeLeft = duration;
+            this.show = true;
+            
+            // Start countdown
+            this.countdownInterval = setInterval(() => {
+                this.timeLeft--;
+                
+                if (this.timeLeft <= 0) {
+                    this.hide();
+                }
+            }, 1000);
+        },
+        
+        displayError(message, duration = 2) {
+            console.log('Undo toast error called with:', { message, duration });
+            this.fragmentId = null; // No undo action for error messages
+            this.message = message;
+            this.objectType = 'error';
+            this.messageType = 'error';
             this.timeLeft = duration;
             this.show = true;
             
@@ -46,6 +68,9 @@
         },
         
         getTitle() {
+            if (this.messageType === 'error') {
+                return 'Error';
+            }
             if (!this.fragmentId) {
                 // Success message - no undo action
                 return this.objectType === 'chat' ? 'Chat restored' : 'Fragment restored';
@@ -55,12 +80,35 @@
         },
         
         getIcon() {
+            if (this.messageType === 'error') {
+                return '❌';
+            }
             if (!this.fragmentId) {
                 // Success message - use checkmark
                 return '✅';
             }
             // Delete message - use type-specific icon
             return this.objectType === 'chat' ? '💬' : '🗑️';
+        },
+        
+        getIconBgClass() {
+            if (this.messageType === 'error') {
+                return 'bg-bright-pink';
+            }
+            if (this.messageType === 'success') {
+                return 'bg-electric-blue';
+            }
+            return 'bg-hot-pink';
+        },
+        
+        getProgressBarClass() {
+            if (this.messageType === 'error') {
+                return 'bg-bright-pink';
+            }
+            if (this.messageType === 'success') {
+                return 'bg-electric-blue';
+            }
+            return 'bg-hot-pink';
         },
         
         showUndoButton() {
@@ -89,7 +137,7 @@
     <div class="flex items-center justify-center">
         <div class="flex items-center justify-between w-full max-w-2xl">
             <div class="flex items-center space-x-3">
-                <div class="w-6 h-6 bg-hot-pink rounded-pixel flex items-center justify-center">
+                <div class="w-6 h-6 rounded-pixel flex items-center justify-center" :class="getIconBgClass()">
                     <span class="text-white text-sm" x-text="getIcon()"></span>
                 </div>
                 <div class="flex-1">
@@ -129,8 +177,9 @@
     <!-- Progress Bar -->
     <div class="mt-2">
         <div class="h-1 bg-surface rounded-pixel overflow-hidden">
-            <div class="h-full bg-hot-pink transition-all duration-1000 ease-linear rounded-pixel" 
-                 :style="{ width: (timeLeft / 60 * 100) + '%' }"></div>
+            <div class="h-full transition-all duration-1000 ease-linear rounded-pixel" 
+                 :class="getProgressBarClass()"
+                 :style="{ width: (timeLeft / (messageType === 'error' || messageType === 'success' ? 2 : 60) * 100) + '%' }"></div>
         </div>
     </div>
 </div>

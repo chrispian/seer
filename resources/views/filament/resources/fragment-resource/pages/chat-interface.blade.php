@@ -148,7 +148,7 @@
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-xs font-medium text-hot-pink/80">
-                        <x-heroicon-o-bookmark class="inline w-3 h-3 mr-1"/>
+                        <x-heroicon-o-paper-clip class="inline w-3 h-3 mr-1"/>
                         Pinned Chats
                     </h3>
                 </div>
@@ -233,15 +233,9 @@
                                 handle: '.drag-handle',
                                 animation: 150,
                                 ghostClass: 'opacity-50',
+                                disabled: true, // Disable sorting but keep structure
                                 onEnd: (evt) => {
-                                    const items = Array.from(container.children);
-                                    const newOrder = items.map((item, index) => ({
-                                        id: parseInt(item.dataset.id),
-                                        sortOrder: index + 1
-                                    }));
-
-                                    // Call Livewire method to update sort order
-                                    @this.call('updateRecentChatOrder', newOrder);
+                                    // No-op since sorting is disabled
                                 }
                             });
                         }
@@ -254,17 +248,13 @@
                 @if (!empty($recentChatSessions))
                     @foreach ($recentChatSessions as $session)
                         <div
-                            data-id="{{ $session['id'] }}"
                             wire:click="switchToChat({{ $session['id'] }})"
-                            class="flex items-center p-2 rounded-pixel cursor-pointer transition-all sortable-item
+                            class="flex items-center p-2 rounded-pixel cursor-pointer transition-all
                                 {{ $session['id'] === $currentChatSessionId
                                     ? 'bg-hot-pink/20 border-l-2 border-hot-pink'
                                     : 'bg-gray-800 hover:bg-electric-blue/10'
                                 }}"
                         >
-                            <div class="drag-handle cursor-move mr-2 text-gray-500 hover:text-electric-blue transition-colors">
-                                <x-heroicon-o-bars-2 class="w-3 h-3"/>
-                            </div>
                             <div class="flex-1 min-w-0 mr-2">
                                 <span class="text-sm {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-gray-300' }} truncate block" title="{{ $session['title'] }}">
                                     {{ $session['title'] }}
@@ -279,7 +269,7 @@
                                     class="p-0.5 rounded bg-gray-700/50 text-gray-500 hover:bg-electric-blue/20 hover:text-electric-blue hover:shadow-sm hover:shadow-electric-blue/20 transition-all"
                                     title="Pin chat"
                                 >
-                                    <x-heroicon-o-bookmark class="w-2.5 h-2.5"/>
+                                    <x-heroicon-o-paper-clip class="w-2.5 h-2.5"/>
                                 </button>
                                 <button
                                     wire:click.stop="deleteChat({{ $session['id'] }})"
@@ -500,6 +490,9 @@
         <!-- Error Toast Row (slides up from below) -->
         <x-error-toast />
 
+        <!-- Success Toast Row (slides up from below) -->
+        <x-success-toast />
+
         <!-- Row 3: Input Area -->
         <div class="bg-surface-2 border-t border-thin border-hot-pink/30">
             <!-- Chat Input -->
@@ -614,7 +607,7 @@
                                 x-on:click.stop="openBookmark(bookmark)"
                                 class="flex items-center space-x-2 text-xs cursor-pointer hover:bg-neon-cyan/10 p-1 rounded-pixel transition-colors"
                             >
-                                <div class="w-2 h-2 bg-neon-cyan rounded-full flex-shrink-0"></div>
+                                <x-heroicon-o-bookmark class="w-3 h-3 text-hot-pink flex-shrink-0"/>
                                 <span
                                     class="text-text-secondary flex-1 truncate"
                                     :title="bookmark.fragment_title"
@@ -1503,20 +1496,22 @@
                 }
             });
 
-            // Listen for success toast events
+            // Listen for success toast events (for /frag and /chaos commands)
             Livewire.on('show-success-toast', function(event) {
                 console.log('Received success toast event:', event);
 
+                let title = event.title || event.detail?.title || 'Success';
                 let message = event.message || event.detail?.message;
-                let objectType = event.objectType || event.detail?.objectType || 'fragment';
+                let fragmentType = event.fragmentType || event.detail?.fragmentType || 'fragment';
+                let fragmentId = event.fragmentId || event.detail?.fragmentId || null;
 
-                console.log('Success toast values:', { message, objectType });
+                console.log('Success toast values:', { title, message, fragmentType, fragmentId });
 
                 if (message) {
-                    const toastElement = document.getElementById('undo-toast');
+                    const toastElement = document.getElementById('success-toast');
                     if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
-                        console.log('Calling displaySuccess with:', message, objectType);
-                        toastElement._x_dataStack[0].displaySuccess(message, objectType, 10);
+                        console.log('Calling display with:', title, message, fragmentType, fragmentId);
+                        toastElement._x_dataStack[0].display(title, message, fragmentType, fragmentId, 5);
                     }
                 }
             });
@@ -1538,14 +1533,138 @@
             });
 
             Livewire.on('show-error-toast', function(data) {
-                // Find the error toast by ID and trigger display
-                const errorToastElement = document.getElementById('error-toast');
-                if (errorToastElement && errorToastElement._x_dataStack && errorToastElement._x_dataStack[0]) {
-                    errorToastElement._x_dataStack[0].display(data.message);
+                // Use the unified undo-toast for error messages
+                const toastElement = document.getElementById('undo-toast');
+                if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
+                    toastElement._x_dataStack[0].displayError(data.message, 2);
+                }
+            });
+
+            Livewire.on('show-success-toast', function(data) {
+                // Use the unified undo-toast for success messages
+                const toastElement = document.getElementById('undo-toast');
+                if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
+                    toastElement._x_dataStack[0].displaySuccess(data.message, 'fragment', 2);
                 }
             });
 
         });
+
+        // Bookmark and copy functionality (fallback if link-handler.js not loaded)
+        if (!window.checkBookmarkStatus) {
+            window.checkBookmarkStatus = async function(fragmentId, element) {
+                console.log('checkBookmarkStatus called:', fragmentId, element);
+                if (!fragmentId || fragmentId <= 0) return;
+                try {
+                    const response = await fetch(`/api/fragments/${fragmentId}/bookmark`);
+                    if (!response.ok) return;
+                    const data = await response.json();
+                    console.log('Initial bookmark status data:', data);
+                    
+                    // Try different ways to access Alpine component
+                    let alpineComponent;
+                    if (window.Alpine && Alpine.$data) {
+                        alpineComponent = Alpine.$data(element);
+                    }
+                    
+                    console.log('Alpine component for status check:', alpineComponent);
+                    
+                    if (alpineComponent && typeof alpineComponent.bookmarked !== 'undefined') {
+                        alpineComponent.bookmarked = data.is_bookmarked;
+                        console.log('Set initial bookmarked to:', data.is_bookmarked);
+                    } else {
+                        console.warn('Could not access Alpine component data for bookmark status');
+                        // Fallback: set data attribute for visual state
+                        element.setAttribute('data-bookmarked', data.is_bookmarked);
+                    }
+                } catch (error) {
+                    console.error('checkBookmarkStatus error:', error);
+                    return;
+                }
+            };
+        }
+
+        if (!window.toggleBookmark) {
+            window.toggleBookmark = async function(fragmentId, element) {
+                console.log('toggleBookmark called:', fragmentId, element);
+                try {
+                    const response = await fetch(`/api/fragments/${fragmentId}/bookmark`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                        }
+                    });
+                    console.log('Bookmark toggle response status:', response.status);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const data = await response.json();
+                    console.log('Bookmark toggle data:', data);
+                    
+                    // Update Alpine component state
+                    const alpineComponent = Alpine.$data(element);
+                    console.log('Alpine component for toggle:', alpineComponent);
+                    if (alpineComponent) {
+                        alpineComponent.bookmarked = data.is_bookmarked;
+                        console.log('Updated bookmarked state to:', data.is_bookmarked);
+                    }
+
+                    // Dispatch event to notify bookmark widget to refresh (CRITICAL for real-time updates)
+                    window.dispatchEvent(new CustomEvent('bookmark-toggled', {
+                        detail: { fragmentId, action: data.action, isBookmarked: data.is_bookmarked }
+                    }));
+
+                } catch (error) {
+                    console.error('Failed to toggle bookmark:', error.message);
+                }
+            };
+        }
+
+        if (!window.copyChatMessage) {
+            window.copyChatMessage = async function(button) {
+                try {
+                    let messageContainer = button.parentElement;
+                    while (messageContainer && !messageContainer.classList.contains('relative')) {
+                        messageContainer = messageContainer.parentElement;
+                    }
+                    if (!messageContainer) {
+                        messageContainer = button.closest('div.flex-1, div[class*="bg-surface-card"]');
+                    }
+                    if (!messageContainer) throw new Error('Could not find message container');
+
+                    const clonedContainer = messageContainer.cloneNode(true);
+                    const copyButton = clonedContainer.querySelector('button');
+                    if (copyButton) copyButton.remove();
+
+                    let text = clonedContainer.textContent || clonedContainer.innerText;
+                    text = text.replace(/📋\s*Copy/g, '').replace(/✅\s*Copied!/g, '').replace(/❌\s*Failed/g, '').trim();
+                    
+                    if (!text || text.length === 0) throw new Error('No text content found');
+
+                    await navigator.clipboard.writeText(text);
+
+                    const originalHtml = button.innerHTML;
+                    button.innerHTML = '✅ Copied!';
+                    button.classList.add('text-green-400', 'border-green-400/40');
+                    button.classList.remove('text-neon-cyan', 'border-neon-cyan/40');
+
+                    setTimeout(() => {
+                        button.innerHTML = originalHtml;
+                        button.classList.remove('text-green-400', 'border-green-400/40');
+                        button.classList.add('text-neon-cyan', 'border-neon-cyan/40');
+                    }, 2000);
+
+                } catch (error) {
+                    console.error('Failed to copy message:', error);
+                    const originalHtml = button.innerHTML;
+                    button.innerHTML = '❌ Failed';
+                    button.classList.add('text-red-400', 'border-red-400/40');
+                    setTimeout(() => {
+                        button.innerHTML = originalHtml;
+                        button.classList.remove('text-red-400', 'border-red-400/40');
+                    }, 2000);
+                }
+            };
+        }
     </script>
 
 </div>

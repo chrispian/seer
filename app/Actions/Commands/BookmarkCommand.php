@@ -39,9 +39,9 @@ class BookmarkCommand implements HandlesCommand
 
         if ($bookmarks->isEmpty()) {
             return new CommandResponse(
-                message: "📑 No bookmarks found.",
-                type: 'system',
-                shouldResetChat: true,
+                type: 'bookmark',
+                message: 'No bookmarks found',
+                shouldShowErrorToast: true,
             );
         }
 
@@ -53,9 +53,13 @@ class BookmarkCommand implements HandlesCommand
         $message = "📑 Bookmarks:\n" . implode("\n", $lines);
 
         return new CommandResponse(
-            message: $message,
-            type: 'system',
-            shouldResetChat: true,
+            type: 'bookmark',
+            shouldOpenPanel: true,
+            panelData: [
+                'action' => 'list',
+                'message' => $message,
+                'bookmarks' => $bookmarks->toArray(),
+            ],
         );
     }
 
@@ -65,9 +69,9 @@ class BookmarkCommand implements HandlesCommand
 
         if (!$bookmark) {
             return new CommandResponse(
-                message: "🔎 No bookmark found matching `{$hint}`.",
-                type: 'system',
-                shouldResetChat: true,
+                type: 'bookmark',
+                message: "No bookmark found matching `{$hint}`",
+                shouldShowErrorToast: true,
             );
         }
 
@@ -77,9 +81,9 @@ class BookmarkCommand implements HandlesCommand
 
         if ($fragments->isEmpty()) {
             return new CommandResponse(
-                message: "🔎 Bookmark `{$bookmark->name}` exists but no fragments found.",
-                type: 'system',
-                shouldResetChat: true,
+                type: 'bookmark',
+                message: "Bookmark `{$bookmark->name}` exists but no fragments found",
+                shouldShowErrorToast: true,
             );
         }
 
@@ -90,9 +94,14 @@ class BookmarkCommand implements HandlesCommand
         }
 
         return new CommandResponse(
-            message: trim($message),
-            type: 'system',
-            shouldResetChat: true,
+            type: 'bookmark',
+            shouldOpenPanel: true,
+            panelData: [
+                'action' => 'show',
+                'message' => trim($message),
+                'bookmark' => $bookmark->toArray(),
+                'fragments' => $fragments->toArray(),
+            ],
         );
     }
 
@@ -102,9 +111,9 @@ class BookmarkCommand implements HandlesCommand
 
         if (!$bookmark) {
             return new CommandResponse(
-                message: "❌ No bookmark found matching `{$hint}` to forget.",
-                type: 'system',
-                shouldResetChat: true,
+                type: 'bookmark',
+                message: "No bookmark found matching `{$hint}`",
+                shouldShowErrorToast: true,
             );
         }
 
@@ -112,9 +121,9 @@ class BookmarkCommand implements HandlesCommand
         $bookmark->delete();
 
         return new CommandResponse(
-            message: "🗑️ Bookmark `{$name}` has been forgotten.",
-            type: 'system',
-            shouldResetChat: true,
+            type: 'bookmark',
+            message: "Bookmark `{$name}` deleted",
+            shouldShowSuccessToast: true,
         );
     }
 
@@ -125,9 +134,9 @@ class BookmarkCommand implements HandlesCommand
 
         if (!$lastFragment) {
             return new CommandResponse(
-                message: "⚡ No fragments found to bookmark.",
-                type: 'system',
-                shouldResetChat: true,
+                type: 'bookmark',
+                message: 'No fragments found to bookmark',
+                shouldShowErrorToast: true,
             );
         }
 
@@ -147,9 +156,9 @@ class BookmarkCommand implements HandlesCommand
         ]);
 
         return new CommandResponse(
-            message: "📌 Bookmarked as `{$title}` (" . count($fragmentIds) . " fragment" . (count($fragmentIds) > 1 ? 's' : '') . ").",
-            type: 'system',
-            shouldResetChat: true,
+            type: 'bookmark',
+            message: "Bookmarked as `{$title}`",
+            shouldShowSuccessToast: true,
         );
     }
 }

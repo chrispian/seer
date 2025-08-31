@@ -165,6 +165,13 @@ class ChatInterface extends Page
     public function handleInput()
     {
         $message = trim($this->input);
+        
+        // Early return for empty messages - fail silently
+        if (empty($message)) {
+            $this->input = '';
+            return;
+        }
+        
         // ✅ 1. Clear Input Immediately
         $this->input = '';
 
@@ -187,12 +194,10 @@ class ChatInterface extends Page
                 $handler = app($handlerClass);
             } catch (InvalidArgumentException $e) {
                 $this->removeSpinner($spinnerKey); // ❗ clean up spinner
-                $this->chatMessages[] = [
-                    'type' => 'system',
-                    'type_id' => $this->getSystemTypeId(),
-                    'message' => "❌ Command `/{$command->command}` not recognized. Try `/help` for options.",
-                ];
-
+                
+                // Show error toast instead of adding to chat
+                $this->showErrorToast("Command `/{$command->command}` not recognized. Try `/help` for options.");
+                
                 return;
             }
 
@@ -208,19 +213,42 @@ class ChatInterface extends Page
                 return;
             }
 
+            // Handle success toast notifications (for /frag and /chaos)
+            if ($response->shouldShowSuccessToast && isset($response->toastData)) {
+                $this->showSuccessToast(
+                    $response->toastData['title'] ?? 'Success',
+                    $response->toastData['message'] ?? '',
+                    $response->toastData['fragmentType'] ?? 'fragment',
+                    $response->toastData['fragmentId'] ?? null
+                );
+                return;
+            }
+
+            // Handle error toast notifications
+            if ($response->shouldShowErrorToast) {
+                $this->showErrorToast($response->message ?? 'An error occurred.');
+                return;
+            }
+
+            // Handle success toast notifications
+            if ($response->shouldShowSuccessToast) {
+                $this->showSuccessToast(
+                    'Success',
+                    $response->message ?? 'Command completed successfully.',
+                    'fragment',
+                    null
+                );
+                return;
+            }
+
             // Handle clear command (exit command mode)
             if ($response->type === 'clear') {
                 if ($this->inCommandMode) {
                     $this->exitCommandMode();
-                } else {
-                    // Add message to chat if not in command mode
-                    if (! empty($response->message)) {
-                        $this->chatMessages[] = [
-                            'type' => 'system',
-                            'message' => $response->message,
-                        ];
-                    }
                 }
+                // Clear the input field to prevent modal from showing /clear
+                $this->input = '';
+                // No message added - just exit silently
                 return;
             }
 
@@ -229,12 +257,8 @@ class ChatInterface extends Page
                 $this->chatMessages = [];
             }
 
-            if (! empty($response->message)) {
-                $this->chatMessages[] = [
-                    'type' => $response->type ?? 'system',
-                    'message' => $response->message,
-                ];
-            }
+            // Don't add system messages to chat anymore
+            // Commands should use shouldOpenPanel for feedback
 
             if (! empty($response->fragments) && is_array($response->fragments) && array_is_list($response->fragments)) {
                 // Handle different fragment types differently
@@ -359,14 +383,7 @@ class ChatInterface extends Page
         // Reload recent chat sessions
         $this->loadRecentChatSessions();
 
-        // Add welcome message
-        $this->chatMessages[] = [
-            'type' => 'system',
-            'type_id' => $this->getSystemTypeId(),
-            'message' => '💬 **New chat started!** Type your message or use `/help` for commands.',
-            'created_at' => now(),
-        ];
-
+        // No welcome message - clean start
         $this->saveCurrentChatSession();
     }
 
@@ -795,16 +812,6 @@ class ChatInterface extends Page
         $this->loadPinnedChatSessions();
     }
 
-    public function updateRecentChatOrder(array $newOrder): void
-    {
-        foreach ($newOrder as $item) {
-            ChatSession::where('id', $item['id'])
-                ->update(['sort_order' => $item['sortOrder']]);
-        }
-
-        // Refresh recent chat sessions to reflect new order
-        $this->loadRecentChatSessions();
-    }
 
     public function updatedCurrentVaultId($vaultId): void
     {
@@ -1319,8 +1326,11 @@ class ChatInterface extends Page
 
     private function enterCommandMode(): void
     {
-        // Back up original chat messages
-        $this->originalFragments = $this->chatMessages;
+        // Only back up original chat messages if not already in command mode
+        // This preserves the true original chat when switching between commands
+        if (!$this->inCommandMode) {
+            $this->originalFragments = $this->chatMessages;
+        }
         $this->inCommandMode = true;
     }
 
@@ -1350,5 +1360,25 @@ class ChatInterface extends Page
             $this->loadRecentChatSessions();
         }
     }
+
+    private function showSuccessToast(string $title, string $message, string $fragmentType = 'fragment', ?int $fragmentId = null): void
+    {
+        // Dispatch browser event to show success toast
+        $this->dispatch('show-success-toast', [
+            'title' => $title,
+            'message' => $message,
+            'fragmentType' => $fragmentType,
+            'fragmentId' => $fragmentId,
+        ]);
+    }
+
+    private function showErrorToast(string $message): void
+    {
+        // Dispatch browser event to show error toast
+        $this->dispatch('show-error-toast', [
+            'message' => $message,
+        ]);
+    }
+
 
 }

@@ -67,6 +67,92 @@
                 </div>
             @endif
 
+        @elseif ($type === 'bookmark')
+            {{-- Bookmark Results --}}
+            @if (isset($data['action']) && $data['action'] === 'show' && isset($data['fragments']) && count($data['fragments']) > 0)
+                <div class="space-y-3">
+                    @foreach ($data['fragments'] as $fragment)
+                        <x-fragment-card 
+                            :fragment="$fragment" 
+                            :show-timestamp="true"
+                            :highlight="true"
+                        />
+                    @endforeach
+                </div>
+            @elseif (isset($data['message']))
+                <div class="text-sm text-text-muted">
+                    <x-chat-markdown :fragment="null">
+                        {{ $data['message'] }}
+                    </x-chat-markdown>
+                </div>
+            @endif
+
+        @elseif (in_array($type, ['session', 'session-start', 'session-end']))
+            {{-- Session Results --}}
+            @if (isset($data['message']))
+                <div class="prose prose-sm max-w-none text-text-primary">
+                    <x-chat-markdown :fragment="null">
+                        {{ $data['message'] }}
+                    </x-chat-markdown>
+                </div>
+            @endif
+
+            @if (isset($data['session']) && is_array($data['session']))
+                <div class="mt-4 bg-surface border border-electric-blue/20 rounded-lg p-3">
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <span class="text-electric-blue font-medium">Session ID:</span>
+                            <span class="text-text-muted">{{ $data['session']['session_key'] ?? 'Unknown' }}</span>
+                        </div>
+                        <div>
+                            <span class="text-electric-blue font-medium">Type:</span>
+                            <span class="text-text-muted">{{ $data['session']['type'] ?? 'note' }}</span>
+                        </div>
+                        @if (!empty($data['session']['tags']))
+                            <div class="col-span-2">
+                                <span class="text-electric-blue font-medium">Tags:</span>
+                                <div class="flex flex-wrap gap-1 mt-1">
+                                    @foreach ((array)$data['session']['tags'] as $tag)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-electric-blue/20 text-electric-blue">
+                                            #{{ $tag }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                        @if (!empty($data['session']['context']))
+                            <div class="col-span-2">
+                                <span class="text-electric-blue font-medium">Context:</span>
+                                <span class="text-text-muted">{{ $data['session']['context'] }}</span>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+        @elseif ($type === 'search')
+            {{-- Search Results --}}
+            @if (isset($data['message']))
+                <div class="prose prose-sm max-w-none text-text-primary mb-3">
+                    <x-chat-markdown :fragment="null">
+                        {{ $data['message'] }}
+                    </x-chat-markdown>
+                </div>
+            @endif
+
+            @if (isset($data['fragments']) && count($data['fragments']) > 0)
+                <div class="space-y-3">
+                    @foreach ($data['fragments'] as $fragment)
+                        <x-search-result-card 
+                            :fragment="$fragment" 
+                            :show-timestamp="true"
+                            :show-score="true"
+                            :highlight="true"
+                        />
+                    @endforeach
+                </div>
+            @endif
+
         @else
             {{-- Generic data display --}}
             <pre class="text-xs bg-gray-800 p-3 rounded overflow-x-auto">{{ json_encode($data, JSON_PRETTY_PRINT) }}</pre>

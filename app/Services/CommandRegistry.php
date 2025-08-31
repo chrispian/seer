@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Actions\Commands\BookmarkCommand;
+use App\Actions\Commands\ChaosCommand;
 use App\Actions\Commands\ClearCommand;
 use App\Actions\Commands\FragCommand;
 use App\Actions\Commands\HelpCommand;
 use App\Actions\Commands\RecallCommand;
+use App\Actions\Commands\SearchCommand;
 use App\Actions\Commands\SessionCommand;
 
 class CommandRegistry
@@ -18,7 +20,9 @@ class CommandRegistry
         'help' => HelpCommand::class,
         'clear' => ClearCommand::class,
         'frag' => FragCommand::class,
-        'chaos' => FragCommand::class,
+        'chaos' => ChaosCommand::class,
+        'search' => SearchCommand::class,
+        's' => SearchCommand::class, // alias for search
         // 'export' => ExportCommand::class (future)
     ];
 
@@ -26,7 +30,7 @@ class CommandRegistry
     {
         logger('COMMAND_REGISTRY_LOOKUP', ['commandName' => $commandName]);
         if (!array_key_exists($commandName, self::$commands)) {
-            throw new \InvalidArgumentException("Unknown command: {$commandName}");
+            throw new \InvalidArgumentException("Command not recognized: {$commandName}");
         }
 
         return self::$commands[$commandName];

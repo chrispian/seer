@@ -80,6 +80,7 @@ PROMPT;
         }
 
         $atomicFragments = $raw;
+        $children = []; // Initialize the children array
 
         Log::debug('Chaos parse result', [
             'fragment_id' => $fragment->id,
