@@ -67,6 +67,26 @@
                 </div>
             @endif
 
+        @elseif ($type === 'bookmark')
+            {{-- Bookmark Results --}}
+            @if (isset($data['action']) && $data['action'] === 'show' && isset($data['fragments']) && count($data['fragments']) > 0)
+                <div class="space-y-3">
+                    @foreach ($data['fragments'] as $fragment)
+                        <x-fragment-card 
+                            :fragment="$fragment" 
+                            :show-timestamp="true"
+                            :highlight="true"
+                        />
+                    @endforeach
+                </div>
+            @elseif (isset($data['message']))
+                <div class="text-sm text-text-muted">
+                    <x-chat-markdown :fragment="null">
+                        {{ $data['message'] }}
+                    </x-chat-markdown>
+                </div>
+            @endif
+
         @else
             {{-- Generic data display --}}
             <pre class="text-xs bg-gray-800 p-3 rounded overflow-x-auto">{{ json_encode($data, JSON_PRETTY_PRINT) }}</pre>
