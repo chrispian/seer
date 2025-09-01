@@ -11,6 +11,9 @@ use App\Actions\Commands\RecallCommand;
 use App\Actions\Commands\SearchCommand;
 use App\Actions\Commands\SessionCommand;
 use App\Actions\Commands\TodoCommand;
+use App\Actions\Commands\JoinCommand;
+use App\Actions\Commands\ChannelsCommand;
+use App\Actions\Commands\NameCommand;
 
 class CommandRegistry
 {
@@ -26,6 +29,10 @@ class CommandRegistry
         's' => SearchCommand::class, // alias for search
         'todo' => TodoCommand::class,
         't' => TodoCommand::class, // alias for todo
+        'join' => JoinCommand::class,
+        'j' => JoinCommand::class, // alias for join
+        'channels' => ChannelsCommand::class,
+        'name' => NameCommand::class,
         // 'export' => ExportCommand::class (future)
     ];
 

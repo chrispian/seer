@@ -195,8 +195,8 @@
                                 <x-heroicon-o-bars-2 class="w-3 h-3"/>
                             </div>
                             <div class="flex-1 min-w-0 mr-2">
-                                <span class="text-sm {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-gray-300' }} truncate block" title="{{ $session['title'] }}">
-                                    {{ $session['title'] }}
+                                <span class="text-sm {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-gray-300' }} truncate block" title="{{ $session['channel_display'] ?? $session['title'] }}">
+                                    {{ $session['channel_display'] ?? $session['title'] }}
                                 </span>
                             </div>
                             <span class="px-1.5 py-0.5 text-xs rounded-full {{ $session['id'] === $currentChatSessionId ? 'bg-hot-pink/30 text-hot-pink' : 'bg-neon-cyan/20 text-neon-cyan' }} font-medium">
@@ -256,8 +256,8 @@
                                 }}"
                         >
                             <div class="flex-1 min-w-0 mr-2">
-                                <span class="text-sm {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-gray-300' }} truncate block" title="{{ $session['title'] }}">
-                                    {{ $session['title'] }}
+                                <span class="text-sm {{ $session['id'] === $currentChatSessionId ? 'text-hot-pink' : 'text-gray-300' }} truncate block" title="{{ $session['channel_display'] ?? $session['title'] }}">
+                                    {{ $session['channel_display'] ?? $session['title'] }}
                                 </span>
                             </div>
                             <span class="px-1.5 py-0.5 text-xs rounded-full {{ $session['id'] === $currentChatSessionId ? 'bg-hot-pink/30 text-hot-pink' : 'bg-electric-blue/20 text-electric-blue' }} font-medium">

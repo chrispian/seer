@@ -15,6 +15,8 @@ class ChatSession extends Model
         'vault_id',
         'project_id',
         'title',
+        'short_code',
+        'custom_name',
         'summary',
         'messages',
         'metadata',
@@ -41,6 +43,11 @@ class ChatSession extends Model
         static::creating(function (ChatSession $chatSession) {
             if (empty($chatSession->title)) {
                 $chatSession->title = 'Chat '.now()->format('M j, g:i A');
+            }
+            
+            // Generate short code if not provided
+            if (empty($chatSession->short_code)) {
+                $chatSession->short_code = static::generateNextShortCode();
             }
         });
     }
@@ -167,5 +174,107 @@ class ChatSession extends Model
         $this->save();
 
         return $this;
+    }
+    
+    /**
+     * Generate the next available short code
+     */
+    public static function generateNextShortCode(): string
+    {
+        // Find the highest existing number - PostgreSQL compatible
+        $lastCode = static::where('short_code', 'like', 'c%')
+            ->orderByRaw('CAST(SUBSTRING(short_code, 2) AS INTEGER) DESC')
+            ->first();
+        
+        if ($lastCode && preg_match('/^c(\d+)$/', $lastCode->short_code, $matches)) {
+            $nextNumber = (int)$matches[1] + 1;
+        } else {
+            $nextNumber = 1;
+        }
+        
+        return 'c' . $nextNumber;
+    }
+    
+    /**
+     * Find chat session by short code
+     */
+    public static function findByShortCode(string $shortCode): ?self
+    {
+        return static::where('short_code', $shortCode)->first();
+    }
+    
+    /**
+     * Find chat session by custom name
+     */
+    public static function findByCustomName(string $customName): ?self
+    {
+        return static::where('custom_name', $customName)->first();
+    }
+    
+    /**
+     * Search chat sessions for autocomplete
+     */
+    public static function searchForAutocomplete(string $query = '', int $vaultId = null, int $projectId = null, int $limit = 10): \Illuminate\Database\Eloquent\Collection
+    {
+        $queryBuilder = static::query()
+            ->where('is_active', true)
+            ->orderBy('last_activity_at', 'desc');
+        
+        // Filter by vault and project if provided
+        if ($vaultId) {
+            $queryBuilder->where('vault_id', $vaultId);
+            if ($projectId) {
+                $queryBuilder->where('project_id', $projectId);
+            }
+        }
+        
+        // Apply search filter if provided
+        if (!empty($query)) {
+            $queryBuilder->where(function ($q) use ($query) {
+                $q->where('title', 'ilike', "%{$query}%")
+                  ->orWhere('custom_name', 'ilike', "%{$query}%")
+                  ->orWhere('short_code', 'ilike', "%{$query}%");
+            });
+        }
+        
+        return $queryBuilder->limit($limit)->get();
+    }
+    
+    /**
+     * Get display name (custom name or title)
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->custom_name ?: $this->title;
+    }
+    
+    /**
+     * Get channel display format (#c5 Title)
+     */
+    public function getChannelDisplayAttribute(): string
+    {
+        if ($this->custom_name) {
+            // If custom name is set, use it as the full display name with # prefix
+            return "#{$this->custom_name}";
+        } else {
+            // If no custom name, use the default format with short code
+            return "#{$this->short_code} {$this->title}";
+        }
+    }
+    
+    /**
+     * Get shortened channel display for sidebar
+     */
+    public function getChannelSidebarDisplayAttribute(): string
+    {
+        if ($this->custom_name) {
+            // If custom name is set, use it as the full display name with # prefix
+            $truncatedName = Str::limit($this->custom_name, 18, '...');
+            return "#{$truncatedName}";
+        } else {
+            // If no custom name, use the default format with short code
+            $truncatedName = Str::limit($this->title, 15, '...');
+            return "#{$this->short_code} {$truncatedName}";
+        }
     }
 }

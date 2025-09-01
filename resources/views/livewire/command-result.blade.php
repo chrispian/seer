@@ -152,6 +152,72 @@
                 </div>
             @endif
 
+        @elseif ($type === 'join-channels')
+            {{-- Join Channel Results --}}
+            @if (isset($data['message']))
+                <div class="prose prose-sm max-w-none text-text-primary mb-3">
+                    <x-chat-markdown :fragment="null">
+                        {{ $data['message'] }}
+                    </x-chat-markdown>
+                </div>
+            @endif
+
+            @if (isset($data['channels']) && count($data['channels']) > 0)
+                <div class="space-y-2">
+                    @foreach ($data['channels'] as $channel)
+                        <div 
+                            wire:click="$dispatch('join-channel', { chatId: {{ $channel['id'] }} })"
+                            class="flex items-center justify-between p-3 rounded-lg bg-surface border border-electric-blue/20 hover:border-electric-blue/40 cursor-pointer transition-all group">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm font-mono text-electric-blue">{{ $channel['short_code'] }}</span>
+                                    <span class="text-sm text-text-primary truncate">{{ $channel['display_name'] }}</span>
+                                </div>
+                                @if (isset($channel['last_activity']))
+                                    <div class="text-xs text-text-muted mt-1">{{ $channel['last_activity'] }}</div>
+                                @endif
+                            </div>
+                            <div class="text-xs text-electric-blue/60 group-hover:text-electric-blue transition-colors">
+                                Click to join →
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+        @elseif ($type === 'channels-list')
+            {{-- Channels List Results --}}
+            @if (isset($data['message']))
+                <div class="prose prose-sm max-w-none text-text-primary mb-3">
+                    <x-chat-markdown :fragment="null">
+                        {{ $data['message'] }}
+                    </x-chat-markdown>
+                </div>
+            @endif
+
+            @if (isset($data['channels']) && count($data['channels']) > 0)
+                <div class="space-y-2 mt-4">
+                    @foreach ($data['channels'] as $channel)
+                        <div 
+                            wire:click="$dispatch('join-channel', { chatId: {{ $channel['id'] }} })"
+                            class="flex items-center justify-between p-3 rounded-lg bg-surface border border-electric-blue/20 hover:border-electric-blue/40 cursor-pointer transition-all group">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm font-mono text-electric-blue">{{ $channel['short_code'] }}</span>
+                                    <span class="text-sm text-text-primary truncate">{{ $channel['display_name'] }}</span>
+                                </div>
+                                @if (isset($channel['last_activity']))
+                                    <div class="text-xs text-text-muted mt-1">{{ $channel['last_activity'] }}</div>
+                                @endif
+                            </div>
+                            <div class="text-xs text-electric-blue/60 group-hover:text-electric-blue transition-colors">
+                                Click to join →
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
         @elseif ($type === 'search')
             {{-- Search Results --}}
             @if (isset($data['message']))
