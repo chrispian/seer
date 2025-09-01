@@ -19,6 +19,7 @@ class HelpCommand implements HandlesCommand
             'fragment' => $this->getFragmentSection(),
             'todo' => $this->getTodoSection(),
             'search' => $this->getSearchSection(),
+            'join' => $this->getJoinSection(),
             'session' => $this->getSessionSection(),
             'tools' => $this->getToolsSection(),
         ];
@@ -57,6 +58,7 @@ class HelpCommand implements HandlesCommand
             'fragment' => 'Fragment Commands', 
             'todo' => 'Todo Management',
             'search' => 'Search Commands',
+            'join' => 'Channel Navigation',
             'session' => 'Sessions',
             'tools' => 'Chat Tools',
             default => 'Commands',
@@ -108,6 +110,27 @@ MARKDOWN;
         return <<<MARKDOWN
 - `/search your query here` – Search all fragments with hybrid search
 - `/s your query here` – Shorthand for search
+MARKDOWN;
+    }
+    
+    private function getJoinSection(): string
+    {
+        return <<<MARKDOWN
+- `/join #c5` – Join channel #c5 by short code
+- `/join #custom` – Join channel by custom name  
+- `/join #` – Show all available channels
+- `/join bug` – Search for channels containing "bug"
+- `/j #c1` – Shorthand for join (alias)
+
+**Examples:**
+- `/join #c1` – Switch to channel #c1 (by short code)
+- `/join #ProjectAlpha` – Switch to channel named "ProjectAlpha"
+- `/join project` – Find channels about "project"
+- `/join #` – Browse all active channels
+
+**Related Commands:**
+- `/channels` – List all available channels
+- `/name Custom Name` – Rename current channel
 MARKDOWN;
     }
     

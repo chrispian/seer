@@ -21,6 +21,8 @@ class CommandResponse
     public ?array $toastData = []; // 👈 NEW! Data for toast display
 
     public bool $shouldShowErrorToast = false; // 👈 NEW! For error toast notifications
+    
+    public ?array $data = []; // 👈 NEW! Additional command data
 
     public function __construct(
         ?string $message = null,
@@ -31,7 +33,8 @@ class CommandResponse
         ?array $panelData = [],
         bool $shouldShowSuccessToast = false,
         ?array $toastData = [],
-        bool $shouldShowErrorToast = false
+        bool $shouldShowErrorToast = false,
+        ?array $data = []
     ) {
         $this->message = $message;
         $this->type = $type;
@@ -42,5 +45,6 @@ class CommandResponse
         $this->shouldShowSuccessToast = $shouldShowSuccessToast;
         $this->toastData = $toastData ?? [];
         $this->shouldShowErrorToast = $shouldShowErrorToast;
+        $this->data = $data ?? [];
     }
 }

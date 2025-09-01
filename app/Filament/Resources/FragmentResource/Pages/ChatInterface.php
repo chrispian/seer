@@ -93,6 +93,7 @@ class ChatInterface extends Page
     protected $listeners = [
         'echo:lens.chat,fragment.processed' => 'onFragmentProcessed',
         'undo-fragment' => 'handleUndoDeleteObject',
+        'join-channel' => 'handleJoinChannel',
     ];
 
     public static function shouldRegisterNavigation(array $parameters = []): bool
@@ -189,6 +190,9 @@ class ChatInterface extends Page
         if (str_starts_with($message, '/')) {
             $command = app(ParseSlashCommand::class)($message);
             $command->arguments['__currentSession'] = $this->currentSession; // Inject current session
+            $command->arguments['current_chat_session_id'] = $this->currentChatSessionId; // Inject current chat session ID
+            $command->arguments['vault_id'] = $this->currentVaultId; // Inject vault context
+            $command->arguments['project_id'] = $this->currentProjectId; // Inject project context
 
             try {
                 $handlerClass = CommandRegistry::find($command->command);
@@ -212,6 +216,47 @@ class ChatInterface extends Page
                 $this->enterCommandMode();
                 $this->injectCommandResults($response);
 
+                return;
+            }
+
+            // Handle name command response
+            if ($response->type === 'name-success') {
+                // Refresh the sidebar to show the new channel name
+                $this->loadRecentChatSessions();
+                $this->loadPinnedChatSessions();
+                
+                // Show success toast
+                if ($response->shouldShowSuccessToast && !empty($response->toastData)) {
+                    $this->showSuccessToast(
+                        $response->toastData['title'] ?? 'Success',
+                        $response->toastData['message'] ?? '',
+                        $response->toastData['fragmentType'] ?? 'fragment',
+                        $response->toastData['fragmentId'] ?? null
+                    );
+                }
+                return;
+            }
+
+            // Handle join command response
+            if ($response->type === 'join-success' && isset($response->data['action']) && $response->data['action'] === 'switch_chat') {
+                $chatSessionId = $response->data['chat_session_id'];
+                
+                // Exit command mode if we're in it (e.g., after /help join)
+                if ($this->inCommandMode) {
+                    $this->exitCommandMode();
+                }
+                
+                $this->switchToChat($chatSessionId);
+                
+                // Show success toast
+                if ($response->shouldShowSuccessToast && !empty($response->toastData)) {
+                    $this->showSuccessToast(
+                        $response->toastData['title'] ?? 'Success',
+                        $response->toastData['message'] ?? '',
+                        $response->toastData['fragmentType'] ?? 'fragment',
+                        $response->toastData['fragmentId'] ?? null
+                    );
+                }
                 return;
             }
 
@@ -356,6 +401,8 @@ class ChatInterface extends Page
             ->map(fn ($session) => [
                 'id' => $session->id,
                 'title' => $session->sidebar_title,
+                'short_code' => $session->short_code,
+                'channel_display' => $session->channel_sidebar_display,
                 'message_count' => $session->message_count,
                 'last_activity' => $this->formatTimestamp($session->last_activity_at) !== 'Just now'
                     ? $this->formatTimestamp($session->last_activity_at)
@@ -650,6 +697,8 @@ class ChatInterface extends Page
             ->map(fn ($session) => [
                 'id' => $session->id,
                 'title' => $session->sidebar_title,
+                'short_code' => $session->short_code,
+                'channel_display' => $session->channel_sidebar_display,
                 'message_count' => $session->message_count,
                 'last_activity' => $this->formatTimestamp($session->last_activity_at) !== 'Just now'
                     ? $this->formatTimestamp($session->last_activity_at)
@@ -1438,6 +1487,23 @@ class ChatInterface extends Page
         $this->dispatch('show-error-toast', [
             'message' => $message,
         ]);
+    }
+
+    public function handleJoinChannel(int $chatId): void
+    {
+        $this->switchToChat($chatId);
+        $this->exitCommandMode(); // Close the command panel
+        
+        // Show success toast
+        $chatSession = ChatSession::find($chatId);
+        if ($chatSession) {
+            $this->showSuccessToast(
+                'Channel Joined',
+                "Switched to {$chatSession->channel_display}",
+                'chat',
+                null
+            );
+        }
     }
 
     public function filterTodos(string $searchTerm = ''): void

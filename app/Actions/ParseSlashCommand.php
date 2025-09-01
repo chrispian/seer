@@ -36,16 +36,29 @@ class ParseSlashCommand
             }
         }
 
-        // Match #tags
-        if (preg_match_all('/#(\w+)/', $argumentsString, $tagMatches)) {
-            $arguments['tags'] = $tagMatches[1];
-        }
+        // Handle special cases for join/channel commands: if argument starts with # treat it as channel identifier
+        if (in_array($command, ['join', 'j']) && preg_match('/^#(\w+)/', trim($argumentsString))) {
+            $arguments['identifier'] = trim($argumentsString);
+        } else {
+            // Match #tags (but not channel identifiers for join commands)
+            if (preg_match_all('/#(\w+)/', $argumentsString, $tagMatches)) {
+                // For join commands, don't treat # patterns as tags
+                if (!in_array($command, ['join', 'j'])) {
+                    $arguments['tags'] = $tagMatches[1];
+                }
+            }
 
-        // Remaining text could be identifier or message
-        $remaining = trim(preg_replace('/(\w+):([^\s]+)|#(\w+)/', '', $argumentsString));
+            // Remaining text could be identifier or message (after removing structured args and tags)
+            $remaining = trim(preg_replace('/(\w+):([^\s]+)/', '', $argumentsString));
+            
+            // For non-join commands, also remove hashtag patterns from remaining text
+            if (!in_array($command, ['join', 'j'])) {
+                $remaining = trim(preg_replace('/#\w+/', '', $remaining));
+            }
 
-        if (!empty($remaining)) {
-            $arguments['identifier'] = $remaining;
+            if (!empty($remaining)) {
+                $arguments['identifier'] = $remaining;
+            }
         }
 
         return new CommandRequest($command, $arguments, $input);
