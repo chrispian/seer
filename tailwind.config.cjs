@@ -12,7 +12,13 @@ module.exports = {
         },
     ],
     theme: {
-        extend: {},
+        extend: {
+            colors: {
+                'hot-pink': 'rgb(255 20 147)',
+                'neon-cyan': 'rgb(0 255 255)',
+                'electric-blue': 'rgb(0 191 255)',
+            },
+        },
     },
     plugins: [],
 }
