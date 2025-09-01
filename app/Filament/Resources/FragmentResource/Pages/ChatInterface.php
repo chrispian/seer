@@ -865,6 +865,33 @@ class ChatInterface extends Page
         // Store message before deletion for toast
         $fragmentMessage = $fragment->message;
 
+        // Find bookmarks that contain this fragment and store them for potential restoration
+        $bookmarksContaining = \App\Models\Bookmark::whereJsonContains('fragment_ids', $fragmentId)->get();
+        $bookmarkIds = $bookmarksContaining->pluck('id')->toArray();
+
+        // Store bookmark IDs in fragment metadata for restoration
+        $fragment->update([
+            'metadata' => array_merge($fragment->metadata ?? [], [
+                'deleted_bookmark_ids' => $bookmarkIds
+            ])
+        ]);
+
+        // Remove fragment from all bookmarks but don't delete empty ones
+        foreach ($bookmarksContaining as $bookmark) {
+            $fragmentIds = $bookmark->fragment_ids;
+            $updatedFragmentIds = array_values(array_filter($fragmentIds, fn($id) => $id !== $fragmentId));
+            
+            // Always update the bookmark, even if it becomes empty
+            // This preserves the bookmark for restoration
+            $bookmark->update(['fragment_ids' => $updatedFragmentIds]);
+        }
+
+        Log::debug('Removed fragment from bookmarks', [
+            'fragment_id' => $fragmentId,
+            'affected_bookmarks' => count($bookmarksContaining),
+            'stored_bookmark_ids' => $bookmarkIds
+        ]);
+
         // Soft delete the fragment
         $fragment->delete();
 
@@ -885,6 +912,15 @@ class ChatInterface extends Page
             message: $fragmentMessage
         );
 
+        // Dispatch bookmark-toggled event to update UI if fragment was bookmarked
+        if (!empty($bookmarkIds)) {
+            $this->js("
+                window.dispatchEvent(new CustomEvent('bookmark-toggled', {
+                    detail: { fragmentId: {$fragmentId}, action: 'removed', isBookmarked: false }
+                }));
+            ");
+        }
+
         // Also dispatch a browser event as fallback
         $this->js("
             window.dispatchEvent(new CustomEvent('show-undo-toast', {
@@ -900,6 +936,10 @@ class ChatInterface extends Page
 
     public function undoFragmentDelete(int $fragmentId): void
     {
+        // Check if fragment had bookmarks before restoration
+        $fragmentWithTrashed = Fragment::withTrashed()->find($fragmentId);
+        $hadBookmarks = !empty($fragmentWithTrashed->metadata['deleted_bookmark_ids'] ?? []);
+        
         $restoredFragment = app(\App\Actions\UndoFragmentDelete::class)($fragmentId);
 
         if ($restoredFragment) {
@@ -916,6 +956,15 @@ class ChatInterface extends Page
 
             // Save the updated chat session
             $this->saveCurrentChatSession();
+
+            // Dispatch bookmark update event if fragment was restored to bookmarks
+            if ($hadBookmarks) {
+                $this->js("
+                    window.dispatchEvent(new CustomEvent('bookmark-toggled', {
+                        detail: { fragmentId: {$restoredFragment->id}, action: 'added', isBookmarked: true }
+                    }));
+                ");
+            }
 
             // Dispatch event to refresh bookmark widget
             $this->js("
