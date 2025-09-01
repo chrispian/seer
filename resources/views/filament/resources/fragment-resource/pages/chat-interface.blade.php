@@ -1493,25 +1493,30 @@
                 }
             });
 
+            // DISABLED: First listener commented out to avoid conflicts
+            /*
             // Listen for success toast events (for /frag and /chaos commands)
             Livewire.on('show-success-toast', function(event) {
-                console.log('Received success toast event:', event);
+                console.log('FIRST success toast listener received:', event);
 
                 let title = event.title || event.detail?.title || 'Success';
                 let message = event.message || event.detail?.message;
                 let fragmentType = event.fragmentType || event.detail?.fragmentType || 'fragment';
                 let fragmentId = event.fragmentId || event.detail?.fragmentId || null;
 
-                console.log('Success toast values:', { title, message, fragmentType, fragmentId });
+                console.log('FIRST listener success toast values:', { title, message, fragmentType, fragmentId });
 
                 if (message) {
                     const toastElement = document.getElementById('success-toast');
                     if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
-                        console.log('Calling display with:', title, message, fragmentType, fragmentId);
+                        console.log('FIRST listener calling display with:', title, message, fragmentType, fragmentId);
                         toastElement._x_dataStack[0].display(title, message, fragmentType, fragmentId, 5);
+                    } else {
+                        console.log('FIRST listener: success-toast element not found or not ready');
                     }
                 }
             });
+            */
 
             // Listen for browser success toast events
             window.addEventListener('show-success-toast', function(event) {
@@ -1537,11 +1542,48 @@
                 }
             });
 
+            // Handle success toasts with custom titles (for todo creation, etc.)
             Livewire.on('show-success-toast', function(data) {
-                // Use the unified undo-toast for success messages
-                const toastElement = document.getElementById('undo-toast');
-                if (toastElement && toastElement._x_dataStack && toastElement._x_dataStack[0]) {
-                    toastElement._x_dataStack[0].displaySuccess(data.message, 'fragment', 2);
+                console.log('SECOND success toast handler received:', data);
+                
+                // Livewire events come as arrays, get the first element
+                const eventData = Array.isArray(data) ? data[0] : data;
+                console.log('Processed event data:', eventData);
+                console.log('Title check:', { title: eventData.title, isCustom: (eventData.title && eventData.title !== 'Success') });
+                
+                // If we have a custom title, use success-toast component
+                if (eventData.title && eventData.title !== 'Success') {
+                    console.log('Attempting to use success-toast for custom title:', eventData.title);
+                    const successToastElement = document.getElementById('success-toast');
+                    console.log('success-toast element found:', !!successToastElement);
+                    
+                    if (successToastElement && successToastElement._x_dataStack && successToastElement._x_dataStack[0]) {
+                        console.log('SUCCESS: Using success-toast for custom title:', eventData.title);
+                        successToastElement._x_dataStack[0].display(
+                            eventData.title, 
+                            eventData.message, 
+                            eventData.fragmentType || 'fragment', 
+                            eventData.fragmentId || null, 
+                            3
+                        );
+                        return;
+                    } else {
+                        console.log('FAILED: success-toast element not ready, _x_dataStack:', successToastElement?._x_dataStack);
+                    }
+                }
+                
+                // Fallback to undo-toast for generic messages (like fragment restored)
+                console.log('FALLBACK: Using undo-toast for message');
+                const undoToastElement = document.getElementById('undo-toast');
+                if (undoToastElement && undoToastElement._x_dataStack && undoToastElement._x_dataStack[0]) {
+                    console.log('undo-toast element ready, displaying success');
+                    undoToastElement._x_dataStack[0].displaySuccess(
+                        eventData.message, 
+                        eventData.fragmentType || 'fragment', 
+                        2
+                    );
+                } else {
+                    console.log('ERROR: undo-toast element not found or not ready');
                 }
             });
 

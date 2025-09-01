@@ -165,13 +165,14 @@ class ChatInterface extends Page
     public function handleInput()
     {
         $message = trim($this->input);
-        
+
         // Early return for empty messages - fail silently
         if (empty($message)) {
             $this->input = '';
+
             return;
         }
-        
+
         // ✅ 1. Clear Input Immediately
         $this->input = '';
 
@@ -194,10 +195,10 @@ class ChatInterface extends Page
                 $handler = app($handlerClass);
             } catch (InvalidArgumentException $e) {
                 $this->removeSpinner($spinnerKey); // ❗ clean up spinner
-                
+
                 // Show error toast instead of adding to chat
                 $this->showErrorToast("Command `/{$command->command}` not recognized. Try `/help` for options.");
-                
+
                 return;
             }
 
@@ -210,23 +211,26 @@ class ChatInterface extends Page
             if ($response->shouldOpenPanel && isset($response->panelData)) {
                 $this->enterCommandMode();
                 $this->injectCommandResults($response);
+
                 return;
             }
 
             // Handle success toast notifications (for /frag and /chaos)
-            if ($response->shouldShowSuccessToast && isset($response->toastData)) {
+            if ($response->shouldShowSuccessToast && !empty($response->toastData)) {
                 $this->showSuccessToast(
                     $response->toastData['title'] ?? 'Success',
                     $response->toastData['message'] ?? '',
                     $response->toastData['fragmentType'] ?? 'fragment',
                     $response->toastData['fragmentId'] ?? null
                 );
+
                 return;
             }
 
             // Handle error toast notifications
             if ($response->shouldShowErrorToast) {
                 $this->showErrorToast($response->message ?? 'An error occurred.');
+
                 return;
             }
 
@@ -238,6 +242,7 @@ class ChatInterface extends Page
                     'fragment',
                     null
                 );
+
                 return;
             }
 
@@ -248,6 +253,7 @@ class ChatInterface extends Page
                 }
                 // Clear the input field to prevent modal from showing /clear
                 $this->input = '';
+
                 // No message added - just exit silently
                 return;
             }
@@ -307,7 +313,7 @@ class ChatInterface extends Page
 
         // Save the updated chat session after any input
         $this->saveCurrentChatSession();
-        
+
         // Refresh recent chat sessions to update count badges
         $this->loadRecentChatSessions();
     }
@@ -815,7 +821,6 @@ class ChatInterface extends Page
         $this->loadPinnedChatSessions();
     }
 
-
     public function updatedCurrentVaultId($vaultId): void
     {
         $this->switchVault($vaultId);
@@ -872,15 +877,15 @@ class ChatInterface extends Page
         // Store bookmark IDs in fragment metadata for restoration
         $fragment->update([
             'metadata' => array_merge($fragment->metadata ?? [], [
-                'deleted_bookmark_ids' => $bookmarkIds
-            ])
+                'deleted_bookmark_ids' => $bookmarkIds,
+            ]),
         ]);
 
         // Remove fragment from all bookmarks but don't delete empty ones
         foreach ($bookmarksContaining as $bookmark) {
             $fragmentIds = $bookmark->fragment_ids;
-            $updatedFragmentIds = array_values(array_filter($fragmentIds, fn($id) => $id !== $fragmentId));
-            
+            $updatedFragmentIds = array_values(array_filter($fragmentIds, fn ($id) => $id !== $fragmentId));
+
             // Always update the bookmark, even if it becomes empty
             // This preserves the bookmark for restoration
             $bookmark->update(['fragment_ids' => $updatedFragmentIds]);
@@ -889,7 +894,7 @@ class ChatInterface extends Page
         Log::debug('Removed fragment from bookmarks', [
             'fragment_id' => $fragmentId,
             'affected_bookmarks' => count($bookmarksContaining),
-            'stored_bookmark_ids' => $bookmarkIds
+            'stored_bookmark_ids' => $bookmarkIds,
         ]);
 
         // Soft delete the fragment
@@ -913,7 +918,7 @@ class ChatInterface extends Page
         );
 
         // Dispatch bookmark-toggled event to update UI if fragment was bookmarked
-        if (!empty($bookmarkIds)) {
+        if (! empty($bookmarkIds)) {
             $this->js("
                 window.dispatchEvent(new CustomEvent('bookmark-toggled', {
                     detail: { fragmentId: {$fragmentId}, action: 'removed', isBookmarked: false }
@@ -938,8 +943,8 @@ class ChatInterface extends Page
     {
         // Check if fragment had bookmarks before restoration
         $fragmentWithTrashed = Fragment::withTrashed()->find($fragmentId);
-        $hadBookmarks = !empty($fragmentWithTrashed->metadata['deleted_bookmark_ids'] ?? []);
-        
+        $hadBookmarks = ! empty($fragmentWithTrashed->metadata['deleted_bookmark_ids'] ?? []);
+
         $restoredFragment = app(\App\Actions\UndoFragmentDelete::class)($fragmentId);
 
         if ($restoredFragment) {
@@ -1383,7 +1388,7 @@ class ChatInterface extends Page
     {
         // Only back up original chat messages if not already in command mode
         // This preserves the true original chat when switching between commands
-        if (!$this->inCommandMode) {
+        if (! $this->inCommandMode) {
             $this->originalFragments = $this->chatMessages;
         }
         $this->inCommandMode = true;
@@ -1410,7 +1415,7 @@ class ChatInterface extends Page
             $this->chatMessages = $this->originalFragments;
             $this->originalFragments = [];
             $this->inCommandMode = false;
-            
+
             // Refresh recent chats to ensure count badges are correct
             $this->loadRecentChatSessions();
         }
@@ -1435,5 +1440,52 @@ class ChatInterface extends Page
         ]);
     }
 
+    public function filterTodos(string $searchTerm = ''): void
+    {
+        // Only filter if we're in command mode with todo results
+        if (! $this->inCommandMode || empty($this->chatMessages)) {
+            return;
+        }
 
+        $commandFragment = $this->chatMessages[0] ?? null;
+
+        if (! $commandFragment ||
+            $commandFragment['type'] !== 'command_result' ||
+            ($commandFragment['data']['type'] ?? '') !== 'todo') {
+            return;
+        }
+
+        // Get the original fragments from the command data
+        $originalFragments = $commandFragment['data']['fragments'] ?? [];
+
+        if (empty($searchTerm)) {
+            // Show all original fragments
+            $filteredFragments = $originalFragments;
+        } else {
+            // Filter fragments based on search term
+            $filteredFragments = array_filter($originalFragments, function ($fragment) use ($searchTerm) {
+                $message = $fragment['message'] ?? '';
+                $title = $fragment['title'] ?? '';
+
+                return stripos($message, $searchTerm) !== false ||
+                       stripos($title, $searchTerm) !== false;
+            });
+        }
+
+        // Update the command fragment with filtered results
+        $this->chatMessages[0]['data']['fragments'] = array_values($filteredFragments);
+
+        // Update the result message
+        $count = count($filteredFragments);
+        $status = $commandFragment['data']['status'] ?? 'open';
+        $statusText = $status === 'completed' ? 'completed' : 'open';
+
+        if (empty($searchTerm)) {
+            $message = "📝 Found **{$count}** {$statusText} todo".($count !== 1 ? 's' : '');
+        } else {
+            $message = "📝 Found **{$count}** {$statusText} todo".($count !== 1 ? 's' : '')." matching '{$searchTerm}'";
+        }
+
+        $this->chatMessages[0]['data']['message'] = $message;
+    }
 }

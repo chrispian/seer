@@ -10,6 +10,7 @@ use App\Actions\Commands\HelpCommand;
 use App\Actions\Commands\RecallCommand;
 use App\Actions\Commands\SearchCommand;
 use App\Actions\Commands\SessionCommand;
+use App\Actions\Commands\TodoCommand;
 
 class CommandRegistry
 {
@@ -23,13 +24,15 @@ class CommandRegistry
         'chaos' => ChaosCommand::class,
         'search' => SearchCommand::class,
         's' => SearchCommand::class, // alias for search
+        'todo' => TodoCommand::class,
+        't' => TodoCommand::class, // alias for todo
         // 'export' => ExportCommand::class (future)
     ];
 
     public static function find(string $commandName): string
     {
         logger('COMMAND_REGISTRY_LOOKUP', ['commandName' => $commandName]);
-        if (!array_key_exists($commandName, self::$commands)) {
+        if (! array_key_exists($commandName, self::$commands)) {
             throw new \InvalidArgumentException("Command not recognized: {$commandName}");
         }
 
@@ -40,6 +43,4 @@ class CommandRegistry
     {
         return array_keys(self::$commands);
     }
-
-
 }
