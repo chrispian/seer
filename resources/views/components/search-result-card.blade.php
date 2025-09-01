@@ -64,38 +64,87 @@
 
             {{-- Action Buttons (20% smaller icons) --}}
             @if($showActions && $fragmentId && is_numeric($fragmentId) && $fragmentId > 0)
-                <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <!-- Copy Button -->
-                    <button
-                        onclick="copyChatMessage(this)"
-                        class="p-1.5 bg-gray-700 hover:bg-neon-cyan/20 text-gray-400 hover:text-neon-cyan rounded border border-gray-600 hover:border-neon-cyan/40 hover:shadow-sm hover:shadow-neon-cyan/20 transition-all"
-                        title="Copy message"
-                    >
-                        <x-heroicon-o-document-duplicate class="w-3.5 h-3.5"/>
-                    </button>
+                <div class="flex items-center">
+                    <!-- Copy and Delete Buttons (hover only) -->
+                    <div class="flex items-center space-x-2 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <!-- Copy Button -->
+                        <button
+                            onclick="copyChatMessage(this)"
+                            class="p-1.5 bg-gray-700 hover:bg-neon-cyan/20 text-gray-400 hover:text-neon-cyan rounded border border-gray-600 hover:border-neon-cyan/40 hover:shadow-sm hover:shadow-neon-cyan/20 transition-all"
+                            title="Copy message"
+                        >
+                            <x-heroicon-o-document-duplicate class="w-3.5 h-3.5"/>
+                        </button>
 
-                    <!-- Delete Button -->
-                    <button
-                        wire:click="deleteFragment({{ $fragmentId }})"
-                        class="p-1.5 bg-gray-700 hover:bg-hot-pink/20 text-gray-400 hover:text-hot-pink rounded border border-gray-600 hover:border-hot-pink/40 hover:shadow-sm hover:shadow-hot-pink/20 transition-all"
-                        title="Delete message"
-                        onclick="event.stopPropagation();"
-                    >
-                        <x-heroicon-o-trash class="w-3.5 h-3.5"/>
-                    </button>
+                        <!-- Delete Button -->
+                        <button
+                            wire:click="deleteFragment({{ $fragmentId }})"
+                            class="p-1.5 bg-gray-700 hover:bg-hot-pink/20 text-gray-400 hover:text-hot-pink rounded border border-gray-600 hover:border-hot-pink/40 hover:shadow-sm hover:shadow-hot-pink/20 transition-all"
+                            title="Delete message"
+                            onclick="event.stopPropagation();"
+                        >
+                            <x-heroicon-o-trash class="w-3.5 h-3.5"/>
+                        </button>
+                    </div>
 
-                    <!-- Bookmark Button -->
-                    <button
-                        onclick="event.stopPropagation(); window.toggleBookmark && window.toggleBookmark({{ $fragmentId }}, this)"
-                        class="p-1.5 bg-gray-700 hover:bg-hot-pink/20 rounded border border-gray-600 hover:border-hot-pink/40 hover:shadow-sm hover:shadow-hot-pink/20 transition-all text-gray-400 hover:text-hot-pink"
-                        title="Toggle bookmark"
-                        data-fragment-id="{{ $fragmentId }}"
-                        x-data="{ bookmarked: false }"
-                        x-init="window.checkBookmarkStatus && window.checkBookmarkStatus({{ $fragmentId }}, $el)"
-                        x-cloak
-                    >
-                        <x-heroicon-o-bookmark class="w-3.5 h-3.5 pointer-events-none"/>
-                    </button>
+                    <!-- Bookmark Button (independent opacity control) -->
+                    <div wire:ignore.self 
+                         x-data="{
+                             bookmarked: false,
+                             init() {
+                                 console.log('Bookmark component init for fragment {{ $fragmentId }}');
+                                 this.checkBookmarkStatus();
+                             },
+                             async checkBookmarkStatus() {
+                                 try {
+                                     const response = await fetch(`/api/fragments/{{ $fragmentId }}/bookmark`);
+                                     if (response.ok) {
+                                         const data = await response.json();
+                                         console.log('Initial bookmark status for {{ $fragmentId }}:', data.is_bookmarked);
+                                         this.bookmarked = data.is_bookmarked;
+                                     }
+                                 } catch (error) {
+                                     console.log('Error checking bookmark status:', error);
+                                 }
+                             },
+                             async toggleBookmark() {
+                                 try {
+                                     const response = await fetch(`/api/fragments/{{ $fragmentId }}/bookmark`, {
+                                         method: 'POST',
+                                         headers: {
+                                             'Content-Type': 'application/json',
+                                             'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''
+                                         }
+                                     });
+                                     
+                                     if (response.ok) {
+                                         const data = await response.json();
+                                         console.log('Toggle result for {{ $fragmentId }}:', data.is_bookmarked);
+                                         this.bookmarked = data.is_bookmarked;
+                                         
+                                         // Dispatch event for bookmark widget
+                                         window.dispatchEvent(new CustomEvent('bookmark-toggled', {
+                                             detail: { fragmentId: {{ $fragmentId }}, action: data.action, isBookmarked: data.is_bookmarked }
+                                         }));
+                                     }
+                                 } catch (error) {
+                                     console.log('Error toggling bookmark:', error);
+                                 }
+                             }
+                         }"
+                         :class="bookmarked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
+                         class="transition-opacity duration-200">
+                        <button
+                            @click="event.stopPropagation(); toggleBookmark(); console.log('Bookmark clicked, state:', bookmarked)"
+                            class="p-1.5 bg-gray-700 hover:bg-hot-pink/20 rounded border border-gray-600 hover:border-hot-pink/40 hover:shadow-sm hover:shadow-hot-pink/20 transition-all"
+                            :class="bookmarked ? 'text-hot-pink border-hot-pink/40' : 'text-gray-400 hover:text-hot-pink'"
+                            title="Toggle bookmark"
+                            data-fragment-id="{{ $fragmentId }}"
+                            x-ref="button"
+                        >
+                            <x-heroicon-o-bookmark class="w-3.5 h-3.5 pointer-events-none"/>
+                        </button>
+                    </div>
                 </div>
             @endif
         </div>

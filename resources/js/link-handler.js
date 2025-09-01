@@ -481,15 +481,6 @@ window.checkBookmarkStatus = async function(fragmentId, element) {
         if (alpineComponent && typeof alpineComponent.bookmarked !== 'undefined') {
             alpineComponent.bookmarked = data.is_bookmarked;
         }
-        
-        // Also update classes directly as a fallback for initial state
-        if (data.is_bookmarked) {
-            element.classList.add('text-hot-pink', 'border-hot-pink/40');
-            element.classList.remove('text-gray-400');
-        } else {
-            element.classList.remove('text-hot-pink', 'border-hot-pink/40');
-            element.classList.add('text-gray-400');
-        }
     } catch (error) {
         // Silently ignore network errors
         return;
@@ -512,19 +503,10 @@ window.toggleBookmark = async function(fragmentId, element) {
         
         const data = await response.json();
         
-        // Update Alpine.js component state and classes directly
+        // Update Alpine.js component state
         const alpineComponent = Alpine.$data(element);
         if (alpineComponent && typeof alpineComponent.bookmarked !== 'undefined') {
             alpineComponent.bookmarked = data.is_bookmarked;
-        }
-        
-        // Update classes directly since we removed :class binding
-        if (data.is_bookmarked) {
-            element.classList.add('text-hot-pink', 'border-hot-pink/40');
-            element.classList.remove('text-gray-400');
-        } else {
-            element.classList.remove('text-hot-pink', 'border-hot-pink/40');
-            element.classList.add('text-gray-400');
         }
         
         // No toast/feedback - the icon color change is the indicator

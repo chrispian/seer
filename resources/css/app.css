@@ -8,6 +8,9 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-hot-pink: rgb(255 20 147);
+    --color-neon-cyan: rgb(0 255 255);
+    --color-electric-blue: rgb(0 191 255);
 }
 
 
