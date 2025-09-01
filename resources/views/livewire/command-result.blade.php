@@ -26,7 +26,7 @@
         @if ($type === 'recall')
             {{-- Recall Results --}}
             @if (isset($data['fragments']) && count($data['fragments']) > 0)
-                <div class="space-y-3">
+                <div class="space-y-1">
                     @foreach ($data['fragments'] as $fragment)
                         @if (($fragment['type']['value'] ?? '') === 'todo')
                             {{-- Use Livewire TodoItem for todos --}}

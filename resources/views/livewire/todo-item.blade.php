@@ -1,4 +1,4 @@
-<div class="flex items-center gap-3 py-2 px-3 transition-all duration-300 ease-in-out hover:bg-neon-cyan/10 rounded-pixel">
+<div class="flex items-center gap-3 py-1 px-3 transition-all duration-300 ease-in-out hover:bg-neon-cyan/10 rounded-pixel">
     <input
         type="checkbox"
         wire:click="toggle"
