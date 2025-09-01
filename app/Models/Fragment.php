@@ -42,7 +42,7 @@ class Fragment extends Model
         if ($key === 'type' && $this->relationLoaded('type')) {
             return $this->getRelation('type');
         }
-        
+
         return parent::__get($key);
     }
 
@@ -243,6 +243,50 @@ class Fragment extends Model
         return $query;
     }
 
+    // Todo-specific scopes
+    public function scopeTodos($query)
+    {
+        $todoType = \App\Models\Type::where('value', 'todo')->first();
+
+        return $todoType ? $query->where('type_id', $todoType->id) : $query->whereRaw('1 = 0');
+    }
+
+    public function scopeOpenTodos($query)
+    {
+        $todoType = \App\Models\Type::where('value', 'todo')->first();
+        if (! $todoType) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where('type_id', $todoType->id)
+            ->where(function ($q) {
+                $q->whereRaw("(state::jsonb->>'status') = ?", ['open'])
+                    ->orWhereNull('state')
+                    ->orWhere(function ($subq) {
+                        $subq->whereNotNull('state')
+                            ->whereRaw("(state::jsonb->>'status') IS NULL");
+                    });
+            });
+    }
+
+    public function scopeCompletedTodos($query)
+    {
+        $todoType = \App\Models\Type::where('value', 'todo')->first();
+        if (! $todoType) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where('type_id', $todoType->id)
+            ->whereRaw("(state::jsonb->>'status') = ?", ['complete']);
+    }
+
+    public function scopeTodosByStatus($query, string $status)
+    {
+        return $status === 'completed'
+            ? $query->completedTodos()
+            : $query->openTodos();
+    }
+
     public function getTitleAttribute(): string
     {
         // Try to extract a title from the message
@@ -275,5 +319,4 @@ class Fragment extends Model
     {
         return $this->edited_message ?? $this->message ?? '';
     }
-
 }

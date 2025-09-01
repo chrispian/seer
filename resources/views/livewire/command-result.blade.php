@@ -26,6 +26,27 @@
         @if ($type === 'recall')
             {{-- Recall Results --}}
             @if (isset($data['fragments']) && count($data['fragments']) > 0)
+                {{-- Live search for todo results --}}
+                @if (isset($data['type']) && $data['type'] === 'todo')
+                    <div class="mb-4">
+                        <div class="relative">
+                            <input
+                                type="text"
+                                placeholder="Search todos..."
+                                class="w-full px-3 py-2 text-sm bg-surface/50 border border-electric-blue/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-electric-blue/50 focus:border-electric-blue text-text-primary placeholder:text-text-muted"
+                                x-data="{ search: '' }"
+                                x-model="search"
+                                x-on:input.debounce.300ms="@this.call('filterTodos', search)"
+                            />
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="space-y-1">
                     @foreach ($data['fragments'] as $fragment)
                         @if (($fragment['type']['value'] ?? '') === 'todo')

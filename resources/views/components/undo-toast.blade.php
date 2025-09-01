@@ -8,6 +8,7 @@
         fragmentId: null,
         objectType: 'fragment',
         messageType: 'delete', // 'delete', 'success', 'error'
+        customTitle: null,
         countdownInterval: null,
         
         display(fragmentId, message, objectType = 'fragment', duration = 60) {
@@ -29,12 +30,13 @@
             }, 1000);
         },
         
-        displaySuccess(message, objectType = 'fragment', duration = 2) {
-            console.log('Undo toast success called with:', { message, objectType, duration });
+        displaySuccess(message, objectType = 'fragment', duration = 2, customTitle = null) {
+            console.log('Undo toast success called with:', { message, objectType, duration, customTitle });
             this.fragmentId = null; // No undo action for success messages
             this.message = message;
             this.objectType = objectType;
             this.messageType = 'success';
+            this.customTitle = customTitle;
             this.timeLeft = duration;
             this.show = true;
             
@@ -73,6 +75,9 @@
             }
             if (!this.fragmentId) {
                 // Success message - no undo action
+                if (this.customTitle) {
+                    return this.customTitle;
+                }
                 return this.objectType === 'chat' ? 'Chat restored' : 'Fragment restored';
             }
             // Delete message - with undo action
