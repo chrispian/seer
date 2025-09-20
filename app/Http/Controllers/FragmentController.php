@@ -176,46 +176,103 @@ class FragmentController extends Controller
                 'vec_sim' => null,
                 'txt_rank' => $fragment->search_score ?? 0,
                 'score' => $fragment->search_score ?? 0,
+                'search_mode' => 'text-only',
             ])->values();
 
             return response()->json($results);
         }
 
-        // 1) query embedding
-        $emb = app(Embeddings::class)->embed($q, $provider);
-        $qe = '['.implode(',', $emb['vector']).']';
+        // Check if we have pgvector support
+        if (! $this->hasPgVectorSupport()) {
+            \Illuminate\Support\Facades\Log::warning('FragmentController: pgvector not available, falling back to text search');
+            $results = app(\App\Actions\SearchFragments::class)(
+                query: $q,
+                vault: null,
+                projectId: null,
+                sessionId: null,
+                limit: $limit
+            )->map(fn ($fragment) => [
+                'id' => $fragment->id,
+                'title' => $fragment->title,
+                'snippet' => \Illuminate\Support\Str::limit(strip_tags($fragment->message ?? ''), 200),
+                'vec_sim' => null,
+                'txt_rank' => $fragment->search_score ?? 0,
+                'score' => $fragment->search_score ?? 0,
+                'search_mode' => 'text-only-fallback',
+            ])->values();
 
-        // 2) choose text expr (edits first)
-        $hasEdited = Schema::hasColumn('fragments', 'edited_message');
-        $bodyExpr = $hasEdited ? "coalesce(f.edited_message, f.message, '')"
-            : "coalesce(f.message, '')";
-        $docExpr = "coalesce(f.title,'') || ' ' || {$bodyExpr}";
+            return response()->json($results);
+        }
 
-        // 3) hybrid SQL with snippet
-        $sql = "
-            WITH p AS (
-              SELECT ?::vector AS qe, websearch_to_tsquery('simple', ?) AS qq
-            )
-            SELECT
-              f.id,
-              f.title,
-              ts_headline('simple', {$docExpr}, p.qq,
-                'StartSel=<mark>,StopSel=</mark>,MaxFragments=2,MaxWords=18') AS snippet,
-              (1 - (e.embedding <=> p.qe)) AS vec_sim,
-              ts_rank_cd(to_tsvector('simple', {$docExpr}), p.qq) AS txt_rank,
-              (0.6 * ts_rank_cd(to_tsvector('simple', {$docExpr}), p.qq)
-               + 0.4 * (1 - (e.embedding <=> p.qe))) AS score
-            FROM fragments f
-            JOIN fragment_embeddings e
-              ON e.fragment_id = f.id
-             AND e.provider    = ?
-            CROSS JOIN p
-            ORDER BY score DESC
-            LIMIT ?";
+        try {
+            // 1) query embedding
+            $emb = app(Embeddings::class)->embed($q, $provider);
+            $qe = '['.implode(',', $emb['vector']).']';
 
-        $rows = DB::select($sql, [$qe, $q, $provider, $limit]);
+            // 2) choose text expr (edits first)
+            $hasEdited = Schema::hasColumn('fragments', 'edited_message');
+            $bodyExpr = $hasEdited ? "coalesce(f.edited_message, f.message, '')"
+                : "coalesce(f.message, '')";
+            $docExpr = "coalesce(f.title,'') || ' ' || {$bodyExpr}";
 
-        return response()->json($rows);
+            // 3) hybrid SQL with snippet
+            $sql = "
+                WITH p AS (
+                  SELECT ?::vector AS qe, websearch_to_tsquery('simple', ?) AS qq
+                )
+                SELECT
+                  f.id,
+                  f.title,
+                  ts_headline('simple', {$docExpr}, p.qq,
+                    'StartSel=<mark>,StopSel=</mark>,MaxFragments=2,MaxWords=18') AS snippet,
+                  (1 - (e.embedding <=> p.qe)) AS vec_sim,
+                  ts_rank_cd(to_tsvector('simple', {$docExpr}), p.qq) AS txt_rank,
+                  (0.6 * ts_rank_cd(to_tsvector('simple', {$docExpr}), p.qq)
+                   + 0.4 * (1 - (e.embedding <=> p.qe))) AS score
+                FROM fragments f
+                JOIN fragment_embeddings e
+                  ON e.fragment_id = f.id
+                 AND e.provider    = ?
+                CROSS JOIN p
+                ORDER BY score DESC
+                LIMIT ?";
+
+            $rows = DB::select($sql, [$qe, $q, $provider, $limit]);
+
+            // Add search mode to each result
+            $rows = array_map(function ($row) {
+                $row->search_mode = 'hybrid';
+
+                return $row;
+            }, $rows);
+
+            return response()->json($rows);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('FragmentController: hybrid search failed', [
+                'query' => $q,
+                'provider' => $provider,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Fallback to text search
+            $results = app(\App\Actions\SearchFragments::class)(
+                query: $q,
+                vault: null,
+                projectId: null,
+                sessionId: null,
+                limit: $limit
+            )->map(fn ($fragment) => [
+                'id' => $fragment->id,
+                'title' => $fragment->title,
+                'snippet' => \Illuminate\Support\Str::limit(strip_tags($fragment->message ?? ''), 200),
+                'vec_sim' => null,
+                'txt_rank' => $fragment->search_score ?? 0,
+                'score' => $fragment->search_score ?? 0,
+                'search_mode' => 'text-only-error-fallback',
+            ])->values();
+
+            return response()->json($results);
+        }
     }
 
     public function recall(Request $request)
@@ -231,5 +288,23 @@ class FragmentController extends Controller
         return response()->json(
             $query->take($limit)->get()
         );
+    }
+
+    private function hasPgVectorSupport(): bool
+    {
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver !== 'pgsql') {
+            return false;
+        }
+
+        try {
+            // Check if pgvector extension is installed
+            $result = DB::select("SELECT 1 FROM pg_extension WHERE extname = 'vector'");
+
+            return ! empty($result);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 }
