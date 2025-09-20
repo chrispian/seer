@@ -1,0 +1,1 @@
+<x-toast variant="success" toastId="success-toast" />
