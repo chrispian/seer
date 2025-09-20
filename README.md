@@ -26,6 +26,7 @@
 - **Entity Extraction**: Automatically identifies people, dates, emails, phone numbers
 - **Content Enrichment**: LLM-based analysis and categorization
 - **Smart Routing**: Automatically organizes fragments into appropriate vaults/projects
+- **Vector Embeddings**: Semantic search with configurable AI providers (OpenAI, Ollama)
 - **Learning System**: Gets better at surfacing relevant content over time
 
 ### 💬 **Chat-Based Interface**
@@ -179,6 +180,7 @@ Extracted:
 - [x] User behavior analytics and learning system
 - [x] Cross-platform database optimization
 - [x] Data-driven vault routing system with rule-based fragment routing
+- [x] **Semantic Search**: Vector embeddings with configurable toggle and fallback
 
 ### 🔄 **In Progress** 
 - [ ] UI/UX improvements and modernization
@@ -187,8 +189,7 @@ Extracted:
 - [ ] Mobile-responsive interface enhancements
 
 ### 🔮 **Upcoming Features**
-- [ ] **Semantic Search**: Vector embeddings for content similarity
-- [ ] **Smart Connections**: Automatic fragment relationship detection  
+- [ ] **Smart Connections**: Automatic fragment relationship detection
 - [ ] **Export/Sync**: Obsidian, Notion, and Markdown integration
 - [ ] **Collaboration**: Shared vaults and team features
 - [ ] **Mobile App**: Native iOS/Android applications
@@ -223,6 +224,65 @@ Extracted:
 - **Analytics**: Real-time insights without performance impact
 - **Memory Usage**: Optimized for long-running sessions
 - **Cross-Platform**: Works on MySQL, SQLite, and PostgreSQL
+
+## ⚙️ Configuration
+
+### Vector Embeddings & Semantic Search
+
+Fragments Engine supports optional vector embeddings for semantic search capabilities. This feature can be toggled on/off and gracefully falls back to text-based search when disabled.
+
+#### Environment Configuration
+
+```bash
+# Enable/disable vector embeddings (default: false)
+EMBEDDINGS_ENABLED=true
+
+# Embeddings provider (openai, ollama)
+EMBEDDINGS_PROVIDER=openai
+
+# OpenAI embedding model
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+
+# Embeddings version for cache invalidation
+EMBEDDINGS_VERSION=1
+```
+
+#### Database Requirements
+
+- **PostgreSQL**: Requires `pgvector` extension for vector storage
+- **SQLite/MySQL**: Falls back to text-only search automatically
+
+#### Management Commands
+
+```bash
+# Backfill embeddings for existing fragments
+php artisan embeddings:backfill
+
+# Dry run to see what would be processed
+php artisan embeddings:backfill --dry-run
+
+# Process in smaller batches
+php artisan embeddings:backfill --batch=50
+
+# Force execution without confirmation
+php artisan embeddings:backfill --force
+
+# Use specific provider/model
+php artisan embeddings:backfill --provider=ollama --model=nomic-embed-text
+```
+
+#### How It Works
+
+When embeddings are **enabled**:
+- New fragments automatically generate vector embeddings
+- Search uses hybrid scoring (text relevance + semantic similarity)
+- Results include similarity scores and enhanced ranking
+
+When embeddings are **disabled**:
+- No embedding jobs are queued
+- Search falls back to full-text search only
+- UI clearly indicates "text-only search" mode
+- No performance or functionality degradation
 
 ## 🎉 Getting Started
 
