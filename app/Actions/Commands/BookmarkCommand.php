@@ -13,18 +13,20 @@ class BookmarkCommand implements HandlesCommand
 {
     public function handle(CommandRequest $command): CommandResponse
     {
-        if (!empty($command->arguments['identifier']) && $command->arguments['identifier'] === 'list') {
+        if (! empty($command->arguments['identifier']) && $command->arguments['identifier'] === 'list') {
             return $this->renderBookmarksList();
         }
 
-        if (!empty($command->arguments['identifier']) && str_starts_with($command->arguments['identifier'], 'show ')) {
+        if (! empty($command->arguments['identifier']) && str_starts_with($command->arguments['identifier'], 'show ')) {
             $hint = trim(str_replace('show ', '', $command->arguments['identifier']));
+
             return $this->renderBookmarkShow($hint);
         }
 
-        if (!empty($command->arguments['identifier']) && Str::contains($command->arguments['identifier'], ['forget', 'rm', 'del'])) {
+        if (! empty($command->arguments['identifier']) && Str::contains($command->arguments['identifier'], ['forget', 'rm', 'del'])) {
             if (preg_match('/^(forget|del|rm)\s+(.*)$/i', $command->arguments['identifier'], $matches)) {
                 $hint = $matches[2]; // group 2 is after forget|del|rm
+
                 return $this->renderBookmarkForget(trim($hint));
             }
         }
@@ -47,10 +49,10 @@ class BookmarkCommand implements HandlesCommand
 
         $lines = [];
         foreach ($bookmarks as $bookmark) {
-            $lines[] = "- `{$bookmark->name}` (" . count($bookmark->fragment_ids) . " fragment" . (count($bookmark->fragment_ids) > 1 ? 's' : '') . ")";
+            $lines[] = "- `{$bookmark->name}` (".count($bookmark->fragment_ids).' fragment'.(count($bookmark->fragment_ids) > 1 ? 's' : '').')';
         }
 
-        $message = "📑 Bookmarks:\n" . implode("\n", $lines);
+        $message = "📑 Bookmarks:\n".implode("\n", $lines);
 
         return new CommandResponse(
             type: 'bookmark',
@@ -67,7 +69,7 @@ class BookmarkCommand implements HandlesCommand
     {
         $bookmark = Bookmark::where('name', 'like', "%{$hint}%")->orderByDesc('created_at')->first();
 
-        if (!$bookmark) {
+        if (! $bookmark) {
             return new CommandResponse(
                 type: 'bookmark',
                 message: "No bookmark found matching `{$hint}`",
@@ -76,7 +78,7 @@ class BookmarkCommand implements HandlesCommand
         }
 
         $fragments = Fragment::whereIn('id', $bookmark->fragment_ids)
-            ->orderByRaw("FIELD(id, " . implode(',', $bookmark->fragment_ids) . ")")
+            ->orderByRaw('FIELD(id, '.implode(',', $bookmark->fragment_ids).')')
             ->get();
 
         if ($fragments->isEmpty()) {
@@ -87,10 +89,10 @@ class BookmarkCommand implements HandlesCommand
             );
         }
 
-        $message = "🔖 Showing bookmark `{$bookmark->name}` (" . count($fragments) . " fragment" . (count($fragments) > 1 ? 's' : '') . "):\n";
+        $message = "🔖 Showing bookmark `{$bookmark->name}` (".count($fragments).' fragment'.(count($fragments) > 1 ? 's' : '')."):\n";
 
         foreach ($fragments as $fragment) {
-            $message .= "- " . trim(Str::limit($fragment->message, 80)) . "\n";
+            $message .= '- '.trim(Str::limit($fragment->message, 80))."\n";
         }
 
         return new CommandResponse(
@@ -109,7 +111,7 @@ class BookmarkCommand implements HandlesCommand
     {
         $bookmark = Bookmark::where('name', 'like', "%{$hint}%")->orderByDesc('created_at')->first();
 
-        if (!$bookmark) {
+        if (! $bookmark) {
             return new CommandResponse(
                 type: 'bookmark',
                 message: "No bookmark found matching `{$hint}`",
@@ -127,12 +129,11 @@ class BookmarkCommand implements HandlesCommand
         );
     }
 
-
     protected function createBookmark(): CommandResponse
     {
         $lastFragment = Fragment::latest()->first();
 
-        if (!$lastFragment) {
+        if (! $lastFragment) {
             return new CommandResponse(
                 type: 'bookmark',
                 message: 'No fragments found to bookmark',
@@ -148,7 +149,7 @@ class BookmarkCommand implements HandlesCommand
             $fragmentIds = [$lastFragment->id];
         }
 
-        $title = Str::slug(substr($lastFragment->message, 0, 30)) . '-' . now()->format('His');
+        $title = Str::slug(substr($lastFragment->message, 0, 30)).'-'.now()->format('His');
 
         Bookmark::create([
             'name' => $title,

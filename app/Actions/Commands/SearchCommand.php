@@ -2,10 +2,10 @@
 
 namespace App\Actions\Commands;
 
+use App\Actions\SearchFragments as FallbackSearch;
 use App\Contracts\HandlesCommand;
 use App\DTOs\CommandRequest;
 use App\DTOs\CommandResponse;
-use App\Actions\SearchFragments as FallbackSearch;
 use App\Models\Fragment;
 use App\Services\AI\Embeddings;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +22,7 @@ class SearchCommand implements HandlesCommand
             return new CommandResponse(
                 type: 'search',
                 shouldShowErrorToast: true,
-                message: "No search query provided. Please try `/search your query here` or `/s your query here`",
+                message: 'No search query provided. Please try `/search your query here` or `/s your query here`',
             );
         }
 
@@ -56,7 +56,7 @@ class SearchCommand implements HandlesCommand
                         'created_at' => $fragment->created_at,
                         'type' => [
                             'name' => $fragment->type?->label ?? ucfirst($fragment->type?->value ?? 'fragment'),
-                            'value' => $fragment->type?->value ?? 'fragment'
+                            'value' => $fragment->type?->value ?? 'fragment',
                         ],
                         'snippet' => $result->snippet ?? '',
                         'score' => $result->score ?? 0,
@@ -70,7 +70,7 @@ class SearchCommand implements HandlesCommand
                 type: 'search',
                 shouldOpenPanel: true,
                 panelData: [
-                    'message' => "🔍 Found **" . count($fragmentData) . "** results for: **{$query}**",
+                    'message' => '🔍 Found **'.count($fragmentData)."** results for: **{$query}**",
                     'query' => $query,
                     'fragments' => $fragmentData,
                 ],
@@ -79,7 +79,7 @@ class SearchCommand implements HandlesCommand
             return new CommandResponse(
                 type: 'search',
                 shouldShowErrorToast: true,
-                message: "Search failed: " . $e->getMessage(),
+                message: 'Search failed: '.$e->getMessage(),
             );
         }
     }
@@ -109,17 +109,17 @@ class SearchCommand implements HandlesCommand
         })->all();
     }
 
-    private function hybridSearch(string $query, string $provider = null, int $limit = 20): array
+    private function hybridSearch(string $query, ?string $provider = null, int $limit = 20): array
     {
         if (! config('fragments.embeddings.enabled')) {
             return [];
         }
 
         $provider = $provider ?? config('fragments.embeddings.provider');
-        
+
         // Get query embedding
         $emb = app(Embeddings::class)->embed($query, $provider);
-        $qe = '[' . implode(',', $emb['vector']) . ']';
+        $qe = '['.implode(',', $emb['vector']).']';
 
         // Choose text expression (handle edited messages)
         $hasEdited = Schema::hasColumn('fragments', 'edited_message');
@@ -150,6 +150,7 @@ class SearchCommand implements HandlesCommand
             LIMIT ?";
 
         $rows = DB::select($sql, [$qe, $query, $provider, $limit]);
+
         return $rows;
     }
 }

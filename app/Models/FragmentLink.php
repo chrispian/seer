@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class FragmentLink extends Model
 {
     protected $table = 'fragment_links';
-    
 
     protected $casts = [
         'relation' => RelationType::class,

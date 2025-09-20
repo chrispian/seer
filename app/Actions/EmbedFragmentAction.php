@@ -2,10 +2,10 @@
 
 namespace App\Actions;
 
+use App\Jobs\EmbedFragment;
 use App\Models\Fragment;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Jobs\EmbedFragment; // make sure this exists
+use Illuminate\Support\Facades\Log; // make sure this exists
 
 class EmbedFragmentAction
 {
@@ -23,14 +23,15 @@ class EmbedFragmentAction
         $text = trim($fragment->edited_message ?? $fragment->message ?? '');
         if ($text === '') {
             Log::debug('EmbedFragmentAction: empty text, skipping');
+
             return $fragment;
         }
 
         // Provider/model from env (keep simple + overridable)
         $provider = config('fragments.embeddings.provider');   // e.g. 'openai' or 'ollama'
-        $model    = config('fragments.embeddings.model');      // e.g. 'text-embedding-3-small'
-        $version  = (string) config('fragments.embeddings.version', '1');
-        $contentHash  = hash('sha256', $text . '|' . $provider . '|' . $model . '|' . $version);
+        $model = config('fragments.embeddings.model');      // e.g. 'text-embedding-3-small'
+        $version = (string) config('fragments.embeddings.version', '1');
+        $contentHash = hash('sha256', $text.'|'.$provider.'|'.$model.'|'.$version);
 
         // Idempotence: if we already have the same hash for this provider+model, skip
         $exists = false;
@@ -51,15 +52,16 @@ class EmbedFragmentAction
 
         if ($exists) {
             Log::debug('EmbedFragmentAction: up-to-date embedding exists', compact('provider', 'model'));
+
             return $fragment;
         }
 
         // Enqueue async embed; job writes/updates fragment_embeddings
         dispatch(new EmbedFragment(
             fragmentId: $fragment->id,
-            provider:   $provider,
-            model:      $model,
-            contentHash:$contentHash
+            provider: $provider,
+            model: $model,
+            contentHash: $contentHash
         ))->onQueue('embeddings');
 
         Log::debug('EmbedFragmentAction: queued', compact('provider', 'model'));

@@ -12,9 +12,7 @@ use Illuminate\Support\Str;
 
 class RoutingCommand implements HandlesCommand
 {
-    public function __construct(private readonly VaultRoutingRuleService $routingRules)
-    {
-    }
+    public function __construct(private readonly VaultRoutingRuleService $routingRules) {}
 
     public function handle(CommandRequest $command): CommandResponse
     {

@@ -7,7 +7,6 @@ use App\DTOs\CommandRequest;
 use App\DTOs\CommandResponse;
 use App\Jobs\ProcessFragmentJob;
 use App\Models\Fragment;
-use Illuminate\Support\Str;
 
 class ChaosCommand implements HandlesCommand
 {
@@ -19,7 +18,7 @@ class ChaosCommand implements HandlesCommand
             return new CommandResponse(
                 type: 'chaos',
                 shouldShowErrorToast: true,
-                message: "No valid chaos fragment detected. Please try `/chaos Your mixed thoughts here...`",
+                message: 'No valid chaos fragment detected. Please try `/chaos Your mixed thoughts here...`',
             );
         }
 

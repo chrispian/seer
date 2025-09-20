@@ -226,9 +226,9 @@ class ModelSelectionService
                 }
             } else {
                 // For other providers, check for API keys - need at least one valid configuration
-                $hasConfigKey = !empty(config("services.{$provider}.key"));
-                $hasEnvKey = !empty(env($configKey));
-                if (!$hasConfigKey && !$hasEnvKey) {
+                $hasConfigKey = ! empty(config("services.{$provider}.key"));
+                $hasEnvKey = ! empty(env($configKey));
+                if (! $hasConfigKey && ! $hasEnvKey) {
                     return false;
                 }
             }

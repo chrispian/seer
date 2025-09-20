@@ -28,8 +28,11 @@ if (class_exists(\PHPUnit\Runner\ErrorHandler::class)) {
 */
 
 pest()->extend(Tests\TestCase::class)
- // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in('Feature');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit');
 
 /*
 |--------------------------------------------------------------------------
@@ -46,6 +49,28 @@ expect()->extend('toBeOne', function () {
     return $this->toBe(1);
 });
 
+expect()->extend('toHaveValidStructure', function (array $expectedKeys) {
+    $actual = $this->value;
+
+    foreach ($expectedKeys as $key) {
+        if (! array_key_exists($key, $actual)) {
+            throw new \Exception("Expected key '{$key}' not found in array");
+        }
+    }
+
+    return $this;
+});
+
+expect()->extend('toBeValidFragment', function () {
+    $fragment = $this->value;
+
+    expect($fragment)->toBeInstanceOf(\App\Models\Fragment::class);
+    expect($fragment->message)->not->toBeEmpty();
+    expect($fragment->type)->toBeIn(['todo', 'note', 'meeting', 'idea', 'obs', 'observation']);
+
+    return $this;
+});
+
 /*
 |--------------------------------------------------------------------------
 | Functions
@@ -57,7 +82,28 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function createTestUser(): \App\Models\User
 {
-    // ..
+    return \App\Models\User::factory()->create();
+}
+
+function actingAsTestUser(): \App\Models\User
+{
+    $user = createTestUser();
+    test()->actingAs($user);
+
+    return $user;
+}
+
+function createTestFragment(array $attributes = []): \App\Models\Fragment
+{
+    return \App\Models\Fragment::factory()->create($attributes);
+}
+
+function mockAIProvider(string $provider = 'openai'): void
+{
+    config([
+        'fragments.models.default_provider' => $provider,
+        "fragments.models.providers.{$provider}.enabled" => true,
+    ]);
 }

@@ -9,4 +9,3 @@ interface HandlesCommand
 {
     public function handle(CommandRequest $command): CommandResponse;
 }
-

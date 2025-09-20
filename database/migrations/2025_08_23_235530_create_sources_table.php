@@ -35,7 +35,7 @@ return new class extends Migration
             $table->dropIndex(['source_key']);
             $table->dropColumn('source_key');
         });
-        
+
         Schema::dropIfExists('sources');
     }
 };

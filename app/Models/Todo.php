@@ -8,13 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Todo extends Model
 {
     protected $table = 'todos';
-    
+
     protected $primaryKey = 'fragment_id';
-    
+
     public $incrementing = false;
-    
+
     public $timestamps = false;
-    
 
     protected $casts = [
         'state' => 'array',

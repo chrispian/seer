@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\SearchFragments;
 use App\Models\Category;
 use App\Models\Fragment;
-use App\Actions\SearchFragments;
 use App\Services\AI\Embeddings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 
 class FragmentController extends Controller
 {
@@ -123,43 +122,45 @@ class FragmentController extends Controller
         );
     }
 
-//    public function hybridSearch(string $query, string $provider = null, int $limit = 20)
-//    {
-//        $provider = $provider ?: config('fragments.embeddings.provider');
-//
-//        $emb = app(Embeddings::class)->embed($query, $provider);
-//        $qe  = '['.implode(',', $emb['vector']).']';
-//
-//        $textExpr = Schema::hasColumn('fragments', 'edited_message')
-//            ? "coalesce(f.title,'') || ' ' || coalesce(f.edited_message,'')"
-//            : "coalesce(f.title,'') || ' ' || coalesce(f.message,'')";
-//
-//        $sql = <<<SQL
-//            WITH q AS (SELECT ?::vector AS qe)
-//            SELECT
-//              f.id, f.title,
-//              (1 - (e.embedding <=> q.qe)) AS vec_sim,
-//              ts_rank_cd(to_tsvector('simple', {$textExpr}), plainto_tsquery('simple', ?)) AS txt_rank,
-//              (0.6 * ts_rank_cd(to_tsvector('simple', {$textExpr}), plainto_tsquery('simple', ?))
-//               + 0.4 * (1 - (e.embedding <=> q.qe))) AS score
-//            FROM fragments f
-//            JOIN fragment_embeddings e
-//              ON e.fragment_id = f.id AND e.provider = ?
-//            CROSS JOIN q
-//            ORDER BY score DESC
-//            LIMIT ?
-//            SQL;
-//
-//        return DB::select($sql, [$qe, $query, $query, $provider, $limit]);
-//    }
+    //    public function hybridSearch(string $query, string $provider = null, int $limit = 20)
+    //    {
+    //        $provider = $provider ?: config('fragments.embeddings.provider');
+    //
+    //        $emb = app(Embeddings::class)->embed($query, $provider);
+    //        $qe  = '['.implode(',', $emb['vector']).']';
+    //
+    //        $textExpr = Schema::hasColumn('fragments', 'edited_message')
+    //            ? "coalesce(f.title,'') || ' ' || coalesce(f.edited_message,'')"
+    //            : "coalesce(f.title,'') || ' ' || coalesce(f.message,'')";
+    //
+    //        $sql = <<<SQL
+    //            WITH q AS (SELECT ?::vector AS qe)
+    //            SELECT
+    //              f.id, f.title,
+    //              (1 - (e.embedding <=> q.qe)) AS vec_sim,
+    //              ts_rank_cd(to_tsvector('simple', {$textExpr}), plainto_tsquery('simple', ?)) AS txt_rank,
+    //              (0.6 * ts_rank_cd(to_tsvector('simple', {$textExpr}), plainto_tsquery('simple', ?))
+    //               + 0.4 * (1 - (e.embedding <=> q.qe))) AS score
+    //            FROM fragments f
+    //            JOIN fragment_embeddings e
+    //              ON e.fragment_id = f.id AND e.provider = ?
+    //            CROSS JOIN q
+    //            ORDER BY score DESC
+    //            LIMIT ?
+    //            SQL;
+    //
+    //        return DB::select($sql, [$qe, $query, $query, $provider, $limit]);
+    //    }
 
     public function hybridSearch(Request $request)
     {
-        $q         = (string) $request->query('q', '');
-        $provider  = (string) $request->query('provider', config('fragments.embeddings.provider'));
-        $limit     = (int)    $request->query('limit', 20);
+        $q = (string) $request->query('q', '');
+        $provider = (string) $request->query('provider', config('fragments.embeddings.provider'));
+        $limit = (int) $request->query('limit', 20);
 
-        if ($q === '') return response()->json([]);
+        if ($q === '') {
+            return response()->json([]);
+        }
 
         if (! config('fragments.embeddings.enabled')) {
             $results = app(\App\Actions\SearchFragments::class)(
@@ -182,13 +183,13 @@ class FragmentController extends Controller
 
         // 1) query embedding
         $emb = app(Embeddings::class)->embed($q, $provider);
-        $qe  = '['.implode(',', $emb['vector']).']';
+        $qe = '['.implode(',', $emb['vector']).']';
 
         // 2) choose text expr (edits first)
         $hasEdited = Schema::hasColumn('fragments', 'edited_message');
-        $bodyExpr  = $hasEdited ? "coalesce(f.edited_message, f.message, '')"
+        $bodyExpr = $hasEdited ? "coalesce(f.edited_message, f.message, '')"
             : "coalesce(f.message, '')";
-        $docExpr   = "coalesce(f.title,'') || ' ' || {$bodyExpr}";
+        $docExpr = "coalesce(f.title,'') || ' ' || {$bodyExpr}";
 
         // 3) hybrid SQL with snippet
         $sql = "
@@ -213,9 +214,9 @@ class FragmentController extends Controller
             LIMIT ?";
 
         $rows = DB::select($sql, [$qe, $q, $provider, $limit]);
+
         return response()->json($rows);
     }
-
 
     public function recall(Request $request)
     {

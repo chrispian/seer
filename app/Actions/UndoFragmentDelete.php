@@ -44,29 +44,29 @@ class UndoFragmentDelete
 
         // Restore bookmark relationships if they were stored during deletion
         $deletedBookmarkIds = $fragment->metadata['deleted_bookmark_ids'] ?? [];
-        
-        if (!empty($deletedBookmarkIds)) {
+
+        if (! empty($deletedBookmarkIds)) {
             foreach ($deletedBookmarkIds as $bookmarkId) {
                 $bookmark = \App\Models\Bookmark::find($bookmarkId);
-                
+
                 if ($bookmark) {
                     // Add fragment back to existing bookmark
                     $fragmentIds = $bookmark->fragment_ids ?? [];
-                    if (!in_array($fragmentId, $fragmentIds)) {
+                    if (! in_array($fragmentId, $fragmentIds)) {
                         $fragmentIds[] = $fragmentId;
                         $bookmark->update(['fragment_ids' => $fragmentIds]);
                     }
                 }
             }
-            
+
             // Clean up the stored bookmark IDs from metadata
             $metadata = $fragment->metadata ?? [];
             unset($metadata['deleted_bookmark_ids']);
             $fragment->update(['metadata' => $metadata]);
-            
+
             Log::info('Restored bookmark relationships', [
                 'fragment_id' => $fragmentId,
-                'restored_bookmarks' => count($deletedBookmarkIds)
+                'restored_bookmarks' => count($deletedBookmarkIds),
             ]);
         }
 

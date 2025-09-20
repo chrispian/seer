@@ -23,7 +23,7 @@ class FragmentRecallIntegrationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $user = User::factory()->create();
         $this->actingAs($user);
         Filament::setCurrentPanel('app');
@@ -83,7 +83,7 @@ class FragmentRecallIntegrationTest extends TestCase
         $searchResults = $searchAction('meeting client');
 
         $this->assertGreaterThan(0, count($searchResults));
-        
+
         // Should find fragments with meeting or client keywords
         $foundTitles = collect($searchResults)->pluck('title')->toArray();
         $this->assertContains('Client Discussion', $foundTitles);
@@ -99,12 +99,12 @@ class FragmentRecallIntegrationTest extends TestCase
 
         // Step 6: Test decision logging through selection
         $initialDecisionCount = RecallDecision::count();
-        
+
         $component->call('selectRecallResult', 0);
 
         // Verify decision was logged
         $this->assertEquals($initialDecisionCount + 1, RecallDecision::count());
-        
+
         $decision = RecallDecision::latest()->first();
         $this->assertEquals('meeting client', $decision->query);
         $this->assertEquals('select', $decision->action);

@@ -98,7 +98,6 @@ return [
 
     'system_route_prefix' => 'filament',
 
-
     'panels' => [
         'fragments' => [
             'id' => 'fragments',
@@ -115,6 +114,5 @@ return [
             ],
         ],
     ],
-
 
 ];

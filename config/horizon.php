@@ -198,34 +198,34 @@ return [
     'environments' => [
         'local' => [
             'all' => [
-                'connection'    => 'redis',
-                'queue'         => ['default','fragments','embeddings','broadcasts','mail','notifications'],
-                'balance'       => 'auto',
-                'minProcesses'  => 1,
-                'maxProcesses'  => 8,
-                'tries'         => 3,
-                'timeout'       => 300, // embeddings can run longer
+                'connection' => 'redis',
+                'queue' => ['default', 'fragments', 'embeddings', 'broadcasts', 'mail', 'notifications'],
+                'balance' => 'auto',
+                'minProcesses' => 1,
+                'maxProcesses' => 8,
+                'tries' => 3,
+                'timeout' => 300, // embeddings can run longer
             ],
         ],
         'production' => [
             'high' => [
-                'connection'   => 'redis',
-                'queue'        => ['default','fragments'],
-                'balance'      => 'auto',
+                'connection' => 'redis',
+                'queue' => ['default', 'fragments'],
+                'balance' => 'auto',
                 'minProcesses' => 3,
                 'maxProcesses' => 24,
-                'tries'        => 3,
+                'tries' => 3,
             ],
             'embeddings' => [
-                'connection'   => 'redis',
-                'queue'        => ['embeddings'],
+                'connection' => 'redis',
+                'queue' => ['embeddings'],
                 'minProcesses' => 2,
                 'maxProcesses' => 12,
-                'timeout'      => 600,
+                'timeout' => 600,
             ],
             'low' => [
-                'connection'   => 'redis',
-                'queue'        => ['mail','notifications','broadcasts'],
+                'connection' => 'redis',
+                'queue' => ['mail', 'notifications', 'broadcasts'],
                 'minProcesses' => 1,
                 'maxProcesses' => 6,
             ],

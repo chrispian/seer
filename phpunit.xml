@@ -3,6 +3,12 @@
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
+         processIsolation="false"
+         stopOnFailure="false"
+         executionOrder="defects"
+         failOnWarning="false"
+         failOnRisky="false"
+         cacheDirectory=".phpunit.cache"
 >
     <testsuites>
         <testsuite name="Unit">
@@ -10,6 +16,9 @@
         </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
     <source>
@@ -29,5 +38,12 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <!-- Performance optimizations -->
+        <env name="LOG_CHANNEL" value="null"/>
+        <env name="FRAGMENTS_EMBEDDINGS_ENABLED" value="false"/>
+        <env name="FRAGMENTS_AI_TIMEOUT" value="5"/>
+        <!-- Test environment flags -->
+        <env name="APP_DEBUG" value="false"/>
+        <env name="PEST_PARALLEL" value="true"/>
     </php>
 </phpunit>

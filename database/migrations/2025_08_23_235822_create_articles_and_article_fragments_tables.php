@@ -30,10 +30,10 @@ return new class extends Migration
             $table->integer('order_pos');
             $table->mediumText('body')->nullable()->comment('Snapshot for edit_mode=copy');
             $table->enum('edit_mode', ['reference', 'copy'])->default('reference');
-            
+
             $table->primary(['article_id', 'order_pos']);
             $table->index('fragment_id');
-            
+
             $table->foreign('article_id')->references('id')->on('articles')->cascadeOnDelete();
             $table->foreign('fragment_id')->references('id')->on('fragments')->nullOnDelete();
         });
@@ -48,7 +48,7 @@ return new class extends Migration
             $table->string('kind', 32)->default('daily')->comment('daily, weekly, session');
             $table->json('meta')->nullable();
             $table->timestamps();
-            
+
             $table->index(['workspace_id', 'range_start', 'kind']);
             $table->foreign('article_id')->references('id')->on('articles')->cascadeOnDelete();
         });

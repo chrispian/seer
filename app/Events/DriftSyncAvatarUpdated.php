@@ -2,13 +2,10 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Queue\SerializesModels;
 
 class DriftSyncAvatarUpdated implements ShouldBroadcast
 {
@@ -18,6 +15,7 @@ class DriftSyncAvatarUpdated implements ShouldBroadcast
 
     // 👇 ensure it uses Redis + the broadcasts queue
     public $connection = 'redis';
+
     public $queue = 'broadcasts';
 
     public function __construct(string $avatarPath)
@@ -26,11 +24,13 @@ class DriftSyncAvatarUpdated implements ShouldBroadcast
         $this->avatarPath = $avatarPath;
     }
 
-    public function broadcastOn() {
+    public function broadcastOn()
+    {
         return new \Illuminate\Broadcasting\Channel('lens.chat');
     }
-    public function broadcastAs() {
+
+    public function broadcastAs()
+    {
         return 'drift-avatar-change';
     }
-
 }

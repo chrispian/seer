@@ -14,7 +14,7 @@ enum RelationType: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Mentions => 'Mentions',
             self::References => 'References',
             self::SimilarTo => 'Similar To',
@@ -27,7 +27,7 @@ enum RelationType: string
 
     public function description(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Mentions => 'One fragment mentions another',
             self::References => 'One fragment references another',
             self::SimilarTo => 'Fragments are similar in content',

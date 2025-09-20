@@ -12,7 +12,7 @@ enum StorageKind: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Local => 'Local Storage',
             self::Obsidian => 'Obsidian Vault',
             self::Remote => 'Remote URL',
@@ -23,7 +23,7 @@ enum StorageKind: string
 
     public function icon(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Local => 'folder',
             self::Obsidian => 'document',
             self::Remote => 'globe',

@@ -2,10 +2,11 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         // 1) Add nullable columns first (avoid NOT NULL on existing rows)
@@ -25,23 +26,27 @@ return new class extends Migration {
         }
 
         // Enforce NOT NULL & unique index on databases that support it (Postgres)
-        DB::statement("ALTER TABLE fragment_embeddings ALTER COLUMN model SET NOT NULL");
-        DB::statement("ALTER TABLE fragment_embeddings ALTER COLUMN content_hash SET NOT NULL");
+        DB::statement('ALTER TABLE fragment_embeddings ALTER COLUMN model SET NOT NULL');
+        DB::statement('ALTER TABLE fragment_embeddings ALTER COLUMN content_hash SET NOT NULL');
 
-        DB::statement("
+        DB::statement('
             CREATE UNIQUE INDEX IF NOT EXISTS fragment_embeddings_unique
             ON fragment_embeddings (fragment_id, provider, model, content_hash)
-        ");
+        ');
     }
 
     public function down(): void
     {
         if (! $this->isSqlite()) {
-            DB::statement("DROP INDEX IF EXISTS fragment_embeddings_unique");
+            DB::statement('DROP INDEX IF EXISTS fragment_embeddings_unique');
         }
         Schema::table('fragment_embeddings', function (Blueprint $table) {
-            if (Schema::hasColumn('fragment_embeddings', 'content_hash')) $table->dropColumn('content_hash');
-            if (Schema::hasColumn('fragment_embeddings', 'model'))        $table->dropColumn('model');
+            if (Schema::hasColumn('fragment_embeddings', 'content_hash')) {
+                $table->dropColumn('content_hash');
+            }
+            if (Schema::hasColumn('fragment_embeddings', 'model')) {
+                $table->dropColumn('model');
+            }
         });
     }
 

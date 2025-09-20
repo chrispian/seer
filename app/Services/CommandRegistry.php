@@ -3,18 +3,18 @@
 namespace App\Services;
 
 use App\Actions\Commands\BookmarkCommand;
+use App\Actions\Commands\ChannelsCommand;
 use App\Actions\Commands\ChaosCommand;
 use App\Actions\Commands\ClearCommand;
 use App\Actions\Commands\FragCommand;
 use App\Actions\Commands\HelpCommand;
+use App\Actions\Commands\JoinCommand;
+use App\Actions\Commands\NameCommand;
 use App\Actions\Commands\RecallCommand;
+use App\Actions\Commands\RoutingCommand;
 use App\Actions\Commands\SearchCommand;
 use App\Actions\Commands\SessionCommand;
 use App\Actions\Commands\TodoCommand;
-use App\Actions\Commands\JoinCommand;
-use App\Actions\Commands\ChannelsCommand;
-use App\Actions\Commands\NameCommand;
-use App\Actions\Commands\RoutingCommand;
 
 class CommandRegistry
 {

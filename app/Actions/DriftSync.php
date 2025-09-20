@@ -28,10 +28,11 @@ class DriftSync
                 'trace' => $e->getTraceAsString(),
             ]);
         }
-        
+
         // Continue pipeline
         return $next($fragment);
     }
+
     protected function determineAvatar(Fragment $fragment): string
     {
         Log::debug('DriftSync::determineAvatar', $fragment->toArray());

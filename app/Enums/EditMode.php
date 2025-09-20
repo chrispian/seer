@@ -9,7 +9,7 @@ enum EditMode: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Reference => 'Reference',
             self::Copy => 'Copy',
         };
@@ -17,7 +17,7 @@ enum EditMode: string
 
     public function description(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Reference => 'Reference the original fragment (changes reflect automatically)',
             self::Copy => 'Copy the fragment content (independent snapshot)',
         };

@@ -14,10 +14,10 @@ class ChannelsCommand implements HandlesCommand
         // Get vault/project context from command
         $vaultId = $command->arguments['vault_id'] ?? null;
         $projectId = $command->arguments['project_id'] ?? null;
-        
+
         // Get all active chat sessions
         $channels = ChatSession::searchForAutocomplete('', $vaultId, $projectId, 25);
-        
+
         if ($channels->isEmpty()) {
             return new CommandResponse(
                 type: 'channels-list',
@@ -27,17 +27,18 @@ class ChannelsCommand implements HandlesCommand
                 ]
             );
         }
-        
+
         // Format channels list
         $channelsList = $channels->map(function ($session) {
             $activity = $session->last_activity_at ? $session->last_activity_at->diffForHumans() : 'No activity';
+
             return "- `#{$session->short_code}` – {$session->display_name} *(last activity: {$activity})*";
         })->join("\n");
-        
+
         $count = $channels->count();
         $title = "**Active Channels ({$count})**";
         $message = "{$title}\n\n{$channelsList}\n\nType `/join #c5` to join a specific channel.";
-        
+
         return new CommandResponse(
             type: 'channels-list',
             shouldOpenPanel: true,
@@ -49,9 +50,9 @@ class ChannelsCommand implements HandlesCommand
                         'short_code' => $session->short_code,
                         'display_name' => $session->display_name,
                         'channel_display' => $session->channel_display,
-                        'last_activity' => $session->last_activity_at?->diffForHumans()
+                        'last_activity' => $session->last_activity_at?->diffForHumans(),
                     ];
-                })->toArray()
+                })->toArray(),
             ]
         );
     }

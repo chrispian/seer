@@ -13,9 +13,9 @@ class TodoItem extends Component
     {
         $state = $this->fragment->state ?? [];
         $newStatus = ($state['status'] ?? 'open') === 'complete' ? 'open' : 'complete';
-        
+
         $state['status'] = $newStatus;
-        
+
         // Add completion timestamp when marking as complete
         if ($newStatus === 'complete') {
             $state['completed_at'] = now()->toISOString();
