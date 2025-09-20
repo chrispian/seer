@@ -49,7 +49,7 @@ Create or refresh these packets before handing work to another agent.
 - [x] Instrument `app/Actions/RouteToVault.php` to log decision inputs/outputs.
 - [x] Design data model for routing rules (per project/vault thresholds).
 - [ ] Implement configuration persistence (DB table or JSONB) and management UI/command.
-- [ ] Replace hard-coded `'debug'` vault with dynamic lookup + tests.
+- [x] Replace hard-coded `'debug'` vault with dynamic lookup + tests.
 - [ ] Consume routing services from `hollis-labs/fragments-engine` package; ensure demo shell + Project Mentat share the same engine facade.
 
 ### ENG-03 Model Selection Step
