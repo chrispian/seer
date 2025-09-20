@@ -8,6 +8,13 @@ use Illuminate\Support\Str;
 
 class ParseAtomicFragment
 {
+    public function handle(Fragment $fragment, $next)
+    {
+        $fragment = $this->__invoke($fragment);
+
+        return $next($fragment);
+    }
+
     public function __invoke(Fragment $fragment): Fragment
     {
 

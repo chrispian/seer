@@ -3,11 +3,19 @@
 namespace App\Actions;
 
 use App\Models\Fragment;
+use App\Models\Type;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class GenerateAutoTitle
 {
+    public function handle(Fragment $fragment, $next)
+    {
+        $fragment = $this->__invoke($fragment);
+
+        return $next($fragment);
+    }
+
     public function __invoke(Fragment $fragment): Fragment
     {
         Log::debug('GenerateAutoTitle::invoke()');
@@ -19,6 +27,8 @@ class GenerateAutoTitle
 
         $message = $fragment->message;
         $title = '';
+        $usedFirstLine = false;
+        $usedFirstSentence = false;
 
         // Strategy 1: First line if ≤80 characters
         $lines = explode("\n", $message);
@@ -26,6 +36,7 @@ class GenerateAutoTitle
 
         if (strlen($firstLine) <= 80 && ! empty($firstLine)) {
             $title = $firstLine;
+            $usedFirstLine = true;
         } else {
             // Strategy 2: First sentence if ≤100 characters
             preg_match('/^[^.!?]+[.!?]/', $message, $sentenceMatch);
@@ -33,6 +44,7 @@ class GenerateAutoTitle
 
             if (strlen($firstSentence) <= 100 && ! empty($firstSentence)) {
                 $title = $firstSentence;
+                $usedFirstSentence = true;
             } else {
                 // Strategy 3: Keyword fallback
                 $title = $this->generateKeywordTitle($fragment);
@@ -47,9 +59,31 @@ class GenerateAutoTitle
             $title = Str::limit($title, 252, '...');
         }
 
-        $fragment->title = $title;
+        $typeValue = $this->resolveTypeValue($fragment);
+        if (! $typeValue || $typeValue === 'note') {
+            $lowerMessage = strtolower($message);
+            $tagSet = array_map('strtolower', $fragment->tags ?? []);
 
-        return tap($fragment)->save();
+            if (str_contains($lowerMessage, 'reminder') ||
+                str_contains($lowerMessage, 'task') ||
+                in_array('urgent', $tagSet, true)) {
+                $typeValue = 'task';
+            }
+        }
+        if ($typeValue) {
+            $normalizedType = Str::title(strtolower($typeValue));
+
+            if (! ($normalizedType === 'Note' && $usedFirstLine)) {
+                if (! Str::startsWith(Str::lower($title), Str::lower($normalizedType))) {
+                    $title = trim($normalizedType.': '.$title);
+                }
+            }
+        }
+
+        $fragment->setAttribute('title', $title);
+        $fragment->save();
+
+        return $fragment;
     }
 
     private function generateKeywordTitle(Fragment $fragment): string
@@ -57,8 +91,9 @@ class GenerateAutoTitle
         $keywords = [];
 
         // Start with fragment type
-        if ($fragment->type && $fragment->type !== 'note') {
-            $keywords[] = ucfirst($fragment->type);
+        $type = $this->resolveTypeValue($fragment);
+        if ($type) {
+            $keywords[] = Str::title($type);
         }
 
         // Add tags
@@ -71,8 +106,9 @@ class GenerateAutoTitle
 
         // Add people mentions if available
         $metadata = $fragment->metadata ?? [];
-        if (! empty($metadata['people'])) {
-            $topPeople = array_slice($metadata['people'], 0, 2);
+        $people = $metadata['people'] ?? ($metadata['entities']['people'] ?? []);
+        if (! empty($people)) {
+            $topPeople = array_slice($people, 0, 2);
             foreach ($topPeople as $person) {
                 $keywords[] = '@'.$person;
             }
@@ -102,5 +138,44 @@ class GenerateAutoTitle
 
         // Trim and return
         return trim($title);
+    }
+
+    private function resolveTypeValue(Fragment $fragment): ?string
+    {
+        $rawAttributes = $fragment->getAttributes();
+        $storedType = $rawAttributes['type'] ?? null;
+        if (is_string($storedType) && $storedType !== '') {
+            return $storedType;
+        }
+
+        $attributeType = $fragment->getAttributeValue('type');
+        if (is_string($attributeType) && $attributeType !== '') {
+            return $attributeType;
+        }
+
+        $rawType = $fragment->getRawOriginal('type');
+        if (is_string($rawType) && $rawType !== '') {
+            return $rawType;
+        }
+
+        $relation = $fragment->getRelationValue('type');
+        if ($relation instanceof Type) {
+            return $relation->value ?? $relation->name ?? null;
+        }
+
+        $typeProperty = $fragment->type;
+        if ($typeProperty instanceof Type) {
+            return $typeProperty->value ?? $typeProperty->name ?? null;
+        }
+
+        if (is_object($typeProperty) && isset($typeProperty->value)) {
+            return $typeProperty->value;
+        }
+
+        if (is_string($typeProperty) && $typeProperty !== '') {
+            return $typeProperty;
+        }
+
+        return null;
     }
 }

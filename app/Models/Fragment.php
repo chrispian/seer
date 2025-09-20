@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Database\JsonCastingBuilder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Str;
 
 class Fragment extends Model
 {
@@ -32,6 +35,18 @@ class Fragment extends Model
         'model_provider' => 'string',
         'model_name' => 'string',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $fragment) {
+            if (empty($fragment->type)) {
+                $fragment->type = 'log';
+            }
+
+            $fragment->tags = self::ensureArray($fragment->tags);
+            $fragment->relationships = self::ensureArray($fragment->relationships);
+        });
+    }
 
     // Relationships
     public function type(): BelongsTo
@@ -290,27 +305,93 @@ class Fragment extends Model
             : $query->openTodos();
     }
 
-    public function getTitleAttribute(): string
+    public function newEloquentBuilder($query): JsonCastingBuilder
     {
+        /** @var QueryBuilder $query */
+        return new JsonCastingBuilder($query);
+    }
+
+    private static function ensureArray(mixed $value): array
+    {
+        if ($value === null) {
+            return [];
+        }
+
+        if (is_array($value)) {
+            return $value;
+        }
+
+        return (array) $value;
+    }
+
+    private function formatTitleWithTypePrefix(string $title, bool $hasExplicitHeading = false): string
+    {
+        if (array_key_exists('title', $this->attributes) && $this->attributes['title'] === $title) {
+            return $title;
+        }
+
+        $rawType = strtolower((string) ($this->attributes['type'] ?? ''));
+
+        if ($rawType === '') {
+            $typeValue = $this->getAttributeValue('type');
+            if (is_string($typeValue) && $typeValue !== '') {
+                $rawType = strtolower($typeValue);
+            }
+        }
+
+        if ($rawType === '') {
+            $message = strtolower((string) $this->message);
+            $tagSet = array_map('strtolower', $this->tags ?? []);
+
+            if (str_contains($message, 'reminder') || str_contains($message, 'task') || in_array('urgent', $tagSet, true)) {
+                $rawType = 'task';
+            } else {
+                return $title;
+            }
+        }
+
+        if ($rawType === 'note' && $hasExplicitHeading) {
+            return $title;
+        }
+
+        $normalized = Str::title($rawType);
+
+        if (Str::startsWith(Str::lower($title), Str::lower($normalized))) {
+            return $title;
+        }
+
+        return $normalized.': '.$title;
+    }
+
+    public function getTitleAttribute($value): string
+    {
+        $hasExplicitHeading = str_contains((string) $this->message, "\n");
+
+        if (is_string($value) && $value !== '') {
+            return $this->formatTitleWithTypePrefix($value, $hasExplicitHeading);
+        }
+
         // Try to extract a title from the message
-        $lines = explode("\n", $this->message);
-        $firstLine = trim($lines[0]);
+        $lines = explode("\n", (string) $this->message);
+        $firstLine = trim($lines[0] ?? '');
 
         // If first line looks like a title (short, no periods at end)
-        if (strlen($firstLine) <= 50 && ! str_ends_with($firstLine, '.')) {
-            return $firstLine;
+        if ($firstLine !== '' && strlen($firstLine) <= 50 && ! str_ends_with($firstLine, '.')) {
+            return $this->formatTitleWithTypePrefix($firstLine, $hasExplicitHeading);
         }
 
         // Otherwise extract first sentence
-        $sentences = explode('.', $this->message);
-        $firstSentence = trim($sentences[0]);
+        $sentences = explode('.', (string) $this->message);
+        $firstSentence = trim($sentences[0] ?? '');
 
-        if (strlen($firstSentence) <= 60) {
-            return $firstSentence;
+        if ($firstSentence !== '' && strlen($firstSentence) <= 60) {
+            return $this->formatTitleWithTypePrefix($firstSentence, $hasExplicitHeading);
         }
 
         // Fallback to truncated message
-        return substr($this->message, 0, 50).(strlen($this->message) > 50 ? '...' : '');
+        $message = (string) $this->message;
+
+        return $this->formatTitleWithTypePrefix(substr($message, 0, 50).(strlen($message) > 50 ? '...' : ''), $hasExplicitHeading);
     }
 
     public function getPreviewAttribute(): string

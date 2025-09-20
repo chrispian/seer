@@ -174,6 +174,10 @@ class ModelSelectionService
             'source' => 'fallback',
         ];
 
+        if (($context['command'] ?? null) === 'type_inference') {
+            $selections['fallback']['priority'] = max($selections['fallback']['priority'], 110);
+        }
+
         return $selections;
     }
 

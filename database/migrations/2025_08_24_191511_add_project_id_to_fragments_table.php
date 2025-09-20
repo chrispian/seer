@@ -11,8 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('fragments', function (Blueprint $table) {
-            $table->foreignId('project_id')->nullable()->after('vault')->constrained()->nullOnDelete();
+        $usingSqlite = Schema::getConnection()->getDriverName() === 'sqlite';
+
+        Schema::table('fragments', function (Blueprint $table) use ($usingSqlite) {
+            if ($usingSqlite) {
+                $table->unsignedBigInteger('project_id')->nullable()->after('vault');
+            } else {
+                $table->foreignId('project_id')->nullable()->after('vault')->constrained()->nullOnDelete();
+            }
 
             $table->index(['vault', 'project_id']);
             $table->index(['project_id', 'created_at']);
@@ -24,8 +30,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('fragments', function (Blueprint $table) {
-            $table->dropForeign(['project_id']);
+        $usingSqlite = Schema::getConnection()->getDriverName() === 'sqlite';
+
+        Schema::table('fragments', function (Blueprint $table) use ($usingSqlite) {
+            if (! $usingSqlite) {
+                $table->dropForeign(['project_id']);
+            }
+
+            $table->dropIndex(['vault', 'project_id']);
+            $table->dropIndex(['project_id', 'created_at']);
             $table->dropColumn('project_id');
         });
     }

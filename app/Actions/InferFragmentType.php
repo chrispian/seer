@@ -16,6 +16,13 @@ class InferFragmentType
         $this->typeInference = $typeInference;
     }
 
+    public function handle(Fragment $fragment, $next)
+    {
+        $fragment = $this->__invoke($fragment);
+
+        return $next($fragment);
+    }
+
     public function __invoke(Fragment $fragment): Fragment
     {
         Log::debug('InferFragmentType: Starting type inference', [

@@ -53,14 +53,14 @@ Create or refresh these packets before handing work to another agent.
 - [ ] Consume routing services from `hollis-labs/fragments-engine` package; ensure demo shell + Project Mentat share the same engine facade.
 
 ### ENG-03 Model Selection Step
-- [ ] Delegation packet: `delegation/ENG-03-model-selection/` (provider inventory, weighting heuristics, UI expectations).
-- [ ] Catalog available AI models/providers and required configuration keys.
-- [ ] Add model selection metadata to fragments and session context.
-- [ ] Implement selection strategy service (weighted rules, per-command overrides).
-- [ ] Surface model choice in UI/toasts for transparency.
+- [x] Delegation packet: `delegation/ENG-03-model-selection/` (provider inventory, weighting heuristics, UI expectations).
+- [x] Catalog available AI models/providers and required configuration keys.
+- [x] Add model selection metadata to fragments and session context.
+- [x] Implement selection strategy service (weighted rules, per-command overrides).
+- [x] Surface model choice in UI/toasts for transparency.
 
 ### ENG-04 Embeddings Toggle
-- [ ] Delegation packet: `delegation/ENG-04-embeddings-toggle/` (config matrix, fallback behaviour, CLI outline).
+- [x] Delegation packet: `delegation/ENG-04-embeddings-toggle/` (config matrix, fallback behaviour, CLI outline).
 - [ ] Add config flag/env guard to disable embeddings gracefully.
 - [ ] Implement conditional logic in ingestion/search so pipeline degrades without embeddings.
 - [ ] Provide admin command to backfill embeddings when re-enabled.
@@ -90,7 +90,7 @@ Create or refresh these packets before handing work to another agent.
 ## Command System (CMD)
 
 ### CMD-01 Slash Command Expansion
-- [ ] Delegation packet: `delegation/CMD-01-command-expansion/` (command matrix, UX copy, validation rules).
+- [x] Delegation packet: `delegation/CMD-01-command-expansion/` (command matrix, UX copy, validation rules).
 - [ ] Capture requirements/UX for `/vault`, `/project`, `/session`, `/context`, `/inbox`, `/compose`.
 - [ ] Add command definitions to `app/Services/CommandRegistry.php` with validation + help text.
 - [ ] Implement handlers and associated UI panels/toasts.
@@ -152,10 +152,10 @@ Create or refresh these packets before handing work to another agent.
 ## Developer Experience (DEV)
 
 ### DEV-01 Testing Infrastructure
-- [ ] Delegation packet: `delegation/DEV-01-testing-infra/` (target suites, tooling decisions, runbooks).
-- [ ] Introduce Pest or improve PHPUnit config for speed and clarity.
-- [ ] Add factories/seeders covering pipeline scenarios.
-- [ ] Set up CI to run targeted test suites (unit, feature, integration).
+- [x] Delegation packet: `delegation/DEV-01-testing-infra/` (target suites, tooling decisions, runbooks).
+- [x] Introduce Pest or improve PHPUnit config for speed and clarity.
+- [x] Add factories/seeders covering pipeline scenarios.
+- [x] Set up CI to run targeted test suites (unit, feature, integration).
 
 ### DEV-02 Seed Data
 - [ ] Delegation packet: `delegation/DEV-02-seed-data/` (domain fixtures, seeder scripts, onboarding notes).
@@ -188,8 +188,8 @@ Create or refresh these packets before handing work to another agent.
 - [ ] Document restore procedure and test it.
 
 ## Global Next Steps
-- [ ] Sequence upcoming work inside this repo: complete ENG-02 routing integration/tests, then ENG-03 model selection groundwork, followed by ENG-04 embeddings toggle.
-- [ ] Spin up delegation packets for the next three workstreams queued for hand-off (ENG-02, ENG-03, UX-01) and file them under `delegation/`.
+- [ ] Sequence upcoming work inside this repo: run ENG-04 embeddings toggle alongside CMD-01 slash command expansion, then queue AI-01 provider abstraction.
+- [ ] Spin up delegation packets for ENG-04 and CMD-01 and brief agents before kickoff.
 - [ ] Draft/refresh ADRs for mode strategy, AI fallback, UI stack to reflect the paused split/UI projects.
 - [ ] Create GitHub issues or project board cards referencing active todos; assign owners and target milestones.
 - [ ] Revisit plan monthly; log decisions in ADRs/CHANGELOG.

@@ -11,6 +11,13 @@ class RouteToVault
 {
     public function __construct(protected VaultRoutingRuleService $routingService) {}
 
+    public function handle(Fragment $fragment, $next)
+    {
+        $fragment = $this->__invoke($fragment);
+
+        return $next($fragment);
+    }
+
     public function __invoke(Fragment $fragment): Fragment
     {
         Log::debug('RouteFragment::invoke()');

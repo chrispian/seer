@@ -4,8 +4,10 @@ namespace App\Services\AI;
 
 use App\Models\Fragment;
 use App\Models\Type;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Prism\Prism\Prism;
+use RuntimeException;
 
 class TypeInferenceService
 {
@@ -39,12 +41,9 @@ class TypeInferenceService
             // Select appropriate model
             $selectedModel = $this->modelSelection->selectTextModel($context);
 
-            $response = Prism::text()
-                ->using($selectedModel['provider'], $selectedModel['model'])
-                ->withPrompt($this->buildPrompt($fragment))
-                ->generate();
+            $modelResponse = $this->dispatchModelRequest($selectedModel['provider'], $selectedModel['model'], $fragment);
 
-            $result = $this->parseResponse($response->text);
+            $result = $this->parseResponse($modelResponse['text']);
 
             // Add model metadata to result
             $result['model_provider'] = $selectedModel['provider'];
@@ -55,7 +54,7 @@ class TypeInferenceService
                 'result' => $result,
                 'model_provider' => $selectedModel['provider'],
                 'model_name' => $selectedModel['model'],
-                'usage' => $response->usage ? (array) $response->usage : null,
+                'usage' => $modelResponse['usage'] ?? null,
             ]);
 
             return $result;
@@ -75,6 +74,39 @@ class TypeInferenceService
                 'model_name' => null,
             ];
         }
+    }
+
+    protected function dispatchModelRequest(string $provider, string $model, Fragment $fragment): array
+    {
+        if ($provider === 'ollama') {
+            $baseUrl = config('services.ollama.base', config('prism.providers.ollama.url', 'http://localhost:11434'));
+            $endpoint = rtrim($baseUrl, '/').'/api/generate';
+
+            $response = Http::timeout(20)->post($endpoint, [
+                'model' => $model,
+                'prompt' => $this->buildPrompt($fragment),
+                'stream' => false,
+            ]);
+
+            if ($response->failed()) {
+                throw new RuntimeException('Failed to generate type inference via Ollama');
+            }
+
+            return [
+                'text' => (string) ($response->json('response') ?? ''),
+                'usage' => $response->json('usage'),
+            ];
+        }
+
+        $response = Prism::text()
+            ->using($provider, $model)
+            ->withPrompt($this->buildPrompt($fragment))
+            ->generate();
+
+        return [
+            'text' => (string) $response->text,
+            'usage' => $response->usage ? (array) $response->usage : null,
+        ];
     }
 
     /**
