@@ -31,7 +31,7 @@
 
 ### 💬 **Chat-Based Interface**
 - **Natural Interaction**: Chat with your knowledge base
-- **Slash Commands**: Quick actions via `/recall`, `/frag add`, `/search`
+- **Slash Commands**: Quick actions for managing vaults, projects, sessions, and more
 - **Context Integration**: Seamlessly pull fragments into conversations
 - **Session Management**: Organized chat history with smart titles
 
@@ -62,11 +62,20 @@ The heart of Fragments Engine - instant access to your entire knowledge base:
 ### Slash Commands
 Quick actions within the chat interface:
 
+**Fragment Management:**
 - `/frag add [content]` - Create a new fragment
-- `/recall [query]` - Search and recall fragments  
+- `/recall [query]` - Search and recall fragments
 - `/search [terms]` - Advanced search with grammar
-- `/vault [name]` - Switch workspace context
-- `/project [name]` - Set project scope
+
+**Context & Organization:**
+- `/vault [list|create|name]` - Manage vaults (switch, list, create)
+- `/project [list|create|name]` - Manage projects (switch, list, create)
+- `/context [show|update]` - View or update current context
+- `/session [list|start|end]` - Manage chat sessions
+
+**Productivity:**
+- `/inbox [pending|bookmarked|todos]` - View actionable items
+- `/compose [type]` - Open rich composer with templates
 
 ### Search Grammar
 Powerful query language for precise fragment discovery:

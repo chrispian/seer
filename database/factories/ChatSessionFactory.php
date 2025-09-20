@@ -26,7 +26,7 @@ class ChatSessionFactory extends Factory
             'last_activity_at' => now(),
             'is_active' => true,
             'is_pinned' => false,
-            'sort_order' => null,
+            'sort_order' => 0,
             'model_provider' => $this->faker->randomElement(['openai', 'ollama']),
             'model_name' => $this->faker->randomElement(['gpt-4o-mini', 'llama3:latest']),
         ];

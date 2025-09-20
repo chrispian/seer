@@ -6,19 +6,25 @@ use App\Actions\Commands\BookmarkCommand;
 use App\Actions\Commands\ChannelsCommand;
 use App\Actions\Commands\ChaosCommand;
 use App\Actions\Commands\ClearCommand;
+use App\Actions\Commands\ComposeCommand;
+use App\Actions\Commands\ContextCommand;
 use App\Actions\Commands\FragCommand;
 use App\Actions\Commands\HelpCommand;
+use App\Actions\Commands\InboxCommand;
 use App\Actions\Commands\JoinCommand;
 use App\Actions\Commands\NameCommand;
+use App\Actions\Commands\ProjectCommand;
 use App\Actions\Commands\RecallCommand;
 use App\Actions\Commands\RoutingCommand;
 use App\Actions\Commands\SearchCommand;
 use App\Actions\Commands\SessionCommand;
 use App\Actions\Commands\TodoCommand;
+use App\Actions\Commands\VaultCommand;
 
 class CommandRegistry
 {
     protected static array $commands = [
+        // Core commands
         'session' => SessionCommand::class,
         'recall' => RecallCommand::class,
         'bookmark' => BookmarkCommand::class,
@@ -35,6 +41,19 @@ class CommandRegistry
         'channels' => ChannelsCommand::class,
         'name' => NameCommand::class,
         'routing' => RoutingCommand::class,
+
+        // New CMD-01 commands
+        'vault' => VaultCommand::class,
+        'v' => VaultCommand::class, // alias for vault
+        'project' => ProjectCommand::class,
+        'p' => ProjectCommand::class, // alias for project
+        'context' => ContextCommand::class,
+        'ctx' => ContextCommand::class, // alias for context
+        'inbox' => InboxCommand::class,
+        'in' => InboxCommand::class, // alias for inbox
+        'compose' => ComposeCommand::class,
+        'c' => ComposeCommand::class, // alias for compose
+
         // 'export' => ExportCommand::class (future)
     ];
 
