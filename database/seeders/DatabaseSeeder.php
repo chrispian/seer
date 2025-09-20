@@ -12,9 +12,10 @@ class DatabaseSeeder extends Seeder
     {
         // SeerLog::factory(10)->create();
 
-        // Optionally seed demo routing data in development
+        // Setup defaults
         $this->call([
             DemoRoutingDataSeeder::class,
+            TypeSeeder::class,
         ]);
     }
 }

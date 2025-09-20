@@ -14,6 +14,7 @@ use App\Models\Project;
 use App\Models\Type;
 use App\Models\Vault;
 use App\Services\CommandRegistry;
+use App\Services\ToastService;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -90,11 +91,15 @@ class ChatInterface extends Page
 
     public string $newProjectDescription = '';
 
+    public bool $showToastSettings = false;
+
     protected $listeners = [
         'echo:lens.chat,fragment.processed' => 'onFragmentProcessed',
         'undo-fragment' => 'handleUndoDeleteObject',
         'join-channel' => 'handleJoinChannel',
     ];
+
+    protected ToastService $toastService;
 
     public static function shouldRegisterNavigation(array $parameters = []): bool
     {
@@ -124,6 +129,9 @@ class ChatInterface extends Page
 
     public function mount()
     {
+        // Initialize services
+        $this->toastService = app(ToastService::class);
+
         // Initialize vault/project context
         $this->initializeVaultProjectContext();
 
@@ -224,9 +232,9 @@ class ChatInterface extends Page
                 // Refresh the sidebar to show the new channel name
                 $this->loadRecentChatSessions();
                 $this->loadPinnedChatSessions();
-                
+
                 // Show success toast
-                if ($response->shouldShowSuccessToast && !empty($response->toastData)) {
+                if ($response->shouldShowSuccessToast && ! empty($response->toastData)) {
                     $this->showSuccessToast(
                         $response->toastData['title'] ?? 'Success',
                         $response->toastData['message'] ?? '',
@@ -234,22 +242,23 @@ class ChatInterface extends Page
                         $response->toastData['fragmentId'] ?? null
                     );
                 }
+
                 return;
             }
 
             // Handle join command response
             if ($response->type === 'join-success' && isset($response->data['action']) && $response->data['action'] === 'switch_chat') {
                 $chatSessionId = $response->data['chat_session_id'];
-                
+
                 // Exit command mode if we're in it (e.g., after /help join)
                 if ($this->inCommandMode) {
                     $this->exitCommandMode();
                 }
-                
+
                 $this->switchToChat($chatSessionId);
-                
+
                 // Show success toast
-                if ($response->shouldShowSuccessToast && !empty($response->toastData)) {
+                if ($response->shouldShowSuccessToast && ! empty($response->toastData)) {
                     $this->showSuccessToast(
                         $response->toastData['title'] ?? 'Success',
                         $response->toastData['message'] ?? '',
@@ -257,11 +266,12 @@ class ChatInterface extends Page
                         $response->toastData['fragmentId'] ?? null
                     );
                 }
+
                 return;
             }
 
             // Handle success toast notifications (for /frag and /chaos)
-            if ($response->shouldShowSuccessToast && !empty($response->toastData)) {
+            if ($response->shouldShowSuccessToast && ! empty($response->toastData)) {
                 $this->showSuccessToast(
                     $response->toastData['title'] ?? 'Success',
                     $response->toastData['message'] ?? '',
@@ -365,7 +375,24 @@ class ChatInterface extends Page
 
     protected function getSystemTypeId(): int
     {
-        return Type::where('value', 'system')->first()?->id ?? Type::where('value', 'log')->first()->id;
+        $systemType = Type::where('value', 'system')->first();
+        if ($systemType) {
+            return $systemType->id;
+        }
+
+        $logType = Type::where('value', 'log')->first();
+        if ($logType) {
+            return $logType->id;
+        }
+
+        // Fallback: return the first available type or create a default one
+        $firstType = Type::first();
+        if ($firstType) {
+            return $firstType->id;
+        }
+
+        // Last resort: create a system type
+        return Type::create(['value' => 'system', 'name' => 'System'])->id;
     }
 
     protected function removeSpinner(string $spinnerKey): void
@@ -1472,6 +1499,24 @@ class ChatInterface extends Page
 
     private function showSuccessToast(string $title, string $message, string $fragmentType = 'fragment', ?int $fragmentId = null): void
     {
+        $user = auth()->user();
+        $severity = ToastService::SEVERITY_SUCCESS;
+
+        // Ensure we have a valid user instance
+        if ($user && ! ($user instanceof \App\Models\User)) {
+            $user = null;
+        }
+
+        // Check if this toast should be shown based on user verbosity preference
+        if (! $this->toastService->shouldShowToast($severity, $user)) {
+            return;
+        }
+
+        // Check for duplicates (only for success toasts to reduce noise)
+        if ($this->toastService->isDuplicate($severity, $message, $user)) {
+            return;
+        }
+
         // Dispatch browser event to show success toast
         $this->dispatch('show-success-toast', [
             'title' => $title,
@@ -1483,17 +1528,71 @@ class ChatInterface extends Page
 
     private function showErrorToast(string $message): void
     {
+        $user = auth()->user();
+        $severity = ToastService::SEVERITY_ERROR;
+
+        // Ensure we have a valid user instance
+        if ($user && ! ($user instanceof \App\Models\User)) {
+            $user = null;
+        }
+
+        // Check if this toast should be shown based on user verbosity preference
+        if (! $this->toastService->shouldShowToast($severity, $user)) {
+            return;
+        }
+
+        // Error toasts are not subject to duplicate suppression (important to show all errors)
+
         // Dispatch browser event to show error toast
         $this->dispatch('show-error-toast', [
             'message' => $message,
         ]);
     }
 
+    public function updateToastVerbosity(string $verbosity): void
+    {
+        if (! in_array($verbosity, [ToastService::VERBOSITY_MINIMAL, ToastService::VERBOSITY_NORMAL, ToastService::VERBOSITY_VERBOSE])) {
+            return;
+        }
+
+        $user = auth()->user();
+        if ($user && ($user instanceof \App\Models\User)) {
+            $user->update(['toast_verbosity' => $verbosity]);
+
+            // Show confirmation (but respect the new setting)
+            if ($verbosity !== ToastService::VERBOSITY_MINIMAL) {
+                $this->showSuccessToast(
+                    'Settings Updated',
+                    'Toast notification preference has been saved.',
+                    'setting',
+                    null
+                );
+            }
+        }
+
+        $this->showToastSettings = false;
+    }
+
+    public function toggleToastSettings(): void
+    {
+        $this->showToastSettings = ! $this->showToastSettings;
+    }
+
+    public function getCurrentToastVerbosity(): string
+    {
+        return auth()->user()?->toast_verbosity ?? ToastService::VERBOSITY_NORMAL;
+    }
+
+    public function getToastVerbosityOptions(): array
+    {
+        return ToastService::getVerbosityOptions();
+    }
+
     public function handleJoinChannel(int $chatId): void
     {
         $this->switchToChat($chatId);
         $this->exitCommandMode(); // Close the command panel
-        
+
         // Show success toast
         $chatSession = ChatSession::find($chatId);
         if ($chatSession) {

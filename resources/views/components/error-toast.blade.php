@@ -1,0 +1,1 @@
+<x-toast variant="error" toastId="error-toast" />

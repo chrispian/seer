@@ -68,6 +68,20 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </button>
+
+            <!-- Toast Settings Button -->
+            <div x-data="{ open: false }" class="relative">
+                <button
+                    @click="open = !open"
+                    wire:click="toggleToastSettings"
+                    class="w-8 h-8 bg-surface-card rounded-pixel pixel-card border-thin border-amber-500/30 flex items-center justify-center hover:bg-amber-500/10 transition-colors"
+                    title="Toast notification settings"
+                >
+                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM9 12h6m-6-4h6m2 5l-8-5-8 5"/>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1256,6 +1270,72 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Toast Settings Modal -->
+    <div
+        x-show="$wire.showToastSettings"
+        x-transition
+        style="display: none;"
+        class="fixed inset-0 z-50 overflow-y-auto"
+        @keydown.escape="$wire.showToastSettings = false"
+    >
+        <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" @click="$wire.showToastSettings = false"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-surface-2 p-6 rounded-pixel border border-thin border-amber-500/30 max-w-lg w-full mx-auto">
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-amber-400 mb-2 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM9 12h6m-6-4h6m2 5l-8-5-8 5"/>
+                        </svg>
+                        Toast Notifications
+                    </h3>
+                    <p class="text-sm text-gray-400">Choose how many notifications you want to see</p>
+                </div>
+
+                <div class="space-y-3 mb-6">
+                    @foreach ($this->getToastVerbosityOptions() as $value => $label)
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input
+                                type="radio"
+                                name="toast_verbosity"
+                                value="{{ $value }}"
+                                wire:click="updateToastVerbosity('{{ $value }}')"
+                                {{ $this->getCurrentToastVerbosity() === $value ? 'checked' : '' }}
+                                class="sr-only"
+                            >
+                            <div class="relative flex items-center justify-center w-4 h-4 border-2 border-amber-500/50 rounded-full group-hover:border-amber-400 transition-colors">
+                                <div
+                                    class="w-2 h-2 bg-amber-400 rounded-full transition-opacity {{ $this->getCurrentToastVerbosity() === $value ? 'opacity-100' : 'opacity-0' }}"
+                                ></div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-200 group-hover:text-amber-100 transition-colors">
+                                    {{ $label }}
+                                </div>
+                                @if ($value === 'minimal')
+                                    <div class="text-xs text-gray-500">Only errors and warnings</div>
+                                @elseif ($value === 'normal')
+                                    <div class="text-xs text-gray-500">All notifications (recommended)</div>
+                                @elseif ($value === 'verbose')
+                                    <div class="text-xs text-gray-500">All notifications with extra details</div>
+                                @endif
+                            </div>
+                        </label>
+                    @endforeach
+                </div>
+
+                <div class="flex justify-end">
+                    <button
+                        type="button"
+                        wire:click="toggleToastSettings"
+                        class="bg-gray-800 text-gray-400 py-2 px-4 rounded-pixel hover:bg-gray-700 transition-colors text-sm font-medium border border-gray-600"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
