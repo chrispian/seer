@@ -30,13 +30,14 @@ class InferFragmentType
                 'fragment_id' => $fragment->id,
                 'type' => $fragment->type,
             ]);
+
             return $fragment;
         }
 
         try {
             // Use AI-powered type inference
             $updatedFragment = $this->typeInference->applyTypeToFragment($fragment);
-            
+
             Log::info('InferFragmentType: Type inference completed', [
                 'fragment_id' => $updatedFragment->id,
                 'assigned_type' => $updatedFragment->type,
@@ -66,7 +67,7 @@ class InferFragmentType
         // Simple rules for common patterns
         if (str_starts_with(strtolower($fragment->message), 'http')) {
             $typeValue = 'bookmark';
-        } elseif (str_contains(strtolower($fragment->message), 'todo') || 
+        } elseif (str_contains(strtolower($fragment->message), 'todo') ||
                   str_contains(strtolower($fragment->message), 'task')) {
             $typeValue = 'todo';
         } elseif (str_contains(strtolower($fragment->message), 'meeting')) {
@@ -77,7 +78,7 @@ class InferFragmentType
 
         // Find or create the type
         $type = Type::where('value', $typeValue)->first();
-        if (!$type) {
+        if (! $type) {
             // Fallback to log if type doesn't exist
             $type = Type::where('value', 'log')->first();
             $typeValue = 'log';

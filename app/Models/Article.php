@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Article extends Model
 {
-
     protected $casts = [
         'status' => ArticleStatus::class,
         'meta' => 'array',

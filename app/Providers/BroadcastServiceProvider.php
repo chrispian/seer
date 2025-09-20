@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Broadcasting\BroadcastManager;
+use Illuminate\Support\ServiceProvider;
 use Pusher\Pusher;
 
 class BroadcastServiceProvider extends ServiceProvider

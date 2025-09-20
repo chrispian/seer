@@ -14,7 +14,7 @@ class ParseSlashCommand
         Log::debug("Parsing Slash command input: {$input}");
 
         // Expect input to start with '/'
-        if (!str_starts_with($input, '/')) {
+        if (! str_starts_with($input, '/')) {
             throw new \InvalidArgumentException('Invalid slash command syntax.');
         }
 
@@ -43,20 +43,20 @@ class ParseSlashCommand
             // Match #tags (but not channel identifiers for join commands)
             if (preg_match_all('/#(\w+)/', $argumentsString, $tagMatches)) {
                 // For join commands, don't treat # patterns as tags
-                if (!in_array($command, ['join', 'j'])) {
+                if (! in_array($command, ['join', 'j'])) {
                     $arguments['tags'] = $tagMatches[1];
                 }
             }
 
             // Remaining text could be identifier or message (after removing structured args and tags)
             $remaining = trim(preg_replace('/(\w+):([^\s]+)/', '', $argumentsString));
-            
+
             // For non-join commands, also remove hashtag patterns from remaining text
-            if (!in_array($command, ['join', 'j'])) {
+            if (! in_array($command, ['join', 'j'])) {
                 $remaining = trim(preg_replace('/#\w+/', '', $remaining));
             }
 
-            if (!empty($remaining)) {
+            if (! empty($remaining)) {
                 $arguments['identifier'] = $remaining;
             }
         }

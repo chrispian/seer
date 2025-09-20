@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::table('fragments', function (Blueprint $table) {
             $table->char('input_hash', 64)->nullable()->after('message');
             $table->integer('hash_bucket')->nullable()->after('input_hash');
-            
+
             // Add index for fast lookups on hash + bucket combination
             $table->index(['input_hash', 'hash_bucket'], 'idx_fragments_hash_bucket');
         });

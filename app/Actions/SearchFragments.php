@@ -207,7 +207,7 @@ class SearchFragments
 
         // Include relationships
         $query->with(['category', 'project']);
-        
+
         // Add default ordering for non-FULLTEXT queries
         if (empty($parsedQuery['search_terms'])) {
             $query->orderBy('created_at', 'desc');

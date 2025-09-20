@@ -20,7 +20,7 @@ class ParseAtomicFragment
             // Explicit type specified (e.g., "todo: pick up laundry")
             $type = strtolower(trim($matches[1]));
             $body = trim($matches[2]);
-            
+
             Log::debug('ParseAtomicFragment - Explicit type found', [
                 'type' => $type,
                 'body' => $body,
@@ -29,7 +29,7 @@ class ParseAtomicFragment
             // No explicit type, use full message and let AI infer the type later
             $type = 'note'; // Default, will be overridden by AI inference
             $body = trim($fragment->message);
-            
+
             Log::debug('ParseAtomicFragment - No explicit type, using full message', [
                 'body' => $body,
             ]);

@@ -77,6 +77,30 @@
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite"
+        ],
+        "test": [
+            "vendor/bin/pest"
+        ],
+        "test:unit": [
+            "vendor/bin/pest tests/Unit"
+        ],
+        "test:feature": [
+            "vendor/bin/pest tests/Feature"
+        ],
+        "test:integration": [
+            "vendor/bin/pest tests/Integration"
+        ],
+        "test:parallel": [
+            "php artisan test --parallel"
+        ],
+        "test:coverage": [
+            "vendor/bin/pest --coverage"
+        ],
+        "test:fast": [
+            "vendor/bin/pest --exclude-group=slow"
+        ],
+        "test:ci": [
+            "vendor/bin/pest --ci"
         ]
     },
     "extra": {

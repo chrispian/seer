@@ -21,7 +21,7 @@ class CommandResponse
     public ?array $toastData = []; // 👈 NEW! Data for toast display
 
     public bool $shouldShowErrorToast = false; // 👈 NEW! For error toast notifications
-    
+
     public ?array $data = []; // 👈 NEW! Additional command data
 
     public function __construct(

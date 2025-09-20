@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Type;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class TypeSeeder extends Seeder
@@ -17,7 +16,7 @@ class TypeSeeder extends Seeder
         $types = [
             // Essential system type
             ['value' => 'system', 'label' => 'System', 'color' => 'gray'],
-            
+
             // Existing types from database query
             ['value' => 'idea', 'label' => 'Idea', 'color' => 'violet'],
             ['value' => 'log', 'label' => 'Log', 'color' => 'slate'],
@@ -26,7 +25,7 @@ class TypeSeeder extends Seeder
             ['value' => 'research', 'label' => 'Research', 'color' => 'cyan'],
             ['value' => 'this', 'label' => 'This', 'color' => 'stone'],
             ['value' => 'todo', 'label' => 'Todo', 'color' => 'green'],
-            
+
             // Common additional types
             ['value' => 'fragment', 'label' => 'Fragment', 'color' => 'gray'],
             ['value' => 'article', 'label' => 'Article', 'color' => 'blue'],
@@ -40,7 +39,7 @@ class TypeSeeder extends Seeder
             ['value' => 'question', 'label' => 'Question', 'color' => 'indigo'],
             ['value' => 'bookmark', 'label' => 'Bookmark', 'color' => 'amber'],
         ];
-        
+
         foreach ($types as $type) {
             Type::updateOrCreate(
                 ['value' => $type['value']],

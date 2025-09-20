@@ -16,7 +16,7 @@ class RecallDecisionLoggingTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $user = User::factory()->create();
         $this->actingAs($user);
     }
@@ -50,7 +50,7 @@ class RecallDecisionLoggingTest extends TestCase
         $this->assertEquals('select', $decision->action);
         $this->assertEquals(2, $decision->total_results);
         $this->assertNotNull($decision->context);
-        
+
         // Check that fragment stats were updated
         $fragment->refresh();
         $stats = $fragment->selection_stats;
@@ -85,17 +85,17 @@ class RecallDecisionLoggingTest extends TestCase
     public function test_tracks_search_patterns(): void
     {
         $fragment = Fragment::factory()->create();
-        
+
         $logDecision = app(LogRecallDecision::class);
-        
+
         // Log multiple selections for the same fragment with different search terms
         $logDecision('meeting notes', [['id' => $fragment->id]], $fragment, 0, 'select');
         $logDecision('client meeting', [['id' => $fragment->id]], $fragment, 0, 'select');
         $logDecision('meeting notes', [['id' => $fragment->id]], $fragment, 0, 'select');
-        
+
         $fragment->refresh();
         $stats = $fragment->selection_stats;
-        
+
         $this->assertEquals(3, $stats['total_selections']);
         $this->assertEquals(2, $stats['search_patterns']['meeting notes']);
         $this->assertEquals(1, $stats['search_patterns']['client meeting']);
@@ -104,7 +104,7 @@ class RecallDecisionLoggingTest extends TestCase
     public function test_tracks_position_based_selection(): void
     {
         $fragment = Fragment::factory()->create();
-        
+
         $results = [
             ['id' => 999, 'title' => 'Other'],
             ['id' => 998, 'title' => 'Another'],
@@ -113,10 +113,10 @@ class RecallDecisionLoggingTest extends TestCase
 
         $logDecision = app(LogRecallDecision::class);
         $logDecision('test', $results, $fragment, 2, 'select'); // Position 3 (index 2)
-        
+
         $fragment->refresh();
         $stats = $fragment->selection_stats;
-        
+
         $this->assertEquals(1, $stats['position_stats']['total_clicks']);
         $this->assertEquals(3, $stats['position_stats']['average_position']); // Position is 1-indexed
     }
@@ -124,7 +124,7 @@ class RecallDecisionLoggingTest extends TestCase
     public function test_parses_query_grammar_for_context(): void
     {
         $fragment = Fragment::factory()->create();
-        
+
         $logDecision = app(LogRecallDecision::class);
         $decision = $logDecision(
             query: 'type:meeting #urgent client notes',
@@ -136,7 +136,7 @@ class RecallDecisionLoggingTest extends TestCase
 
         $context = $decision->context;
         $parsed = $context['parsed_query'];
-        
+
         $this->assertEquals('client notes', trim($parsed['search_terms']));
         $this->assertCount(2, $parsed['filters']); // type and tag filters
         $this->assertContains('type', array_column($parsed['filters'], 'type'));

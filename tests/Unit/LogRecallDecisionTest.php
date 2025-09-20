@@ -17,7 +17,7 @@ class LogRecallDecisionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Manually create the minimal tables needed for this test
         Schema::create('test_recall_decisions', function ($table) {
             $table->id();
@@ -35,9 +35,11 @@ class LogRecallDecisionTest extends TestCase
 
         // Mock the RecallDecision model to use the test table
         $this->app->bind(RecallDecision::class, function () {
-            $model = new class extends RecallDecision {
+            $model = new class extends RecallDecision
+            {
                 protected $table = 'test_recall_decisions';
             };
+
             return $model;
         });
 
@@ -106,11 +108,11 @@ class LogRecallDecisionTest extends TestCase
 
         $context = $decision->context;
         $parsed = $context['parsed_query'];
-        
+
         $this->assertArrayHasKey('search_terms', $parsed);
         $this->assertArrayHasKey('filters', $parsed);
         $this->assertNotEmpty($parsed['filters']);
-        
+
         // Verify filters were parsed
         $filterTypes = array_column($parsed['filters'], 'type');
         $this->assertContains('type', $filterTypes);
@@ -135,7 +137,7 @@ class LogRecallDecisionTest extends TestCase
         );
 
         $context = $decision->context;
-        
+
         $this->assertEquals(3, $context['click_depth']); // 1-indexed position
         $this->assertEquals(3, $context['total_results']);
         $this->assertFalse($context['clicked_in_top_n']['top_1']);

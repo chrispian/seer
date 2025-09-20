@@ -10,7 +10,7 @@ enum ArticleStatus: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Draft => 'Draft',
             self::Review => 'Under Review',
             self::Published => 'Published',
@@ -19,7 +19,7 @@ enum ArticleStatus: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Draft => 'gray',
             self::Review => 'yellow',
             self::Published => 'green',

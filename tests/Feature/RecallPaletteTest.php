@@ -17,7 +17,7 @@ class RecallPaletteTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $user = User::factory()->create();
         $this->actingAs($user);
         Filament::setCurrentPanel('app');
@@ -65,7 +65,7 @@ class RecallPaletteTest extends TestCase
             ->call('performRecallSearch');
 
         $component->assertSet('recallQuery', 'meeting client');
-        
+
         // Should find the meeting fragment
         $results = $component->get('recallResults');
         $this->assertCount(1, $results);
@@ -149,7 +149,7 @@ class RecallPaletteTest extends TestCase
 
         // Should close the palette and set the selected fragment
         $component->assertSet('showRecallPalette', false);
-        
+
         // Should trigger fragment selection (implementation may vary)
         $results = $component->get('recallResults');
         $this->assertCount(1, $results);
@@ -162,7 +162,7 @@ class RecallPaletteTest extends TestCase
 
         $suggestions = $component->get('recallSuggestions');
         $this->assertNotEmpty($suggestions);
-        
+
         // Should contain common filter suggestions
         $suggestionTexts = collect($suggestions)->pluck('text');
         $this->assertContains('type:todo', $suggestionTexts);
@@ -179,7 +179,7 @@ class RecallPaletteTest extends TestCase
 
         $autocomplete = $component->get('recallAutocomplete');
         $this->assertNotEmpty($autocomplete);
-        
+
         // Should contain fragment types
         $typeOptions = collect($autocomplete)->where('category', 'Types');
         $this->assertGreaterThan(0, $typeOptions->count());
@@ -210,7 +210,7 @@ class RecallPaletteTest extends TestCase
 
         $results = $component->get('recallResults');
         $this->assertCount(0, $results);
-        
+
         // Should show no results message in UI
         $component->assertSet('recallQuery', 'nonexistent query that will not match anything');
     }

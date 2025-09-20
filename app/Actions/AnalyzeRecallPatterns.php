@@ -3,8 +3,6 @@
 namespace App\Actions;
 
 use App\Models\RecallDecision;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class AnalyzeRecallPatterns
 {
@@ -15,7 +13,7 @@ class AnalyzeRecallPatterns
     {
         $baseQuery = RecallDecision::query()
             ->where('decided_at', '>=', now()->subDays($daysPast));
-            
+
         if ($userId) {
             $baseQuery->where('user_id', $userId);
         }
@@ -42,7 +40,7 @@ class AnalyzeRecallPatterns
             'successful_selections' => $selections,
             'dismissals' => $dismissals,
             'success_rate' => $totalSearches > 0 ? round(($selections / $totalSearches) * 100, 2) : 0,
-            'average_results_per_search' => $totalSearches > 0 ? 
+            'average_results_per_search' => $totalSearches > 0 ?
                 round($decisions->avg('total_results'), 1) : 0,
         ];
     }
@@ -50,22 +48,23 @@ class AnalyzeRecallPatterns
     private function analyzeQueryPatterns(mixed $baseQuery): array
     {
         $decisions = $baseQuery->get();
-        
+
         // Most common queries
         $queryFrequency = $decisions->groupBy('query')
-            ->map(fn($group) => $group->count())
+            ->map(fn ($group) => $group->count())
             ->sortDesc()
             ->take(10);
 
         // Most successful queries (highest selection rate)
         $querySuccess = $decisions->groupBy('query')
-            ->map(function($group) {
+            ->map(function ($group) {
                 $total = $group->count();
                 $selected = $group->where('action', 'select')->count();
+
                 return [
                     'total' => $total,
                     'selected' => $selected,
-                    'success_rate' => $total > 0 ? ($selected / $total) * 100 : 0
+                    'success_rate' => $total > 0 ? ($selected / $total) * 100 : 0,
                 ];
             })
             ->where('total', '>=', 3) // Only queries with 3+ uses
@@ -73,11 +72,12 @@ class AnalyzeRecallPatterns
             ->take(10);
 
         // Search term analysis
-        $allTerms = $decisions->flatMap(function($decision) {
+        $allTerms = $decisions->flatMap(function ($decision) {
             $parsed = $decision->parsed_query;
-            if (isset($parsed['search_terms']) && !empty($parsed['search_terms'])) {
+            if (isset($parsed['search_terms']) && ! empty($parsed['search_terms'])) {
                 return explode(' ', strtolower(trim($parsed['search_terms'])));
             }
+
             return [];
         })->filter();
 
@@ -95,7 +95,7 @@ class AnalyzeRecallPatterns
     private function calculateSelectionMetrics(mixed $baseQuery): array
     {
         $selections = $baseQuery->where('action', 'select')->get();
-        
+
         if ($selections->isEmpty()) {
             return [
                 'average_click_position' => 0,
@@ -105,12 +105,12 @@ class AnalyzeRecallPatterns
         }
 
         // Click position analysis
-        $positions = $selections->pluck('selected_index')->map(fn($idx) => $idx + 1);
+        $positions = $selections->pluck('selected_index')->map(fn ($idx) => $idx + 1);
         $averagePosition = $positions->avg();
-        
+
         // Click distribution by position
         $clickDistribution = $positions->countBy()->sortKeys()->toArray();
-        
+
         // Top-N performance
         $topNPerformance = [
             'top_1' => $positions->where('<=', 1)->count(),
@@ -120,9 +120,9 @@ class AnalyzeRecallPatterns
         ];
 
         $total = $selections->count();
-        $topNPerformance = array_map(fn($count) => [
+        $topNPerformance = array_map(fn ($count) => [
             'count' => $count,
-            'percentage' => $total > 0 ? round(($count / $total) * 100, 1) : 0
+            'percentage' => $total > 0 ? round(($count / $total) * 100, 1) : 0,
         ], $topNPerformance);
 
         return [
@@ -135,37 +135,37 @@ class AnalyzeRecallPatterns
     private function analyzeFilterUsage(mixed $baseQuery): array
     {
         $decisions = $baseQuery->get();
-        
+
         $filterUsage = [];
         $filterSuccessRates = [];
-        
+
         foreach ($decisions as $decision) {
             $parsed = $decision->parsed_query;
             if (isset($parsed['filters']) && is_array($parsed['filters'])) {
                 foreach ($parsed['filters'] as $filter) {
                     $filterType = $filter['type'] ?? 'unknown';
-                    
-                    if (!isset($filterUsage[$filterType])) {
+
+                    if (! isset($filterUsage[$filterType])) {
                         $filterUsage[$filterType] = 0;
                         $filterSuccessRates[$filterType] = ['total' => 0, 'selected' => 0];
                     }
-                    
+
                     $filterUsage[$filterType]++;
                     $filterSuccessRates[$filterType]['total']++;
-                    
+
                     if ($decision->action === 'select') {
                         $filterSuccessRates[$filterType]['selected']++;
                     }
                 }
             }
         }
-        
+
         // Calculate success rates
         foreach ($filterSuccessRates as $type => &$stats) {
-            $stats['success_rate'] = $stats['total'] > 0 ? 
+            $stats['success_rate'] = $stats['total'] > 0 ?
                 round(($stats['selected'] / $stats['total']) * 100, 1) : 0;
         }
-        
+
         return [
             'usage_frequency' => $filterUsage,
             'success_rates' => $filterSuccessRates,
@@ -175,27 +175,27 @@ class AnalyzeRecallPatterns
     private function generatePerformanceInsights(mixed $baseQuery): array
     {
         $decisions = $baseQuery->get();
-        
+
         // Time-based patterns
-        $hourlyPattern = $decisions->groupBy(function($decision) {
+        $hourlyPattern = $decisions->groupBy(function ($decision) {
             return $decision->decided_at->format('H');
         })->map->count()->sortKeys();
-        
-        $dailyPattern = $decisions->groupBy(function($decision) {
+
+        $dailyPattern = $decisions->groupBy(function ($decision) {
             return $decision->decided_at->format('N'); // 1=Monday, 7=Sunday
         })->map->count()->sortKeys();
-        
+
         // Query length analysis
-        $queryLengths = $decisions->map(function($decision) {
+        $queryLengths = $decisions->map(function ($decision) {
             return strlen($decision->query);
         });
-        
+
         $lengthStats = [
             'average' => round($queryLengths->avg(), 1),
             'min' => $queryLengths->min(),
             'max' => $queryLengths->max(),
         ];
-        
+
         return [
             'hourly_usage_pattern' => $hourlyPattern->toArray(),
             'daily_usage_pattern' => $dailyPattern->toArray(),
@@ -207,17 +207,17 @@ class AnalyzeRecallPatterns
     {
         $decisions = $baseQuery->get();
         $recommendations = [];
-        
+
         // Check success rate
         $successRate = $this->generateSummary($baseQuery)['success_rate'];
         if ($successRate < 60) {
             $recommendations[] = [
                 'type' => 'search_quality',
                 'message' => 'Search success rate is low. Consider improving result ranking or query parsing.',
-                'priority' => 'high'
+                'priority' => 'high',
             ];
         }
-        
+
         // Check average position
         $selections = $decisions->where('action', 'select');
         if ($selections->isNotEmpty()) {
@@ -226,25 +226,25 @@ class AnalyzeRecallPatterns
                 $recommendations[] = [
                     'type' => 'ranking',
                     'message' => 'Users typically select results beyond position 3. Consider improving ranking algorithm.',
-                    'priority' => 'medium'
+                    'priority' => 'medium',
                 ];
             }
         }
-        
+
         // Check common failed queries
         $failedQueries = $decisions->where('action', 'dismiss')
             ->groupBy('query')
-            ->filter(fn($group) => $group->count() >= 3)
+            ->filter(fn ($group) => $group->count() >= 3)
             ->keys();
-            
+
         if ($failedQueries->isNotEmpty()) {
             $recommendations[] = [
                 'type' => 'failed_queries',
-                'message' => 'Several queries consistently fail. Review: ' . $failedQueries->take(3)->implode(', '),
-                'priority' => 'medium'
+                'message' => 'Several queries consistently fail. Review: '.$failedQueries->take(3)->implode(', '),
+                'priority' => 'medium',
             ];
         }
-        
+
         return $recommendations;
     }
 }

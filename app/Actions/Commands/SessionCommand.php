@@ -11,11 +11,11 @@ class SessionCommand implements HandlesCommand
 {
     public function handle(CommandRequest $command): CommandResponse
     {
-        if (!empty($command->arguments['identifier']) && $command->arguments['identifier'] === 'show') {
+        if (! empty($command->arguments['identifier']) && $command->arguments['identifier'] === 'show') {
             return $this->renderCurrentSession($command);
         }
 
-        if (!empty($command->arguments['identifier']) && $command->arguments['identifier'] === 'end') {
+        if (! empty($command->arguments['identifier']) && $command->arguments['identifier'] === 'end') {
             return new CommandResponse(
                 type: 'session-end',
                 message: 'Session ended',
@@ -38,10 +38,10 @@ class SessionCommand implements HandlesCommand
             'context' => $context,
             'identifier' => $identifier,
             'started_at' => now()->toISOString(),
-            'session_key' => 'sess_' . Str::uuid(),
+            'session_key' => 'sess_'.Str::uuid(),
         ];
 
-        $tagsString = !empty($session['tags']) ? implode(', ', $session['tags']) : '(no tags)';
+        $tagsString = ! empty($session['tags']) ? implode(', ', $session['tags']) : '(no tags)';
 
         $message = <<<TEXT
 **✅ Session Started:**
@@ -52,7 +52,6 @@ class SessionCommand implements HandlesCommand
 - Context: `{$session['context']}`
 - Started: `{$session['started_at']}`
 TEXT;
-
 
         return new CommandResponse(
             type: 'session-start',
@@ -66,7 +65,7 @@ TEXT;
     {
         $session = $command->arguments['__currentSession'] ?? null;
 
-        if (!$session) {
+        if (! $session) {
             return new CommandResponse(
                 type: 'session',
                 message: 'No active session',
@@ -74,7 +73,7 @@ TEXT;
             );
         }
 
-        $tagsString = !empty($session['tags']) ? implode(', ', $session['tags']) : '(no tags)';
+        $tagsString = ! empty($session['tags']) ? implode(', ', $session['tags']) : '(no tags)';
 
         $message = <<<TEXT
 **Session Active:**

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Fragment;
-use Illuminate\Http\Request;
 
 class FragmentDetailController extends Controller
 {
@@ -11,19 +10,19 @@ class FragmentDetailController extends Controller
     {
         $fragment = Fragment::with(['fragmentTags', 'todo', 'contact', 'link', 'type'])
             ->find($id);
-        
-        if (!$fragment) {
+
+        if (! $fragment) {
             return response()->json(['error' => 'Fragment not found'], 404);
         }
-        
+
         // Extract tags from relationships
         $tags = $fragment->fragmentTags->pluck('tag')->toArray();
-        
+
         // Add any tags from the tags JSON field
         if (is_array($fragment->tags)) {
             $tags = array_merge($tags, $fragment->tags);
         }
-        
+
         return response()->json([
             'id' => $fragment->id,
             'message' => $fragment->message,
@@ -42,17 +41,17 @@ class FragmentDetailController extends Controller
             // Include typed object data if available
             'todo' => $fragment->todo ? [
                 'title' => $fragment->todo->title,
-                'state' => $fragment->todo->state ?: []
+                'state' => $fragment->todo->state ?: [],
             ] : null,
             'contact' => $fragment->contact ? [
                 'full_name' => $fragment->contact->full_name,
-                'organization' => $fragment->contact->organization
+                'organization' => $fragment->contact->organization,
             ] : null,
             'link' => $fragment->link ? [
                 'url' => $fragment->link->url,
                 'title' => $fragment->link->title,
-                'domain' => $fragment->link->domain
-            ] : null
+                'domain' => $fragment->link->domain,
+            ] : null,
         ]);
     }
 }

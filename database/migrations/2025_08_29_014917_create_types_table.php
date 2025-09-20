@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('types', function (Blueprint $table) {
             $table->id();
             $table->string('value')->unique(); // The enum value (e.g., 'log', 'idea')
-            $table->string('label'); // Human readable label (e.g., 'Log', 'Idea')  
+            $table->string('label'); // Human readable label (e.g., 'Log', 'Idea')
             $table->string('color')->default('gray'); // Color for UI
             $table->timestamps();
         });

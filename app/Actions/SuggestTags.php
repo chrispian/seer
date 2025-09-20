@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Short Description Goes Here
  *
  * @author Chrispian H. Burks <chrispian.burks@webvdevstudios.com>
- * @package App\Actions
+ *
  * @since 4/24/25
  */
 
@@ -14,7 +15,6 @@ use Illuminate\Support\Facades\Log;
 
 class SuggestTags
 {
-
     public function __invoke(Fragment $fragment): Fragment
     {
 
@@ -39,8 +39,4 @@ class SuggestTags
 
         return $fragment;
     }
-
-
-
-
 }

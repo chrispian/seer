@@ -23,7 +23,7 @@ class LogRecallDecision
             'results_count' => count($results),
             'selected_fragment_id' => $selectedFragment?->id,
             'selected_index' => $selectedIndex,
-            'action' => $action
+            'action' => $action,
         ]);
 
         // Parse the query to understand search patterns
@@ -34,7 +34,7 @@ class LogRecallDecision
         $totalResults = count($results);
         $clickDepth = $selectedIndex !== null ? $selectedIndex + 1 : null;
         $clickedInTopN = null;
-        
+
         if ($clickDepth !== null) {
             $clickedInTopN = [
                 'top_1' => $clickDepth <= 1,
@@ -83,32 +83,32 @@ class LogRecallDecision
     {
         // Track selection frequency and context for ranking improvements
         $currentStats = $fragment->selection_stats ?? [];
-        
+
         $currentStats['total_selections'] = ($currentStats['total_selections'] ?? 0) + 1;
         $currentStats['last_selected_at'] = now()->toISOString();
-        
+
         // Track search context patterns
-        if (!empty($context['search_terms'])) {
+        if (! empty($context['search_terms'])) {
             $searchTerms = $context['search_terms'];
-            $currentStats['search_patterns'][$searchTerms] = 
+            $currentStats['search_patterns'][$searchTerms] =
                 ($currentStats['search_patterns'][$searchTerms] ?? 0) + 1;
         }
 
         // Track filter usage patterns
-        if (!empty($context['filters_used'])) {
+        if (! empty($context['filters_used'])) {
             foreach ($context['filters_used'] as $filterType) {
-                $currentStats['filter_patterns'][$filterType] = 
+                $currentStats['filter_patterns'][$filterType] =
                     ($currentStats['filter_patterns'][$filterType] ?? 0) + 1;
             }
         }
 
         // Track position-based selection (for ranking optimization)
         if (isset($context['click_depth'])) {
-            $currentStats['position_stats']['total_clicks'] = 
+            $currentStats['position_stats']['total_clicks'] =
                 ($currentStats['position_stats']['total_clicks'] ?? 0) + 1;
-            $currentStats['position_stats']['average_position'] = 
-                (($currentStats['position_stats']['average_position'] ?? 0) * 
-                 ($currentStats['position_stats']['total_clicks'] - 1) + 
+            $currentStats['position_stats']['average_position'] =
+                (($currentStats['position_stats']['average_position'] ?? 0) *
+                 ($currentStats['position_stats']['total_clicks'] - 1) +
                  $context['click_depth']) / $currentStats['position_stats']['total_clicks'];
         }
 

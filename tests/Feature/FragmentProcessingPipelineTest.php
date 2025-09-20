@@ -3,13 +3,13 @@
 namespace Tests\Feature;
 
 use App\Actions\DriftSync;
+use App\Actions\EnrichFragmentWithLlama;
 use App\Actions\ExtractMetadataEntities;
 use App\Actions\GenerateAutoTitle;
-use App\Actions\ParseAtomicFragment;
-use App\Actions\EnrichFragmentWithLlama;
 use App\Actions\InferFragmentType;
-use App\Actions\SuggestTags;
+use App\Actions\ParseAtomicFragment;
 use App\Actions\RouteToVault;
+use App\Actions\SuggestTags;
 use App\Models\Fragment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,7 +23,7 @@ class FragmentProcessingPipelineTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $user = User::factory()->create();
         $this->actingAs($user);
     }
@@ -40,7 +40,7 @@ class FragmentProcessingPipelineTest extends TestCase
 
         // Test the pipeline actions in order
         $pipeline = app(Pipeline::class);
-        
+
         $processed = $pipeline
             ->send($fragment)
             ->through([
@@ -61,7 +61,7 @@ class FragmentProcessingPipelineTest extends TestCase
 
         // Check that each action performed its task
         $fragment->refresh();
-        
+
         // ExtractMetadataEntities should have populated parsed_entities
         $this->assertNotNull($fragment->parsed_entities);
         $this->assertArrayHasKey('people', $fragment->parsed_entities);
@@ -84,7 +84,7 @@ class FragmentProcessingPipelineTest extends TestCase
         ]);
 
         $pipeline = app(Pipeline::class);
-        
+
         // Pipeline should not throw exceptions
         $processed = $pipeline
             ->send($fragment)
@@ -95,7 +95,7 @@ class FragmentProcessingPipelineTest extends TestCase
             ->thenReturn();
 
         $this->assertInstanceOf(Fragment::class, $processed);
-        
+
         $fragment->refresh();
         // Should handle empty content gracefully
         $this->assertNotNull($fragment->parsed_entities);
@@ -112,14 +112,14 @@ class FragmentProcessingPipelineTest extends TestCase
         $processed = $extractAction($fragment);
 
         $entities = $processed->parsed_entities;
-        
+
         // Verify comprehensive entity extraction
         $this->assertArrayHasKey('people', $entities);
         $this->assertArrayHasKey('emails', $entities);
         $this->assertArrayHasKey('phones', $entities);
         $this->assertArrayHasKey('urls', $entities);
         $this->assertArrayHasKey('dates', $entities);
-        
+
         $this->assertContains('John', $entities['people']);
         $this->assertContains('sarah@example.com', $entities['emails']);
         $this->assertContains('+1-555-0123', $entities['phones']);
@@ -138,21 +138,21 @@ class FragmentProcessingPipelineTest extends TestCase
                 'type' => 'note',
                 'tags' => [],
                 'expected_title' => 'Project Status Update',
-                'strategy' => 'first_line'
+                'strategy' => 'first_line',
             ],
             [
                 'message' => 'Quick reminder to submit expense reports',
                 'type' => 'task',
                 'tags' => ['urgent'],
                 'expected_pattern' => '/Task.*/',
-                'strategy' => 'keyword_based'
+                'strategy' => 'keyword_based',
             ],
             [
                 'message' => 'Random thoughts about the weather today.',
                 'type' => 'note',
                 'tags' => [],
                 'expected_pattern' => '/Note.*/',
-                'strategy' => 'keyword_based'
+                'strategy' => 'keyword_based',
             ],
         ];
 
@@ -188,7 +188,7 @@ class FragmentProcessingPipelineTest extends TestCase
         ]);
 
         $pipeline = app(Pipeline::class);
-        
+
         $processed = $pipeline
             ->send($fragment)
             ->through([
@@ -198,14 +198,14 @@ class FragmentProcessingPipelineTest extends TestCase
             ->thenReturn();
 
         $fragment->refresh();
-        
+
         // Existing title should be preserved
         $this->assertEquals('Existing Title', $fragment->title);
-        
+
         // Existing tags should be preserved
         $this->assertContains('existing', $fragment->tags);
         $this->assertContains('tags', $fragment->tags);
-        
+
         // Should still extract new entities (but preserve existing structure)
         $this->assertNotNull($fragment->parsed_entities);
         $this->assertArrayHasKey('people', $fragment->parsed_entities);
@@ -220,19 +220,22 @@ class FragmentProcessingPipelineTest extends TestCase
         ]);
 
         // Create a mock action that throws an exception
-        $mockAction = new class {
-            public function handle($fragment, $next) {
+        $mockAction = new class
+        {
+            public function handle($fragment, $next)
+            {
                 // Perform some processing that might fail
                 if (empty($fragment->message)) {
                     throw new \Exception('Processing failed');
                 }
+
                 return $next($fragment);
             }
         };
 
         // Test that pipeline continues after non-critical errors
         $pipeline = app(Pipeline::class);
-        
+
         try {
             $processed = $pipeline
                 ->send($fragment)
@@ -248,7 +251,7 @@ class FragmentProcessingPipelineTest extends TestCase
             $this->assertInstanceOf(Fragment::class, $processed);
         } catch (\Exception $e) {
             // If an exception is thrown, it should be handled gracefully
-            $this->fail('Pipeline should handle errors gracefully: ' . $e->getMessage());
+            $this->fail('Pipeline should handle errors gracefully: '.$e->getMessage());
         }
     }
 
@@ -274,9 +277,9 @@ class FragmentProcessingPipelineTest extends TestCase
         }
 
         $processingTime = microtime(true) - $startTime;
-        
+
         // Should process 10 fragments in reasonable time
-        $this->assertLessThan(5, $processingTime, 
+        $this->assertLessThan(5, $processingTime,
             "Pipeline processing took too long: {$processingTime}s for 10 fragments");
 
         // Verify all fragments were processed
@@ -307,7 +310,7 @@ class FragmentProcessingPipelineTest extends TestCase
         // Then generate title (may use entity information)
         $withTitle = $titleAction($withEntities);
         $this->assertNotNull($withTitle->title);
-        
+
         // Title generation should work whether or not entities are present
         $fragment2 = Fragment::factory()->create([
             'message' => 'Another test fragment',

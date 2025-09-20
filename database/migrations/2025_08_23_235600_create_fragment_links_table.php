@@ -22,14 +22,14 @@ return new class extends Migration
                 'duplicate_of',
                 'references',
                 'mentions',
-                'child_of'
+                'child_of',
             ])->comment('Type of relationship between fragments');
             $table->timestamps();
-            
+
             // Indexes for performance
             $table->index(['from_id', 'relation']);
             $table->index(['to_id', 'relation']);
-            
+
             // Foreign key constraints
             $table->foreign('from_id')->references('id')->on('fragments')->cascadeOnDelete();
             $table->foreign('to_id')->references('id')->on('fragments')->cascadeOnDelete();

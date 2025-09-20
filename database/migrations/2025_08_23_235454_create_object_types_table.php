@@ -32,7 +32,7 @@ return new class extends Migration
         Schema::table('fragments', function (Blueprint $table) {
             $table->dropForeign(['object_type_id']);
         });
-        
+
         Schema::dropIfExists('object_types');
     }
 };

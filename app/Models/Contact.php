@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Contact extends Model
 {
     protected $primaryKey = 'fragment_id';
+
     public $incrementing = false;
+
     public $timestamps = false;
 
     protected $casts = [
@@ -23,7 +25,7 @@ class Contact extends Model
         'emails',
         'phones',
         'organization',
-        'state'
+        'state',
     ];
 
     public function fragment(): BelongsTo
@@ -33,20 +35,21 @@ class Contact extends Model
 
     public function scopeSearch($query, string $searchTerm)
     {
-        return $query->where(function($q) use ($searchTerm) {
+        return $query->where(function ($q) use ($searchTerm) {
             $q->where('full_name', 'LIKE', "%{$searchTerm}%")
-              ->orWhere('organization', 'LIKE', "%{$searchTerm}%")
-              ->orWhereJsonContains('emails', $searchTerm)
-              ->orWhereHas('fragment', function($fragmentQuery) use ($searchTerm) {
-                  $fragmentQuery->where('message', 'LIKE', "%{$searchTerm}%");
-              });
+                ->orWhere('organization', 'LIKE', "%{$searchTerm}%")
+                ->orWhereJsonContains('emails', $searchTerm)
+                ->orWhereHas('fragment', function ($fragmentQuery) use ($searchTerm) {
+                    $fragmentQuery->where('message', 'LIKE', "%{$searchTerm}%");
+                });
         });
     }
 
     public function getPrimaryEmailAttribute(): ?string
     {
         $emails = $this->emails;
-        return is_array($emails) && !empty($emails) ? $emails[0] : null;
+
+        return is_array($emails) && ! empty($emails) ? $emails[0] : null;
     }
 
     public function getDisplayNameAttribute(): string

@@ -11,11 +11,11 @@ class HelpCommand implements HandlesCommand
     public function handle(CommandRequest $command): CommandResponse
     {
         $section = $command->arguments['identifier'] ?? '';
-        
+
         // Define all sections
         $sections = [
             'recall' => $this->getRecallSection(),
-            'bookmark' => $this->getBookmarkSection(),  
+            'bookmark' => $this->getBookmarkSection(),
             'fragment' => $this->getFragmentSection(),
             'todo' => $this->getTodoSection(),
             'search' => $this->getSearchSection(),
@@ -23,15 +23,15 @@ class HelpCommand implements HandlesCommand
             'session' => $this->getSessionSection(),
             'tools' => $this->getToolsSection(),
         ];
-        
+
         // Handle aliases
         if ($section === 'sessions') {
             $section = 'session';
         }
-        
+
         // If specific section requested, return only that section
-        if (!empty($section) && isset($sections[$section])) {
-            $message = "# {$this->getSectionTitle($section)}\n\n" . $sections[$section];
+        if (! empty($section) && isset($sections[$section])) {
+            $message = "# {$this->getSectionTitle($section)}\n\n".$sections[$section];
         } else {
             // Return all sections
             $message = "# Commands Cheat Sheet\n\nHere are the commands you can use in the chat:\n\n";
@@ -49,13 +49,13 @@ class HelpCommand implements HandlesCommand
             ],
         );
     }
-    
+
     private function getSectionTitle(string $section): string
     {
-        return match($section) {
+        return match ($section) {
             'recall' => 'Recall Commands',
             'bookmark' => 'Bookmark Commands',
-            'fragment' => 'Fragment Commands', 
+            'fragment' => 'Fragment Commands',
             'todo' => 'Todo Management',
             'search' => 'Search Commands',
             'join' => 'Channel Navigation',
@@ -64,37 +64,37 @@ class HelpCommand implements HandlesCommand
             default => 'Commands',
         };
     }
-    
+
     private function getRecallSection(): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 - `/recall type:todo limit:5` – Recall recent fragments by type
 - `/recall session {hint}` – Recall all fragments from a saved session (coming soon 🚀)
 MARKDOWN;
     }
-    
+
     private function getBookmarkSection(): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 - `/bookmark` – Bookmark the most recent fragment (or all from chaos)
 - `/bookmark list` – List saved bookmarks
 - `/bookmark show {hint}` – Replay a bookmark in the chat
 - `/bookmark forget {hint}` – Delete a saved bookmark
 MARKDOWN;
     }
-    
+
     private function getFragmentSection(): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 - `/frag This is something worth remembering` – Log a fragment
 - `/chaos This contains multiple items. Do X. Also do Y.` – Split and log a chaos fragment
 - `/todo Fix the login bug #urgent` – Create a new todo fragment with tags
 MARKDOWN;
     }
-    
+
     private function getTodoSection(): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 - `/todo` – List 25 open todos (newest first)
 - `/todo list` – List 25 open todos (explicit)
 - `/todo list status:completed` – List completed todos
@@ -104,18 +104,18 @@ MARKDOWN;
 - `/todo complete:"login bug"` – Mark matching todo complete
 MARKDOWN;
     }
-    
+
     private function getSearchSection(): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 - `/search your query here` – Search all fragments with hybrid search
 - `/s your query here` – Shorthand for search
 MARKDOWN;
     }
-    
+
     private function getJoinSection(): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 - `/join #c5` – Join channel #c5 by short code
 - `/join #custom` – Join channel by custom name  
 - `/join #` – Show all available channels
@@ -133,10 +133,10 @@ MARKDOWN;
 - `/name Custom Name` – Rename current channel
 MARKDOWN;
     }
-    
+
     private function getSessionSection(): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 - `/session vault:work type:meeting Project Sync #weekly` – Start a scoped session for all new fragments
 - `/session show` – Display current active session details
 - `/session end` – End the current session and return to normal logging
@@ -154,10 +154,10 @@ Example:
 - Session grouping key for easy recall later.
 MARKDOWN;
     }
-    
+
     private function getToolsSection(): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 - `/clear` – Clear the current chat view
 - `/help` – Show this help message
 MARKDOWN;

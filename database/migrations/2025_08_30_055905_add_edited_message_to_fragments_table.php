@@ -2,10 +2,11 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('fragments', function (Blueprint $table) {
@@ -18,7 +19,7 @@ return new class extends Migration {
         }
 
         // Update your full-text index to prefer edited_message when present
-        DB::statement("DROP INDEX IF EXISTS idx_frag_fulltext;");
+        DB::statement('DROP INDEX IF EXISTS idx_frag_fulltext;');
         DB::statement("
             CREATE INDEX IF NOT EXISTS idx_frag_fulltext
             ON fragments USING GIN (
@@ -34,7 +35,7 @@ return new class extends Migration {
     {
         if (DB::getDriverName() !== 'sqlite') {
             // Drop index first, then column
-            DB::statement("DROP INDEX IF EXISTS idx_frag_fulltext;");
+            DB::statement('DROP INDEX IF EXISTS idx_frag_fulltext;');
         }
 
         Schema::table('fragments', function (Blueprint $table) {
