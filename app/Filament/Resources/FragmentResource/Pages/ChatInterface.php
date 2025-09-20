@@ -27,7 +27,7 @@ class ChatInterface extends Page
 
     protected static ?string $slug = 'lens';
 
-    protected static string $view = 'filament.resources.fragment-resource.pages.chat-interface';
+    protected string $view = 'filament.resources.fragment-resource.pages.chat-interface';
 
     public string $input = '';
 
