@@ -77,10 +77,23 @@ class RecallPerformanceTest extends TestCase
         $user = User::first();
 
         // Create a large number of recall decisions
+        $fragments = Fragment::factory()->count(100)->create();
+        $fragmentIds = $fragments->pluck('id')->values()->all();
+        $fragmentPoolSize = count($fragmentIds);
+
         $decisionCount = 1000;
         $decisions = [];
 
         for ($i = 0; $i < $decisionCount; $i++) {
+            $isDismissAction = $i % 4 === 0;
+
+            $selectedFragmentId = $isDismissAction
+                ? null
+                : $fragmentIds[$i % $fragmentPoolSize];
+
+            $selectedIndex = $isDismissAction ? null : rand(0, 10);
+            $clickDepth = $isDismissAction ? null : rand(1, 10);
+
             $decisions[] = [
                 'user_id' => $user->id,
                 'query' => 'test query '.($i % 50), // Create patterns
@@ -89,11 +102,11 @@ class RecallPerformanceTest extends TestCase
                     'filters' => $i % 3 === 0 ? [['type' => 'type', 'value' => 'meeting']] : [],
                 ],
                 'total_results' => rand(1, 20),
-                'selected_fragment_id' => $i % 4 === 0 ? null : rand(1, 100),
-                'selected_index' => $i % 4 === 0 ? null : rand(0, 10),
-                'action' => $i % 4 === 0 ? 'dismiss' : 'select',
+                'selected_fragment_id' => $selectedFragmentId,
+                'selected_index' => $selectedIndex,
+                'action' => $isDismissAction ? 'dismiss' : 'select',
                 'context' => [
-                    'click_depth' => $i % 4 === 0 ? null : rand(1, 10),
+                    'click_depth' => $clickDepth,
                     'total_results' => rand(1, 20),
                 ],
                 'decided_at' => now()->subMinutes(rand(1, 10080)), // Within last week

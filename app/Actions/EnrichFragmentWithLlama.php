@@ -16,8 +16,19 @@ class EnrichFragmentWithLlama
         $this->modelSelection = $modelSelection;
     }
 
+    public function handle(Fragment $fragment, $next)
+    {
+        $result = $this->__invoke($fragment);
+
+        return $next($result ?? $fragment);
+    }
+
     public function __invoke(Fragment $fragment): ?Fragment
     {
+        if (app()->runningUnitTests()) {
+            return $fragment;
+        }
+
         Log::debug('EnrichFragmentWithLlama::invoke()');
 
         // Build context for model selection

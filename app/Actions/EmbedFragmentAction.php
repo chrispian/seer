@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\Log; // make sure this exists
 
 class EmbedFragmentAction
 {
+    public function handle(Fragment $fragment, $next)
+    {
+        $fragment = $this->__invoke($fragment);
+
+        return $next($fragment);
+    }
+
     public function __invoke(Fragment $fragment): Fragment
     {
         Log::debug('EmbedFragmentAction::__invoke()', ['fragment_id' => $fragment->id]);

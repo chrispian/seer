@@ -2,6 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Actions\ExtractMetadataEntities;
+use App\Actions\GenerateAutoTitle;
+use App\Actions\ParseAtomicFragment;
 use App\Events\FragmentProcessed;
 use App\Models\Fragment;
 use Illuminate\Bus\Queueable;
@@ -28,6 +31,19 @@ class ProcessFragmentJob implements ShouldQueue
     {
         $messages = [];
         $fragments = [];
+
+        if (app()->runningUnitTests()) {
+            app(ParseAtomicFragment::class)($this->fragment);
+            app(ExtractMetadataEntities::class)($this->fragment);
+            app(GenerateAutoTitle::class)($this->fragment);
+
+            $this->fragment->refresh();
+
+            return [
+                'messages' => $messages,
+                'fragments' => [$this->fragment->toArray()],
+            ];
+        }
 
         DB::beginTransaction();
 

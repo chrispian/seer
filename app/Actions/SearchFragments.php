@@ -3,8 +3,10 @@
 namespace App\Actions;
 
 use App\Models\Fragment;
+use App\Models\Type;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class SearchFragments
@@ -36,7 +38,16 @@ class SearchFragments
         // Build the search query
         $fragments = $this->buildSearchQuery($parsedQuery, $vault, $projectId)
             ->limit($limit * 2) // Get extra for ranking
-            ->get();
+            ->get()
+            ->map(function (Fragment $fragment) use ($parsedQuery) {
+                $this->hydrateTypeRelation($fragment);
+
+                if (! isset($fragment->relevance)) {
+                    $fragment->relevance = $this->computeFallbackRelevance($fragment, $parsedQuery['search_terms']);
+                }
+
+                return $fragment;
+            });
 
         // Calculate rankings and sort
         $rankedFragments = $fragments->map(function ($fragment) use ($parsedQuery, $sessionId) {
@@ -51,7 +62,18 @@ class SearchFragments
 
         // Sort by score and limit
         return $rankedFragments
-            ->sortByDesc('search_score')
+            ->sort(function (Fragment $a, Fragment $b) {
+                $scoreComparison = $b->search_score <=> $a->search_score;
+
+                if ($scoreComparison !== 0) {
+                    return $scoreComparison;
+                }
+
+                $aCreated = optional($a->created_at)->getTimestamp() ?? 0;
+                $bCreated = optional($b->created_at)->getTimestamp() ?? 0;
+
+                return $bCreated <=> $aCreated;
+            })
             ->take($limit)
             ->values();
     }
@@ -130,23 +152,20 @@ class SearchFragments
 
     private function buildSearchQuery(array $parsedQuery, ?string $vault, ?int $projectId): Builder
     {
-        $query = Fragment::query();
+        $query = Fragment::query()->select('fragments.*');
 
         // Apply FULLTEXT search if we have search terms
         if (! empty($parsedQuery['search_terms'])) {
             $searchTerms = $parsedQuery['search_terms'];
 
-            // Use PostgreSQL full-text search
-            $query->whereRaw(
-                "to_tsvector('english', coalesce(title, '') || ' ' || coalesce(message, '')) @@ plainto_tsquery('english', ?)",
-                [$searchTerms]
-            )->selectRaw(
-                "*, ts_rank(to_tsvector('english', coalesce(title, '') || ' ' || coalesce(message, '')), plainto_tsquery('english', ?)) as relevance",
-                [$searchTerms]
-            );
+            if ($this->usingSqlite()) {
+                $this->applySqliteSearch($query, $searchTerms);
+            } else {
+                $this->applyPostgresSearch($query, $searchTerms);
+            }
         } else {
             // When no search terms, add a placeholder relevance score for ranking
-            $query->selectRaw('*, 1.0 as relevance');
+            $query->selectRaw('1.0 as relevance');
         }
 
         // Apply type filter
@@ -206,7 +225,7 @@ class SearchFragments
         }
 
         // Include relationships
-        $query->with(['category', 'project']);
+        $query->with(['category', 'project', 'type']);
 
         // Add default ordering for non-FULLTEXT queries
         if (empty($parsedQuery['search_terms'])) {
@@ -214,5 +233,86 @@ class SearchFragments
         }
 
         return $query;
+    }
+
+    private function applyPostgresSearch(Builder $query, string $searchTerms): void
+    {
+        $query->whereRaw(
+            "to_tsvector('english', coalesce(title, '') || ' ' || coalesce(message, '')) @@ plainto_tsquery('english', ?)",
+            [$searchTerms]
+        )->selectRaw(
+            "ts_rank(to_tsvector('english', coalesce(title, '') || ' ' || coalesce(message, '')), plainto_tsquery('english', ?)) as relevance",
+            [$searchTerms]
+        );
+    }
+
+    private function applySqliteSearch(Builder $query, string $searchTerms): void
+    {
+        $terms = collect(preg_split('/\s+/', $searchTerms, -1, PREG_SPLIT_NO_EMPTY));
+
+        $query->where(function (Builder $builder) use ($terms) {
+            foreach ($terms as $term) {
+                $like = '%'.$this->escapeLike($term).'%';
+                $builder->where(function (Builder $subQuery) use ($like) {
+                    $subQuery->where('title', 'LIKE', $like)
+                        ->orWhere('message', 'LIKE', $like);
+                });
+            }
+        })->selectRaw('1.0 as relevance');
+    }
+
+    private function escapeLike(string $term): string
+    {
+        return str_replace(['%', '_'], ['\\%', '\\_'], $term);
+    }
+
+    private function usingSqlite(): bool
+    {
+        return DB::connection()->getDriverName() === 'sqlite';
+    }
+
+    private function computeFallbackRelevance(Fragment $fragment, string $searchTerms): float
+    {
+        if (empty($searchTerms)) {
+            return 1.0;
+        }
+
+        $terms = collect(preg_split('/\s+/', strtolower($searchTerms), -1, PREG_SPLIT_NO_EMPTY));
+        if ($terms->isEmpty()) {
+            return 1.0;
+        }
+
+        $haystacks = [
+            strtolower((string) $fragment->title),
+            strtolower((string) $fragment->message),
+        ];
+
+        $matches = 0;
+        foreach ($terms as $term) {
+            foreach ($haystacks as $text) {
+                if ($term !== '' && str_contains($text, $term)) {
+                    $matches++;
+                    break;
+                }
+            }
+        }
+
+        return max(0.1, min(1.0, $matches / max(1, $terms->count())));
+    }
+
+    private function hydrateTypeRelation(Fragment $fragment): void
+    {
+        if ($fragment->relationLoaded('type') && $fragment->getRelationValue('type')) {
+            return;
+        }
+
+        $rawType = $fragment->getRawOriginal('type');
+
+        if (! is_string($rawType) || $rawType === '') {
+            return;
+        }
+
+        $typeModel = Type::findByValue($rawType) ?? new Type(['value' => $rawType]);
+        $fragment->setRelation('type', $typeModel);
     }
 }

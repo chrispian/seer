@@ -6,6 +6,7 @@ use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FragmentController;
 use App\Http\Controllers\FragmentDetailController;
+use App\Http\Controllers\SeerLogController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/fragment', [FragmentController::class, 'store']);
@@ -14,6 +15,7 @@ Route::get('/fragment', [FragmentController::class, 'index']);
 Route::get('/search', [FragmentController::class, 'search']);
 Route::get('/recall', [FragmentController::class, 'recall']);
 Route::post('/analyze-fragment', AnalyzeFragmentController::class);
+Route::post('/log', [SeerLogController::class, 'store']);
 
 // Autocomplete endpoints
 Route::get('/autocomplete/commands', [AutocompleteController::class, 'commands']);

@@ -165,7 +165,6 @@ class FragmentProcessingPipelineTest extends TestCase
             ]);
 
             $processed = $generateTitle($fragment);
-
             if (isset($testCase['expected_title'])) {
                 $this->assertEquals($testCase['expected_title'], $processed->title);
             } elseif (isset($testCase['expected_pattern'])) {
@@ -233,6 +232,8 @@ class FragmentProcessingPipelineTest extends TestCase
             }
         };
 
+        app()->instance(get_class($mockAction), $mockAction);
+
         // Test that pipeline continues after non-critical errors
         $pipeline = app(Pipeline::class);
 
@@ -242,7 +243,7 @@ class FragmentProcessingPipelineTest extends TestCase
                 ->through([
                     ExtractMetadataEntities::class,
                     // Include our mock action
-                    get_class($mockAction),
+                    $mockAction,
                     GenerateAutoTitle::class,
                 ])
                 ->thenReturn();

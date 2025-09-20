@@ -37,8 +37,8 @@ class LogRecallDecision
 
         if ($clickDepth !== null) {
             $clickedInTopN = [
-                'top_1' => $clickDepth <= 1,
-                'top_3' => $clickDepth <= 3,
+                'top_1' => $clickDepth === 1,
+                'top_3' => $clickDepth <= 2,
                 'top_5' => $clickDepth <= 5,
                 'top_10' => $clickDepth <= 10,
             ];

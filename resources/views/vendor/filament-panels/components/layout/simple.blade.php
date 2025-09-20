@@ -1,5 +1,5 @@
 @php
-    use Filament\Support\Enums\MaxWidth;
+    use Filament\Support\Enums\Width;
 @endphp
 
 <x-filament-panels::layout.base :livewire="$livewire">
@@ -30,28 +30,28 @@
             <main
                 @class([
                     'fi-simple-main my-16 w-full bg-white px-6 py-12 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 sm:rounded-xl sm:px-12',
-                    match ($maxWidth ??= (filament()->getSimplePageMaxContentWidth() ?? MaxWidth::Large)) {
-                        MaxWidth::ExtraSmall, 'xs' => 'max-w-xs',
-                        MaxWidth::Small, 'sm' => 'max-w-sm',
-                        MaxWidth::Medium, 'md' => 'max-w-md',
-                        MaxWidth::Large, 'lg' => 'max-w-lg',
-                        MaxWidth::ExtraLarge, 'xl' => 'max-w-xl',
-                        MaxWidth::TwoExtraLarge, '2xl' => 'max-w-2xl',
-                        MaxWidth::ThreeExtraLarge, '3xl' => 'max-w-3xl',
-                        MaxWidth::FourExtraLarge, '4xl' => 'max-w-4xl',
-                        MaxWidth::FiveExtraLarge, '5xl' => 'max-w-5xl',
-                        MaxWidth::SixExtraLarge, '6xl' => 'max-w-6xl',
-                        MaxWidth::SevenExtraLarge, '7xl' => 'max-w-7xl',
-                        MaxWidth::Full, 'full' => 'max-w-full',
-                        MaxWidth::MinContent, 'min' => 'max-w-min',
-                        MaxWidth::MaxContent, 'max' => 'max-w-max',
-                        MaxWidth::FitContent, 'fit' => 'max-w-fit',
-                        MaxWidth::Prose, 'prose' => 'max-w-prose',
-                        MaxWidth::ScreenSmall, 'screen-sm' => 'max-w-screen-sm',
-                        MaxWidth::ScreenMedium, 'screen-md' => 'max-w-screen-md',
-                        MaxWidth::ScreenLarge, 'screen-lg' => 'max-w-screen-lg',
-                        MaxWidth::ScreenExtraLarge, 'screen-xl' => 'max-w-screen-xl',
-                        MaxWidth::ScreenTwoExtraLarge, 'screen-2xl' => 'max-w-screen-2xl',
+                    match ($maxWidth ??= (filament()->getSimplePageMaxContentWidth() ?? Width::Large)) {
+                        Width::ExtraSmall, 'xs' => 'max-w-xs',
+                        Width::Small, 'sm' => 'max-w-sm',
+                        Width::Medium, 'md' => 'max-w-md',
+                        Width::Large, 'lg' => 'max-w-lg',
+                        Width::ExtraLarge, 'xl' => 'max-w-xl',
+                        Width::TwoExtraLarge, '2xl' => 'max-w-2xl',
+                        Width::ThreeExtraLarge, '3xl' => 'max-w-3xl',
+                        Width::FourExtraLarge, '4xl' => 'max-w-4xl',
+                        Width::FiveExtraLarge, '5xl' => 'max-w-5xl',
+                        Width::SixExtraLarge, '6xl' => 'max-w-6xl',
+                        Width::SevenExtraLarge, '7xl' => 'max-w-7xl',
+                        Width::Full, 'full' => 'max-w-full',
+                        Width::MinContent, 'min' => 'max-w-min',
+                        Width::MaxContent, 'max' => 'max-w-max',
+                        Width::FitContent, 'fit' => 'max-w-fit',
+                        Width::Prose, 'prose' => 'max-w-prose',
+                        Width::ScreenSmall, 'screen-sm' => 'max-w-screen-sm',
+                        Width::ScreenMedium, 'screen-md' => 'max-w-screen-md',
+                        Width::ScreenLarge, 'screen-lg' => 'max-w-screen-lg',
+                        Width::ScreenExtraLarge, 'screen-xl' => 'max-w-screen-xl',
+                        Width::ScreenTwoExtraLarge, 'screen-2xl' => 'max-w-screen-2xl',
                         default => $maxWidth,
                     },
                 ])

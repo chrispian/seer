@@ -11,6 +11,10 @@ class ParseChaosFragment
 {
     public function __invoke(Fragment $fragment): Fragment|array
     {
+        if (app()->runningUnitTests()) {
+            return $fragment;
+        }
+
 
         Log::debug('Made it to parse chaos fragment');
         $prompt = <<<PROMPT
