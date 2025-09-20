@@ -4,17 +4,20 @@ namespace App\Services\AI;
 
 use App\Models\Fragment;
 use App\Models\Type;
-use Prism\Prism\Prism;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Prism\Prism\Prism;
 
 class TypeInferenceService
 {
     protected array $availableTypes;
+
     protected float $confidenceThreshold;
 
-    public function __construct(float $confidenceThreshold = 0.7)
+    protected ModelSelectionService $modelSelection;
+
+    public function __construct(ModelSelectionService $modelSelection, float $confidenceThreshold = 0.7)
     {
+        $this->modelSelection = $modelSelection;
         $this->confidenceThreshold = $confidenceThreshold;
         $this->availableTypes = $this->getAvailableTypes();
     }
@@ -25,16 +28,33 @@ class TypeInferenceService
     public function inferType(Fragment $fragment): array
     {
         try {
+            // Build context for model selection
+            $context = [
+                'operation_type' => 'text',
+                'command' => 'type_inference',
+                'vault' => $fragment->vault,
+                'project_id' => $fragment->project_id,
+            ];
+
+            // Select appropriate model
+            $selectedModel = $this->modelSelection->selectTextModel($context);
+
             $response = Prism::text()
-                ->using('ollama', 'llama3:latest')
+                ->using($selectedModel['provider'], $selectedModel['model'])
                 ->withPrompt($this->buildPrompt($fragment))
                 ->generate();
 
             $result = $this->parseResponse($response->text);
-            
+
+            // Add model metadata to result
+            $result['model_provider'] = $selectedModel['provider'];
+            $result['model_name'] = $selectedModel['model'];
+
             Log::info('TypeInferenceService: AI response', [
                 'fragment_id' => $fragment->id,
                 'result' => $result,
+                'model_provider' => $selectedModel['provider'],
+                'model_name' => $selectedModel['model'],
                 'usage' => $response->usage ? (array) $response->usage : null,
             ]);
 
@@ -51,6 +71,8 @@ class TypeInferenceService
                 'type' => 'log',
                 'confidence' => 0.0,
                 'reasoning' => 'AI inference failed, using default',
+                'model_provider' => null,
+                'model_name' => null,
             ];
         }
     }
@@ -61,19 +83,23 @@ class TypeInferenceService
     public function applyTypeToFragment(Fragment $fragment): Fragment
     {
         $inference = $this->inferType($fragment);
-        
+
         if ($inference['confidence'] >= $this->confidenceThreshold) {
             $type = Type::where('value', $inference['type'])->first();
             if ($type) {
                 $fragment->update([
                     'type' => $inference['type'],
                     'type_id' => $type->id,
+                    'model_provider' => $inference['model_provider'],
+                    'model_name' => $inference['model_name'],
                 ]);
-                
+
                 Log::info('TypeInferenceService: Applied type to fragment', [
                     'fragment_id' => $fragment->id,
                     'type' => $inference['type'],
                     'confidence' => $inference['confidence'],
+                    'model_provider' => $inference['model_provider'],
+                    'model_name' => $inference['model_name'],
                 ]);
             }
         } else {
@@ -81,14 +107,18 @@ class TypeInferenceService
             $logType = Type::where('value', 'log')->first();
             if ($logType) {
                 $fragment->update([
-                    'type' => 'log', 
+                    'type' => 'log',
                     'type_id' => $logType->id,
+                    'model_provider' => $inference['model_provider'],
+                    'model_name' => $inference['model_name'],
                 ]);
-                
+
                 Log::info('TypeInferenceService: Applied default log type', [
                     'fragment_id' => $fragment->id,
                     'confidence' => $inference['confidence'],
                     'reason' => 'Low confidence',
+                    'model_provider' => $inference['model_provider'],
+                    'model_name' => $inference['model_name'],
                 ]);
             }
         }
@@ -102,7 +132,7 @@ class TypeInferenceService
     protected function buildPrompt(Fragment $fragment): string
     {
         $typesJson = json_encode($this->availableTypes, JSON_PRETTY_PRINT);
-        
+
         return <<<PROMPT
 You are a text classifier that categorizes fragments of information into specific types.
 
@@ -140,13 +170,13 @@ PROMPT;
             $data = json_decode($cleanedResponse, true, 512, JSON_THROW_ON_ERROR);
 
             // Validate required fields
-            if (!isset($data['type']) || !isset($data['confidence'])) {
+            if (! isset($data['type']) || ! isset($data['confidence'])) {
                 throw new \InvalidArgumentException('Invalid AI response format');
             }
 
             // Ensure type exists in our available types
             $typeExists = collect($this->availableTypes)->contains('value', $data['type']);
-            if (!$typeExists) {
+            if (! $typeExists) {
                 $data['type'] = 'log';
                 $data['confidence'] = 0.0;
                 $data['reasoning'] = 'Unknown type returned by AI, defaulting to log';
@@ -188,6 +218,7 @@ PROMPT;
     public function refreshAvailableTypes(): self
     {
         $this->availableTypes = $this->getAvailableTypes();
+
         return $this;
     }
 }

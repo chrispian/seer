@@ -64,6 +64,19 @@
                                         {{ \Carbon\Carbon::parse($fragment['created_at'])->format('M j, g:i A') }}
                                     </div>
                                 </div>
+
+                                {{-- Model info display --}}
+                                @if (config('fragments.models.ui.show_in_fragments', true) && !empty($fragment['model_provider']))
+                                    <div class="mb-2">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-electric-blue/10 text-electric-blue/80 border border-electric-blue/20">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                                            </svg>
+                                            {{ ucfirst($fragment['model_provider'] ?? 'AI') }}{{ !empty($fragment['model_name']) ? ' ' . $fragment['model_name'] : '' }}
+                                        </span>
+                                    </div>
+                                @endif
+
                                 <div class="text-sm text-text-primary">
                                     <x-chat-markdown :fragment="null">
                                         {{ $fragment['message'] }}

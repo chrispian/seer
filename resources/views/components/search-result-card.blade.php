@@ -14,6 +14,10 @@
     $createdAt = is_array($fragment) ? ($fragment['created_at'] ?? null) : ($fragment->created_at ?? null);
     $score = is_array($fragment) ? ($fragment['score'] ?? 0) : 0;
 
+    // Handle model info
+    $modelProvider = is_array($fragment) ? ($fragment['model_provider'] ?? null) : ($fragment->model_provider ?? null);
+    $modelName = is_array($fragment) ? ($fragment['model_name'] ?? null) : ($fragment->model_name ?? null);
+
     // Handle type display - use 'label' for human-readable names
     if (is_array($fragment)) {
         // Type could be an array with label/value, or just a string
@@ -44,6 +48,18 @@
                     <span class="text-electric-blue">{{ $typeName }}</span>
                 </div>
             </div>
+
+            {{-- Model Info Display --}}
+            @if (config('fragments.models.ui.show_in_fragments', true) && !empty($modelProvider))
+                <div class="mb-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-electric-blue/10 text-electric-blue/80 border border-electric-blue/20">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                        </svg>
+                        {{ ucfirst($modelProvider) }}{{ !empty($modelName) ? ' ' . $modelName : '' }}
+                    </span>
+                </div>
+            @endif
 
             {{-- Message Content --}}
             <div class="prose prose-sm dark:prose-invert max-w-none text-text-primary">

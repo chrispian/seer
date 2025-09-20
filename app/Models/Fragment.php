@@ -29,6 +29,8 @@ class Fragment extends Model
         'state_json' => 'array',
         'deleted_at' => 'datetime',
         'hash_bucket' => 'integer',
+        'model_provider' => 'string',
+        'model_name' => 'string',
     ];
 
     // Relationships
