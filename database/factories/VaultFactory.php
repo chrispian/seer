@@ -15,8 +15,8 @@ class VaultFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->unique()->words(2, true),
-            'description' => $this->faker->sentence(),
+            'name' => 'test-vault-'.$this->faker->randomNumber(),
+            'description' => 'Test vault description',
             'is_default' => false,
             'sort_order' => $this->faker->numberBetween(0, 200),
             'metadata' => null,

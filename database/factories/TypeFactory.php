@@ -17,7 +17,9 @@ class TypeFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'value' => 'type-'.$this->faker->unique()->randomNumber(),
+            'label' => 'Type '.$this->faker->unique()->randomNumber(),
+            'color' => 'gray',
         ];
     }
 }

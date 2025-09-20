@@ -17,12 +17,12 @@ class VaultRoutingRuleFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->unique()->words(3, true),
+            'name' => 'test-rule-'.$this->faker->randomNumber(),
             'match_type' => $this->faker->randomElement(['keyword', 'type', 'tag']),
-            'match_value' => $this->faker->words(2, true),
+            'match_value' => 'test-value-'.$this->faker->randomNumber(),
             'conditions' => [
                 'threshold' => $this->faker->randomFloat(2, 0.1, 0.9),
-                'keywords' => $this->faker->words(2),
+                'keywords' => ['test', 'data'],
             ],
             'target_vault_id' => Vault::factory(),
             'target_project_id' => Project::factory(),
@@ -30,7 +30,7 @@ class VaultRoutingRuleFactory extends Factory
             'scope_project_id' => null,
             'priority' => $this->faker->numberBetween(1, 200),
             'is_active' => true,
-            'notes' => $this->faker->optional()->sentence(),
+            'notes' => 'Test routing rule notes',
         ];
     }
 }

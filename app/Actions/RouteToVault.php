@@ -3,13 +3,16 @@
 namespace App\Actions;
 
 use App\Models\Fragment;
+use App\Models\Vault;
+use App\Services\VaultRoutingRuleService;
 use Illuminate\Support\Facades\Log;
 
 class RouteToVault
 {
+    public function __construct(protected VaultRoutingRuleService $routingService) {}
+
     public function __invoke(Fragment $fragment): Fragment
     {
-
         Log::debug('RouteFragment::invoke()');
         $message = $fragment->message;
 
@@ -22,12 +25,36 @@ class RouteToVault
             $fragment->message = trim($message);
         }
 
-        // Default fallback
+        // If vault not set by directive, try rule-driven routing
         if (empty($fragment->vault)) {
-            $fragment->vault = 'default';
+            $routingTarget = $this->routingService->resolveForFragment($fragment);
+
+            if ($routingTarget) {
+                if (isset($routingTarget['vault'])) {
+                    $fragment->vault = $routingTarget['vault'];
+                }
+                if (isset($routingTarget['project_id'])) {
+                    $fragment->project_id = $routingTarget['project_id'];
+                }
+            }
         }
 
-        $fragment->vault = 'debug';
+        // Final fallback to default vault if still no vault set
+        if (empty($fragment->vault)) {
+            $defaultVault = Vault::getDefault();
+            if ($defaultVault) {
+                $fragment->vault = $defaultVault->name;
+                if (! $fragment->project_id) {
+                    $defaultProject = \App\Models\Project::getDefaultForVault($defaultVault->id);
+                    if ($defaultProject) {
+                        $fragment->project_id = $defaultProject->id;
+                    }
+                }
+            } else {
+                $fragment->vault = 'default';
+            }
+        }
+
         $fragment->save();
 
         return $fragment;

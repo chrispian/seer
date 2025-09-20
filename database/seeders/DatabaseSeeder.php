@@ -1,14 +1,20 @@
 <?php
 
-    namespace Database\Seeders;
+namespace Database\Seeders;
 
-    use Illuminate\Database\Seeder;
-    // use App\Models\SeerLog;
+use Illuminate\Database\Seeder;
 
-    class DatabaseSeeder extends Seeder
+// use App\Models\SeerLog;
+
+class DatabaseSeeder extends Seeder
+{
+    public function run(): void
     {
-        public function run(): void
-        {
-            // SeerLog::factory(10)->create();
-        }
+        // SeerLog::factory(10)->create();
+
+        // Optionally seed demo routing data in development
+        $this->call([
+            DemoRoutingDataSeeder::class,
+        ]);
     }
+}
