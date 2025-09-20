@@ -99,11 +99,7 @@ class ChatInterface extends Page
         'join-channel' => 'handleJoinChannel',
     ];
 
-    public function __construct(
-        protected ToastService $toastService
-    ) {
-        parent::__construct();
-    }
+    protected ToastService $toastService;
 
     public static function shouldRegisterNavigation(array $parameters = []): bool
     {
@@ -133,6 +129,9 @@ class ChatInterface extends Page
 
     public function mount()
     {
+        // Initialize services
+        $this->toastService = app(ToastService::class);
+
         // Initialize vault/project context
         $this->initializeVaultProjectContext();
 
@@ -376,7 +375,24 @@ class ChatInterface extends Page
 
     protected function getSystemTypeId(): int
     {
-        return Type::where('value', 'system')->first()?->id ?? Type::where('value', 'log')->first()->id;
+        $systemType = Type::where('value', 'system')->first();
+        if ($systemType) {
+            return $systemType->id;
+        }
+
+        $logType = Type::where('value', 'log')->first();
+        if ($logType) {
+            return $logType->id;
+        }
+
+        // Fallback: return the first available type or create a default one
+        $firstType = Type::first();
+        if ($firstType) {
+            return $firstType->id;
+        }
+
+        // Last resort: create a system type
+        return Type::create(['value' => 'system', 'name' => 'System'])->id;
     }
 
     protected function removeSpinner(string $spinnerKey): void
@@ -1486,6 +1502,11 @@ class ChatInterface extends Page
         $user = auth()->user();
         $severity = ToastService::SEVERITY_SUCCESS;
 
+        // Ensure we have a valid user instance
+        if ($user && ! ($user instanceof \App\Models\User)) {
+            $user = null;
+        }
+
         // Check if this toast should be shown based on user verbosity preference
         if (! $this->toastService->shouldShowToast($severity, $user)) {
             return;
@@ -1510,6 +1531,11 @@ class ChatInterface extends Page
         $user = auth()->user();
         $severity = ToastService::SEVERITY_ERROR;
 
+        // Ensure we have a valid user instance
+        if ($user && ! ($user instanceof \App\Models\User)) {
+            $user = null;
+        }
+
         // Check if this toast should be shown based on user verbosity preference
         if (! $this->toastService->shouldShowToast($severity, $user)) {
             return;
@@ -1530,7 +1556,7 @@ class ChatInterface extends Page
         }
 
         $user = auth()->user();
-        if ($user) {
+        if ($user && ($user instanceof \App\Models\User)) {
             $user->update(['toast_verbosity' => $verbosity]);
 
             // Show confirmation (but respect the new setting)

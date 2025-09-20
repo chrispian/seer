@@ -67,7 +67,11 @@ class ToastService
      */
     private function getToastCacheKey(string $severity, string $message, ?User $user = null): string
     {
-        $userId = $user?->id ?? 'guest';
+        $userId = 'guest';
+
+        if ($user && property_exists($user, 'id') && $user->id) {
+            $userId = $user->id;
+        }
 
         return "toast_suppress:{$userId}:{$severity}:".md5($message);
     }
