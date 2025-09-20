@@ -3,7 +3,10 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "keywords": [
+        "laravel",
+        "framework"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.2",
@@ -13,6 +16,8 @@
         "laravel/horizon": "^5.33",
         "laravel/reverb": "^1.0",
         "laravel/tinker": "^2.10.1",
+        "livewire/flux": "^2.4",
+        "livewire/flux-pro": "^2.4",
         "openai-php/client": "^0.10.3",
         "openai-php/laravel": "^0.11.0",
         "predis/predis": "^3.2",
@@ -83,11 +88,14 @@
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
-    "repositories": [
-        {
+    "repositories": {
+        "flux-pro": {
+            "type": "composer",
+            "url": "https://composer.fluxui.dev"
+        },
+        "0": {
             "type": "vcs",
             "url": "https://github.com/hollis-labs/laravel-console"
         }
-    ]
-
+    }
 }

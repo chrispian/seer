@@ -55,23 +55,29 @@
 
 /* Main Chat Area Scrollbar */
 #chat-output::-webkit-scrollbar {
-    width: 12px;
+    width: 10px;
 }
 
 #chat-output::-webkit-scrollbar-track {
     background: rgb(17 24 39); /* gray-900 - darker background */
-    border-radius: 6px;
+    border-radius: 1px;
     margin: 4px;
 }
 
 #chat-output::-webkit-scrollbar-thumb {
-    background: linear-gradient(45deg, rgb(255 20 147 / 0.4), rgb(0 255 255 / 0.3)); /* hot-pink to cyan gradient */
-    border-radius: 6px;
-    border: 1px solid rgb(255 20 147 / 0.2);
+    background: linear-gradient(
+        45deg,
+        rgb(255 20 147 / 1),
+        rgb(0 255 255 / 1)); /* hot-pink to cyan gradient */
+    border-radius: 2px;
+    border: 1px solid rgb(255 20 147 / 0.6);
 }
 
 #chat-output::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(45deg, rgb(255 20 147 / 0.6), rgb(0 255 255 / 0.5));
+    background: linear-gradient(
+        45deg,
+        rgb(255 20 147 / .8),
+        rgb(0 255 255 / .8));
     border-color: rgb(255 20 147 / 0.4);
 }
 
@@ -320,9 +326,6 @@
     line-height: 2rem;
     margin-bottom: 0.75rem;
     margin-top: 1.25rem;
-    text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
-    border-left: 4px solid rgb(0 212 255 / 0.5);
-    padding-left: 1rem;
 }
 
 .prose h3 {
@@ -332,7 +335,6 @@
     line-height: 1.75rem;
     margin-bottom: 0.5rem;
     margin-top: 1rem;
-    text-shadow: 0 0 6px rgba(34, 211, 238, 0.3);
 }
 
 .prose h4 {
@@ -342,7 +344,6 @@
     line-height: 1.75rem;
     margin-bottom: 0.5rem;
     margin-top: 0.75rem;
-    text-shadow: 0 0 4px rgba(147, 51, 234, 0.3);
 }
 
 .prose h5, .prose h6 {
@@ -434,11 +435,12 @@
 }
 
 .prose ul li::before {
-    content: '▶';
-    color: rgb(255 20 147); /* hot-pink */
+    font-size: 1.2rem;
+    content: '▧';
+    color: rgb(0 191 255 / 0.8); /* hot-pink */
     position: absolute;
-    left: -1.25rem;
-    text-shadow: 0 0 4px rgba(255, 20, 147, 0.4);
+    left: -1rem;
+    top: -0.1rem;
 }
 
 .prose ol li {
@@ -467,18 +469,18 @@
 
 .prose hr {
     border: none;
-    height: 2px;
+    height: 1px;
     background: linear-gradient(
         90deg,
-        transparent,
+        rgb(200 40 147) 10%,
         rgb(255 20 147) 20%,
-        rgb(0 212 255) 50%,
-        rgb(34 211 238) 80%,
-        transparent
+        rgb(230 230 230) 50%,
+        rgb(34 198 200) 80%,
+        rgb(34 211 238) 80%
     );
-    margin: 2rem 0;
+    margin: 1rem 0;
     border-radius: 1px;
-    box-shadow: 0 0 10px rgba(255, 20, 147, 0.2);
+    box-shadow: 0 0 8px rgba(255, 20, 147, 0.9);
 }
 
 .prose table {

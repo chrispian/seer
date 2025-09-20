@@ -15,6 +15,10 @@ class EmbedFragment implements ShouldQueue
 
     public function handle(\App\Services\AI\Embeddings $emb): void
     {
+        if (! config('fragments.embeddings.enabled')) {
+            return;
+        }
+
         $fragment = \App\Models\Fragment::find($this->fragmentId);
         if (!$fragment) return;
 

@@ -13,6 +13,10 @@ return new class extends Migration {
             $table->longText('edited_message')->nullable()->after('message');
         });
 
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Update your full-text index to prefer edited_message when present
         DB::statement("DROP INDEX IF EXISTS idx_frag_fulltext;");
         DB::statement("
@@ -28,11 +32,19 @@ return new class extends Migration {
 
     public function down(): void
     {
-        // Drop index first, then column
-        DB::statement("DROP INDEX IF EXISTS idx_frag_fulltext;");
+        if (DB::getDriverName() !== 'sqlite') {
+            // Drop index first, then column
+            DB::statement("DROP INDEX IF EXISTS idx_frag_fulltext;");
+        }
+
         Schema::table('fragments', function (Blueprint $table) {
             $table->dropColumn('edited_message');
         });
+
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Optional: recreate old index that used only message
         DB::statement("
             CREATE INDEX IF NOT EXISTS idx_frag_fulltext
@@ -42,4 +54,3 @@ return new class extends Migration {
         ");
     }
 };
-

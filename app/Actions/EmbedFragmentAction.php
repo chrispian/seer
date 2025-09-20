@@ -13,6 +13,12 @@ class EmbedFragmentAction
     {
         Log::debug('EmbedFragmentAction::__invoke()', ['fragment_id' => $fragment->id]);
 
+        if (! config('fragments.embeddings.enabled')) {
+            Log::debug('EmbedFragmentAction: embeddings disabled, skipping');
+
+            return $fragment;
+        }
+
         // Choose text to embed (prefer edited)
         $text = trim($fragment->edited_message ?? $fragment->message ?? '');
         if ($text === '') {

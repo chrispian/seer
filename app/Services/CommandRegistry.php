@@ -14,6 +14,7 @@ use App\Actions\Commands\TodoCommand;
 use App\Actions\Commands\JoinCommand;
 use App\Actions\Commands\ChannelsCommand;
 use App\Actions\Commands\NameCommand;
+use App\Actions\Commands\RoutingCommand;
 
 class CommandRegistry
 {
@@ -33,6 +34,7 @@ class CommandRegistry
         'j' => JoinCommand::class, // alias for join
         'channels' => ChannelsCommand::class,
         'name' => NameCommand::class,
+        'routing' => RoutingCommand::class,
         // 'export' => ExportCommand::class (future)
     ];
 

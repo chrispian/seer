@@ -1,5 +1,21 @@
 <?php
 
+if (class_exists(\PHPUnit\Runner\ErrorHandler::class)) {
+    try {
+        $errorHandler = \PHPUnit\Runner\ErrorHandler::instance();
+
+        $reflection = new ReflectionClass($errorHandler);
+
+        if ($reflection->hasProperty('enabled')) {
+            $property = $reflection->getProperty('enabled');
+            $property->setAccessible(true);
+            $property->setValue($errorHandler, false);
+        }
+    } catch (\Throwable $e) {
+        // PHPUnit may not have bootstrapped its error handler yet; ignore.
+    }
+}
+
 /*
 |--------------------------------------------------------------------------
 | Test Case

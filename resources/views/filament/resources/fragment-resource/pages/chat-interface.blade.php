@@ -439,7 +439,7 @@
         </div>
 
         <!-- Row 2: Chat Content -->
-        <div class="flex-1 p-6 overflow-y-auto space-y-4" id="chat-output">
+        <div class="flex-1 p-2 overflow-y-auto space-y-1 space-x-1" id="chat-output">
             <!-- Chat Messages -->
             @foreach ($chatMessages as $entry)
                 @if (($entry['type'] ?? '') === 'command_result')
@@ -748,19 +748,19 @@
                     // Create modal directly using the same pattern as header search
                     try {
                         console.log('Bookmark widget: Opening fragment modal for ID:', bookmark.fragment_id);
-                        
+
                         // Fetch fragment data
                         const response = await fetch(`/api/fragments/${bookmark.fragment_id}`);
                         if (!response.ok) {
                             throw new Error(`Failed to load fragment: HTTP ${response.status}`);
                         }
-                        
+
                         const fragmentData = await response.json();
                         console.log('Bookmark widget: Fragment data loaded:', fragmentData);
-                        
+
                         // Show the fragment using direct modal creation (same as header search)
                         this.showFragmentInModal(fragmentData);
-                        
+
                     } catch (error) {
                         console.error('Bookmark widget: Failed to load fragment:', error);
                         alert('Failed to load bookmark: ' + error.message);
@@ -771,7 +771,7 @@
                         }, 300);
                     }
                 },
-                
+
                 showFragmentInModal(fragmentData) {
                     // Create or get modal container
                     let modalContainer = document.getElementById('bookmark-result-modal');
@@ -781,9 +781,9 @@
                         modalContainer.className = 'fixed inset-0 z-50 hidden';
                         document.body.appendChild(modalContainer);
                     }
-                    
+
                     const fragmentType = fragmentData.type || 'unknown';
-                    
+
                     modalContainer.innerHTML = `
                         <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="document.getElementById('bookmark-result-modal').classList.add('hidden'); document.body.style.overflow = 'auto';"></div>
                         <div class="fixed inset-0 flex items-center justify-center p-4">
@@ -806,17 +806,17 @@
                                         </button>
                                     </div>
                                 </div>
-                                
+
                                 <div class="space-y-4">
                                     <div class="bg-surface-elevated p-4 rounded-pixel">
                                         <div class="text-sm text-text-primary whitespace-pre-wrap">${this.escapeHtml(fragmentData.message)}</div>
                                     </div>
-                                    
+
                                     <div class="flex justify-between text-xs text-text-muted">
                                         <span>Created: ${new Date(fragmentData.created_at).toLocaleDateString()}</span>
                                         <span>ID: ${fragmentData.id}</span>
                                     </div>
-                                    
+
                                     ${fragmentData.tags && fragmentData.tags.length ? `
                                         <div class="flex items-center gap-2 text-xs">
                                             <span class="text-text-muted">Tags:</span>
@@ -829,11 +829,11 @@
                             </div>
                         </div>
                     `;
-                    
+
                     // Show the modal
                     modalContainer.classList.remove('hidden');
                     document.body.style.overflow = 'hidden';
-                    
+
                     // Add ESC key handler
                     const escHandler = (e) => {
                         if (e.key === 'Escape') {
@@ -844,7 +844,7 @@
                     };
                     document.addEventListener('keydown', escHandler);
                 },
-                
+
                 escapeHtml(text) {
                     const map = {
                         '&': '&amp;',
@@ -908,19 +908,19 @@
                     // Simple direct approach - just open the modal with the fragment ID
                     try {
                         console.log('Header search: Opening fragment modal for ID:', result.id);
-                        
+
                         // Create a simple modal directly without waiting for LinkHandler
                         const response = await fetch(`/api/fragments/${result.id}`);
                         if (!response.ok) {
                             throw new Error(`Failed to load fragment: HTTP ${response.status}`);
                         }
-                        
+
                         const fragmentData = await response.json();
                         console.log('Header search: Fragment data loaded:', fragmentData);
-                        
+
                         // Show the fragment using a simple modal
                         this.showFragmentInModal(fragmentData);
-                        
+
                     } catch (error) {
                         console.error('Header search: Failed to load fragment:', error);
                         alert('Failed to load fragment: ' + error.message);
@@ -931,7 +931,7 @@
                         }, 500);
                     }
                 },
-                
+
                 showFragmentInModal(fragmentData) {
                     // Create or get modal container
                     let modalContainer = document.getElementById('search-result-modal');
@@ -941,9 +941,9 @@
                         modalContainer.className = 'fixed inset-0 z-50 hidden';
                         document.body.appendChild(modalContainer);
                     }
-                    
+
                     const fragmentType = fragmentData.type || 'unknown';
-                    
+
                     modalContainer.innerHTML = `
                         <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="document.getElementById('search-result-modal').classList.add('hidden')"></div>
                         <div class="fixed inset-0 flex items-center justify-center p-4">
@@ -966,17 +966,17 @@
                                         </button>
                                     </div>
                                 </div>
-                                
+
                                 <div class="space-y-4">
                                     <div class="bg-surface-elevated p-4 rounded-pixel">
                                         <div class="text-sm text-text-primary whitespace-pre-wrap">${this.escapeHtml(fragmentData.message)}</div>
                                     </div>
-                                    
+
                                     <div class="flex justify-between text-xs text-text-muted">
                                         <span>Created: ${new Date(fragmentData.created_at).toLocaleDateString()}</span>
                                         <span>ID: ${fragmentData.id}</span>
                                     </div>
-                                    
+
                                     ${fragmentData.tags && fragmentData.tags.length ? `
                                         <div class="flex items-center gap-2 text-xs">
                                             <span class="text-text-muted">Tags:</span>
@@ -989,10 +989,10 @@
                             </div>
                         </div>
                     `;
-                    
+
                     modalContainer.classList.remove('hidden');
                     document.body.style.overflow = 'hidden';
-                    
+
                     // Close modal on escape key
                     const escapeHandler = (e) => {
                         if (e.key === 'Escape') {
@@ -1003,7 +1003,7 @@
                     };
                     document.addEventListener('keydown', escapeHandler);
                 },
-                
+
                 escapeHtml(text) {
                     const div = document.createElement('div');
                     div.textContent = text;
@@ -1011,7 +1011,7 @@
                 }
             };
         }
-        
+
         // Global function for copying fragment content from modal
         window.copyFragmentFromModal = async function(event, text) {
             try {
@@ -1019,10 +1019,10 @@
                 const textarea = document.createElement('textarea');
                 textarea.innerHTML = text;
                 const unescapedText = textarea.value;
-                
+
                 // Copy to clipboard
                 await navigator.clipboard.writeText(unescapedText);
-                
+
                 // Visual feedback on the button
                 const button = event.target.closest('button');
                 if (button) {
@@ -1030,7 +1030,7 @@
                     button.innerHTML = '<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
                     button.classList.add('text-green-400', 'border-green-400/40');
                     button.classList.remove('text-gray-400', 'border-gray-600');
-                    
+
                     setTimeout(() => {
                         button.innerHTML = originalHTML;
                         button.classList.remove('text-green-400', 'border-green-400/40');
@@ -1039,14 +1039,14 @@
                 }
             } catch (error) {
                 console.error('Failed to copy fragment:', error);
-                
+
                 // Error feedback
                 const button = event.target.closest('button');
                 if (button) {
                     const originalHTML = button.innerHTML;
                     button.innerHTML = '<svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
                     button.classList.add('text-red-400', 'border-red-400/40');
-                    
+
                     setTimeout(() => {
                         button.innerHTML = originalHTML;
                         button.classList.remove('text-red-400', 'border-red-400/40');
@@ -1545,25 +1545,25 @@
             // Handle success toasts with custom titles (for todo creation, etc.)
             Livewire.on('show-success-toast', function(data) {
                 console.log('SECOND success toast handler received:', data);
-                
+
                 // Livewire events come as arrays, get the first element
                 const eventData = Array.isArray(data) ? data[0] : data;
                 console.log('Processed event data:', eventData);
                 console.log('Title check:', { title: eventData.title, isCustom: (eventData.title && eventData.title !== 'Success') });
-                
+
                 // If we have a custom title, use success-toast component
                 if (eventData.title && eventData.title !== 'Success') {
                     console.log('Attempting to use success-toast for custom title:', eventData.title);
                     const successToastElement = document.getElementById('success-toast');
                     console.log('success-toast element found:', !!successToastElement);
-                    
+
                     if (successToastElement && successToastElement._x_dataStack && successToastElement._x_dataStack[0]) {
                         console.log('SUCCESS: Using success-toast for custom title:', eventData.title);
                         successToastElement._x_dataStack[0].display(
-                            eventData.title, 
-                            eventData.message, 
-                            eventData.fragmentType || 'fragment', 
-                            eventData.fragmentId || null, 
+                            eventData.title,
+                            eventData.message,
+                            eventData.fragmentType || 'fragment',
+                            eventData.fragmentId || null,
                             3
                         );
                         return;
@@ -1571,15 +1571,15 @@
                         console.log('FAILED: success-toast element not ready, _x_dataStack:', successToastElement?._x_dataStack);
                     }
                 }
-                
+
                 // Fallback to undo-toast for generic messages (like fragment restored)
                 console.log('FALLBACK: Using undo-toast for message');
                 const undoToastElement = document.getElementById('undo-toast');
                 if (undoToastElement && undoToastElement._x_dataStack && undoToastElement._x_dataStack[0]) {
                     console.log('undo-toast element ready, displaying success');
                     undoToastElement._x_dataStack[0].displaySuccess(
-                        eventData.message, 
-                        eventData.fragmentType || 'fragment', 
+                        eventData.message,
+                        eventData.fragmentType || 'fragment',
                         2
                     );
                 } else {
@@ -1599,15 +1599,15 @@
                     if (!response.ok) return;
                     const data = await response.json();
                     console.log('Initial bookmark status data:', data);
-                    
+
                     // Try different ways to access Alpine component
                     let alpineComponent;
                     if (window.Alpine && Alpine.$data) {
                         alpineComponent = Alpine.$data(element);
                     }
-                    
+
                     console.log('Alpine component for status check:', alpineComponent);
-                    
+
                     if (alpineComponent && typeof alpineComponent.bookmarked !== 'undefined') {
                         alpineComponent.bookmarked = data.is_bookmarked;
                         console.log('Set initial bookmarked to:', data.is_bookmarked);
@@ -1638,7 +1638,7 @@
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const data = await response.json();
                     console.log('Bookmark toggle data:', data);
-                    
+
                     // Update Alpine component state
                     const alpineComponent = Alpine.$data(element);
                     console.log('Alpine component for toggle:', alpineComponent);
@@ -1676,7 +1676,7 @@
 
                     let text = clonedContainer.textContent || clonedContainer.innerText;
                     text = text.replace(/📋\s*Copy/g, '').replace(/✅\s*Copied!/g, '').replace(/❌\s*Failed/g, '').trim();
-                    
+
                     if (!text || text.length === 0) throw new Error('No text content found');
 
                     await navigator.clipboard.writeText(text);

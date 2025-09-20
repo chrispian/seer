@@ -32,11 +32,11 @@
 @endphp
 
 <div
-    class="group transition-colors duration-200 {{ $highlight ? 'bg-electric-blue/10 border border-electric-blue/30 rounded-lg p-3' : 'bg-gray-800 border border-electric-blue/20 rounded-lg p-3' }} relative"
+    class="group transition-colors duration-200 {{ $highlight ? 'bg-electric-blue/10 border border-electric-blue/30 rounded-lg p-3' : 'border-b border-b-gray-800 border-dashed p-3' }} relative"
     @if($fragmentId) data-fragment-id="{{ $fragmentId }}" @endif
 >
     <div class="flex items-start justify-between">
-        <div class="flex-1 {{ $showActions ? 'mr-4' : '' }} pr-20">
+        <div class="flex-1 {{ $showActions ? 'mr-2' : '' }} ">
             {{-- Type Display --}}
             <div class="flex items-center justify-between mb-2">
                 <div class="text-sm font-medium">
@@ -88,7 +88,7 @@
                     </div>
 
                     <!-- Bookmark Button (independent opacity control) -->
-                    <div wire:ignore.self 
+                    <div wire:ignore.self
                          x-data="{
                              bookmarked: false,
                              init() {
@@ -116,12 +116,12 @@
                                              'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''
                                          }
                                      });
-                                     
+
                                      if (response.ok) {
                                          const data = await response.json();
                                          console.log('Toggle result for {{ $fragmentId }}:', data.is_bookmarked);
                                          this.bookmarked = data.is_bookmarked;
-                                         
+
                                          // Dispatch event for bookmark widget
                                          window.dispatchEvent(new CustomEvent('bookmark-toggled', {
                                              detail: { fragmentId: {{ $fragmentId }}, action: data.action, isBookmarked: data.is_bookmarked }

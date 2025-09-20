@@ -1,7 +1,7 @@
 {{-- Command Result Display --}}
-<div class="border-l-4 border-electric-blue/50 bg-surface/50 p-4 rounded-r-lg">
+<div class="bg-surface/50 p-4 rounded-r-lg">
     {{-- Header --}}
-    <div class="flex items-center justify-between mb-3">
+    <div class="border border-amber-400 flex items-center justify-between mb-3">
         <h3 class="text-sm font-medium text-electric-blue capitalize">
             {{ ucfirst(str_replace('_', ' ', $type ?? 'command')) }} Result
         </h3>
@@ -49,6 +49,7 @@
 
                 <div class="space-y-1">
                     @foreach ($data['fragments'] as $fragment)
+
                         @if (($fragment['type']['value'] ?? '') === 'todo')
                             {{-- Use Livewire TodoItem for todos --}}
                             @livewire('todo-item', ['fragment' => \App\Models\Fragment::find($fragment['id'])], key('todo-'.$fragment['id']))
@@ -165,7 +166,7 @@
             @if (isset($data['channels']) && count($data['channels']) > 0)
                 <div class="space-y-2">
                     @foreach ($data['channels'] as $channel)
-                        <div 
+                        <div
                             wire:click="$dispatch('join-channel', { chatId: {{ $channel['id'] }} })"
                             class="flex items-center justify-between p-3 rounded-lg bg-surface border border-electric-blue/20 hover:border-electric-blue/40 cursor-pointer transition-all group">
                             <div class="flex-1 min-w-0">
@@ -185,6 +186,14 @@
                 </div>
             @endif
 
+        @elseif ($type === 'routing')
+            <livewire:routing-rules-manager
+                :rules="$data['rules'] ?? []"
+                :vaults="$data['vaults'] ?? []"
+                :projects="$data['projects'] ?? []"
+                :filters="$data['filters'] ?? []"
+            />
+
         @elseif ($type === 'channels-list')
             {{-- Channels List Results --}}
             @if (isset($data['message']))
@@ -198,7 +207,7 @@
             @if (isset($data['channels']) && count($data['channels']) > 0)
                 <div class="space-y-2 mt-4">
                     @foreach ($data['channels'] as $channel)
-                        <div 
+                        <div
                             wire:click="$dispatch('join-channel', { chatId: {{ $channel['id'] }} })"
                             class="flex items-center justify-between p-3 rounded-lg bg-surface border border-electric-blue/20 hover:border-electric-blue/40 cursor-pointer transition-all group">
                             <div class="flex-1 min-w-0">

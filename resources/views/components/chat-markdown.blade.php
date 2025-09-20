@@ -23,6 +23,6 @@
 @endphp
 
 
-<div class="prose dark:prose-invert max-w-none">
+<div class="prose dark:prose-invert w-full">
     {!! $html !!}
 </div>

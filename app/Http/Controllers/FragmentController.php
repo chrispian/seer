@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Fragment;
+use App\Actions\SearchFragments;
 use App\Services\AI\Embeddings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class FragmentController extends Controller
 {
@@ -158,6 +160,25 @@ class FragmentController extends Controller
         $limit     = (int)    $request->query('limit', 20);
 
         if ($q === '') return response()->json([]);
+
+        if (! config('fragments.embeddings.enabled')) {
+            $results = app(\App\Actions\SearchFragments::class)(
+                query: $q,
+                vault: null,
+                projectId: null,
+                sessionId: null,
+                limit: $limit
+            )->map(fn ($fragment) => [
+                'id' => $fragment->id,
+                'title' => $fragment->title,
+                'snippet' => \Illuminate\Support\Str::limit(strip_tags($fragment->message ?? ''), 200),
+                'vec_sim' => null,
+                'txt_rank' => $fragment->search_score ?? 0,
+                'score' => $fragment->search_score ?? 0,
+            ])->values();
+
+            return response()->json($results);
+        }
 
         // 1) query embedding
         $emb = app(Embeddings::class)->embed($q, $provider);

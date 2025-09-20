@@ -102,12 +102,14 @@
     </style>
     
     @livewireStyles
+    @fluxAppearance
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </head>
 <body class="h-full bg-surface text-text-primary overflow-hidden">
     {{ $slot }}
     
     @livewireScripts
+    @fluxScripts
     
     <script>
         // Auto-scroll chat to bottom

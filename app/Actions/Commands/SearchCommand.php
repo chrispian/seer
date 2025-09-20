@@ -5,10 +5,12 @@ namespace App\Actions\Commands;
 use App\Contracts\HandlesCommand;
 use App\DTOs\CommandRequest;
 use App\DTOs\CommandResponse;
+use App\Actions\SearchFragments as FallbackSearch;
 use App\Models\Fragment;
 use App\Services\AI\Embeddings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class SearchCommand implements HandlesCommand
 {
@@ -25,8 +27,12 @@ class SearchCommand implements HandlesCommand
         }
 
         try {
-            $results = $this->hybridSearch($query);
-            
+            if (! config('fragments.embeddings.enabled')) {
+                $results = $this->fallbackSearch($command, $query);
+            } else {
+                $results = $this->hybridSearch($query);
+            }
+
             if (empty($results)) {
                 return new CommandResponse(
                     type: 'search',
@@ -78,8 +84,37 @@ class SearchCommand implements HandlesCommand
         }
     }
 
+    private function fallbackSearch(CommandRequest $command, string $query): array
+    {
+        $vault = $command->arguments['vault'] ?? null;
+        $projectId = isset($command->arguments['project_id']) ? (int) $command->arguments['project_id'] : null;
+        $sessionId = $command->arguments['current_chat_session_id'] ?? null;
+
+        $collection = app(FallbackSearch::class)(
+            query: $query,
+            vault: $vault,
+            projectId: $projectId,
+            sessionId: $sessionId,
+            limit: 20
+        );
+
+        return $collection->map(function (Fragment $fragment) {
+            return (object) [
+                'id' => $fragment->id,
+                'snippet' => Str::limit(strip_tags($fragment->message ?? ''), 200),
+                'score' => $fragment->search_score ?? 0,
+                'vec_sim' => null,
+                'txt_rank' => $fragment->search_score ?? 0,
+            ];
+        })->all();
+    }
+
     private function hybridSearch(string $query, string $provider = null, int $limit = 20): array
     {
+        if (! config('fragments.embeddings.enabled')) {
+            return [];
+        }
+
         $provider = $provider ?? config('fragments.embeddings.provider');
         
         // Get query embedding
