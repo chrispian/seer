@@ -20,6 +20,8 @@ class ModelSelectionService
 
     protected string $fallbackTextModel;
 
+    protected array $aiParameters;
+
     public function __construct()
     {
         $config = config('fragments.models');
@@ -30,6 +32,7 @@ class ModelSelectionService
         $this->defaultTextModel = $config['default_text_model'] ?? 'gpt-4o-mini';
         $this->fallbackProvider = $config['fallback_provider'] ?? 'ollama';
         $this->fallbackTextModel = $config['fallback_text_model'] ?? 'llama3:latest';
+        $this->aiParameters = $config['parameters'] ?? [];
     }
 
     /**
@@ -66,8 +69,12 @@ class ModelSelectionService
     public function selectEmbeddingModel(array $context = []): array
     {
         $context['operation_type'] = 'embedding';
+        $selection = $this->selectModelByType($context, 'embedding_models');
 
-        return $this->selectModelByType($context, 'embedding_models');
+        // Add AI parameters for embedding operations
+        $selection['parameters'] = $this->getAIParameters($context);
+
+        return $selection;
     }
 
     /**
@@ -76,8 +83,12 @@ class ModelSelectionService
     public function selectTextModel(array $context = []): array
     {
         $context['operation_type'] = 'text';
+        $selection = $this->selectModelByType($context, 'text_models');
 
-        return $this->selectModelByType($context, 'text_models');
+        // Add AI parameters based on operation context
+        $selection['parameters'] = $this->getAIParameters($context);
+
+        return $selection;
     }
 
     /**
@@ -393,6 +404,59 @@ class ModelSelectionService
     public function getModelsForProvider(string $provider): array
     {
         return $this->providers[$provider] ?? [];
+    }
+
+    /**
+     * Get AI parameters based on operation context
+     */
+    public function getAIParameters(array $context): array
+    {
+        $command = $context['command'] ?? null;
+        $operationType = $context['operation_type'] ?? 'text';
+
+        // Map specific commands to parameter types
+        $parameterType = match ($command) {
+            'type_inference' => 'classification',
+            'enrich_fragment' => 'enrichment',
+            'parse_chaos' => 'parsing',
+            default => match ($operationType) {
+                'embedding' => 'embedding',
+                'text' => 'enrichment', // Default text operations use enrichment params
+                default => 'enrichment',
+            }
+        };
+
+        // Get base parameters for the operation type
+        $parameters = $this->aiParameters[$parameterType] ?? [];
+
+        // Allow context overrides
+        if (isset($context['temperature'])) {
+            $parameters['temperature'] = $context['temperature'];
+        }
+        if (isset($context['top_p'])) {
+            $parameters['top_p'] = $context['top_p'];
+        }
+        if (isset($context['max_tokens'])) {
+            $parameters['max_tokens'] = $context['max_tokens'];
+        }
+
+        return $parameters;
+    }
+
+    /**
+     * Get available AI parameter types
+     */
+    public function getAvailableParameterTypes(): array
+    {
+        return array_keys($this->aiParameters);
+    }
+
+    /**
+     * Get AI parameters for a specific type
+     */
+    public function getParametersForType(string $type): array
+    {
+        return $this->aiParameters[$type] ?? [];
     }
 
     /**

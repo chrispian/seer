@@ -16,6 +16,29 @@ return [
         'fallback_provider' => env('AI_FALLBACK_PROVIDER', 'ollama'),
         'fallback_text_model' => env('AI_FALLBACK_TEXT_MODEL', 'llama3:latest'),
 
+        // Deterministic AI parameters per operation type
+        'parameters' => [
+            'classification' => [
+                'temperature' => env('AI_CLASSIFICATION_TEMPERATURE', 0.1),
+                'top_p' => env('AI_CLASSIFICATION_TOP_P', 0.95),
+                'max_tokens' => env('AI_CLASSIFICATION_MAX_TOKENS', 500),
+            ],
+            'enrichment' => [
+                'temperature' => env('AI_ENRICHMENT_TEMPERATURE', 0.3),
+                'top_p' => env('AI_ENRICHMENT_TOP_P', 0.95),
+                'max_tokens' => env('AI_ENRICHMENT_MAX_TOKENS', 1000),
+            ],
+            'parsing' => [
+                'temperature' => env('AI_PARSING_TEMPERATURE', 0.1),
+                'top_p' => env('AI_PARSING_TOP_P', 0.95),
+                'max_tokens' => env('AI_PARSING_MAX_TOKENS', 2000),
+            ],
+            'embedding' => [
+                // Embeddings don't use temperature/top_p but may have other params
+                'dimensions' => env('AI_EMBEDDING_DIMENSIONS', null),
+            ],
+        ],
+
         // Provider catalog with capabilities
         'providers' => [
             'openai' => [

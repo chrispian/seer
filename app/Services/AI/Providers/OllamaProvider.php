@@ -31,6 +31,8 @@ class OllamaProvider extends AbstractAIProvider
     {
         $model = $options['model'] ?? 'llama3:latest';
         $temperature = $options['temperature'] ?? 0.7;
+        $topP = $options['top_p'] ?? null;
+        $maxTokens = $options['max_tokens'] ?? null;
 
         $request = [
             'model' => $model,
@@ -40,6 +42,16 @@ class OllamaProvider extends AbstractAIProvider
                 'temperature' => $temperature,
             ],
         ];
+
+        // Add top_p if specified (Ollama supports this as 'top_p')
+        if ($topP !== null) {
+            $request['options']['top_p'] = $topP;
+        }
+
+        // Add num_predict if max_tokens specified (Ollama equivalent to max_tokens)
+        if ($maxTokens !== null) {
+            $request['options']['num_predict'] = $maxTokens;
+        }
 
         try {
             $baseUrl = rtrim($this->getConfigValue('base') ?? 'http://127.0.0.1:11434', '/');

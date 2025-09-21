@@ -3,8 +3,8 @@
 namespace App\Actions;
 
 use App\Models\Fragment;
+use App\Services\AI\AIProviderManager;
 use Illuminate\Pipeline\Pipeline;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ParseChaosFragment
@@ -43,24 +43,38 @@ Input:
 ONLY return an array of JSON objects. No explanation, no markdown, no prose.
 PROMPT;
 
-        $response = Http::timeout(20)->post('http://localhost:11434/api/generate', [
-            'model' => 'llama3',
-            'prompt' => $prompt,
-            'stream' => false,
-        ]);
+        // Build context for model selection with parsing-specific parameters
+        $context = [
+            'operation_type' => 'text',
+            'command' => 'parse_chaos',
+            'vault' => $fragment->vault,
+            'project_id' => $fragment->project_id,
+        ];
 
-        if (! $response->ok()) {
-            Log::error('Chaos parse HTTP failed', ['fragment_id' => $fragment->id]);
+        try {
+            // Use AIProviderManager with deterministic controls
+            $aiProvider = app(AIProviderManager::class);
+            $aiResponse = $aiProvider->generateText($prompt, $context);
+
+            Log::debug('AI chaos parsing response', [
+                'fragment_id' => $fragment->id,
+                'provider' => $aiResponse['provider'],
+                'model' => $aiResponse['model'],
+                'usage' => $aiResponse['usage'] ?? null,
+            ]);
+
+            $raw = $aiResponse['text'];
+
+        } catch (\Exception $e) {
+            Log::error('Chaos parse AI failed', [
+                'fragment_id' => $fragment->id,
+                'error' => $e->getMessage(),
+            ]);
 
             return [
-                'error' => $response->json('error'),
+                'error' => $e->getMessage(),
             ];
-
         }
-
-        Log::debug('Raw chaos response before parse', ['raw' => $response->json()]);
-
-        $raw = $response->json('response');
 
         // Step 1: Extract markdown
         if (preg_match('/```(?:json)?\s*(\[.*?\])\s*```/s', $raw, $matches)) {
@@ -140,9 +154,11 @@ PROMPT;
             'chaos_parsed_at' => now()->toISOString(),
             'child_count' => count($children),
             'chaos_lineage' => [
-                'model' => 'llama3',
+                'provider' => $aiResponse['provider'] ?? 'unknown',
+                'model' => $aiResponse['model'] ?? 'unknown',
                 'parsed_on' => now()->toISOString(),
                 'child_ids' => $children,
+                'usage' => $aiResponse['usage'] ?? null,
             ],
         ]);
 

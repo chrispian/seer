@@ -3,8 +3,8 @@
 namespace App\Actions;
 
 use App\Models\Fragment;
+use App\Services\AI\AIProviderManager;
 use App\Services\AI\ModelSelectionService;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class EnrichFragmentWithLlama
@@ -31,7 +31,7 @@ class EnrichFragmentWithLlama
 
         Log::debug('EnrichFragmentWithLlama::invoke()');
 
-        // Build context for model selection
+        // Build context for model selection with enrichment-specific parameters
         $context = [
             'operation_type' => 'text',
             'command' => 'enrich_fragment',
@@ -39,7 +39,7 @@ class EnrichFragmentWithLlama
             'project_id' => $fragment->project_id,
         ];
 
-        // Select appropriate model
+        // Select appropriate model with deterministic parameters
         $selectedModel = $this->modelSelection->selectTextModel($context);
 
         $prompt = <<<PROMPT
@@ -64,28 +64,38 @@ Output format:
 Only return JSON. No markdown, no explanation.
 PROMPT;
 
-        $response = $this->makeApiCall($selectedModel, $prompt);
+        try {
+            // Use AIProviderManager with deterministic controls
+            $aiProvider = app(AIProviderManager::class);
+            $aiResponse = $aiProvider->generateText($prompt, $context);
 
-        if (! $response || ! $response->ok()) {
-            Log::error('AI enrichment failed', [
+            Log::info('Fragment enrichment AI response', [
                 'fragment_id' => $fragment->id,
-                'provider' => $selectedModel['provider'],
-                'model' => $selectedModel['model'],
+                'provider' => $aiResponse['provider'],
+                'model' => $aiResponse['model'],
+                'usage' => $aiResponse['usage'] ?? null,
             ]);
 
-            return null;
-        }
+            $raw = $aiResponse['text'];
+            $cleanJson = $this->cleanJsonResponse($raw);
+            $parsed = json_decode($cleanJson, true);
 
-        $raw = $this->extractResponse($response, $selectedModel['provider']);
-        $cleanJson = $this->cleanJsonResponse($raw);
-        $parsed = json_decode($cleanJson, true);
+            if (! is_array($parsed)) {
+                Log::error('JSON decode failed during enrichment', [
+                    'fragment_id' => $fragment->id,
+                    'raw' => $raw,
+                    'cleanJson' => $cleanJson,
+                    'provider' => $aiResponse['provider'],
+                    'model' => $aiResponse['model'],
+                ]);
 
-        if (! is_array($parsed)) {
-            Log::error('JSON decode failed', [
-                'raw' => $raw,
-                'cleanJson' => $cleanJson,
-                'provider' => $selectedModel['provider'],
-                'model' => $selectedModel['model'],
+                return null;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('AI enrichment failed', [
+                'fragment_id' => $fragment->id,
+                'error' => $e->getMessage(),
             ]);
 
             return null;
@@ -105,63 +115,22 @@ PROMPT;
             }
         }
 
-        // Store model metadata
-        $fragment->model_provider = $selectedModel['provider'];
-        $fragment->model_name = $selectedModel['model'];
+        // Store model metadata from actual AI response
+        $fragment->model_provider = $aiResponse['provider'];
+        $fragment->model_name = $aiResponse['model'];
 
         $fragment->save();
 
         Log::info('Fragment enriched with AI', [
             'fragment_id' => $fragment->id,
-            'provider' => $selectedModel['provider'],
-            'model' => $selectedModel['model'],
+            'provider' => $aiResponse['provider'],
+            'model' => $aiResponse['model'],
+            'usage' => $aiResponse['usage'] ?? null,
         ]);
 
         return $fragment;
     }
 
-    protected function makeApiCall(array $selectedModel, string $prompt)
-    {
-        $provider = $selectedModel['provider'];
-        $model = $selectedModel['model'];
-
-        if ($provider === 'ollama') {
-            $base = rtrim(config('services.ollama.base', 'http://127.0.0.1:11434'), '/');
-
-            return Http::timeout(20)->post("$base/api/generate", [
-                'model' => $model,
-                'prompt' => $prompt,
-                'stream' => false,
-            ]);
-        }
-
-        if ($provider === 'openai') {
-            $apiKey = config('services.openai.key');
-
-            return Http::withToken($apiKey)
-                ->timeout(20)
-                ->post('https://api.openai.com/v1/chat/completions', [
-                    'model' => $model,
-                    'messages' => [['role' => 'user', 'content' => $prompt]],
-                    'temperature' => 0.3,
-                ]);
-        }
-
-        throw new \RuntimeException("Unsupported provider for enrichment: $provider");
-    }
-
-    protected function extractResponse($response, string $provider): string
-    {
-        if ($provider === 'ollama') {
-            return $response->json('response');
-        }
-
-        if ($provider === 'openai') {
-            return $response->json('choices.0.message.content');
-        }
-
-        return '';
-    }
 
     protected function cleanJsonResponse(string $raw): string
     {

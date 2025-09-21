@@ -95,7 +95,16 @@ class AIProviderManager
             throw new \RuntimeException('No suitable text generation provider available');
         }
 
+        // Merge model selection with AI parameters
+        $options = array_merge($selectedModel['parameters'] ?? [], $options);
         $options['model'] = $selectedModel['model'];
+
+        Log::info('AI text generation request', [
+            'provider' => $selectedModel['provider'],
+            'model' => $selectedModel['model'],
+            'parameters' => $selectedModel['parameters'] ?? [],
+            'context' => $context,
+        ]);
 
         return $provider->generateText($prompt, $options);
     }
@@ -112,7 +121,16 @@ class AIProviderManager
             throw new \RuntimeException('No suitable embedding provider available');
         }
 
+        // Merge model selection with AI parameters
+        $options = array_merge($selectedModel['parameters'] ?? [], $options);
         $options['model'] = $selectedModel['model'];
+
+        Log::info('AI embedding generation request', [
+            'provider' => $selectedModel['provider'],
+            'model' => $selectedModel['model'],
+            'parameters' => $selectedModel['parameters'] ?? [],
+            'context' => $context,
+        ]);
 
         return $provider->generateEmbedding($text, $options);
     }

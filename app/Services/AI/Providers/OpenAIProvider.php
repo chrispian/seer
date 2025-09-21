@@ -32,6 +32,7 @@ class OpenAIProvider extends AbstractAIProvider
         $model = $options['model'] ?? 'gpt-4o-mini';
         $maxTokens = $options['max_tokens'] ?? 1000;
         $temperature = $options['temperature'] ?? 0.7;
+        $topP = $options['top_p'] ?? null;
 
         $request = [
             'model' => $model,
@@ -41,6 +42,11 @@ class OpenAIProvider extends AbstractAIProvider
             'max_tokens' => $maxTokens,
             'temperature' => $temperature,
         ];
+
+        // Add top_p if specified (OpenAI supports this parameter)
+        if ($topP !== null) {
+            $request['top_p'] = $topP;
+        }
 
         try {
             $response = $this->createHttpClient()
