@@ -45,7 +45,7 @@ Create or refresh these packets before handing work to another agent.
 - [ ] Identify failure handling gaps and propose retries/fallbacks per action.
 
 ### ENG-02 Data-Driven Vault Routing
-- [ ] Delegation packet: `delegation/ENG-02-routing/` (existing command specs, Livewire panel notes, outstanding backend wiring).
+- [x] Delegation packet: `delegation/ENG-02-routing/` (existing command specs, Livewire panel notes, outstanding backend wiring).
 - [x] Instrument `app/Actions/RouteToVault.php` to log decision inputs/outputs.
 - [x] Design data model for routing rules (per project/vault thresholds).
 - [ ] Implement configuration persistence (DB table or JSONB) and management UI/command.
@@ -61,9 +61,9 @@ Create or refresh these packets before handing work to another agent.
 
 ### ENG-04 Embeddings Toggle
 - [x] Delegation packet: `delegation/ENG-04-embeddings-toggle/` (config matrix, fallback behaviour, CLI outline).
-- [ ] Add config flag/env guard to disable embeddings gracefully.
-- [ ] Implement conditional logic in ingestion/search so pipeline degrades without embeddings.
-- [ ] Provide admin command to backfill embeddings when re-enabled.
+- [x] Add config flag/env guard to disable embeddings gracefully.
+- [x] Implement conditional logic in ingestion/search so pipeline degrades without embeddings.
+- [x] Provide admin command to backfill embeddings when re-enabled.
 
 ### ENG-05 Streaming Contract
 - [ ] Delegation packet: `delegation/ENG-05-streaming-contract/` (event contract draft, transport trade-offs, UI integration plan).
@@ -75,7 +75,7 @@ Create or refresh these packets before handing work to another agent.
 ## AI Integration (AI)
 
 ### AI-01 Provider Abstraction (BYOK/OAuth)
-- [ ] Delegation packet: `delegation/AI-01-provider-abstraction/` (auth flow matrix, interface contract, security checklist).
+- [x] Delegation packet: `delegation/AI-01-provider-abstraction/` (auth flow matrix, interface contract, security checklist).
 - [ ] Inventory authentication flows needed (API key, OAuth device flow, local model).
 - [ ] Create provider interface + adapters for OpenAI, Azure, Anthropic, local Ollama.
 - [ ] Implement credential storage/service (encrypted config, vault, or NativePHP keychain).
@@ -91,13 +91,13 @@ Create or refresh these packets before handing work to another agent.
 
 ### CMD-01 Slash Command Expansion
 - [x] Delegation packet: `delegation/CMD-01-command-expansion/` (command matrix, UX copy, validation rules).
-- [ ] Capture requirements/UX for `/vault`, `/project`, `/session`, `/context`, `/inbox`, `/compose`.
-- [ ] Add command definitions to `app/Services/CommandRegistry.php` with validation + help text.
-- [ ] Implement handlers and associated UI panels/toasts.
-- [ ] Write command execution tests + docs.
+- [x] Capture requirements/UX for `/vault`, `/project`, `/session`, `/context`, `/inbox`, `/compose`.
+- [x] Add command definitions to `app/Services/CommandRegistry.php` with validation + help text.
+- [x] Implement handlers and associated UI panels/toasts.
+- [x] Write command execution tests + docs.
 
 ### CMD-02 Keyboard Shortcuts
-- [ ] Delegation packet: `delegation/CMD-02-shortcuts/` (current map audit, accessibility guidance, testing plan).
+- [x] Delegation packet: `delegation/CMD-02-shortcuts/` (current map audit, accessibility guidance, testing plan).
 - [ ] Audit existing shortcuts and conflicts.
 - [ ] Design shortcut map covering recall, capture, navigation.
 - [ ] Implement JS layer (likely Filament/Livewire hooks) with discoverability overlay.
@@ -188,8 +188,8 @@ Create or refresh these packets before handing work to another agent.
 - [ ] Document restore procedure and test it.
 
 ## Global Next Steps
-- [ ] Sequence upcoming work inside this repo: run ENG-04 embeddings toggle alongside CMD-01 slash command expansion, then queue AI-01 provider abstraction.
-- [ ] Spin up delegation packets for ENG-04 and CMD-01 and brief agents before kickoff.
+- [ ] Sequence upcoming work inside this repo: tackle AI-01 provider abstraction in parallel with CMD-02 keyboard shortcuts, then queue ENG-05 streaming contract.
+- [ ] Spin up delegation packets for AI-01 and CMD-02 and brief agents before kickoff.
 - [ ] Draft/refresh ADRs for mode strategy, AI fallback, UI stack to reflect the paused split/UI projects.
 - [ ] Create GitHub issues or project board cards referencing active todos; assign owners and target milestones.
 - [ ] Revisit plan monthly; log decisions in ADRs/CHANGELOG.
