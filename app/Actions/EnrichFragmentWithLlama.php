@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\Fragment;
 use App\Services\AI\AIProviderManager;
+use App\Services\AI\JsonSchemaValidator;
 use App\Services\AI\ModelSelectionService;
 use Illuminate\Support\Facades\Log;
 
@@ -76,21 +77,43 @@ PROMPT;
                 'usage' => $aiResponse['usage'] ?? null,
             ]);
 
-            $raw = $aiResponse['text'];
-            $cleanJson = $this->cleanJsonResponse($raw);
-            $parsed = json_decode($cleanJson, true);
+            // Validate and parse JSON response using schema validation with retry logic
+            $validator = app(JsonSchemaValidator::class);
+            $correlationId = $validator->generateCorrelationId();
 
-            if (! is_array($parsed)) {
-                Log::error('JSON decode failed during enrichment', [
+            $validationResult = $validator->validateAndParse(
+                $aiResponse['text'],
+                'fragment_enrichment',
+                $correlationId,
+                [
                     'fragment_id' => $fragment->id,
-                    'raw' => $raw,
-                    'cleanJson' => $cleanJson,
+                    'provider' => $aiResponse['provider'],
+                    'model' => $aiResponse['model'],
+                ]
+            );
+
+            if (!$validationResult['success']) {
+                Log::error('Fragment enrichment JSON validation failed', [
+                    'fragment_id' => $fragment->id,
+                    'correlation_id' => $correlationId,
+                    'error' => $validationResult['error'],
+                    'attempts' => $validationResult['attempts'],
                     'provider' => $aiResponse['provider'],
                     'model' => $aiResponse['model'],
                 ]);
 
                 return null;
             }
+
+            Log::info('Fragment enrichment JSON validation successful', [
+                'fragment_id' => $fragment->id,
+                'correlation_id' => $correlationId,
+                'attempts' => $validationResult['attempts'],
+                'provider' => $aiResponse['provider'],
+                'model' => $aiResponse['model'],
+            ]);
+
+            $parsed = $validationResult['data'];
 
         } catch (\Exception $e) {
             Log::error('AI enrichment failed', [
@@ -104,6 +127,11 @@ PROMPT;
         // Save enrichment with model metadata
         $fragment->metadata = array_merge((array) $fragment->metadata, [
             'enrichment' => $parsed,
+            'enrichment_validation' => [
+                'correlation_id' => $correlationId,
+                'validation_attempts' => $validationResult['attempts'],
+                'validated_at' => now()->toISOString(),
+            ],
         ]);
 
         if (! empty($parsed['type'])) {
@@ -129,13 +157,5 @@ PROMPT;
         ]);
 
         return $fragment;
-    }
-
-
-    protected function cleanJsonResponse(string $raw): string
-    {
-        return preg_match('/```(?:json)?\s*(\{.*?\})\s*```/s', $raw, $matches)
-            ? $matches[1]
-            : (str_starts_with(trim($raw), 'Here') ? explode('```', $raw)[1] ?? $raw : $raw);
     }
 }
