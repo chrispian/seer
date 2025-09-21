@@ -39,10 +39,22 @@ Create or refresh these packets before handing work to another agent.
 ## Engineering Pipeline (ENG)
 
 ### ENG-01 Pipeline Audit
-- [ ] Delegation packet: `delegation/ENG-01-pipeline-audit/` (process map templates, logging guidelines, open questions).
-- [ ] Map each fragment pipeline action with success/error paths (sequence diagram or table).
-- [ ] Add structured logging for each step with correlation IDs.
-- [ ] Identify failure handling gaps and propose retries/fallbacks per action.
+- [x] Delegation packet: `delegation/ENG-01-pipeline-audit/` (process map templates, logging guidelines, open questions).
+- [x] Map each fragment pipeline action with success/error paths (sequence diagram or table).
+- [x] Identify failure handling gaps and propose retries/fallbacks per action.
+- [x] Complete pipeline audit report with recommendations (docs/pipeline/eng-01-audit.md).
+
+**Follow-up Implementation Tasks (Priority Order):**
+- [ ] **PHASE 1:** Add deterministic temperature controls to all AI calls (ParseChaos=0.1, Enrich=0.3, TypeInference=0.1)
+- [ ] **PHASE 1:** Implement JSON schema validation for AI responses with retry logic
+- [ ] **PHASE 1:** Add correlation IDs to all pipeline logging with structured context
+- [ ] **PHASE 1:** Replace hardcoded Ollama model in ParseChaosFragment with ModelSelectionService
+- [ ] **PHASE 2:** Consolidate entity extraction (merge ParseAtomicFragment + ExtractMetadataEntities)
+- [ ] **PHASE 2:** Add model-specific confidence calibration (replace static 0.7 threshold)
+- [ ] **PHASE 2:** Optimize model assignments per pipeline stage per audit recommendations
+- [ ] **PHASE 3:** Replace static SuggestTags with AI-powered tag suggestions
+- [ ] **PHASE 3:** Add comprehensive error handling with exponential backoff retries
+- [ ] **PHASE 3:** Implement performance monitoring dashboard for pipeline health
 
 ### ENG-02 Data-Driven Vault Routing
 - [x] Delegation packet: `delegation/ENG-02-routing/` (existing command specs, Livewire panel notes, outstanding backend wiring).
