@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\Fragment;
 use App\Services\AI\AIProviderManager;
+use App\Services\AI\JsonSchemaValidator;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\Log;
 
@@ -76,28 +77,43 @@ PROMPT;
             ];
         }
 
-        // Step 1: Extract markdown
-        if (preg_match('/```(?:json)?\s*(\[.*?\])\s*```/s', $raw, $matches)) {
-            $raw = $matches[1];
-        }
+        // Validate and parse JSON response using schema validation with retry logic
+        $validator = app(JsonSchemaValidator::class);
+        $correlationId = $validator->generateCorrelationId();
 
-        // Step 2: Force decode if still a string
-        if (is_string($raw)) {
-            $raw = trim($raw);
-            $raw = json_decode($raw, true);
-        }
-
-        // Step 3: Ensure it's an array now
-        if (! is_array($raw)) {
-            Log::error('Chaos fragment parse failed', [
+        $validationResult = $validator->validateAndParse(
+            $aiResponse['text'],
+            'chaos_fragments',
+            $correlationId,
+            [
                 'fragment_id' => $fragment->id,
-                'raw' => $raw,
+                'provider' => $aiResponse['provider'],
+                'model' => $aiResponse['model'],
+            ]
+        );
+
+        if (!$validationResult['success']) {
+            Log::error('Chaos fragment JSON validation failed', [
+                'fragment_id' => $fragment->id,
+                'correlation_id' => $correlationId,
+                'error' => $validationResult['error'],
+                'attempts' => $validationResult['attempts'],
+                'provider' => $aiResponse['provider'],
+                'model' => $aiResponse['model'],
             ]);
 
             return $fragment;
         }
 
-        $atomicFragments = $raw;
+        Log::info('Chaos fragment JSON validation successful', [
+            'fragment_id' => $fragment->id,
+            'correlation_id' => $correlationId,
+            'attempts' => $validationResult['attempts'],
+            'provider' => $aiResponse['provider'],
+            'model' => $aiResponse['model'],
+        ]);
+
+        $atomicFragments = $validationResult['data'];
         $children = []; // Initialize the children array
 
         Log::debug('Chaos parse result', [
@@ -159,6 +175,8 @@ PROMPT;
                 'parsed_on' => now()->toISOString(),
                 'child_ids' => $children,
                 'usage' => $aiResponse['usage'] ?? null,
+                'correlation_id' => $correlationId,
+                'validation_attempts' => $validationResult['attempts'],
             ],
         ]);
 

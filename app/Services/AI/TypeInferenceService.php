@@ -4,6 +4,7 @@ namespace App\Services\AI;
 
 use App\Models\Fragment;
 use App\Models\Type;
+use App\Services\AI\JsonSchemaValidator;
 use Illuminate\Support\Facades\Log;
 
 class TypeInferenceService
@@ -40,11 +41,57 @@ class TypeInferenceService
 
             $modelResponse = $this->dispatchModelRequest($selectedModel['provider'], $selectedModel['model'], $fragment);
 
-            $result = $this->parseResponse($modelResponse['text']);
+            // Validate and parse JSON response using schema validation with retry logic
+            $validator = app(JsonSchemaValidator::class);
+            $correlationId = $validator->generateCorrelationId();
+
+            $validationResult = $validator->validateAndParse(
+                $modelResponse['text'],
+                'type_inference',
+                $correlationId,
+                [
+                    'fragment_id' => $fragment->id,
+                    'provider' => $selectedModel['provider'],
+                    'model' => $selectedModel['model'],
+                ]
+            );
+
+            if (!$validationResult['success']) {
+                Log::error('Type inference JSON validation failed', [
+                    'fragment_id' => $fragment->id,
+                    'correlation_id' => $correlationId,
+                    'error' => $validationResult['error'],
+                    'attempts' => $validationResult['attempts'],
+                    'provider' => $selectedModel['provider'],
+                    'model' => $selectedModel['model'],
+                ]);
+
+                // Fallback to default
+                return [
+                    'type' => 'log',
+                    'confidence' => 0.0,
+                    'reasoning' => 'JSON validation failed, using default',
+                    'model_provider' => $selectedModel['provider'],
+                    'model_name' => $selectedModel['model'],
+                    'correlation_id' => $correlationId,
+                ];
+            }
+
+            Log::info('Type inference JSON validation successful', [
+                'fragment_id' => $fragment->id,
+                'correlation_id' => $correlationId,
+                'attempts' => $validationResult['attempts'],
+                'provider' => $selectedModel['provider'],
+                'model' => $selectedModel['model'],
+            ]);
+
+            $result = $validationResult['data'];
 
             // Add model metadata to result
             $result['model_provider'] = $selectedModel['provider'];
             $result['model_name'] = $selectedModel['model'];
+            $result['correlation_id'] = $correlationId;
+            $result['validation_attempts'] = $validationResult['attempts'];
 
             Log::info('TypeInferenceService: AI response', [
                 'fragment_id' => $fragment->id,
@@ -69,6 +116,7 @@ class TypeInferenceService
                 'reasoning' => 'AI inference failed, using default',
                 'model_provider' => null,
                 'model_name' => null,
+                'correlation_id' => null,
             ];
         }
     }
@@ -175,47 +223,6 @@ Only respond with valid JSON, no additional text.
 PROMPT;
     }
 
-    /**
-     * Parse the AI response into structured data
-     */
-    protected function parseResponse(string $response): array
-    {
-        try {
-            // Clean up the response - remove markdown code blocks if present
-            $cleanedResponse = preg_replace('/```json\s*|\s*```/', '', trim($response));
-            $data = json_decode($cleanedResponse, true, 512, JSON_THROW_ON_ERROR);
-
-            // Validate required fields
-            if (! isset($data['type']) || ! isset($data['confidence'])) {
-                throw new \InvalidArgumentException('Invalid AI response format');
-            }
-
-            // Ensure type exists in our available types
-            $typeExists = collect($this->availableTypes)->contains('value', $data['type']);
-            if (! $typeExists) {
-                $data['type'] = 'log';
-                $data['confidence'] = 0.0;
-                $data['reasoning'] = 'Unknown type returned by AI, defaulting to log';
-            }
-
-            // Normalize confidence to 0-1 range
-            $data['confidence'] = max(0.0, min(1.0, (float) $data['confidence']));
-
-            return $data;
-
-        } catch (\Exception $e) {
-            Log::error('TypeInferenceService: Failed to parse AI response', [
-                'response' => $response,
-                'error' => $e->getMessage(),
-            ]);
-
-            return [
-                'type' => 'log',
-                'confidence' => 0.0,
-                'reasoning' => 'Failed to parse AI response',
-            ];
-        }
-    }
 
     /**
      * Get available types from database
