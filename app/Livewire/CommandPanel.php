@@ -32,6 +32,15 @@ class CommandPanel extends Component
         $this->dispatch('panel-closed');
     }
 
+    public function toggle(): void
+    {
+        if ($this->isVisible) {
+            $this->hide();
+        } else {
+            $this->show('help'); // Default to help panel
+        }
+    }
+
     public function confirmClear(): void
     {
         // Dispatch event to parent component to actually clear the chat
