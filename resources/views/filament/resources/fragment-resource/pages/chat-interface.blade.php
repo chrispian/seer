@@ -464,12 +464,16 @@
                         'message' => $entry['message']
                     ])
                 @else
-                    <x-search-result-card
-                        :fragment="$entry"
-                        :showTimestamp="true"
-                        :showScore="false"
-                        :showActions="true"
-                    />
+                    <x-chat-message
+                        :type="$entry['type'] ?? 'user'"
+                        :type-id="$entry['type_id'] ?? null"
+                        :fragmentId="$entry['id'] ?? null"
+                        :timestamp="$this->formatTimestamp($entry['created_at'] ?? null)"
+                    >
+                        <x-chat-markdown :fragment="null">
+                            {{ $entry['message'] }}
+                        </x-chat-markdown>
+                    </x-chat-message>
                 @endif
             @endforeach
 

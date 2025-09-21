@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@plugin '@tailwindcss/typography';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -8,9 +9,61 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
-    --color-hot-pink: rgb(255 20 147);
-    --color-neon-cyan: rgb(0 255 255);
-    --color-electric-blue: rgb(0 191 255);
+    --font-mono: 'JetBrains Mono', 'Monaco', 'Consolas', 'monospace';
+
+    --color-hot-pink: #ff1493;
+    --color-bright-pink: #ff69b4;
+    --color-electric-blue: #00bfff;
+    --color-neon-cyan: #00ffff;
+    --color-deep-purple: #4b0082;
+
+    --color-surface: #0f1419;
+    --color-surface-2: #1a1f2e;
+    --color-surface-card: #242b3d;
+    --color-surface-elevated: #2d3548;
+
+    --color-text-primary: #f8fafc;
+    --color-text-secondary: #cbd5e1;
+    --color-text-muted: #94a3b8;
+
+    --radius-pixel: 3px;
+    --border-width-thin: 0.5px;
+}
+
+.bg-surface {
+    background-color: var(--color-surface);
+}
+
+.bg-surface-2 {
+    background-color: var(--color-surface-2);
+}
+
+.bg-surface-card {
+    background-color: var(--color-surface-card);
+}
+
+.bg-surface-elevated {
+    background-color: var(--color-surface-elevated);
+}
+
+.text-text-primary {
+    color: var(--color-text-primary);
+}
+
+.text-text-secondary {
+    color: var(--color-text-secondary);
+}
+
+.text-text-muted {
+    color: var(--color-text-muted);
+}
+
+.border-thin {
+    border-width: var(--border-width-thin);
+}
+
+.rounded-pixel {
+    border-radius: var(--radius-pixel);
 }
 
 

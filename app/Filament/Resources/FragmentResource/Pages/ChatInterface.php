@@ -330,8 +330,12 @@ class ChatInterface extends Page
                     // For other commands, fragments are arrays with type/message
                     foreach ($response->fragments as $fragment) {
                         if (is_array($fragment) && isset($fragment['type'], $fragment['message'])) {
+                            $fragmentType = is_array($fragment['type'])
+                                ? ($fragment['type']['value'] ?? $fragment['type']['label'] ?? 'log')
+                                : $fragment['type'];
+
                             $this->chatMessages[] = [
-                                'type' => $fragment['type'],
+                                'type' => $fragmentType ?? 'log',
                                 'message' => $fragment['message'],
                             ];
                         }
@@ -356,10 +360,7 @@ class ChatInterface extends Page
 
             $this->chatMessages[] = [
                 'id' => $fragment->id,
-                'type' => [
-                    'value' => $fragment->type?->value ?? 'log',
-                    'label' => $fragment->type?->label ?? ucfirst($fragment->type?->value ?? 'log'),
-                ],
+                'type' => $fragment->type?->value ?? 'log',
                 'type_id' => $fragment->type_id,
                 'message' => $fragment->message,
                 'created_at' => $fragment->created_at,
@@ -1027,10 +1028,7 @@ class ChatInterface extends Page
             // Add back to chat messages
             $this->chatMessages[] = [
                 'id' => $restoredFragment->id,
-                'type' => [
-                    'value' => $restoredFragment->type?->value ?? 'log',
-                    'label' => $restoredFragment->type?->label ?? ucfirst($restoredFragment->type?->value ?? 'log'),
-                ],
+                'type' => $restoredFragment->type?->value ?? 'log',
                 'message' => $restoredFragment->message,
                 'created_at' => $restoredFragment->created_at,
             ];

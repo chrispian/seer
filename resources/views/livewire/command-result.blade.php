@@ -16,8 +16,10 @@
 
     {{-- Message --}}
     @if ($message)
-        <div class="text-sm text-text-muted mb-3">
-            {{ $message }}
+        <div class="prose prose-sm dark:prose-invert max-w-none text-text-primary mb-3">
+            <x-chat-markdown :fragment="null">
+                {{ $message }}
+            </x-chat-markdown>
         </div>
     @endif
 
