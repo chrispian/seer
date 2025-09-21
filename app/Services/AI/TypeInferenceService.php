@@ -4,10 +4,7 @@ namespace App\Services\AI;
 
 use App\Models\Fragment;
 use App\Models\Type;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Prism\Prism\Prism;
-use RuntimeException;
 
 class TypeInferenceService
 {
@@ -78,34 +75,21 @@ class TypeInferenceService
 
     protected function dispatchModelRequest(string $provider, string $model, Fragment $fragment): array
     {
-        if ($provider === 'ollama') {
-            $baseUrl = config('services.ollama.base', config('prism.providers.ollama.url', 'http://localhost:11434'));
-            $endpoint = rtrim($baseUrl, '/').'/api/generate';
+        // Use the provider manager for text generation
+        $context = [
+            'operation_type' => 'text',
+            'command' => 'type_inference',
+            'vault' => $fragment->vault,
+            'project_id' => $fragment->project_id,
+            'command_model_override' => "{$provider}:{$model}",
+        ];
 
-            $response = Http::timeout(20)->post($endpoint, [
-                'model' => $model,
-                'prompt' => $this->buildPrompt($fragment),
-                'stream' => false,
-            ]);
-
-            if ($response->failed()) {
-                throw new RuntimeException('Failed to generate type inference via Ollama');
-            }
-
-            return [
-                'text' => (string) ($response->json('response') ?? ''),
-                'usage' => $response->json('usage'),
-            ];
-        }
-
-        $response = Prism::text()
-            ->using($provider, $model)
-            ->withPrompt($this->buildPrompt($fragment))
-            ->generate();
+        $providerManager = app(AIProviderManager::class);
+        $result = $providerManager->generateText($this->buildPrompt($fragment), $context);
 
         return [
-            'text' => (string) $response->text,
-            'usage' => $response->usage ? (array) $response->usage : null,
+            'text' => $result['text'],
+            'usage' => $result['usage'] ?? null,
         ];
     }
 
