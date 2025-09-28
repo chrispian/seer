@@ -302,6 +302,27 @@ class FragmentController extends Controller
         );
     }
 
+    public function destroy(Fragment $fragment)
+    {
+        try {
+            // TODO: Add authorization check here when auth is implemented
+            // $this->authorize('delete', $fragment);
+            
+            $fragment->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Fragment deleted successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete fragment',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     private function hasPgVectorSupport(): bool
     {
         $driver = DB::connection()->getDriverName();

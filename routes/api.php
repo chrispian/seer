@@ -4,7 +4,9 @@ use App\Http\Controllers\AnalyzeFragmentController;
 use App\Http\Controllers\AutocompleteController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\ChatApiController;
+use App\Http\Controllers\CommandController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\FragmentController;
 use App\Http\Controllers\FragmentDetailController;
 use App\Http\Controllers\SeerLogController;
@@ -12,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/fragment', [FragmentController::class, 'store']);
 Route::patch('/fragment/{fragment}', [FragmentController::class, 'update']);
+Route::delete('/fragments/{fragment}', [FragmentController::class, 'destroy']);
 Route::get('/fragment', [FragmentController::class, 'index']);
 Route::get('/search', [FragmentController::class, 'search']);
 Route::get('/recall', [FragmentController::class, 'recall']);
@@ -33,6 +36,12 @@ Route::post('/fragments/{id}/bookmark', [BookmarkController::class, 'toggleBookm
 Route::get('/bookmarks/recent', [BookmarkController::class, 'getRecent']);
 Route::get('/bookmarks/search', [BookmarkController::class, 'search']);
 Route::post('/bookmarks/{id}/mark-viewed', [BookmarkController::class, 'markAsViewed']);
+
+// File upload endpoints
+Route::post('/files', [FileUploadController::class, 'store']);
+
+// Command execution endpoints
+Route::post('/commands/execute', [CommandController::class, 'execute']);
 
 // Search endpoints
 Route::get('/search/hybrid', [\App\Http\Controllers\FragmentController::class, 'hybridSearch'])->name('fragments.hybrid-search');
