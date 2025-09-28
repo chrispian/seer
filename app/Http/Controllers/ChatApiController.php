@@ -14,6 +14,7 @@ class ChatApiController extends Controller
         $data = $req->validate([
             'content' => 'required|string',
             'conversation_id' => 'nullable|string',
+            'session_id' => 'nullable|integer|exists:chat_sessions,id',
             'attachments' => 'array',
             'provider' => 'nullable|string',
             'model' => 'nullable|string',
@@ -21,6 +22,7 @@ class ChatApiController extends Controller
 
         $messageId = (string) Str::uuid();
         $conversationId = $data['conversation_id'] ?? (string) Str::uuid();
+        $sessionId = $data['session_id'] ?? null;
 
         // ✅ 1) Create USER fragment using chat-specific action (bypasses deduplication)
         $createChatFragment = app(\App\Actions\CreateChatFragment::class);
@@ -32,6 +34,7 @@ class ChatApiController extends Controller
             'metadata' => array_merge($fragment->metadata ?? [], [
                 'turn' => 'prompt',
                 'conversation_id' => $conversationId,
+                'session_id' => $sessionId,
                 'provider' => $data['provider'] ?? config('fragments.models.fallback_provider', 'ollama'),
                 'model' => $data['model'] ?? config('fragments.models.fallback_text_model', 'llama3:latest'),
             ]),
@@ -54,6 +57,20 @@ class ChatApiController extends Controller
             $userFragmentId,
             $conversationId
         );
+
+        // Add message to ChatSession if session_id provided
+        if ($sessionId) {
+            $chatSession = \App\Models\ChatSession::find($sessionId);
+            if ($chatSession) {
+                $chatSession->addMessage([
+                    'id' => $userFragmentId,
+                    'type' => 'user',
+                    'message' => $data['content'],
+                    'fragment_id' => $userFragmentId,
+                    'created_at' => now()->toISOString(),
+                ]);
+            }
+        }
 
         return response()->json([
             'message_id' => $messageId,

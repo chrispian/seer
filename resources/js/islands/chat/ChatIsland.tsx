@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { ChatComposer } from './ChatComposer'
 import { ChatTranscript, ChatMessage } from './ChatTranscript'
 import { CommandResultModal } from './CommandResultModal'
+import { useChatSession } from '@/contexts/ChatSessionContext'
 
 const uuid = () => crypto.randomUUID()
 
@@ -16,22 +17,90 @@ export default function ChatIsland() {
   const [isCommandModalOpen, setIsCommandModalOpen] = useState(false)
   const [lastCommand, setLastCommand] = useState('')
   const csrf = useCsrf()
+  const activeStreamRef = useRef<{ eventSource: EventSource; sessionId: number } | null>(null)
+  
+  const { 
+    currentSession, 
+    isLoadingSession, 
+    updateSession 
+  } = useChatSession()
+
+  // Load messages from current session
+  useEffect(() => {
+    if (currentSession?.messages) {
+      const sessionMessages: ChatMessage[] = currentSession.messages.map((msg: any, index: number) => ({
+        id: msg.id || `session-${currentSession.id}-${index}`,
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        md: msg.message || '',
+        messageId: msg.id,
+        fragmentId: msg.fragment_id,
+        isBookmarked: msg.is_bookmarked,
+      }))
+      setMessages(sessionMessages)
+    } else if (currentSession) {
+      // New session with no messages
+      setMessages([])
+    }
+  }, [currentSession])
+
+  // Cleanup active streams when session changes
+  useEffect(() => {
+    return () => {
+      if (activeStreamRef.current) {
+        activeStreamRef.current.eventSource.close()
+        activeStreamRef.current = null
+      }
+    }
+  }, [currentSession?.id])
+
+  // Save messages to current session
+  const saveMessagesToSession = async (updatedMessages: ChatMessage[]) => {
+    if (!currentSession) return
+
+    try {
+      const sessionMessages = updatedMessages.map(msg => ({
+        id: msg.messageId || msg.id,
+        type: msg.role,
+        message: msg.md,
+        fragment_id: msg.fragmentId,
+        is_bookmarked: msg.isBookmarked,
+        created_at: new Date().toISOString(),
+      }))
+
+      await updateSession(currentSession.id, {
+        messages: sessionMessages,
+      })
+    } catch (error) {
+      console.error('Failed to save messages to session:', error)
+    }
+  }
 
   async function onSend(content: string, attachments?: Array<{markdown: string, url: string, filename: string}>) {
-    if (!content.trim() || isSending) return
+    if (!content.trim() || isSending || !currentSession) return
     
+    // Close any existing stream before starting a new one
+    if (activeStreamRef.current) {
+      activeStreamRef.current.eventSource.close()
+      activeStreamRef.current = null
+    }
+
     const userId = uuid()
     const userMessage: ChatMessage = { id: userId, role: 'user', md: content }
-    setMessages(m => [...m, userMessage])
+    const updatedMessages = [...messages, userMessage]
+    const streamSessionId = currentSession.id // Capture session ID at start of stream
+    setMessages(updatedMessages)
     setSending(true)
 
     try {
       // 1) Create message -> get message_id (include attachments if any)
-      const payload: any = { content }
+      const payload: any = { 
+        content,
+        session_id: streamSessionId,
+      }
       if (attachments && attachments.length > 0) {
         payload.attachments = attachments
       }
-      
+
       const resp = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
@@ -40,17 +109,28 @@ export default function ChatIsland() {
       const { message_id } = await resp.json()
 
       // Update user message with server message ID
-      setMessages(m => m.map(msg => 
+      const messagesWithMessageId = updatedMessages.map(msg => 
         msg.id === userId ? { ...msg, messageId: message_id } : msg
-      ))
+      )
+      setMessages(messagesWithMessageId)
 
       // 2) Stream reply
       const es = new EventSource(`/api/chat/stream/${message_id}`)
       const assistantId = uuid()
       let acc = ''
 
+      // Track the active stream
+      activeStreamRef.current = { eventSource: es, sessionId: streamSessionId }
+
       es.onmessage = (evt) => {
         try {
+          // Check if this stream is still for the current session
+          if (currentSession?.id !== streamSessionId) {
+            es.close()
+            activeStreamRef.current = null
+            return
+          }
+
           const data = JSON.parse(evt.data)
           if (data.type === 'assistant_delta') {
             acc += data.content
@@ -62,28 +142,49 @@ export default function ChatIsland() {
               return [...m, { id: assistantId, role: 'assistant', md: acc, messageId: message_id }]
             })
           }
-          if (data.type === 'done') { es.close(); setSending(false) }
+          if (data.type === 'done') { 
+            es.close()
+            activeStreamRef.current = null
+            setSending(false)
+            // Only save if still in the same session
+            if (currentSession?.id === streamSessionId) {
+              setMessages(currentMessages => {
+                saveMessagesToSession(currentMessages)
+                return currentMessages
+              })
+            }
+          }
         } catch {/* ignore */}
       }
-      es.onerror = () => { es.close(); setSending(false) }
+      
+      es.onerror = () => { 
+        es.close()
+        activeStreamRef.current = null
+        setSending(false) 
+      }
     } catch (error) {
       console.error('Failed to send message:', error)
       setSending(false)
+      activeStreamRef.current = null
     }
   }
 
   const handleMessageDelete = (messageId: string) => {
-    setMessages(m => m.filter(msg => msg.id !== messageId))
+    const updatedMessages = messages.filter(msg => msg.id !== messageId)
+    setMessages(updatedMessages)
+    saveMessagesToSession(updatedMessages)
   }
 
   const handleMessageBookmarkToggle = (messageId: string, bookmarked: boolean, fragmentId?: string) => {
-    setMessages(m => m.map(msg => 
+    const updatedMessages = messages.map(msg => 
       msg.id === messageId ? { 
         ...msg, 
         isBookmarked: bookmarked,
         fragmentId: fragmentId || msg.fragmentId 
       } : msg
-    ))
+    )
+    setMessages(updatedMessages)
+    saveMessagesToSession(updatedMessages)
   }
 
   const handleCommand = async (command: string) => {
@@ -123,21 +224,46 @@ export default function ChatIsland() {
     }
   }
 
+  if (!currentSession && !isLoadingSession) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center">
+        <div className="text-muted-foreground mb-4">
+          <div className="text-lg font-medium mb-2">No chat session selected</div>
+          <div className="text-sm">Select a chat from the sidebar or create a new one to get started.</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoadingSession) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <div className="text-muted-foreground">Loading chat session...</div>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 h-full">
       {/* Enhanced Transcript with Message Actions */}
-      <ChatTranscript 
-        messages={messages}
-        onMessageDelete={handleMessageDelete}
-        onMessageBookmarkToggle={handleMessageBookmarkToggle}
-      />
+      <div className="flex-1 min-h-0">
+        <ChatTranscript 
+          messages={messages}
+          onMessageDelete={handleMessageDelete}
+          onMessageBookmarkToggle={handleMessageBookmarkToggle}
+        />
+      </div>
 
       {/* Enhanced Composer with TipTap */}
       <ChatComposer 
         onSend={onSend}
         onCommand={handleCommand}
-        disabled={isSending}
-        placeholder="Type a message... Use / for commands, [[ for links, # for tags"
+        disabled={isSending || !currentSession}
+        placeholder={
+          currentSession 
+            ? "Type a message... Use / for commands, [[ for links, # for tags"
+            : "Select a chat session to start messaging"
+        }
       />
 
       {/* Command Result Modal */}
