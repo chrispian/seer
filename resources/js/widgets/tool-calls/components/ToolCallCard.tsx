@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ChevronDown, ChevronRight, Clock, DollarSign, Zap, Brain, Tool } from 'lucide-react'
+import { ChevronDown, ChevronRight, Clock, DollarSign, Zap, Brain, Wrench } from 'lucide-react'
 import { ToolCallData } from '../types'
 
 interface ToolCallCardProps {
@@ -24,7 +24,7 @@ export function ToolCallCard({ toolCall }: ToolCallCardProps) {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'tool_call':
-        return <Tool className="w-3 h-3" />
+        return <Wrench className="w-3 h-3" />
       case 'cot_reasoning':
         return <Brain className="w-3 h-3" />
       default:
