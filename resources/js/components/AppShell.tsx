@@ -23,7 +23,7 @@ const queryClient = new QueryClient({
 })
 
 function AppContent() {
-  // Initialize app context on mount
+  // Initialize app context on mount - this loads the context and initializes Zustand
   useAppContext();
   
   return (
