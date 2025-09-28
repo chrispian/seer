@@ -1579,7 +1579,7 @@
 
             // DISABLED: First listener commented out to avoid conflicts
             /*
-            // Listen for success toast events (for /frag and /chaos commands)
+            // Listen for success toast events (for /frag and other commands)
             Livewire.on('show-success-toast', function(event) {
                 console.log('FIRST success toast listener received:', event);
 

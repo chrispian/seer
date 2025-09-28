@@ -6,41 +6,7 @@ beforeEach(function () {
     $this->validator = new JsonSchemaValidator();
 });
 
-test('validates chaos fragments successfully', function () {
-    $validJson = json_encode([
-        [
-            'type' => 'todo',
-            'message' => 'Call the doctor',
-            'tags' => ['health'],
-        ],
-        [
-            'type' => 'reminder',
-            'message' => 'Email the client',
-            'tags' => ['work'],
-        ],
-    ]);
 
-    $result = $this->validator->validateAndParse($validJson, 'chaos_fragments');
-
-    expect($result['success'])->toBeTrue();
-    expect($result['data'])->toHaveCount(2);
-    expect($result['data'][0]['type'])->toBe('todo');
-    expect($result['data'][0]['message'])->toBe('Call the doctor');
-    expect($result['data'][1]['type'])->toBe('reminder');
-    expect($result['attempts'])->toBe(1);
-});
-
-test('validates chaos fragments with markdown code blocks', function () {
-    $markdownJson = "```json\n" . json_encode([
-        ['type' => 'note', 'message' => 'Test note'],
-    ]) . "\n```";
-
-    $result = $this->validator->validateAndParse($markdownJson, 'chaos_fragments');
-
-    expect($result['success'])->toBeTrue();
-    expect($result['data'])->toHaveCount(1);
-    expect($result['data'][0]['message'])->toBe('Test note');
-});
 
 test('validates fragment enrichment successfully', function () {
     $validJson = json_encode([
@@ -83,16 +49,7 @@ test('handles malformed JSON with retry logic', function () {
     expect($result['error'])->toContain('Syntax error');
 });
 
-test('handles invalid chaos fragments structure', function () {
-    $invalidJson = json_encode([
-        ['type' => 'todo'], // Missing required message field
-    ]);
 
-    $result = $this->validator->validateAndParse($invalidJson, 'chaos_fragments');
-
-    expect($result['success'])->toBeFalse();
-    expect($result['error'])->toContain("missing required 'message' field");
-});
 
 test('handles missing required fields in fragment enrichment', function () {
     $invalidJson = json_encode([
@@ -158,18 +115,7 @@ test('includes correlation ID in result', function () {
     expect($result['correlation_id'])->toBeString();
 });
 
-test('validates chaos fragments with default values', function () {
-    $minimalJson = json_encode([
-        ['message' => 'Just a message'], // Only required field
-    ]);
 
-    $result = $this->validator->validateAndParse($minimalJson, 'chaos_fragments');
-
-    expect($result['success'])->toBeTrue();
-    expect($result['data'][0]['type'])->toBe('note'); // Default type
-    expect($result['data'][0]['tags'])->toBe([]); // Default empty tags
-    expect($result['data'][0]['state'])->toBe(['status' => 'open']); // Default state
-});
 
 test('validates fragment enrichment with default values', function () {
     $minimalJson = json_encode([

@@ -141,13 +141,7 @@ class BookmarkCommand implements HandlesCommand
             );
         }
 
-        $fragmentIds = [];
-
-        if ($lastFragment->type === 'chaos' && isset($lastFragment->metadata['children'])) {
-            $fragmentIds = $lastFragment->metadata['children'];
-        } else {
-            $fragmentIds = [$lastFragment->id];
-        }
+        $fragmentIds = [$lastFragment->id];
 
         $title = Str::slug(substr($lastFragment->message, 0, 30)).'-'.now()->format('His');
 

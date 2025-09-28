@@ -170,9 +170,6 @@ class JsonSchemaValidator
     protected function validateData(array $data, array $schema, string $schemaType): array
     {
         switch ($schemaType) {
-            case 'chaos_fragments':
-                return $this->validateChaosFragments($data);
-
             case 'fragment_enrichment':
                 return $this->validateFragmentEnrichment($data);
 
@@ -184,36 +181,7 @@ class JsonSchemaValidator
         }
     }
 
-    /**
-     * Validate chaos fragments array structure
-     */
-    protected function validateChaosFragments(array $data): array
-    {
-        if (!is_array($data) || empty($data)) {
-            throw new \InvalidArgumentException('Chaos fragments must be a non-empty array');
-        }
 
-        $validated = [];
-        foreach ($data as $index => $fragment) {
-            if (!is_array($fragment)) {
-                throw new \InvalidArgumentException("Fragment at index {$index} must be an object");
-            }
-
-            if (!isset($fragment['message']) || !is_string($fragment['message'])) {
-                throw new \InvalidArgumentException("Fragment at index {$index} missing required 'message' field");
-            }
-
-            $validated[] = [
-                'type' => $fragment['type'] ?? 'note',
-                'message' => $fragment['message'],
-                'tags' => $fragment['tags'] ?? [],
-                'state' => $fragment['state'] ?? ['status' => 'open'],
-                'metadata' => $fragment['metadata'] ?? [],
-            ];
-        }
-
-        return $validated;
-    }
 
     /**
      * Validate fragment enrichment structure
@@ -274,20 +242,6 @@ class JsonSchemaValidator
     protected function loadSchemas(): array
     {
         return [
-            'chaos_fragments' => [
-                'type' => 'array',
-                'items' => [
-                    'type' => 'object',
-                    'required' => ['message'],
-                    'properties' => [
-                        'type' => ['type' => 'string'],
-                        'message' => ['type' => 'string'],
-                        'tags' => ['type' => 'array'],
-                        'state' => ['type' => 'object'],
-                        'metadata' => ['type' => 'object'],
-                    ],
-                ],
-            ],
             'fragment_enrichment' => [
                 'type' => 'object',
                 'required' => ['type', 'message'],

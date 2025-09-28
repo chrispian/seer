@@ -112,7 +112,6 @@ class AutocompleteController extends Controller
             'help' => 'Show available commands',
             'clear' => 'Clear chat history',
             'frag' => 'Create fragment from text',
-            'chaos' => 'Process complex multi-part content',
         ];
 
         return $descriptions[$command] ?? 'Execute command';

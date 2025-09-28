@@ -418,7 +418,6 @@ class ModelSelectionService
         $parameterType = match ($command) {
             'type_inference' => 'classification',
             'enrich_fragment' => 'enrichment',
-            'parse_chaos' => 'parsing',
             default => match ($operationType) {
                 'embedding' => 'embedding',
                 'text' => 'enrichment', // Default text operations use enrichment params
