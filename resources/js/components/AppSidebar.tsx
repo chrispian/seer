@@ -93,7 +93,9 @@ export function AppSidebar() {
     if (isCreating) return
     setIsCreating(true)
     try {
-      await createChatMutation.mutateAsync({})
+      await createChatMutation.mutateAsync({
+        title: undefined, // Let backend generate default title
+      })
     } catch (error) {
       console.error('Failed to create new chat:', error)
     } finally {
@@ -215,7 +217,7 @@ export function AppSidebar() {
   const renderSessionItem = (session: ChatSession, showPinHandle = false, index?: number) => (
     <div
       key={session.id}
-      className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all ${
+      className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all w-full ${
         currentSession?.id === session.id
           ? 'bg-gray-100 border-l-2 border-l-black'
           : 'hover:bg-gray-50'
@@ -228,13 +230,13 @@ export function AppSidebar() {
       onDragLeave={showPinHandle ? handleDragLeave : undefined}
       onDrop={showPinHandle && typeof index === 'number' ? (e) => handleDrop(e, index) : undefined}
     >
-      <div className="flex items-center min-w-0 flex-1">
+      <div className="flex items-center min-w-0 flex-1 max-w-[180px]">
         {showPinHandle && (
-          <GripVertical className="w-3 h-3 text-gray-400 mr-2 cursor-grab" />
+          <GripVertical className="w-3 h-3 text-gray-400 mr-2 cursor-grab flex-shrink-0" />
         )}
-        <span className="text-sm truncate">{session.channel_display}</span>
+        <span className="text-sm truncate block">{session.channel_display}</span>
       </div>
-      <div className="flex items-center space-x-1 ml-2">
+      <div className="flex items-center space-x-1 ml-2 flex-shrink-0">
         <Badge variant="secondary" className="text-xs">
           {session.message_count}
         </Badge>
@@ -446,19 +448,19 @@ export function AppSidebar() {
                   projectsForCurrentVault.map((project) => (
                     <div
                       key={project.id}
-                      className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all ${
+                      className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all w-full ${
                         currentProject?.id === project.id
                           ? 'bg-gray-100'
                           : 'hover:bg-gray-50'
                       }`}
                       onClick={() => switchProjectMutation.mutate(project.id)}
                     >
-                      <div className="flex items-center min-w-0 flex-1">
-                        <Folder className="w-4 h-4 mr-2 text-gray-400" />
-                        <span className="text-sm truncate">{project.name}</span>
+                      <div className="flex items-center min-w-0 flex-1 max-w-[220px]">
+                        <Folder className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                        <span className="text-sm truncate block">{project.name}</span>
                       </div>
                       {switchProjectMutation.isPending && (
-                        <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                        <Loader2 className="w-4 h-4 animate-spin text-gray-400 flex-shrink-0" />
                       )}
                     </div>
                   ))
