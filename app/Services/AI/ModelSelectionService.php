@@ -459,8 +459,8 @@ class ModelSelectionService
         // Use operation-specific provider, or fall back to default
         $finalProvider = $provider ?: $this->defaultProvider;
         
-        // Use operation-specific model, or get default for the provider
-        $finalModel = $model ?: $this->getDefaultModelForProvider($finalProvider);
+        // Use operation-specific model, or get default for the provider based on operation type
+        $finalModel = $model ?: $this->getDefaultModelForProviderAndOperation($finalProvider, $operation);
         
         // Validate the selected model is available
         if (!$this->isModelAvailable($finalProvider, $finalModel)) {
@@ -537,6 +537,36 @@ class ModelSelectionService
         }
         
         return array_key_first($textModels);
+    }
+
+    /**
+     * Get default model for provider based on operation type
+     */
+    protected function getDefaultModelForProviderAndOperation(string $provider, string $operation): string
+    {
+        // For embedding operations, prioritize embedding models
+        if ($operation === 'embedding') {
+            return $this->getDefaultEmbeddingModelForProvider($provider);
+        }
+        
+        // For text operations, use text models
+        return $this->getDefaultModelForProvider($provider);
+    }
+
+    /**
+     * Get default embedding model for provider
+     */
+    protected function getDefaultEmbeddingModelForProvider(string $provider): string
+    {
+        $providerConfig = $this->providers[$provider] ?? [];
+        $embeddingModels = $providerConfig['embedding_models'] ?? [];
+        
+        if (empty($embeddingModels)) {
+            // Fall back to text model if no embedding models configured
+            return $this->getDefaultModelForProvider($provider);
+        }
+        
+        return array_key_first($embeddingModels);
     }
 
     /**

@@ -22,15 +22,13 @@ class ChatApiController extends Controller
         $messageId = (string) Str::uuid();
         $conversationId = $data['conversation_id'] ?? (string) Str::uuid();
 
-        // ✅ 1) Persist USER fragment using RouteFragment action
-        $routeFragment = app(\App\Actions\RouteFragment::class);
-        $fragment = $routeFragment($data['content']);
+        // ✅ 1) Create USER fragment using chat-specific action (bypasses deduplication)
+        $createChatFragment = app(\App\Actions\CreateChatFragment::class);
+        $fragment = $createChatFragment($data['content']);
         $userFragmentId = $fragment->id;
 
-        // Update the fragment with chat-specific metadata and source
-        // TODO: Should this logic be in the pipeline code? Feels wrong to have this here.
+        // Update the fragment with chat-specific metadata
         $fragment->update([
-            'source' => 'chat-user',
             'metadata' => array_merge($fragment->metadata ?? [], [
                 'turn' => 'prompt',
                 'conversation_id' => $conversationId,

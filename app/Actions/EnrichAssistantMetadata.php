@@ -7,7 +7,7 @@ use App\Models\Vault;
 
 class EnrichAssistantMetadata
 {
-    public function handle(array $payload, \Closure $next): array
+    public function handle(array $payload, \Closure $next): mixed
     {
         $fragment = $payload['fragment'];
         $data = $payload['data'];
@@ -65,7 +65,7 @@ class EnrichAssistantMetadata
             $payload['json_links'] = $jsonMetadata['links'];
         }
 
-        return $next($payload);
+        return $next($payload['fragment']);
     }
 
     /**

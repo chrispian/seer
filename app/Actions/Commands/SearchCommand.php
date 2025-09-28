@@ -35,6 +35,12 @@ class SearchCommand implements HandlesCommand
             } else {
                 $results = $this->hybridSearch($query);
                 $searchMode = 'hybrid';
+                
+                // Fall back to text search if hybrid search returns empty results
+                if (empty($results)) {
+                    $results = $this->fallbackSearch($command, $query);
+                    $searchMode = 'text-fallback';
+                }
             }
 
             if (empty($results)) {
