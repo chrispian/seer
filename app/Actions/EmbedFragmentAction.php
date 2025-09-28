@@ -34,9 +34,18 @@ class EmbedFragmentAction
             return $fragment;
         }
 
-        // Provider/model from env (keep simple + overridable)
-        $provider = config('fragments.embeddings.provider');   // e.g. 'openai' or 'ollama'
-        $model = config('fragments.embeddings.model');      // e.g. 'text-embedding-3-small'
+        // Check if embedding operation is enabled
+        if (!config('fragments.models.operations.embedding.enabled', true)) {
+            Log::debug('EmbedFragmentAction: embedding operation disabled, skipping');
+            return $fragment;
+        }
+
+        // Get provider/model from operation-specific config or fall back to embedding config
+        $operationProvider = config('fragments.models.operations.embedding.provider');
+        $operationModel = config('fragments.models.operations.embedding.model');
+        
+        $provider = $operationProvider ?: config('fragments.embeddings.provider');
+        $model = $operationModel ?: config('fragments.embeddings.model');
         $version = (string) config('fragments.embeddings.version', '1');
         $contentHash = hash('sha256', $text.'|'.$provider.'|'.$model.'|'.$version);
 

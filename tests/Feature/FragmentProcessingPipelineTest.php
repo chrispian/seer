@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\DriftSync;
-use App\Actions\EnrichFragmentWithLlama;
+use App\Actions\EnrichFragmentWithAI;
 use App\Actions\ExtractMetadataEntities;
 use App\Actions\GenerateAutoTitle;
 use App\Actions\InferFragmentType;
@@ -49,7 +49,7 @@ class FragmentProcessingPipelineTest extends TestCase
                 ExtractMetadataEntities::class,
                 GenerateAutoTitle::class,
                 // Skip LLM-dependent actions for unit test
-                // EnrichFragmentWithLlama::class,
+                // EnrichFragmentWithAI::class,
                 // InferFragmentType::class,
                 // SuggestTags::class,
                 RouteToVault::class,

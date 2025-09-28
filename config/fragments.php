@@ -16,6 +16,35 @@ return [
         'fallback_provider' => env('AI_FALLBACK_PROVIDER', 'ollama'),
         'fallback_text_model' => env('AI_FALLBACK_TEXT_MODEL', 'llama3:latest'),
 
+        // Operation-specific provider/model overrides
+        'operations' => [
+            'enrichment' => [
+                'provider' => env('AI_ENRICHMENT_PROVIDER'), // null = use default
+                'model' => env('AI_ENRICHMENT_MODEL'),       // null = use default
+                'enabled' => env('AI_ENRICHMENT_ENABLED', true),
+            ],
+            'classification' => [
+                'provider' => env('AI_CLASSIFICATION_PROVIDER'),
+                'model' => env('AI_CLASSIFICATION_MODEL'),
+                'enabled' => env('AI_CLASSIFICATION_ENABLED', true),
+            ],
+            'embedding' => [
+                'provider' => env('AI_EMBEDDING_PROVIDER'),
+                'model' => env('AI_EMBEDDING_MODEL'),
+                'enabled' => env('AI_EMBEDDING_ENABLED', true),
+            ],
+            'tagging' => [
+                'provider' => env('AI_TAGGING_PROVIDER'),
+                'model' => env('AI_TAGGING_MODEL'),
+                'enabled' => env('AI_TAGGING_ENABLED', false), // Currently rule-based
+            ],
+            'title_generation' => [
+                'provider' => env('AI_TITLE_GENERATION_PROVIDER'),
+                'model' => env('AI_TITLE_GENERATION_MODEL'),
+                'enabled' => env('AI_TITLE_GENERATION_ENABLED', false),
+            ],
+        ],
+
         // Deterministic AI parameters per operation type
         'parameters' => [
             'classification' => [
@@ -28,14 +57,19 @@ return [
                 'top_p' => env('AI_ENRICHMENT_TOP_P', 0.95),
                 'max_tokens' => env('AI_ENRICHMENT_MAX_TOKENS', 1000),
             ],
-            'parsing' => [
-                'temperature' => env('AI_PARSING_TEMPERATURE', 0.1),
-                'top_p' => env('AI_PARSING_TOP_P', 0.95),
-                'max_tokens' => env('AI_PARSING_MAX_TOKENS', 2000),
-            ],
             'embedding' => [
                 // Embeddings don't use temperature/top_p but may have other params
                 'dimensions' => env('AI_EMBEDDING_DIMENSIONS', null),
+            ],
+            'tagging' => [
+                'temperature' => env('AI_TAGGING_TEMPERATURE', 0.2),
+                'top_p' => env('AI_TAGGING_TOP_P', 0.95),
+                'max_tokens' => env('AI_TAGGING_MAX_TOKENS', 300),
+            ],
+            'title_generation' => [
+                'temperature' => env('AI_TITLE_GENERATION_TEMPERATURE', 0.1),
+                'top_p' => env('AI_TITLE_GENERATION_TOP_P', 0.95),
+                'max_tokens' => env('AI_TITLE_GENERATION_MAX_TOKENS', 100),
             ],
         ],
 
