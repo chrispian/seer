@@ -34,7 +34,7 @@ export function RightRail() {
     <div className="w-80 bg-white border-l flex flex-col">
       <div className="flex-1 px-1 py-1 overflow-y-auto space-y-2">
         {/* Today's Activity Stats */}
-        <Card className="border-0 shadow-none border-b-1 border-gray-200">
+        <Card className="border-0 shadow-none border-b border-gray-200">
           <CardHeader className="pb-1">
             <h4 className="text-xs font-medium">Today's Activity</h4>
           </CardHeader>
@@ -55,7 +55,7 @@ export function RightRail() {
         </Card>
 
         {/* Recent Bookmarks Widget */}
-        <Card className="border-0 shadow-none border-b-1 border-gray-200">
+        <Card className="border-0 shadow-none border-b border-gray-200">
           <CardHeader className="pb-1">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-medium">Recent Bookmarks</h4>

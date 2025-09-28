@@ -46,7 +46,7 @@ export function ChatHeader() {
               <Button
                   variant="outline"
                   size="icon"
-                  className="w-8 h-8 rounded-xs border-gray-500 hover:border-blue-500/20 shadow-none bg-gray-100 hover:bg-gray-100/80 text-gray-600 hover:text-black"
+                  className="w-8 h-8 rounded-sm border-gray-500 hover:border-blue-500/20 shadow-none bg-gray-100 hover:bg-gray-100/80 text-gray-600 hover:text-black"
               >
                   <Settings className="w-4 h-4" />
               </Button>
