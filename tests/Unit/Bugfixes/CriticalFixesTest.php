@@ -95,4 +95,18 @@ describe('Critical Bug Fixes', function () {
         // Implementation depends on the actual SearchCommand structure
         expect(true)->toBeTrue(); // Placeholder - full test would require more setup
     });
+
+    test('enrichment pipeline return type allows Fragment passthrough', function () {
+        // Verify that EnrichAssistantMetadata has correct return type to prevent PHP type errors
+        $reflection = new ReflectionClass(\App\Actions\EnrichAssistantMetadata::class);
+        $method = $reflection->getMethod('handle');
+        
+        // Should accept array payload
+        $parameters = $method->getParameters();
+        expect($parameters[0]->getType()->getName())->toBe('array');
+        
+        // Should return mixed to allow Fragment passthrough
+        $returnType = $method->getReturnType();
+        expect($returnType->getName())->toBe('mixed');
+    });
 });
