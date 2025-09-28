@@ -132,6 +132,10 @@ test('assistant fragment relationships are properly set', function () {
     expect($assistantFragment->relationships)->toHaveKey('conversation_id');
     expect($assistantFragment->relationships['conversation_id'])->toBe('test-conversation-456');
 
+    // Verify conversation_id is also stored in metadata for consistency
+    expect($assistantFragment->metadata)->toHaveKey('conversation_id');
+    expect($assistantFragment->metadata['conversation_id'])->toBe('test-conversation-456');
+
     // Verify model attribution
     expect($assistantFragment->model_provider)->toBe('ollama');
     expect($assistantFragment->model_name)->toBe('llama3:latest');
