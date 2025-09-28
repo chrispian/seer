@@ -2,7 +2,8 @@ import React, { useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ChatSessionProvider } from '@/contexts/ChatSessionContext'
 import { Ribbon } from '@/islands/shell/Ribbon'
-import { LeftNav } from '@/islands/shell/LeftNav'
+import { AppSidebar } from '@/components/AppSidebar'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { ChatHeader } from '@/islands/shell/ChatHeader'
 import { RightRail } from '@/islands/shell/RightRail'
 import ChatIsland from '@/islands/chat/ChatIsland'
@@ -69,8 +70,8 @@ function AppContent() {
           {/* Far Left Ribbon */}
           <Ribbon />
           
-          {/* Left Navigation */}
-          <LeftNav />
+          {/* Compact Sidebar */}
+          <AppSidebar />
           
           {/* Main Content */}
           <div className="flex-1 flex flex-col min-w-0">

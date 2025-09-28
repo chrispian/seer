@@ -68,21 +68,49 @@ const fetchPinnedChatSessions = async (vaultId?: number, projectId?: number): Pr
 };
 
 const createChatSession = async (data: CreateChatSessionData): Promise<ChatSessionResponse> => {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+  console.log('Creating chat session with data:', data);
+  console.log('CSRF token:', csrfToken ? 'Present' : 'Missing');
+  
   const response = await fetch(`${API_BASE}/chat-sessions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+      'X-CSRF-TOKEN': csrfToken,
     },
     body: JSON.stringify(data),
   });
   
+  console.log('Response status:', response.status);
+  console.log('Response content-type:', response.headers.get('content-type'));
+  
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to create chat session');
+    let errorMessage = 'Failed to create chat session';
+    try {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const error = await response.json();
+        console.error('JSON error response:', error);
+        errorMessage = error.message || errorMessage;
+      } else {
+        // Likely an HTML error page
+        const text = await response.text();
+        console.error('Non-JSON error response (first 500 chars):', text.substring(0, 500));
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+    } catch (parseError) {
+      console.error('Error parsing response:', parseError);
+      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
   
-  return response.json();
+  try {
+    return await response.json();
+  } catch (parseError) {
+    console.error('Error parsing success response:', parseError);
+    throw new Error('Invalid JSON response from server');
+  }
 };
 
 const updateChatSession = async ({ id, ...data }: { id: number } & Partial<CreateChatSessionData>): Promise<ChatSessionResponse> => {

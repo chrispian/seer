@@ -186,18 +186,34 @@ class ChatSession extends Model
      */
     public static function generateNextShortCode(): string
     {
-        // Find the highest existing number - PostgreSQL compatible
-        $lastCode = static::where('short_code', 'like', 'c%')
-            ->orderByRaw('CAST(SUBSTRING(short_code, 2) AS INTEGER) DESC')
-            ->first();
+        $maxAttempts = 100;
+        $attempt = 0;
+        
+        while ($attempt < $maxAttempts) {
+            // Find the highest existing number including soft-deleted - PostgreSQL compatible
+            $lastCode = static::withTrashed()
+                ->where('short_code', 'like', 'c%')
+                ->orderByRaw('CAST(SUBSTRING(short_code, 2) AS INTEGER) DESC')
+                ->first();
 
-        if ($lastCode && preg_match('/^c(\d+)$/', $lastCode->short_code, $matches)) {
-            $nextNumber = (int) $matches[1] + 1;
-        } else {
-            $nextNumber = 1;
+            if ($lastCode && preg_match('/^c(\d+)$/', $lastCode->short_code, $matches)) {
+                $nextNumber = (int) $matches[1] + 1 + $attempt;
+            } else {
+                $nextNumber = 1 + $attempt;
+            }
+
+            $candidate = 'c'.$nextNumber;
+            
+            // Check if this code already exists (including soft-deleted)
+            if (!static::withTrashed()->where('short_code', $candidate)->exists()) {
+                return $candidate;
+            }
+            
+            $attempt++;
         }
-
-        return 'c'.$nextNumber;
+        
+        // Fallback: use timestamp-based code if all attempts fail
+        return 'c' . time() . rand(10, 99);
     }
 
     /**

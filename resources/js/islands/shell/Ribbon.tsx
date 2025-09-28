@@ -4,18 +4,21 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { Plus, Search, Settings, Archive, Folder, MessageCircle } from 'lucide-react'
+import { Plus, Search, Settings, Archive, Folder, MessageCircle, Loader2 } from 'lucide-react'
 import { useChatSession } from '@/contexts/ChatSessionContext'
+import { useCreateChatSession } from '@/hooks/useChatSessions'
 import { VaultCreateDialog } from '@/components/VaultCreateDialog'
 import { ProjectCreateDialog } from '@/components/ProjectCreateDialog'
 import { ChatCreateDialog } from '@/components/ChatCreateDialog'
 
 export function Ribbon() {
   const { createNewSession } = useChatSession()
+  const createChatMutation = useCreateChatSession()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [vaultDialogOpen, setVaultDialogOpen] = useState(false)
   const [projectDialogOpen, setProjectDialogOpen] = useState(false)
   const [chatDialogOpen, setChatDialogOpen] = useState(false)
+  const [isCreatingChat, setIsCreatingChat] = useState(false)
   const [toastVerbosity, setToastVerbosity] = useState<string>('normal')
 
   // Load toast verbosity from localStorage on mount
@@ -34,8 +37,19 @@ export function Ribbon() {
     setProjectDialogOpen(true)
   }
 
-  const handleNewChat = () => {
-    setChatDialogOpen(true)
+  const handleNewChat = async () => {
+    if (isCreatingChat) return
+    console.log('Creating new chat from ribbon...')
+    setIsCreatingChat(true)
+    
+    try {
+      const result = await createNewSession()
+      console.log('Chat created successfully from ribbon:', result)
+    } catch (error) {
+      console.error('Failed to create new chat from ribbon:', error)
+    } finally {
+      setIsCreatingChat(false)
+    }
   }
 
   const handleSearch = () => {
@@ -104,9 +118,14 @@ export function Ribbon() {
               <DropdownMenuItem 
                 onClick={handleNewChat}
                 className="text-gray-300 hover:bg-cyan-400/20 hover:text-cyan-400 rounded-xs"
+                disabled={isCreatingChat}
               >
                 <div className="flex items-center space-x-2">
-                  <MessageCircle className="w-4 h-4 text-cyan-400" />
+                  {isCreatingChat ? (
+                    <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                  ) : (
+                    <MessageCircle className="w-4 h-4 text-cyan-400" />
+                  )}
                   <span>New Chat</span>
                 </div>
               </DropdownMenuItem>

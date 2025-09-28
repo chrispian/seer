@@ -5,13 +5,17 @@ import { CommandResultModal } from './CommandResultModal'
 import { useAppStore } from '@/stores/useAppStore'
 import { useChatSessionDetails, useUpdateChatSession } from '@/hooks/useChatSessions'
 
-const uuid = () => crypto.randomUUID()
+const uuid = (prefix?: string) => {
+  const id = crypto.randomUUID()
+  return prefix ? `${prefix}-${id}` : id
+}
 
 function useCsrf() {
   return (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
 }
 
 export default function ChatIsland() {
+  console.log('DEBUG: ChatIsland component mounting/rendering')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isSending, setSending] = useState(false)
   const [commandResult, setCommandResult] = useState<any>(null)
@@ -32,14 +36,28 @@ export default function ChatIsland() {
   // Load messages from current session (loaded via React Query)
   useEffect(() => {
     if (sessionDetailsQuery.data?.session?.messages) {
-      const sessionMessages: ChatMessage[] = sessionDetailsQuery.data.session.messages.map((msg: any, index: number) => ({
-        id: msg.id || `session-${sessionDetailsQuery.data.session.id}-${index}`,
-        role: msg.type === 'user' ? 'user' : 'assistant',
-        md: msg.message || '',
-        messageId: msg.id,
-        fragmentId: msg.fragment_id,
-        isBookmarked: msg.is_bookmarked,
-      }))
+      console.log(`DEBUG: Loading messages for session ${sessionDetailsQuery.data.session.id}`)
+      console.log(`DEBUG: Raw messages count: ${sessionDetailsQuery.data.session.messages.length}`)
+      console.log(`DEBUG: Raw messages data:`, sessionDetailsQuery.data.session.messages.map((m: any) => ({
+        id: m.id,
+        type: m.type,
+        fragment_id: m.fragment_id,
+        message_preview: (m.message || '').substring(0, 50) + '...'
+      })))
+      
+      const sessionMessages: ChatMessage[] = sessionDetailsQuery.data.session.messages.map((msg: any, index: number) => {
+        // Create unique React key by combining session ID, message type, and original ID
+        const messageKey = `session-${sessionDetailsQuery.data.session.id}-${msg.type}-${msg.id || index}`
+        console.log(`DEBUG: Creating message with key: ${messageKey}, type: ${msg.type}`)
+        return {
+          id: messageKey,
+          role: msg.type === 'user' ? 'user' : 'assistant',
+          md: msg.message || '',
+          messageId: msg.id,
+          fragmentId: msg.fragment_id,
+          isBookmarked: msg.is_bookmarked,
+        }
+      })
       setMessages(sessionMessages)
     } else if (currentSession && !sessionDetailsQuery.isLoading) {
       // Session exists but has no messages or messages haven't loaded yet
@@ -89,7 +107,7 @@ export default function ChatIsland() {
       activeStreamRef.current = null
     }
 
-    const userId = uuid()
+    const userId = uuid(`user-${streamSessionId}`)
     const userMessage: ChatMessage = { id: userId, role: 'user', md: content }
     const updatedMessages = [...messages, userMessage]
     const streamSessionId = currentSessionId // Capture session ID at start of stream
@@ -121,7 +139,7 @@ export default function ChatIsland() {
 
       // 2) Stream reply
       const es = new EventSource(`/api/chat/stream/${message_id}`)
-      const assistantId = uuid()
+      const assistantId = uuid(`assistant-${streamSessionId}`)
       let acc = ''
 
       // Track the active stream
