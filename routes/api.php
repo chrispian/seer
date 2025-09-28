@@ -4,6 +4,7 @@ use App\Http\Controllers\AnalyzeFragmentController;
 use App\Http\Controllers\AutocompleteController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\ChatApiController;
+use App\Http\Controllers\CommandController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\FragmentController;
@@ -38,6 +39,9 @@ Route::post('/bookmarks/{id}/mark-viewed', [BookmarkController::class, 'markAsVi
 
 // File upload endpoints
 Route::post('/files', [FileUploadController::class, 'store']);
+
+// Command execution endpoints
+Route::post('/commands/execute', [CommandController::class, 'execute']);
 
 // Search endpoints
 Route::get('/search/hybrid', [\App\Http\Controllers\FragmentController::class, 'hybridSearch'])->name('fragments.hybrid-search');

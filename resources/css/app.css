@@ -750,3 +750,34 @@
     @apply bg-background text-foreground;
     }
 }
+
+/* TipTap Editor Styling */
+.ProseMirror {
+  color: oklch(0.147 0.004 49.25) !important; /* foreground color */
+  outline: none !important;
+}
+
+.ProseMirror p {
+  color: oklch(0.147 0.004 49.25) !important; /* foreground color */
+  margin: 0.25rem 0 !important;
+}
+
+.ProseMirror:empty:before {
+  content: attr(data-placeholder);
+  color: oklch(0.553 0.013 58.071) !important; /* muted-foreground color */
+  pointer-events: none;
+  height: 0;
+  float: left;
+}
+
+.dark .ProseMirror {
+  color: oklch(0.985 0.001 106.423) !important; /* dark mode foreground */
+}
+
+.dark .ProseMirror p {
+  color: oklch(0.985 0.001 106.423) !important; /* dark mode foreground */
+}
+
+.dark .ProseMirror:empty:before {
+  color: oklch(0.709 0.01 56.259) !important; /* dark mode muted-foreground */
+}

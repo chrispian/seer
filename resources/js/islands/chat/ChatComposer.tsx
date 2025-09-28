@@ -117,7 +117,7 @@ export function ChatComposer({
     content: '',
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none focus:outline-none min-h-[72px] p-3',
+        class: 'prose prose-sm max-w-none focus:outline-none min-h-[60px] p-2 text-foreground',
         placeholder
       }
     },
@@ -132,7 +132,20 @@ export function ChatComposer({
     const markdown = editor.storage.markdown.getMarkdown()
     const trimmed = markdown.trim()
     
-    // Combine text content with file attachments
+    // Check if this is a slash command
+    if (trimmed.startsWith('/') && !pendingAttachments.length) {
+      // Extract command (remove leading slash)
+      const command = trimmed.substring(1)
+      
+      // Execute as command instead of sending as message
+      if (onCommand && command) {
+        onCommand(command)
+        editor.commands.clearContent()
+        return
+      }
+    }
+    
+    // Combine text content with file attachments for regular messages
     if (trimmed || pendingAttachments.length > 0) {
       let finalContent = trimmed
       
@@ -227,20 +240,20 @@ export function ChatComposer({
   }, [editor])
 
   return (
-    <Card className="p-3">
+    <Card className="p-2 rounded-sm border-0 bg-background">
       {/* Pending Attachments Preview */}
       {pendingAttachments.length > 0 && (
-        <div className="mb-3 p-2 bg-muted rounded-md">
-          <div className="text-xs text-muted-foreground mb-1">Attachments ({pendingAttachments.length}):</div>
+        <div className="mb-2 p-2 bg-muted rounded-sm">
+          <div className="text-xs text-foreground mb-1">Attachments ({pendingAttachments.length}):</div>
           <div className="space-y-1">
             {pendingAttachments.map((attachment, index) => (
-              <div key={index} className="flex items-center gap-2 text-xs">
+              <div key={index} className="flex items-center gap-2 text-xs text-foreground">
                 <Paperclip className="w-3 h-3" />
                 <span className="flex-1 truncate">{attachment.filename}</span>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-4 w-4"
+                  className="h-4 w-4 rounded-sm"
                   onClick={() => setPendingAttachments(prev => prev.filter((_, i) => i !== index))}
                 >
                   ×
@@ -251,16 +264,16 @@ export function ChatComposer({
         </div>
       )}
       
-      <div className="flex items-end gap-3">
+      <div className="flex items-end gap-2">
         <div className="flex-1 relative">
           <EditorContent 
             editor={editor} 
             onKeyDown={handleKeyDown}
-            className="border border-input rounded-md min-h-[72px] focus-within:border-ring"
+            className="border border-input rounded-sm min-h-[60px] focus-within:border-ring"
           />
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {/* File Upload Button */}
           <Button
             type="button"
@@ -269,6 +282,7 @@ export function ChatComposer({
             onClick={handleFileUpload}
             disabled={disabled}
             title="Upload file"
+            className="h-8 w-8 rounded-sm"
           >
             <Paperclip className="w-4 h-4" />
           </Button>
@@ -282,7 +296,7 @@ export function ChatComposer({
               onClick={handleVoiceInput}
               disabled={disabled}
               title={isListening ? "Stop recording" : "Start voice input"}
-              className={isListening ? "bg-red-100 border-red-300" : ""}
+              className={`h-8 w-8 rounded-sm ${isListening ? "bg-red-50 border-red-300" : ""}`}
             >
               {isListening ? (
                 <MicOff className="w-4 h-4 text-red-600" />
@@ -296,7 +310,7 @@ export function ChatComposer({
           <Button 
             onClick={handleSend} 
             disabled={disabled || (isEmpty && pendingAttachments.length === 0)}
-            className="min-w-[80px]"
+            className="min-w-[60px] h-8 rounded-sm"
           >
             {disabled ? 'Sending…' : 'Send'}
           </Button>

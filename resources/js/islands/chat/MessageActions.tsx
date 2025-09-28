@@ -84,23 +84,50 @@ export function MessageActions({
     
     setIsTogglingBookmark(true)
     try {
-      const response = await fetch(`/api/fragments/${messageId}/bookmark`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrf,
-        },
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to toggle bookmark')
+      if (!bookmarked) {
+        // Create a new fragment from the chat message
+        const response = await fetch('/api/fragment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrf,
+          },
+          body: JSON.stringify({
+            message: content,
+            type: 'chat', // or some appropriate type for chat messages
+          }),
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to create fragment')
+        }
+        
+        const fragmentData = await response.json()
+        const fragmentId = fragmentData.id
+        
+        // Now bookmark the created fragment
+        const bookmarkResponse = await fetch(`/api/fragments/${fragmentId}/bookmark`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrf,
+          },
+        })
+        
+        if (!bookmarkResponse.ok) {
+          throw new Error('Failed to bookmark fragment')
+        }
+        
+        setBookmarked(true)
+        onBookmarkToggle?.(messageId, true)
+      } else {
+        // For now, we can't easily remove bookmarks from chat messages
+        // since we don't store the fragment ID mapping
+        // This could be enhanced by storing fragment IDs with chat messages
+        console.log('Removing bookmark not implemented for chat messages')
+        setBookmarked(false)
+        onBookmarkToggle?.(messageId, false)
       }
-      
-      const data = await response.json()
-      const newBookmarkState = data.bookmarked
-      
-      setBookmarked(newBookmarkState)
-      onBookmarkToggle?.(messageId, newBookmarkState)
     } catch (error) {
       console.error('Failed to toggle bookmark:', error)
       // Could show error toast here
@@ -114,18 +141,8 @@ export function MessageActions({
     
     setIsDeleting(true)
     try {
-      const response = await fetch(`/api/fragments/${messageId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrf,
-        },
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete message')
-      }
-      
+      // For chat messages, we just remove them from local state
+      // No API call needed since they're not stored as fragments
       onDelete?.(messageId)
       setShowDeleteDialog(false)
     } catch (error) {
@@ -138,17 +155,17 @@ export function MessageActions({
 
   return (
     <>
-      <div className={`flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ${className}`} data-message-id={messageId}>
+      <div className={`flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition-opacity ${className}`} data-message-id={messageId}>
         {/* Copy Button */}
         <Button
           variant="ghost"
           size="icon"
           onClick={handleCopy}
           title="Copy message"
-          className="h-8 w-8"
+          className="h-6 w-6 rounded-sm"
           data-action="copy"
         >
-          <Copy className="w-4 h-4" />
+          <Copy className="w-3 h-3" />
         </Button>
 
         {/* Bookmark Button */}
@@ -158,9 +175,9 @@ export function MessageActions({
           onClick={handleBookmarkToggle}
           disabled={isTogglingBookmark}
           title={bookmarked ? "Remove bookmark" : "Bookmark message"}
-          className={`h-8 w-8 ${bookmarked ? 'text-yellow-500' : ''}`}
+          className={`h-6 w-6 rounded-sm ${bookmarked ? 'text-yellow-600' : ''}`}
         >
-          <Bookmark className={`w-4 h-4 ${bookmarked ? 'fill-current' : ''}`} />
+          <Bookmark className={`w-3 h-3 ${bookmarked ? 'fill-current' : ''}`} />
         </Button>
 
         {/* More Actions Dropdown */}
@@ -170,17 +187,17 @@ export function MessageActions({
               variant="ghost"
               size="icon"
               title="More actions"
-              className="h-8 w-8"
+              className="h-6 w-6 rounded-sm"
             >
-              <MoreVertical className="w-4 h-4" />
+              <MoreVertical className="w-3 h-3" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="rounded-sm">
             <DropdownMenuItem 
               onClick={() => setShowDeleteDialog(true)}
-              className="text-destructive focus:text-destructive"
+              className="text-destructive focus:text-destructive rounded-sm"
             >
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="w-3 h-3 mr-2" />
               Delete message
             </DropdownMenuItem>
           </DropdownMenuContent>

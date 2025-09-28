@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { ChatComposer } from './ChatComposer'
 import { ChatTranscript, ChatMessage } from './ChatTranscript'
+import { CommandResultModal } from './CommandResultModal'
 
 const uuid = () => crypto.randomUUID()
 
@@ -11,6 +12,9 @@ function useCsrf() {
 export default function ChatIsland() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isSending, setSending] = useState(false)
+  const [commandResult, setCommandResult] = useState<any>(null)
+  const [isCommandModalOpen, setIsCommandModalOpen] = useState(false)
+  const [lastCommand, setLastCommand] = useState('')
   const csrf = useCsrf()
 
   async function onSend(content: string, attachments?: Array<{markdown: string, url: string, filename: string}>) {
@@ -72,11 +76,41 @@ export default function ChatIsland() {
     ))
   }
 
-  const handleCommand = (command: string) => {
+  const handleCommand = async (command: string) => {
     console.log('Executing command:', command)
-    // For now, just send it as a regular message with command prefix
-    // This could be enhanced to integrate with a command system
-    onSend(`/${command}`)
+    setLastCommand(command)
+    
+    try {
+      const response = await fetch('/api/commands/execute', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          'X-CSRF-TOKEN': csrf 
+        },
+        body: JSON.stringify({ command })
+      })
+      
+      const result = await response.json()
+      
+      // Show result in modal
+      setCommandResult(result)
+      setIsCommandModalOpen(true)
+      
+      // Handle special actions
+      if (result.success && result.shouldResetChat) {
+        setMessages([])
+      }
+      
+    } catch (error) {
+      console.error('Command execution failed:', error)
+      // Show error in modal
+      setCommandResult({
+        success: false,
+        error: 'Failed to execute command. Please try again.',
+        type: 'error'
+      })
+      setIsCommandModalOpen(true)
+    }
   }
 
   return (
@@ -94,6 +128,14 @@ export default function ChatIsland() {
         onCommand={handleCommand}
         disabled={isSending}
         placeholder="Type a message... Use / for commands, [[ for links, # for tags"
+      />
+
+      {/* Command Result Modal */}
+      <CommandResultModal
+        isOpen={isCommandModalOpen}
+        onClose={() => setIsCommandModalOpen(false)}
+        result={commandResult}
+        command={lastCommand}
       />
     </div>
   )
