@@ -1,0 +1,375 @@
+<?php
+
+use App\Models\Fragment;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+
+uses(RefreshDatabase::class);
+
+test('valid JSON metadata block is extracted and merged correctly', function () {
+    $responseWithMetadata = <<<'RESPONSE'
+Hello! I can help you with that task.
+
+<<<JSON_METADATA>>>
+{
+    "tags": ["helpful", "task-oriented"],
+    "facets": {"category": "assistance", "complexity": "medium"},
+    "links": ["https://example.com/help"]
+}
+<<<END_JSON_METADATA>>>
+RESPONSE;
+
+    Http::fake([
+        'localhost:11434/*' => Http::response(
+            'data: '.json_encode([
+                'message' => ['content' => $responseWithMetadata],
+                'done' => false,
+            ])."\n".
+            'data: '.json_encode([
+                'message' => ['content' => ''],
+                'done' => true,
+                'prompt_eval_count' => 10,
+                'eval_count' => 5,
+            ])."\n",
+            200,
+            ['Content-Type' => 'text/plain']
+        ),
+    ]);
+
+    // Create user message
+    $response = $this->postJson('/api/messages', [
+        'content' => 'Test message with metadata response',
+        'provider' => 'ollama',
+        'model' => 'llama3:latest',
+    ]);
+
+    $response->assertStatus(200);
+    $data = $response->json();
+
+    // Stream the response
+    $streamResponse = $this->get("/api/chat/stream/{$data['message_id']}");
+    $streamResponse->assertStatus(200);
+
+    // Find the assistant fragment
+    $assistantFragment = Fragment::where('source', 'chat-ai')
+        ->orderBy('created_at', 'desc')
+        ->first();
+
+    expect($assistantFragment)->not->toBeNull();
+
+    // Verify message content has JSON block removed
+    expect($assistantFragment->message)->toBe('Hello! I can help you with that task.');
+    expect($assistantFragment->message)->not->toContain('<<<JSON_METADATA>>>');
+
+    // Verify JSON metadata was merged into fragment metadata
+    expect($assistantFragment->metadata)->toHaveKey('category');
+    expect($assistantFragment->metadata['category'])->toBe('assistance');
+    expect($assistantFragment->metadata)->toHaveKey('complexity');
+    expect($assistantFragment->metadata['complexity'])->toBe('medium');
+
+    // Verify tags were merged
+    expect($assistantFragment->tags)->toContain('helpful');
+    expect($assistantFragment->tags)->toContain('task-oriented');
+
+    // Verify standard metadata is still present
+    expect($assistantFragment->metadata)->toHaveKey('turn');
+    expect($assistantFragment->metadata['turn'])->toBe('response');
+});
+
+test('malformed JSON metadata block fails gracefully', function () {
+    $responseWithBadJson = <<<'RESPONSE'
+Here's my response with bad JSON.
+
+<<<JSON_METADATA>>>
+{
+    "tags": ["test",
+    "facets": {"broken": json}
+}
+<<<END_JSON_METADATA>>>
+RESPONSE;
+
+    Http::fake([
+        'localhost:11434/*' => Http::response(
+            'data: '.json_encode([
+                'message' => ['content' => $responseWithBadJson],
+                'done' => false,
+            ])."\n".
+            'data: '.json_encode([
+                'message' => ['content' => ''],
+                'done' => true,
+                'prompt_eval_count' => 8,
+                'eval_count' => 3,
+            ])."\n",
+            200,
+            ['Content-Type' => 'text/plain']
+        ),
+    ]);
+
+    // Create user message
+    $response = $this->postJson('/api/messages', [
+        'content' => 'Test message with bad JSON response',
+        'provider' => 'ollama',
+        'model' => 'llama3:latest',
+    ]);
+
+    $response->assertStatus(200);
+    $data = $response->json();
+
+    // Stream the response
+    $streamResponse = $this->get("/api/chat/stream/{$data['message_id']}");
+    $streamResponse->assertStatus(200);
+
+    // Find the assistant fragment
+    $assistantFragment = Fragment::where('source', 'chat-ai')
+        ->orderBy('created_at', 'desc')
+        ->first();
+
+    expect($assistantFragment)->not->toBeNull();
+
+    // Verify message content has JSON block removed (even if malformed)
+    expect($assistantFragment->message)->toBe("Here's my response with bad JSON.");
+    expect($assistantFragment->message)->not->toContain('<<<JSON_METADATA>>>');
+
+    // Verify no malformed JSON data was merged (standard metadata only)
+    expect($assistantFragment->metadata)->toHaveKey('turn');
+    expect($assistantFragment->metadata['turn'])->toBe('response');
+    expect($assistantFragment->metadata)->not->toHaveKey('broken');
+
+    // Verify no invalid tags were added
+    expect($assistantFragment->tags)->not->toContain('test');
+});
+
+test('response without JSON metadata block processes normally', function () {
+    $normalResponse = 'This is a normal response without any special metadata blocks.';
+
+    Http::fake([
+        'localhost:11434/*' => Http::response(
+            'data: '.json_encode([
+                'message' => ['content' => $normalResponse],
+                'done' => false,
+            ])."\n".
+            'data: '.json_encode([
+                'message' => ['content' => ''],
+                'done' => true,
+                'prompt_eval_count' => 12,
+                'eval_count' => 6,
+            ])."\n",
+            200,
+            ['Content-Type' => 'text/plain']
+        ),
+    ]);
+
+    // Create user message
+    $response = $this->postJson('/api/messages', [
+        'content' => 'Test message without metadata',
+        'provider' => 'ollama',
+        'model' => 'llama3:latest',
+    ]);
+
+    $response->assertStatus(200);
+    $data = $response->json();
+
+    // Stream the response
+    $streamResponse = $this->get("/api/chat/stream/{$data['message_id']}");
+    $streamResponse->assertStatus(200);
+
+    // Find the assistant fragment
+    $assistantFragment = Fragment::where('source', 'chat-ai')
+        ->orderBy('created_at', 'desc')
+        ->first();
+
+    expect($assistantFragment)->not->toBeNull();
+
+    // Verify message content is unchanged
+    expect($assistantFragment->message)->toBe($normalResponse);
+
+    // Verify only standard metadata is present
+    expect($assistantFragment->metadata)->toHaveKey('turn');
+    expect($assistantFragment->metadata['turn'])->toBe('response');
+    expect($assistantFragment->metadata)->toHaveKey('provider');
+    expect($assistantFragment->metadata['provider'])->toBe('ollama');
+});
+
+test('multiple JSON metadata blocks are handled correctly', function () {
+    $responseWithMultipleBlocks = <<<'RESPONSE'
+First part of response.
+
+<<<JSON_METADATA>>>
+{
+    "tags": ["first-block"],
+    "facets": {"section": "one"}
+}
+<<<END_JSON_METADATA>>>
+
+Middle content.
+
+<<<JSON_METADATA>>>
+{
+    "tags": ["second-block"],
+    "facets": {"section": "two"}
+}
+<<<END_JSON_METADATA>>>
+
+Final part.
+RESPONSE;
+
+    Http::fake([
+        'localhost:11434/*' => Http::response(
+            'data: '.json_encode([
+                'message' => ['content' => $responseWithMultipleBlocks],
+                'done' => false,
+            ])."\n".
+            'data: '.json_encode([
+                'message' => ['content' => ''],
+                'done' => true,
+                'prompt_eval_count' => 15,
+                'eval_count' => 10,
+            ])."\n",
+            200,
+            ['Content-Type' => 'text/plain']
+        ),
+    ]);
+
+    // Create user message
+    $response = $this->postJson('/api/messages', [
+        'content' => 'Test message with multiple metadata blocks',
+        'provider' => 'ollama',
+        'model' => 'llama3:latest',
+    ]);
+
+    $response->assertStatus(200);
+    $data = $response->json();
+
+    // Stream the response
+    $streamResponse = $this->get("/api/chat/stream/{$data['message_id']}");
+    $streamResponse->assertStatus(200);
+
+    // Find the assistant fragment
+    $assistantFragment = Fragment::where('source', 'chat-ai')
+        ->orderBy('created_at', 'desc')
+        ->first();
+
+    expect($assistantFragment)->not->toBeNull();
+
+    // Verify all JSON blocks are removed from message
+    expect($assistantFragment->message)->toBe("First part of response.\n\nMiddle content.\n\nFinal part.");
+    expect($assistantFragment->message)->not->toContain('<<<JSON_METADATA>>>');
+
+    // Note: Current implementation only processes first match
+    // For multiple blocks, would need enhanced parsing logic
+    expect($assistantFragment->metadata)->toHaveKey('section');
+});
+
+test('empty JSON metadata block is handled gracefully', function () {
+    $responseWithEmptyBlock = <<<'RESPONSE'
+Response with empty metadata block.
+
+<<<JSON_METADATA>>>
+{}
+<<<END_JSON_METADATA>>>
+RESPONSE;
+
+    Http::fake([
+        'localhost:11434/*' => Http::response(
+            'data: '.json_encode([
+                'message' => ['content' => $responseWithEmptyBlock],
+                'done' => false,
+            ])."\n".
+            'data: '.json_encode([
+                'message' => ['content' => ''],
+                'done' => true,
+                'prompt_eval_count' => 5,
+                'eval_count' => 2,
+            ])."\n",
+            200,
+            ['Content-Type' => 'text/plain']
+        ),
+    ]);
+
+    // Create user message
+    $response = $this->postJson('/api/messages', [
+        'content' => 'Test message with empty metadata block',
+        'provider' => 'ollama',
+        'model' => 'llama3:latest',
+    ]);
+
+    $response->assertStatus(200);
+    $data = $response->json();
+
+    // Stream the response
+    $streamResponse = $this->get("/api/chat/stream/{$data['message_id']}");
+    $streamResponse->assertStatus(200);
+
+    // Find the assistant fragment
+    $assistantFragment = Fragment::where('source', 'chat-ai')
+        ->orderBy('created_at', 'desc')
+        ->first();
+
+    expect($assistantFragment)->not->toBeNull();
+
+    // Verify empty block is removed
+    expect($assistantFragment->message)->toBe('Response with empty metadata block.');
+    expect($assistantFragment->message)->not->toContain('<<<JSON_METADATA>>>');
+
+    // Verify standard metadata is still present
+    expect($assistantFragment->metadata)->toHaveKey('turn');
+    expect($assistantFragment->metadata['turn'])->toBe('response');
+});
+
+test('JSON metadata with only tags field is processed correctly', function () {
+    $responseWithTagsOnly = <<<'RESPONSE'
+Here's a response with only tags in metadata.
+
+<<<JSON_METADATA>>>
+{
+    "tags": ["simple", "tag-only", "response"]
+}
+<<<END_JSON_METADATA>>>
+RESPONSE;
+
+    Http::fake([
+        'localhost:11434/*' => Http::response(
+            'data: '.json_encode([
+                'message' => ['content' => $responseWithTagsOnly],
+                'done' => false,
+            ])."\n".
+            'data: '.json_encode([
+                'message' => ['content' => ''],
+                'done' => true,
+                'prompt_eval_count' => 7,
+                'eval_count' => 4,
+            ])."\n",
+            200,
+            ['Content-Type' => 'text/plain']
+        ),
+    ]);
+
+    // Create user message
+    $response = $this->postJson('/api/messages', [
+        'content' => 'Test message with tags-only metadata',
+        'provider' => 'ollama',
+        'model' => 'llama3:latest',
+    ]);
+
+    $response->assertStatus(200);
+    $data = $response->json();
+
+    // Stream the response
+    $streamResponse = $this->get("/api/chat/stream/{$data['message_id']}");
+    $streamResponse->assertStatus(200);
+
+    // Find the assistant fragment
+    $assistantFragment = Fragment::where('source', 'chat-ai')
+        ->orderBy('created_at', 'desc')
+        ->first();
+
+    expect($assistantFragment)->not->toBeNull();
+
+    // Verify tags were merged
+    expect($assistantFragment->tags)->toContain('simple');
+    expect($assistantFragment->tags)->toContain('tag-only');
+    expect($assistantFragment->tags)->toContain('response');
+
+    // Verify message content is cleaned
+    expect($assistantFragment->message)->toBe('Here\'s a response with only tags in metadata.');
+});
