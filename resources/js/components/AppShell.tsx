@@ -2,7 +2,8 @@ import React, { useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ChatSessionProvider } from '@/contexts/ChatSessionContext'
 import { Ribbon } from '@/islands/shell/Ribbon'
-import { LeftNav } from '@/islands/shell/LeftNav'
+import { AppSidebar } from '@/components/AppSidebar'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { ChatHeader } from '@/islands/shell/ChatHeader'
 import { RightRail } from '@/islands/shell/RightRail'
 import ChatIsland from '@/islands/chat/ChatIsland'
@@ -65,25 +66,39 @@ function AppContent() {
   return (
     <ErrorBoundary>
       <ChatSessionProvider>
-        <div className="h-screen flex bg-background">
-          {/* Far Left Ribbon */}
-          <Ribbon />
-          
-          {/* Left Navigation */}
-          <LeftNav />
-          
-          {/* Main Content */}
-          <div className="flex-1 flex flex-col min-w-0">
-            <ChatHeader />
-            <ChatIsland />
+        <SidebarProvider
+          style={{
+            "--sidebar-width": "13rem", // Very compact width (208px vs 288px)
+            "--sidebar-width-mobile": "15rem",
+          }}
+        >
+          <div className="h-screen flex bg-background">
+            {/* Far Left Ribbon */}
+            <Ribbon />
+            
+            {/* Compact Sidebar */}
+            <AppSidebar />
+            
+            {/* Main Content */}
+            <SidebarInset>
+              <div className="flex-1 flex flex-col min-w-0">
+                <div className="flex items-center gap-2 px-4 py-2 border-b">
+                  <SidebarTrigger className="-ml-1" />
+                  <div className="flex-1">
+                    <ChatHeader />
+                  </div>
+                </div>
+                <ChatIsland />
+              </div>
+            </SidebarInset>
+            
+            {/* Right Sidebar */}
+            <RightRail />
           </div>
           
-          {/* Right Sidebar */}
-          <RightRail />
-        </div>
-        
-        {/* Toast Notifications */}
-        <ToastContainer toasts={toasts} onRemove={removeToast} />
+          {/* Toast Notifications */}
+          <ToastContainer toasts={toasts} onRemove={removeToast} />
+        </SidebarProvider>
       </ChatSessionProvider>
     </ErrorBoundary>
   );
