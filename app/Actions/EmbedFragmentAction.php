@@ -35,15 +35,16 @@ class EmbedFragmentAction
         }
 
         // Check if embedding operation is enabled
-        if (!config('fragments.models.operations.embedding.enabled', true)) {
+        if (! config('fragments.models.operations.embedding.enabled', true)) {
             Log::debug('EmbedFragmentAction: embedding operation disabled, skipping');
+
             return $fragment;
         }
 
         // Get provider/model from operation-specific config or fall back to embedding config
         $operationProvider = config('fragments.models.operations.embedding.provider');
         $operationModel = config('fragments.models.operations.embedding.model');
-        
+
         $provider = $operationProvider ?: config('fragments.embeddings.provider');
         $model = $operationModel ?: config('fragments.embeddings.model');
         $version = (string) config('fragments.embeddings.version', '1');

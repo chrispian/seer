@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useCallback } from 'react'
+import { useAppStore } from '../stores/useAppStore'
+import { useCurrentContext, useAppContext } from '../hooks/useContext'
+import { useChatSessions, usePinnedChatSessions, useCreateChatSession, useUpdateChatSession, useDeleteChatSession, useTogglePinChatSession } from '../hooks/useChatSessions'
 
 export interface ChatSession {
   id: number
@@ -64,214 +67,136 @@ function useCsrf() {
 }
 
 export function ChatSessionProvider({ children }: { children: React.ReactNode }) {
-  const [currentSession, setCurrentSession] = useState<ChatSession | null>(null)
-  const [isLoadingSession, setIsLoadingSession] = useState(false)
-  const [recentSessions, setRecentSessions] = useState<ChatSession[]>([])
-  const [pinnedSessions, setPinnedSessions] = useState<ChatSession[]>([])
-  const [appContext, setAppContext] = useState<AppContext | null>(null)
-  const [isLoadingContext, setIsLoadingContext] = useState(true)
+  // Use Zustand store and hooks instead of local state
+  const { 
+    setCurrentSession, 
+    getCurrentSession,
+    chatSessions, 
+    isLoadingSessions,
+    vaults,
+    projects,
+    currentVaultId,
+    currentProjectId
+  } = useAppStore()
+  
+  // Use the new hook system (simplified to avoid conflicts)
+  // const contextQuery = useAppContext() // Moved to AppContent to avoid conflicts
+  const chatSessionsQuery = useChatSessions()
+  const pinnedSessionsQuery = usePinnedChatSessions()
+  const createChatMutation = useCreateChatSession()
+  const updateChatMutation = useUpdateChatSession()
+  const deleteChatMutation = useDeleteChatSession()
+  const togglePinMutation = useTogglePinChatSession()
+  
   const csrf = useCsrf()
+  
+  // Transform data for compatibility with existing interface
+  const currentSession = getCurrentSession()
+  const recentSessions = chatSessions.filter(session => !session.is_pinned)
+  const pinnedSessions = pinnedSessionsQuery.data?.sessions.map(session => ({
+    id: session.id,
+    title: session.title,
+    channel_display: session.channel_display,
+    message_count: session.message_count,
+    last_activity_at: session.last_activity_at,
+    is_pinned: session.is_pinned,
+    sort_order: session.sort_order,
+    vault_id: session.vault_id,
+    project_id: session.project_id,
+  })) || []
+  
+  const appContext: AppContext | null = currentVaultId ? {
+    vaults: vaults.map(vault => ({
+      id: vault.id,
+      name: vault.name,
+      description: vault.description || '',
+      is_default: vault.is_default,
+    })),
+    projects: projects.map(project => ({
+      id: project.id,
+      name: project.name,
+      description: project.description || '',
+      vault_id: project.vault_id,
+    })),
+    current_vault_id: currentVaultId,
+    current_project_id: currentProjectId,
+  } : null
 
+  // Delegate to new hook system
   const loadContext = useCallback(async () => {
-    setIsLoadingContext(true)
-    try {
-      const response = await fetch('/api/chat-sessions/context')
-      if (response.ok) {
-        const data = await response.json()
-        setAppContext(data)
-      }
-    } catch (error) {
-      console.error('Failed to load app context:', error)
-    } finally {
-      setIsLoadingContext(false)
-    }
+    // contextQuery.refetch() // Simplified to avoid conflicts
+    console.log('loadContext called - delegating to AppContent useAppContext')
   }, [])
 
   const loadSessions = useCallback(async () => {
-    if (!appContext?.current_vault_id) return
-
-    try {
-      const [recentResponse, pinnedResponse] = await Promise.all([
-        fetch(`/api/chat-sessions?vault_id=${appContext.current_vault_id}&project_id=${appContext.current_project_id || ''}`),
-        fetch(`/api/chat-sessions/pinned?vault_id=${appContext.current_vault_id}&project_id=${appContext.current_project_id || ''}`)
-      ])
-
-      if (recentResponse.ok && pinnedResponse.ok) {
-        const [recentData, pinnedData] = await Promise.all([
-          recentResponse.json(),
-          pinnedResponse.json()
-        ])
-        
-        setRecentSessions(recentData.sessions)
-        setPinnedSessions(pinnedData.sessions)
-      }
-    } catch (error) {
-      console.error('Failed to load sessions:', error)
-    }
-  }, [appContext?.current_vault_id, appContext?.current_project_id])
+    chatSessionsQuery.refetch()
+    pinnedSessionsQuery.refetch()
+  }, [chatSessionsQuery, pinnedSessionsQuery])
 
   const createNewSession = useCallback(async (): Promise<ChatSession> => {
-    const response = await fetch('/api/chat-sessions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': csrf,
-      },
-      body: JSON.stringify({
-        vault_id: appContext?.current_vault_id,
-        project_id: appContext?.current_project_id,
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to create new session')
+    const result = await createChatMutation.mutateAsync({})
+    
+    // The mutation already updates the store, but we need to return a compatible format
+    return {
+      id: result.session.id,
+      title: result.session.title,
+      channel_display: result.session.channel_display,
+      message_count: result.session.message_count,
+      last_activity_at: result.session.last_activity_at,
+      is_pinned: result.session.is_pinned,
+      sort_order: result.session.sort_order,
+      vault_id: result.session.vault_id,
+      project_id: result.session.project_id,
+      messages: result.session.messages,
+      metadata: result.session.metadata,
     }
-
-    const data = await response.json()
-    const newSession = data.session
-
-    // Update session lists
-    setRecentSessions(prev => [newSession, ...prev])
-    setCurrentSession(newSession)
-
-    return newSession
-  }, [csrf, appContext?.current_vault_id, appContext?.current_project_id])
+  }, [createChatMutation])
 
   const switchToSession = useCallback(async (sessionId: number) => {
-    setIsLoadingSession(true)
-    try {
-      const response = await fetch(`/api/chat-sessions/${sessionId}`)
-      if (response.ok) {
-        const data = await response.json()
-        setCurrentSession(data.session)
-      } else {
-        throw new Error('Failed to load session')
-      }
-    } catch (error) {
-      console.error('Failed to switch to session:', error)
-      throw error
-    } finally {
-      setIsLoadingSession(false)
-    }
-  }, [])
+    // Simply update the current session in the store
+    setCurrentSession(sessionId)
+  }, [setCurrentSession])
 
   const updateSession = useCallback(async (sessionId: number, updates: Partial<ChatSession>) => {
-    const response = await fetch(`/api/chat-sessions/${sessionId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': csrf,
-      },
-      body: JSON.stringify(updates),
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to update session')
+    const result = await updateChatMutation.mutateAsync({ id: sessionId, ...updates })
+    
+    return {
+      id: result.session.id,
+      title: result.session.title,
+      channel_display: result.session.channel_display,
+      message_count: result.session.message_count,
+      last_activity_at: result.session.last_activity_at,
+      is_pinned: result.session.is_pinned,
+      sort_order: result.session.sort_order,
+      vault_id: result.session.vault_id,
+      project_id: result.session.project_id,
+      messages: result.session.messages,
+      metadata: result.session.metadata,
     }
-
-    const data = await response.json()
-    const updatedSession = data.session
-
-    // Update current session if it's the one being updated
-    if (currentSession?.id === sessionId) {
-      setCurrentSession(updatedSession)
-    }
-
-    // Update in session lists
-    setRecentSessions(prev => 
-      prev.map(session => session.id === sessionId ? updatedSession : session)
-    )
-    setPinnedSessions(prev => 
-      prev.map(session => session.id === sessionId ? updatedSession : session)
-    )
-
-    return updatedSession
-  }, [csrf, currentSession?.id])
+  }, [updateChatMutation])
 
   const deleteSession = useCallback(async (sessionId: number) => {
-    const response = await fetch(`/api/chat-sessions/${sessionId}`, {
-      method: 'DELETE',
-      headers: {
-        'X-CSRF-TOKEN': csrf,
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to delete session')
-    }
-
-    // Remove from session lists
-    setRecentSessions(prev => prev.filter(session => session.id !== sessionId))
-    setPinnedSessions(prev => prev.filter(session => session.id !== sessionId))
-
-    // If deleting current session, clear it
-    if (currentSession?.id === sessionId) {
-      setCurrentSession(null)
-    }
-  }, [csrf, currentSession?.id])
+    await deleteChatMutation.mutateAsync(sessionId)
+  }, [deleteChatMutation])
 
   const togglePinSession = useCallback(async (sessionId: number) => {
-    const response = await fetch(`/api/chat-sessions/${sessionId}/pin`, {
-      method: 'POST',
-      headers: {
-        'X-CSRF-TOKEN': csrf,
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to toggle pin status')
-    }
-
-    // Reload sessions to get updated pin status and ordering
-    await loadSessions()
-  }, [csrf, loadSessions])
+    await togglePinMutation.mutateAsync(sessionId)
+  }, [togglePinMutation])
 
   const refreshCurrentSession = useCallback(async () => {
     if (!currentSession?.id) return
-
-    try {
-      const response = await fetch(`/api/chat-sessions/${currentSession.id}`)
-      if (response.ok) {
-        const data = await response.json()
-        setCurrentSession(data.session)
-      }
-    } catch (error) {
-      console.error('Failed to refresh current session:', error)
-    }
-  }, [currentSession?.id])
-
-  // Load context on mount
-  useEffect(() => {
-    loadContext()
-  }, [loadContext])
-
-  // Load sessions when context is available
-  useEffect(() => {
-    if (appContext?.current_vault_id) {
-      loadSessions()
-    }
-  }, [appContext?.current_vault_id, appContext?.current_project_id, loadSessions])
-
-  // Auto-create session if none exist and context is loaded
-  useEffect(() => {
-    if (
-      appContext?.current_vault_id && 
-      !isLoadingSession && 
-      !currentSession && 
-      recentSessions.length === 0 && 
-      pinnedSessions.length === 0
-    ) {
-      createNewSession().catch(console.error)
-    }
-  }, [appContext?.current_vault_id, isLoadingSession, currentSession, recentSessions.length, pinnedSessions.length, createNewSession])
+    
+    // Refetch current session data (the hooks will handle updating the store)
+    chatSessionsQuery.refetch()
+  }, [currentSession?.id, chatSessionsQuery])
 
   const contextValue: ChatSessionContextType = {
     currentSession,
-    isLoadingSession,
+    isLoadingSession: isLoadingSessions,
     recentSessions,
     pinnedSessions,
     appContext,
-    isLoadingContext,
+    isLoadingContext: false, // Simplified for debugging
     createNewSession,
     switchToSession,
     updateSession,

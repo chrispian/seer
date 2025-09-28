@@ -181,7 +181,7 @@ class OpenAIProvider extends AbstractAIProvider
                 ->post("{$baseUrl}/chat/completions", $request);
 
             if ($response->failed()) {
-                throw new \RuntimeException('OpenAI streaming request failed: ' . $response->body());
+                throw new \RuntimeException('OpenAI streaming request failed: '.$response->body());
             }
 
             $body = $response->toPsrResponse()->getBody();
@@ -191,6 +191,7 @@ class OpenAIProvider extends AbstractAIProvider
                 $chunk = $body->read(8192);
                 if ($chunk === '') {
                     usleep(50_000);
+
                     continue;
                 }
                 $buffer .= $chunk;

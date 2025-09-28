@@ -11,15 +11,15 @@ class ValidateStreamingProvider
         $providerManager = app(AIProviderManager::class);
         $providerInstance = $providerManager->getProvider($provider);
 
-        if (!$providerInstance) {
+        if (! $providerInstance) {
             abort(400, "Provider '{$provider}' is not supported");
         }
 
-        if (!$providerInstance->supportsStreaming()) {
+        if (! $providerInstance->supportsStreaming()) {
             abort(400, "Provider '{$provider}' does not support streaming");
         }
 
-        if (!$providerInstance->isAvailable()) {
+        if (! $providerInstance->isAvailable()) {
             abort(400, "Provider '{$provider}' is not available or not configured");
         }
 

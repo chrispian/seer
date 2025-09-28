@@ -10,7 +10,9 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\FragmentController;
 use App\Http\Controllers\FragmentDetailController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SeerLogController;
+use App\Http\Controllers\VaultController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/fragment', [FragmentController::class, 'store']);
@@ -55,9 +57,25 @@ Route::delete('/chat-sessions/{chatSession}', [ChatSessionController::class, 'de
 Route::post('/chat-sessions/{chatSession}/pin', [ChatSessionController::class, 'togglePin']);
 Route::post('/chat-sessions/pin-order', [ChatSessionController::class, 'updatePinOrder']);
 
+// Vault endpoints
+Route::get('/vaults', [VaultController::class, 'index']);
+Route::post('/vaults', [VaultController::class, 'store']);
+Route::get('/vaults/{vault}', [VaultController::class, 'show']);
+Route::put('/vaults/{vault}', [VaultController::class, 'update']);
+Route::delete('/vaults/{vault}', [VaultController::class, 'destroy']);
+Route::post('/vaults/{vault}/set-default', [VaultController::class, 'setDefault']);
+
+// Project endpoints
+Route::get('/projects', [ProjectController::class, 'index']);
+Route::post('/projects', [ProjectController::class, 'store']);
+Route::get('/projects/{project}', [ProjectController::class, 'show']);
+Route::put('/projects/{project}', [ProjectController::class, 'update']);
+Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
+Route::get('/vaults/{vault}/projects', [ProjectController::class, 'getForVault']);
+Route::post('/projects/{project}/set-default', [ProjectController::class, 'setDefault']);
+
 // Search endpoints
 Route::get('/search/hybrid', [\App\Http\Controllers\FragmentController::class, 'hybridSearch'])->name('fragments.hybrid-search');
-
 
 Route::middleware('web')->group(function () {
     Route::post('/messages', [ChatApiController::class, 'send']);

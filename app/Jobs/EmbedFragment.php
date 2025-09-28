@@ -62,7 +62,7 @@ class EmbedFragment implements ShouldQueue
                 'vault' => $fragment->vault,
                 'project_id' => $fragment->project_id,
             ];
-            
+
             $res = $emb->embed($text, $context); // returns ['dims'=>..,'vector'=>[..],'provider'=>..,'model'=>..]
             $vec = '['.implode(',', $res['vector']).']';
 

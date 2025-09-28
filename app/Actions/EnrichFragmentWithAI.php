@@ -92,7 +92,7 @@ PROMPT;
                 ]
             );
 
-            if (!$validationResult['success']) {
+            if (! $validationResult['success']) {
                 Log::error('Fragment enrichment JSON validation failed', [
                     'fragment_id' => $fragment->id,
                     'correlation_id' => $correlationId,

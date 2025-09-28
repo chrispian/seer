@@ -3,7 +3,6 @@
 use App\Jobs\EmbedFragment;
 use App\Models\Fragment;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 test('job skips when embeddings disabled', function () {

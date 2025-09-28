@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Cache;
 uses(RefreshDatabase::class);
 
 test('CacheChatSession stores all required data', function () {
-    $action = new CacheChatSession();
-    
+    $action = new CacheChatSession;
+
     $messageId = 'test-message-123';
     $messages = [
         ['role' => 'system', 'content' => 'You are a helpful assistant.'],
@@ -33,7 +33,7 @@ test('CacheChatSession stores all required data', function () {
 
     // Verify cached data
     $cachedData = Cache::get("msg:{$messageId}");
-    
+
     expect($cachedData)->not->toBeNull();
     expect($cachedData)->toHaveKeys([
         'messages',
@@ -53,8 +53,8 @@ test('CacheChatSession stores all required data', function () {
 });
 
 test('CacheChatSession generates session_id when not provided', function () {
-    $action = new CacheChatSession();
-    
+    $action = new CacheChatSession;
+
     $messageId = 'test-message-auto-session';
     $messages = [['role' => 'user', 'content' => 'Test message']];
     $provider = 'ollama';
@@ -75,17 +75,17 @@ test('CacheChatSession generates session_id when not provided', function () {
 
     // Verify session_id was generated
     $cachedData = Cache::get("msg:{$messageId}");
-    
+
     expect($cachedData)->toHaveKey('session_id');
     expect($cachedData['session_id'])->toBeString();
     expect($cachedData['session_id'])->toHaveLength(36); // UUID v4 length
 });
 
 test('CacheChatSession cache expiration is set correctly', function () {
-    $action = new CacheChatSession();
-    
+    $action = new CacheChatSession;
+
     $messageId = 'test-message-expiration';
-    
+
     // Execute the action
     $action(
         $messageId,
@@ -98,22 +98,22 @@ test('CacheChatSession cache expiration is set correctly', function () {
 
     // Verify data is cached
     expect(Cache::has("msg:{$messageId}"))->toBeTrue();
-    
+
     // Fast-forward time by 9 minutes (should still be cached)
     $this->travel(9)->minutes();
     expect(Cache::has("msg:{$messageId}"))->toBeTrue();
-    
+
     // Fast-forward to 11 minutes (should be expired)
     $this->travel(11)->minutes();
     expect(Cache::has("msg:{$messageId}"))->toBeFalse();
 });
 
 test('CacheChatSession works with empty messages array', function () {
-    $action = new CacheChatSession();
-    
+    $action = new CacheChatSession;
+
     $messageId = 'test-message-empty';
     $emptyMessages = [];
-    
+
     // Should not throw an error with empty messages
     $action(
         $messageId,
@@ -129,12 +129,12 @@ test('CacheChatSession works with empty messages array', function () {
 });
 
 test('CacheChatSession handles special characters in IDs', function () {
-    $action = new CacheChatSession();
-    
+    $action = new CacheChatSession;
+
     $messageId = 'test-message-special-chars';
     $conversationId = 'conversation-with-dashes-and_underscores';
     $userFragmentId = 'fragment-123-abc';
-    
+
     $action(
         $messageId,
         [['role' => 'user', 'content' => 'Test special chars']],

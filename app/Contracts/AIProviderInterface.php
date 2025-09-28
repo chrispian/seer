@@ -51,9 +51,9 @@ interface AIProviderInterface
 
     /**
      * Stream chat completions with real-time deltas
-     * 
-     * @param array $messages Array of messages in OpenAI format
-     * @param array $options Provider-specific options (model, temperature, etc.)
+     *
+     * @param  array  $messages  Array of messages in OpenAI format
+     * @param  array  $options  Provider-specific options (model, temperature, etc.)
      * @return \Generator Yields streaming deltas as strings
      */
     public function streamChat(array $messages, array $options = []): \Generator;

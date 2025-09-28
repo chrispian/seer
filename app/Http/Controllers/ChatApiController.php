@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -120,6 +119,7 @@ class ChatApiController extends Controller
                 echo 'data: '.json_encode(['type' => 'done'])."\n\n";
                 @ob_flush();
                 @flush();
+
                 return;
             }
 

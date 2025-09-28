@@ -40,6 +40,7 @@ class FragmentController extends Controller
                 $freshFragment = Fragment::find($fragment->id);
                 if (! $freshFragment) {
                     \Illuminate\Support\Facades\Log::error('Fragment not found for enrichment', ['fragment_id' => $fragment->id]);
+
                     return;
                 }
 
@@ -307,9 +308,9 @@ class FragmentController extends Controller
         try {
             // TODO: Add authorization check here when auth is implemented
             // $this->authorize('delete', $fragment);
-            
+
             $fragment->delete();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Fragment deleted successfully',

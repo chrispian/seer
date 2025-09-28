@@ -221,7 +221,7 @@ class OllamaProvider extends AbstractAIProvider
                 ->post("{$baseUrl}/api/chat", $request);
 
             if ($response->failed()) {
-                throw new \RuntimeException('Ollama streaming request failed: ' . $response->body());
+                throw new \RuntimeException('Ollama streaming request failed: '.$response->body());
             }
 
             $body = $response->toPsrResponse()->getBody();
@@ -231,6 +231,7 @@ class OllamaProvider extends AbstractAIProvider
                 $chunk = $body->read(8192);
                 if ($chunk === '') {
                     usleep(50_000);
+
                     continue;
                 }
                 $buffer .= $chunk;

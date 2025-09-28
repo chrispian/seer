@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 class JsonSchemaValidator
 {
     protected int $maxRetries;
+
     protected array $schemas;
 
     public function __construct(int $maxRetries = 3)
@@ -143,7 +144,7 @@ class JsonSchemaValidator
     {
         $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
 
-        if (!is_array($data)) {
+        if (! is_array($data)) {
             throw new \InvalidArgumentException('Parsed JSON is not an array or object');
         }
 
@@ -155,7 +156,7 @@ class JsonSchemaValidator
      */
     protected function validateAgainstSchema(array $data, string $schemaType): array
     {
-        if (!isset($this->schemas[$schemaType])) {
+        if (! isset($this->schemas[$schemaType])) {
             throw new \InvalidArgumentException("Unknown schema type: {$schemaType}");
         }
 
@@ -181,8 +182,6 @@ class JsonSchemaValidator
         }
     }
 
-
-
     /**
      * Validate fragment enrichment structure
      */
@@ -190,7 +189,7 @@ class JsonSchemaValidator
     {
         $required = ['type', 'message'];
         foreach ($required as $field) {
-            if (!isset($data[$field])) {
+            if (! isset($data[$field])) {
                 throw new \InvalidArgumentException("Missing required field: {$field}");
             }
         }
@@ -216,18 +215,18 @@ class JsonSchemaValidator
      */
     protected function validateTypeInference(array $data): array
     {
-        if (!isset($data['type']) || !is_string($data['type'])) {
+        if (! isset($data['type']) || ! is_string($data['type'])) {
             throw new \InvalidArgumentException("Missing or invalid 'type' field");
         }
 
-        if (!isset($data['confidence']) || !is_numeric($data['confidence'])) {
+        if (! isset($data['confidence']) || ! is_numeric($data['confidence'])) {
             throw new \InvalidArgumentException("Missing or invalid 'confidence' field");
         }
 
         // Validate that type exists in available types (only in non-test environments)
-        if (!app()->runningUnitTests()) {
+        if (! app()->runningUnitTests()) {
             $availableTypes = \App\Models\Type::pluck('value')->toArray();
-            if (!in_array($data['type'], $availableTypes)) {
+            if (! in_array($data['type'], $availableTypes)) {
                 // Default to 'log' if type doesn't exist
                 $data['type'] = 'log';
                 $data['confidence'] = 0.0;
