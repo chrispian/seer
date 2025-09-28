@@ -131,7 +131,13 @@ export const createSlashCommandSuggestion = () => ({
     return {
       onStart: (props: any) => {
         component = new ReactRenderer(SlashCommandList, {
-          props,
+          props: {
+            ...props,
+            command: (item: AutocompleteResult) => {
+              // Call the TipTap command with the selected item
+              props.command({ editor: props.editor, range: props.range, props: item })
+            }
+          },
           editor: props.editor,
         })
 

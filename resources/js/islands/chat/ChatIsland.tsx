@@ -72,6 +72,13 @@ export default function ChatIsland() {
     ))
   }
 
+  const handleCommand = (command: string) => {
+    console.log('Executing command:', command)
+    // For now, just send it as a regular message with command prefix
+    // This could be enhanced to integrate with a command system
+    onSend(`/${command}`)
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* Enhanced Transcript with Message Actions */}
@@ -84,6 +91,7 @@ export default function ChatIsland() {
       {/* Enhanced Composer with TipTap */}
       <ChatComposer 
         onSend={onSend}
+        onCommand={handleCommand}
         disabled={isSending}
         placeholder="Type a message... Use / for commands, [[ for links, # for tags"
       />

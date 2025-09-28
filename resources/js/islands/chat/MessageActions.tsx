@@ -48,17 +48,34 @@ export function MessageActions({
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(content)
-      // Could show a toast notification here
       console.log('Message copied to clipboard')
+      
+      // Show visual feedback (could be enhanced with toast)
+      const button = document.querySelector(`[data-message-id="${messageId}"] [data-action="copy"]`) as HTMLElement
+      if (button) {
+        const originalHTML = button.innerHTML
+        button.innerHTML = '✅'
+        button.classList.add('text-green-400')
+        
+        setTimeout(() => {
+          button.innerHTML = originalHTML
+          button.classList.remove('text-green-400')
+        }, 2000)
+      }
     } catch (error) {
       console.error('Failed to copy message:', error)
       // Fallback for older browsers
-      const textArea = document.createElement('textarea')
-      textArea.value = content
-      document.body.appendChild(textArea)
-      textArea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textArea)
+      try {
+        const textArea = document.createElement('textarea')
+        textArea.value = content
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+        console.log('Message copied to clipboard (fallback)')
+      } catch (fallbackError) {
+        console.error('Fallback copy also failed:', fallbackError)
+      }
     }
   }
 
@@ -121,7 +138,7 @@ export function MessageActions({
 
   return (
     <>
-      <div className={`flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ${className}`}>
+      <div className={`flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ${className}`} data-message-id={messageId}>
         {/* Copy Button */}
         <Button
           variant="ghost"
@@ -129,6 +146,7 @@ export function MessageActions({
           onClick={handleCopy}
           title="Copy message"
           className="h-8 w-8"
+          data-action="copy"
         >
           <Copy className="w-4 h-4" />
         </Button>

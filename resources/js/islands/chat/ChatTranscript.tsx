@@ -55,7 +55,7 @@ export function ChatTranscript({
     <Card ref={scrollerRef} className={`p-4 h-[60vh] md:h-[70vh] overflow-y-auto ${className}`}>
       <div className="space-y-4">
         {messages.map((message) => (
-          <div key={message.id} className="group flex gap-3 relative">
+          <div key={message.id} className="group flex gap-3 relative hover:bg-accent/10 p-2 rounded-md transition-colors">
             {/* Avatar */}
             <div className="w-8 h-8 rounded-full shrink-0 bg-primary text-primary-foreground grid place-items-center text-xs font-medium">
               {message.role === 'user' ? 'CB' : 'AI'}

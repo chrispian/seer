@@ -24,12 +24,14 @@ import {
 
 interface ChatComposerProps {
   onSend: (content: string, attachments?: Array<{markdown: string, url: string, filename: string}>) => void
+  onCommand?: (command: string) => void
   disabled?: boolean
   placeholder?: string
 }
 
 export function ChatComposer({ 
   onSend, 
+  onCommand,
   disabled = false, 
   placeholder = "Type a message... Use / for commands, [[ for links, # for tags" 
 }: ChatComposerProps) {
@@ -76,10 +78,15 @@ export function ChatComposer({
       SlashCommand.configure({
         suggestion: {
           ...createSlashCommandSuggestion(),
-          command: ({ editor, range }: any) => {
+          command: ({ editor, range, props }: any) => {
             // Handle slash command execution
             const { from, to } = range
             editor.chain().focus().deleteRange({ from, to }).run()
+            
+            // Execute the command if onCommand is provided
+            if (onCommand && props?.value) {
+              onCommand(props.value)
+            }
           }
         }
       }),
@@ -201,7 +208,23 @@ export function ChatComposer({
     event.target.value = ''
   }
 
-  const isEmpty = !editor?.getText().trim()
+  const [isEmpty, setIsEmpty] = useState(true)
+  
+  // Update isEmpty when editor content changes
+  React.useEffect(() => {
+    if (editor) {
+      const updateIsEmpty = () => {
+        setIsEmpty(!editor.getText().trim())
+      }
+      
+      editor.on('update', updateIsEmpty)
+      updateIsEmpty() // Initial check
+      
+      return () => {
+        editor.off('update', updateIsEmpty)
+      }
+    }
+  }, [editor])
 
   return (
     <Card className="p-3">
