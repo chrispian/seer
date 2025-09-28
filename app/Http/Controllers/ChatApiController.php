@@ -47,14 +47,15 @@ class ChatApiController extends Controller
             ['role' => 'user',   'content' => $data['content']],
         ];
 
-        // TODO: The cache section seems like it should extracted to either a helper or service or similar pattern.
-        cache()->put("msg:{$messageId}", [
-            'messages' => $messages,      // system + user
-            'provider' => $data['provider'] ?? config('fragments.models.fallback_provider', 'ollama'),
-            'model' => $data['model'] ?? config('fragments.models.fallback_text_model', 'llama3:latest'),
-            'user_fragment_id' => $userFragmentId,
-            'conversation_id' => $conversationId,
-        ], now()->addMinutes(10));
+        // Cache chat session using dedicated action
+        app(\App\Actions\CacheChatSession::class)(
+            $messageId,
+            $messages,
+            $data['provider'] ?? config('fragments.models.fallback_provider', 'ollama'),
+            $data['model'] ?? config('fragments.models.fallback_text_model', 'llama3:latest'),
+            $userFragmentId,
+            $conversationId
+        );
 
         return response()->json([
             'message_id' => $messageId,
