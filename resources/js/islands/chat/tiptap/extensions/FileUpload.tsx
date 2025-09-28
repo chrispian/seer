@@ -26,19 +26,19 @@ export const FileUpload = Extension.create<FileUploadOptions>({
     return {
       insertFile:
         (file: File) =>
-        async ({ tr, dispatch }) => {
-          try {
-            const result = await this.options.onUpload(file)
-            if (dispatch && result.markdown) {
-              const { from } = tr.selection
-              tr.insertText(result.markdown, from)
-              return true
-            }
-            return false
-          } catch (error) {
-            console.error('File upload failed:', error)
-            return false
-          }
+        ({ editor, tr, dispatch }) => {
+          // Handle upload asynchronously
+          this.options.onUpload(file)
+            .then((result) => {
+              if (result.markdown) {
+                editor.commands.insertContent(result.markdown)
+              }
+            })
+            .catch((error) => {
+              console.error('File upload failed:', error)
+            })
+          
+          return true
         },
     }
   },
@@ -113,12 +113,20 @@ export const FileUpload = Extension.create<FileUploadOptions>({
 })
 
 export async function uploadFile(file: File): Promise<{ markdown: string }> {
+  console.log('uploadFile called with:', file.name, file.size, file.type)
+  
   const formData = new FormData()
   formData.append('file', file)
   
   // Get CSRF token
   const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
+  console.log('CSRF token found:', !!csrfToken)
   
+  if (!csrfToken) {
+    throw new Error('CSRF token not found')
+  }
+  
+  console.log('Making request to /api/files')
   const response = await fetch('/api/files', {
     method: 'POST',
     headers: {
@@ -127,14 +135,19 @@ export async function uploadFile(file: File): Promise<{ markdown: string }> {
     body: formData,
   })
   
+  console.log('Response status:', response.status, response.statusText)
+  
   if (!response.ok) {
+    const text = await response.text()
+    console.error('Upload failed response:', text)
     throw new Error(`Upload failed: ${response.statusText}`)
   }
   
   const data = await response.json()
+  console.log('Upload response data:', data)
   
   if (!data.success) {
-    throw new Error('Upload failed')
+    throw new Error('Upload failed: ' + (data.message || 'Unknown error'))
   }
   
   return { markdown: data.markdown }

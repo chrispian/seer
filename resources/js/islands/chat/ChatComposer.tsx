@@ -154,14 +154,34 @@ export function ChatComposer({
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
-    if (!files || !editor) return
+    if (!files || !editor) {
+      console.log('No files or editor not ready')
+      return
+    }
+    
+    console.log('Files selected:', files.length)
     
     for (const file of Array.from(files)) {
       try {
-        await editor.commands.insertFile(file)
+        console.log('Starting upload for file:', file.name, 'size:', file.size, 'type:', file.type)
+        
+        // Show some loading state could be added here
+        const result = await uploadFile(file)
+        console.log('Upload successful, result:', result)
+        
+        if (result.markdown) {
+          const success = editor.commands.insertContent(result.markdown + ' ')
+          console.log('Markdown inserted:', result.markdown, 'success:', success)
+          
+          // Focus the editor after insertion
+          editor.commands.focus()
+        } else {
+          console.error('No markdown in result:', result)
+        }
       } catch (error) {
-        console.error('File upload failed:', error)
-        // Could show toast notification here
+        console.error('File upload failed for', file.name, ':', error)
+        // For now, insert a simple fallback
+        editor.commands.insertContent(`[Upload failed: ${file.name}] `)
       }
     }
     
