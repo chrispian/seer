@@ -46,8 +46,8 @@ test('chat prompt creates fragment through RouteFragment pipeline', function () 
     expect($fragment->metadata['model'])->toBe('llama3:latest');
 });
 
-test('chat prompt uses RouteFragment to avoid chaos parsing', function () {
-    // Test that chat prompts use RouteFragment instead of chaos parsing pipeline
+test('chat prompt uses RouteFragment for single fragment creation', function () {
+    // Test that chat prompts use RouteFragment for single fragment creation
     $response = $this->postJson('/api/messages', [
         'content' => 'Call the doctor today. Also buy groceries and schedule a meeting with the team.',
         'provider' => 'ollama',
@@ -57,7 +57,7 @@ test('chat prompt uses RouteFragment to avoid chaos parsing', function () {
     $response->assertStatus(200);
     $data = $response->json();
 
-    // Verify the fragment was created via RouteFragment (not chaos parsing)
+    // Verify the fragment was created via RouteFragment as a single fragment
     $fragment = Fragment::find($data['user_fragment_id']);
     expect($fragment)->not->toBeNull();
     expect($fragment->message)->toBe('Call the doctor today. Also buy groceries and schedule a meeting with the team.');
@@ -70,9 +70,8 @@ test('chat prompt uses RouteFragment to avoid chaos parsing', function () {
     expect($fragment->hash_bucket)->not->toBeNull();
     expect($fragment->input_hash)->toHaveLength(64); // SHA256 hash length
 
-    // Verify no chaos parsing occurred (no child fragments)
+    // Verify single fragment creation (no child fragments)
     expect($fragment->metadata)->not->toHaveKey('children');
-    expect($fragment->metadata)->not->toHaveKey('chaos_parsed_at');
 });
 
 test('cache payload structure remains compatible with streaming', function () {

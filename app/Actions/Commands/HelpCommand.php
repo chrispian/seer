@@ -76,7 +76,7 @@ MARKDOWN;
     private function getBookmarkSection(): string
     {
         return <<<'MARKDOWN'
-- `/bookmark` – Bookmark the most recent fragment (or all from chaos)
+- `/bookmark` – Bookmark the most recent fragment
 - `/bookmark list` – List saved bookmarks
 - `/bookmark show {hint}` – Replay a bookmark in the chat
 - `/bookmark forget {hint}` – Delete a saved bookmark
@@ -87,7 +87,6 @@ MARKDOWN;
     {
         return <<<'MARKDOWN'
 - `/frag This is something worth remembering` – Log a fragment
-- `/chaos This contains multiple items. Do X. Also do Y.` – Split and log a chaos fragment
 - `/todo Fix the login bug #urgent` – Create a new todo fragment with tags
 MARKDOWN;
     }

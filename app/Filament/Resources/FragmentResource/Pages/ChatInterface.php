@@ -270,7 +270,7 @@ class ChatInterface extends Page
                 return;
             }
 
-            // Handle success toast notifications (for /frag and /chaos)
+            // Handle success toast notifications (for /frag and other commands)
             if ($response->shouldShowSuccessToast && ! empty($response->toastData)) {
                 $this->showSuccessToast(
                     $response->toastData['title'] ?? 'Success',

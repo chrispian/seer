@@ -53,7 +53,6 @@ class ProcessFragmentJob implements ShouldQueue
             $processed = app(Pipeline::class)
                 ->send($this->fragment)
                 ->through([
-                    \App\Actions\ParseChaosFragment::class,
                     \App\Actions\DriftSync::class,
                     \App\Actions\ParseAtomicFragment::class,
                     \App\Actions\ExtractMetadataEntities::class,
@@ -62,6 +61,7 @@ class ProcessFragmentJob implements ShouldQueue
                     \App\Actions\InferFragmentType::class,
                     \App\Actions\SuggestTags::class,
                     \App\Actions\RouteToVault::class,
+                    \App\Actions\EmbedFragmentAction::class,
                 ])
                 ->thenReturn();
 

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Actions\Commands\BookmarkCommand;
 use App\Actions\Commands\ChannelsCommand;
-use App\Actions\Commands\ChaosCommand;
 use App\Actions\Commands\ClearCommand;
 use App\Actions\Commands\ComposeCommand;
 use App\Actions\Commands\ContextCommand;
@@ -31,7 +30,6 @@ class CommandRegistry
         'help' => HelpCommand::class,
         'clear' => ClearCommand::class,
         'frag' => FragCommand::class,
-        'chaos' => ChaosCommand::class,
         'search' => SearchCommand::class,
         's' => SearchCommand::class, // alias for search
         'todo' => TodoCommand::class,

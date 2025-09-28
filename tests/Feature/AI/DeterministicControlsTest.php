@@ -24,16 +24,7 @@ test('applies enrichment parameters for fragment enrichment', function () {
     expect($result['parameters']['max_tokens'])->toBe(1000);
 });
 
-test('applies parsing parameters for chaos parsing', function () {
-    $modelSelection = app(ModelSelectionService::class);
-    $context = ['command' => 'parse_chaos'];
-    $result = $modelSelection->selectTextModel($context);
 
-    expect($result)->toHaveKey('parameters');
-    expect($result['parameters']['temperature'])->toBe(0.1);
-    expect($result['parameters']['top_p'])->toBe(0.95);
-    expect($result['parameters']['max_tokens'])->toBe(2000);
-});
 
 test('applies default enrichment parameters for generic text operations', function () {
     $modelSelection = app(ModelSelectionService::class);

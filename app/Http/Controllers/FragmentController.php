@@ -18,16 +18,13 @@ class FragmentController extends Controller
             'message' => 'required|string',
         ]);
 
-        // Create base fragment with only required message field
+        // Create base fragment with log type (default)
         $fragment = Fragment::create([
             'message' => $request->input('message'),
-            'type' => 'chaos', // ← this is the fix
+            'type' => 'log', // Simple default type
             'source' => $request->input('source'),
             'relationships' => $request->input('relationships', []),
         ]);
-
-        // Run parse action directly (sync)
-        app(\App\Actions\ParseChaosFragment::class)($fragment);
 
         // Attach category if present
         if ($categoryName = $request->input('category')) {
@@ -36,34 +33,49 @@ class FragmentController extends Controller
             $fragment->save();
         }
 
-        // Dispatch enrichment pipeline (async)
-        //            dispatch(function () use ($fragment) {
-        //                try {
-        //                    app(Pipeline::class)
-        //                        ->send($fragment)
-        //                        ->through([
-        //                            \App\Actions\ParseChaosFragment::class,
-        // //                            // \App\Actions\ParseAtomicFragment::class,
-        // //                            \App\Actions\EnrichFragmentWithLlama::class,
-        // //                            \App\Actions\InferFragmentType::class,
-        // //                            \App\Actions\SuggestTags::class,
-        // //                            \App\Actions\RouteToVault::class,
-        //
-        //                        ])
-        //                        ->thenReturn();
-        //                } catch (\Throwable $e) {
-        //                    Log::error('Enrichment pipeline failed', [
-        //                        'fragment_id' => $fragment->id,
-        //                        'error' => $e->getMessage(),
-        //                    ]);
-        //
-        //                    $fragment->metadata = array_merge($fragment->metadata ?? [], [
-        //                        'enrichment_status' => 'pipeline_failed',
-        //                        'error' => $e->getMessage(),
-        //                    ]);
-        //                    $fragment->save();
-        //                }
-        //            })->onQueue('fragments');
+        // Dispatch async enrichment pipeline (same as RouteFragment)
+        dispatch(function () use ($fragment) {
+            try {
+                // Reload fragment from database to ensure fresh state
+                $freshFragment = Fragment::find($fragment->id);
+                if (! $freshFragment) {
+                    \Illuminate\Support\Facades\Log::error('Fragment not found for enrichment', ['fragment_id' => $fragment->id]);
+                    return;
+                }
+
+                \Illuminate\Support\Facades\Log::debug('Starting enrichment pipeline', ['fragment_id' => $freshFragment->id]);
+
+                app(\Illuminate\Pipeline\Pipeline::class)
+                    ->send($freshFragment)
+                    ->through([
+                        \App\Actions\DriftSync::class,
+                        \App\Actions\ParseAtomicFragment::class,
+                        \App\Actions\ExtractMetadataEntities::class,
+                        \App\Actions\GenerateAutoTitle::class,
+                        \App\Actions\EnrichFragmentWithLlama::class,
+                        \App\Actions\InferFragmentType::class,
+                        \App\Actions\SuggestTags::class,
+                        \App\Actions\RouteToVault::class,
+                        \App\Actions\EmbedFragmentAction::class,
+                    ])
+                    ->thenReturn();
+
+                \Illuminate\Support\Facades\Log::debug('Enrichment pipeline completed', ['fragment_id' => $freshFragment->id]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Enrichment pipeline failed', [
+                    'fragment_id' => $fragment->id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+
+                $fragment->refresh();
+                $fragment->metadata = array_merge($fragment->metadata ?? [], [
+                    'enrichment_status' => 'pipeline_failed',
+                    'error' => $e->getMessage(),
+                ]);
+                $fragment->save();
+            }
+        })->onQueue('fragments');
 
         return response()->json($fragment);
     }
