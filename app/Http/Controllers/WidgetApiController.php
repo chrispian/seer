@@ -114,8 +114,14 @@ class WidgetApiController extends Controller
             ->orderBy('last_viewed_at', 'desc')
             ->orderBy('updated_at', 'desc');
 
-        // TODO: Add vault and project scoping to bookmarks
-        // This requires adding vault_id and project_id to bookmarks table
+        // Add vault and project scoping
+        if ($vaultId) {
+            $bookmarksQuery->where('vault_id', $vaultId);
+        }
+        
+        if ($projectId) {
+            $bookmarksQuery->where('project_id', $projectId);
+        }
         
         if (!empty($query)) {
             $bookmarksQuery->where('name', 'ILIKE', "%{$query}%");
@@ -142,8 +148,8 @@ class WidgetApiController extends Controller
                 'updated_at' => $bookmark->updated_at->toISOString(),
                 'fragment_title' => $firstFragment?->title,
                 'fragment_preview' => $firstFragment ? substr($firstFragment->message, 0, 100) : null,
-                'vault_id' => null, // TODO: Add vault scoping
-                'project_id' => null, // TODO: Add project scoping
+                'vault_id' => $bookmark->vault_id,
+                'project_id' => $bookmark->project_id
             ];
         });
 
