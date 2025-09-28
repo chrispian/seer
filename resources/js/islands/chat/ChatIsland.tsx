@@ -282,8 +282,8 @@ export default function ChatIsland() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Enhanced Transcript with Message Actions */}
-      <div className="flex-1 min-h-0 mb-2">
+      {/* Enhanced Transcript with Message Actions - Adaptive Middle Row */}
+      <div className="flex-1 min-h-0 pb-3">
         <ChatTranscript
           messages={messages}
           onMessageDelete={handleMessageDelete}
@@ -291,8 +291,8 @@ export default function ChatIsland() {
         />
       </div>
 
-      {/* Enhanced Composer with TipTap */}
-      <div className="flex-shrink-0">
+      {/* Enhanced Composer with TipTap - Fixed Bottom Row */}
+      <div className="flex-shrink-0 px-3 pb-3">
         <ChatComposer
           onSend={onSend}
           onCommand={handleCommand}
