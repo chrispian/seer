@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Search } from 'lucide-react'
+import {Search, Settings} from 'lucide-react'
 
 export function ChatHeader() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -23,7 +23,7 @@ export function ChatHeader() {
           <AvatarImage src="/interface/avatars/default/avatar-1.png" alt="Agent Avatar" />
           <AvatarFallback>AI</AvatarFallback>
         </Avatar>
-        
+
         <div className="flex items-center space-x-4">
           <div>
             <div className="flex items-center space-x-3">
@@ -39,21 +39,18 @@ export function ChatHeader() {
         </div>
       </div>
 
-      {/* Right: Search Input */}
+      {/* Chat Header Right: TODO: Context aware menu */}
       <div className="flex items-center space-x-4">
         <div className="relative">
           <div className="flex items-center">
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setSearchOpen(true)}
-              onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
-              placeholder="Search fragments..."
-              className="text-sm rounded-l-md w-64"
-            />
-            <Button size="icon" className="rounded-l-none">
-              <Search className="w-4 h-4" />
-            </Button>
+              <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-8 h-8 rounded-xs border-gray-500 hover:border-blue-500/20 shadow-none bg-gray-100 hover:bg-gray-100/80 text-gray-600 hover:text-black"
+              >
+                  <Settings className="w-4 h-4" />
+              </Button>
+
           </div>
 
           {/* Search Dropdown */}

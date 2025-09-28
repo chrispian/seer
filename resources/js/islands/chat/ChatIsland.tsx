@@ -23,12 +23,12 @@ export default function ChatIsland() {
   const [lastCommand, setLastCommand] = useState('')
   const csrf = useCsrf()
   const activeStreamRef = useRef<{ eventSource: EventSource; sessionId: number } | null>(null)
-  
+
   // Use Zustand store and React Query directly
   const { currentSessionId, getCurrentSession } = useAppStore()
   const sessionDetailsQuery = useChatSessionDetails(currentSessionId)
   const updateSessionMutation = useUpdateChatSession()
-  
+
   // Get current session from store (includes messages if loaded)
   const currentSession = getCurrentSession()
   const isLoadingSession = sessionDetailsQuery.isLoading
@@ -44,7 +44,7 @@ export default function ChatIsland() {
         fragment_id: m.fragment_id,
         message_preview: (m.message || '').substring(0, 50) + '...'
       })))
-      
+
       const sessionMessages: ChatMessage[] = sessionDetailsQuery.data.session.messages.map((msg: any, index: number) => {
         // Create unique React key by combining session ID, message type, and original ID
         const messageKey = `session-${sessionDetailsQuery.data.session.id}-${msg.type}-${msg.id || index}`
@@ -100,7 +100,7 @@ export default function ChatIsland() {
 
   async function onSend(content: string, attachments?: Array<{markdown: string, url: string, filename: string}>) {
     if (!content.trim() || isSending || !currentSessionId) return
-    
+
     // Close any existing stream before starting a new one
     if (activeStreamRef.current) {
       activeStreamRef.current.eventSource.close()
@@ -116,7 +116,7 @@ export default function ChatIsland() {
 
     try {
       // 1) Create message -> get message_id (include attachments if any)
-      const payload: any = { 
+      const payload: any = {
         content,
         session_id: streamSessionId,
       }
@@ -132,7 +132,7 @@ export default function ChatIsland() {
       const { message_id } = await resp.json()
 
       // Update user message with server message ID
-      const messagesWithMessageId = updatedMessages.map(msg => 
+      const messagesWithMessageId = updatedMessages.map(msg =>
         msg.id === userId ? { ...msg, messageId: message_id } : msg
       )
       setMessages(messagesWithMessageId)
@@ -165,7 +165,7 @@ export default function ChatIsland() {
               return [...m, { id: assistantId, role: 'assistant', md: acc, messageId: message_id }]
             })
           }
-          if (data.type === 'done') { 
+          if (data.type === 'done') {
             es.close()
             activeStreamRef.current = null
             setSending(false)
@@ -179,11 +179,11 @@ export default function ChatIsland() {
           }
         } catch {/* ignore */}
       }
-      
-      es.onerror = () => { 
+
+      es.onerror = () => {
         es.close()
         activeStreamRef.current = null
-        setSending(false) 
+        setSending(false)
       }
     } catch (error) {
       console.error('Failed to send message:', error)
@@ -199,11 +199,11 @@ export default function ChatIsland() {
   }
 
   const handleMessageBookmarkToggle = (messageId: string, bookmarked: boolean, fragmentId?: string) => {
-    const updatedMessages = messages.map(msg => 
-      msg.id === messageId ? { 
-        ...msg, 
+    const updatedMessages = messages.map(msg =>
+      msg.id === messageId ? {
+        ...msg,
         isBookmarked: bookmarked,
-        fragmentId: fragmentId || msg.fragmentId 
+        fragmentId: fragmentId || msg.fragmentId
       } : msg
     )
     setMessages(updatedMessages)
@@ -213,28 +213,28 @@ export default function ChatIsland() {
   const handleCommand = async (command: string) => {
     console.log('Executing command:', command)
     setLastCommand(command)
-    
+
     try {
       const response = await fetch('/api/commands/execute', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'X-CSRF-TOKEN': csrf 
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrf
         },
         body: JSON.stringify({ command })
       })
-      
+
       const result = await response.json()
-      
+
       // Show result in modal
       setCommandResult(result)
       setIsCommandModalOpen(true)
-      
+
       // Handle special actions
       if (result.success && result.shouldResetChat) {
         setMessages([])
       }
-      
+
     } catch (error) {
       console.error('Command execution failed:', error)
       // Show error in modal
@@ -281,10 +281,10 @@ export default function ChatIsland() {
   }
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="flex flex-col gap-1 h-full">
       {/* Enhanced Transcript with Message Actions */}
       <div className="flex-1 min-h-0">
-        <ChatTranscript 
+        <ChatTranscript
           messages={messages}
           onMessageDelete={handleMessageDelete}
           onMessageBookmarkToggle={handleMessageBookmarkToggle}
@@ -292,12 +292,12 @@ export default function ChatIsland() {
       </div>
 
       {/* Enhanced Composer with TipTap */}
-      <ChatComposer 
+      <ChatComposer
         onSend={onSend}
         onCommand={handleCommand}
         disabled={isSending || !currentSessionId}
         placeholder={
-          currentSessionId 
+          currentSessionId
             ? "Type a message... Use / for commands, [[ for links, # for tags"
             : "Select a chat session to start messaging"
         }

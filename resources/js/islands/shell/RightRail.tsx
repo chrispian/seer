@@ -32,13 +32,13 @@ export function RightRail() {
 
   return (
     <div className="w-80 bg-white border-l flex flex-col">
-      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+      <div className="flex-1 px-1 py-1 overflow-y-auto space-y-2">
         {/* Today's Activity Stats */}
-        <Card>
-          <CardHeader className="pb-2">
+        <Card className="border-0 shadow-none border-b-1 border-gray-200">
+          <CardHeader className="pb-1">
             <h4 className="text-xs font-medium">Today's Activity</h4>
           </CardHeader>
-          <CardContent className="pt-0 space-y-2">
+          <CardContent className="pt-0 space-y-1">
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">Messages</span>
               <Badge variant="secondary">
@@ -55,8 +55,8 @@ export function RightRail() {
         </Card>
 
         {/* Recent Bookmarks Widget */}
-        <Card>
-          <CardHeader className="pb-2">
+        <Card className="border-0 shadow-none border-b-1 border-gray-200">
+          <CardHeader className="pb-1">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-medium">Recent Bookmarks</h4>
               {!bookmarkSearchMode ? (
@@ -95,7 +95,7 @@ export function RightRail() {
             )}
 
             {/* Bookmarks List */}
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-1 max-h-48 overflow-y-auto">
               {recentBookmarks.length === 0 ? (
                 <div className="text-center text-muted-foreground text-xs py-4">
                   {bookmarkSearchMode ? 'No results found' : 'No bookmarks yet'}
@@ -104,7 +104,7 @@ export function RightRail() {
                 recentBookmarks.map((bookmark) => (
                   <div
                     key={bookmark.id}
-                    className="flex items-center space-x-2 text-xs cursor-pointer hover:bg-accent p-2 rounded transition-colors"
+                    className="flex items-center space-x-2 text-xs cursor-pointer hover:bg-accent p-0 transition-colors"
                   >
                     <Bookmark className="w-3 h-3 flex-shrink-0" />
                     <span className="flex-1 truncate" title={bookmark.fragment_title}>
@@ -118,25 +118,6 @@ export function RightRail() {
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader className="pb-2">
-            <h4 className="text-xs font-medium">Quick Actions</h4>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-2">
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start">
-                🔍 Search All
-              </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start">
-                📝 New Note
-              </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start">
-                ⚙️ Settings
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

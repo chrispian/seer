@@ -5,21 +5,21 @@ import { Markdown } from 'tiptap-markdown'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Mic, MicOff, Paperclip } from 'lucide-react'
-import { 
-  SlashCommand, 
-  createSlashCommandSuggestion 
+import {
+  SlashCommand,
+  createSlashCommandSuggestion
 } from './tiptap/extensions/SlashCommand'
-import { 
-  WikiLink, 
-  createWikiLinkSuggestion 
+import {
+  WikiLink,
+  createWikiLinkSuggestion
 } from './tiptap/extensions/WikiLink'
-import { 
-  Hashtag, 
-  createHashtagSuggestion 
+import {
+  Hashtag,
+  createHashtagSuggestion
 } from './tiptap/extensions/Hashtag'
-import { 
-  FileUpload, 
-  uploadFile 
+import {
+  FileUpload,
+  uploadFile
 } from './tiptap/extensions/FileUpload'
 
 interface ChatComposerProps {
@@ -29,11 +29,11 @@ interface ChatComposerProps {
   placeholder?: string
 }
 
-export function ChatComposer({ 
-  onSend, 
+export function ChatComposer({
+  onSend,
   onCommand,
-  disabled = false, 
-  placeholder = "Type a message... Use / for commands, [[ for links, # for tags" 
+  disabled = false,
+  placeholder = "Type a message... Use / for commands, [[ for links, # for tags"
 }: ChatComposerProps) {
   const [isListening, setIsListening] = useState(false)
   const [speechSupported, setSpeechSupported] = useState(false)
@@ -50,7 +50,7 @@ export function ChatComposer({
       recognition.continuous = false
       recognition.interimResults = false
       recognition.lang = 'en-US'
-      
+
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript
         if (editor && transcript) {
@@ -58,15 +58,15 @@ export function ChatComposer({
         }
         setIsListening(false)
       }
-      
+
       recognition.onerror = () => {
         setIsListening(false)
       }
-      
+
       recognition.onend = () => {
         setIsListening(false)
       }
-      
+
       recognitionRef.current = recognition
     }
   }, [])
@@ -82,7 +82,7 @@ export function ChatComposer({
             // Handle slash command execution
             const { from, to } = range
             editor.chain().focus().deleteRange({ from, to }).run()
-            
+
             // Execute the command if onCommand is provided
             if (onCommand && props?.value) {
               onCommand(props.value)
@@ -128,15 +128,15 @@ export function ChatComposer({
 
   const handleSend = () => {
     if (!editor || disabled) return
-    
+
     const markdown = editor.storage.markdown.getMarkdown()
     const trimmed = markdown.trim()
-    
+
     // Check if this is a slash command
     if (trimmed.startsWith('/') && !pendingAttachments.length) {
       // Extract command (remove leading slash)
       const command = trimmed.substring(1)
-      
+
       // Execute as command instead of sending as message
       if (onCommand && command) {
         onCommand(command)
@@ -144,17 +144,17 @@ export function ChatComposer({
         return
       }
     }
-    
+
     // Combine text content with file attachments for regular messages
     if (trimmed || pendingAttachments.length > 0) {
       let finalContent = trimmed
-      
+
       // Add file references at the end
       if (pendingAttachments.length > 0) {
         const fileReferences = pendingAttachments.map(att => att.markdown).join('\n')
         finalContent = trimmed ? `${trimmed}\n\n${fileReferences}` : fileReferences
       }
-      
+
       onSend(finalContent, pendingAttachments)
       editor.commands.clearContent()
       setPendingAttachments([])
@@ -170,7 +170,7 @@ export function ChatComposer({
 
   const handleVoiceInput = () => {
     if (!speechSupported || !recognitionRef.current) return
-    
+
     if (isListening) {
       recognitionRef.current.stop()
     } else {
@@ -189,16 +189,16 @@ export function ChatComposer({
       console.log('No files selected')
       return
     }
-    
+
     console.log('Files selected:', files.length)
-    
+
     for (const file of Array.from(files)) {
       try {
         console.log('Starting upload for file:', file.name, 'size:', file.size, 'type:', file.type)
-        
+
         const uploadResult = await uploadFile(file)
         console.log('Upload successful, result:', uploadResult)
-        
+
         if (uploadResult.markdown) {
           // Add to pending attachments instead of inserting into editor
           const attachment = {
@@ -206,7 +206,7 @@ export function ChatComposer({
             url: uploadResult.url || '',
             filename: file.name
           }
-          
+
           setPendingAttachments(prev => [...prev, attachment])
           console.log('Added attachment:', attachment)
         } else {
@@ -216,23 +216,23 @@ export function ChatComposer({
         console.error('File upload failed for', file.name, ':', error)
       }
     }
-    
+
     // Reset input
     event.target.value = ''
   }
 
   const [isEmpty, setIsEmpty] = useState(true)
-  
+
   // Update isEmpty when editor content changes
   React.useEffect(() => {
     if (editor) {
       const updateIsEmpty = () => {
         setIsEmpty(!editor.getText().trim())
       }
-      
+
       editor.on('update', updateIsEmpty)
       updateIsEmpty() // Initial check
-      
+
       return () => {
         editor.off('update', updateIsEmpty)
       }
@@ -263,16 +263,16 @@ export function ChatComposer({
           </div>
         </div>
       )}
-      
+
       <div className="flex items-end gap-2">
         <div className="flex-1 relative">
-          <EditorContent 
-            editor={editor} 
+          <EditorContent
+            editor={editor}
             onKeyDown={handleKeyDown}
             className="border border-input rounded-sm min-h-[60px] focus-within:border-ring"
           />
         </div>
-        
+
         <div className="flex items-center gap-1">
           {/* File Upload Button */}
           <Button
@@ -286,7 +286,7 @@ export function ChatComposer({
           >
             <Paperclip className="w-4 h-4" />
           </Button>
-          
+
           {/* Voice Input Button */}
           {speechSupported && (
             <Button
@@ -305,10 +305,10 @@ export function ChatComposer({
               )}
             </Button>
           )}
-          
+
           {/* Send Button */}
-          <Button 
-            onClick={handleSend} 
+          <Button
+            onClick={handleSend}
             disabled={disabled || (isEmpty && pendingAttachments.length === 0)}
             className="min-w-[60px] h-8 rounded-sm"
           >
@@ -316,7 +316,7 @@ export function ChatComposer({
           </Button>
         </div>
       </div>
-      
+
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
