@@ -107,10 +107,10 @@ export default function ChatIsland() {
       activeStreamRef.current = null
     }
 
+    const streamSessionId = currentSessionId // Capture session ID at start of stream
     const userId = uuid(`user-${streamSessionId}`)
     const userMessage: ChatMessage = { id: userId, role: 'user', md: content }
     const updatedMessages = [...messages, userMessage]
-    const streamSessionId = currentSessionId // Capture session ID at start of stream
     setMessages(updatedMessages)
     setSending(true)
 
