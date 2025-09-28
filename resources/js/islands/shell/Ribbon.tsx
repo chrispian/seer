@@ -1,39 +1,142 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Plus, Search, Settings, Archive, Folder, MessageCircle } from 'lucide-react'
+import { useChatSession } from '@/contexts/ChatSessionContext'
 
 export function Ribbon() {
+  const { createNewSession, appContext, loadContext } = useChatSession()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [vaultModalOpen, setVaultModalOpen] = useState(false)
+  const [projectModalOpen, setProjectModalOpen] = useState(false)
   const [toastVerbosity, setToastVerbosity] = useState<string>('normal')
+  
+  // Form state
+  const [vaultForm, setVaultForm] = useState({ name: '', description: '' })
+  const [projectForm, setProjectForm] = useState({ name: '', description: '' })
+  const [isCreating, setIsCreating] = useState(false)
+
+  // Load toast verbosity from localStorage on mount
+  useEffect(() => {
+    const savedVerbosity = localStorage.getItem('toastVerbosity')
+    if (savedVerbosity && ['minimal', 'normal', 'verbose'].includes(savedVerbosity)) {
+      setToastVerbosity(savedVerbosity)
+    }
+  }, [])
 
   const handleNewVault = () => {
-    // TODO: Implement new vault creation
-    console.log('Creating new vault...')
+    setVaultModalOpen(true)
   }
 
   const handleNewProject = () => {
-    // TODO: Implement new project creation
-    console.log('Creating new project...')
+    setProjectModalOpen(true)
   }
 
-  const handleNewChat = () => {
-    // TODO: Implement new chat creation
-    console.log('Creating new chat...')
+  const handleCreateVault = async () => {
+    if (!vaultForm.name.trim()) return
+
+    setIsCreating(true)
+    try {
+      // TODO: Replace with actual API call when endpoint is created
+      const response = await fetch('/api/vaults', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+        },
+        body: JSON.stringify({
+          name: vaultForm.name,
+          description: vaultForm.description,
+        }),
+      })
+
+      if (response.ok) {
+        await loadContext()
+        setVaultModalOpen(false)
+        setVaultForm({ name: '', description: '' })
+        console.log('Vault created successfully')
+      } else {
+        throw new Error('Failed to create vault')
+      }
+    } catch (error) {
+      console.error('Error creating vault:', error)
+      // For now, just show a console message until we have proper error handling
+      alert('Vault creation is not yet implemented. This will be available in the next update.')
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  const handleCreateProject = async () => {
+    if (!projectForm.name.trim() || !appContext?.current_vault_id) return
+
+    setIsCreating(true)
+    try {
+      // TODO: Replace with actual API call when endpoint is created  
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+        },
+        body: JSON.stringify({
+          name: projectForm.name,
+          description: projectForm.description,
+          vault_id: appContext.current_vault_id,
+        }),
+      })
+
+      if (response.ok) {
+        await loadContext()
+        setProjectModalOpen(false)
+        setProjectForm({ name: '', description: '' })
+        console.log('Project created successfully')
+      } else {
+        throw new Error('Failed to create project')
+      }
+    } catch (error) {
+      console.error('Error creating project:', error)
+      // For now, just show a console message until we have proper error handling
+      alert('Project creation is not yet implemented. This will be available in the next update.')
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  const handleNewChat = async () => {
+    try {
+      const newSession = await createNewSession()
+      console.log('Created new chat session:', newSession)
+    } catch (error) {
+      console.error('Failed to create new chat:', error)
+    }
   }
 
   const handleSearch = () => {
-    // TODO: Implement search functionality
-    console.log('Opening search...')
+    // Trigger global search by dispatching Ctrl+K event
+    const event = new KeyboardEvent('keydown', {
+      ctrlKey: true,
+      key: 'k',
+      code: 'KeyK',
+      bubbles: true,
+      cancelable: true
+    })
+    document.dispatchEvent(event)
+    console.log('Triggered global search/recall palette')
   }
 
   const handleToastVerbosityChange = (value: string) => {
     setToastVerbosity(value)
-    // TODO: Persist this setting to backend/localStorage
+    // Persist to localStorage
+    localStorage.setItem('toastVerbosity', value)
     console.log('Toast verbosity changed to:', value)
+    // TODO: Also persist to backend user preferences
   }
 
   return (
@@ -166,6 +269,142 @@ export function Ribbon() {
               </ToggleGroup>
             </div>
           </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Vault Creation Sheet */}
+      <Sheet open={vaultModalOpen} onOpenChange={setVaultModalOpen}>
+        <SheetContent side="left" className="w-80 bg-gray-900 border-gray-700">
+          <SheetHeader>
+            <SheetTitle className="text-pink-400 flex items-center">
+              <Archive className="w-5 h-5 mr-2" />
+              Create New Vault
+            </SheetTitle>
+          </SheetHeader>
+          
+          <div className="mt-6 space-y-4">
+            <div>
+              <Label htmlFor="vault-name" className="text-sm font-medium text-gray-200">
+                Vault Name *
+              </Label>
+              <Input
+                id="vault-name"
+                value={vaultForm.name}
+                onChange={(e) => setVaultForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter vault name..."
+                className="mt-1 bg-gray-800 border-pink-400/30 text-gray-200 rounded-xs"
+                disabled={isCreating}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="vault-description" className="text-sm font-medium text-gray-200">
+                Description
+              </Label>
+              <Textarea
+                id="vault-description"
+                value={vaultForm.description}
+                onChange={(e) => setVaultForm(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Brief description (optional)..."
+                className="mt-1 bg-gray-800 border-pink-400/30 text-gray-200 rounded-xs resize-none"
+                rows={3}
+                disabled={isCreating}
+              />
+            </div>
+          </div>
+
+          <SheetFooter className="mt-6">
+            <div className="flex space-x-3 w-full">
+              <Button
+                onClick={handleCreateVault}
+                disabled={!vaultForm.name.trim() || isCreating}
+                className="flex-1 bg-pink-500 hover:bg-pink-600 text-white rounded-xs"
+              >
+                {isCreating ? 'Creating...' : 'Create Vault'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setVaultModalOpen(false)
+                  setVaultForm({ name: '', description: '' })
+                }}
+                disabled={isCreating}
+                className="flex-1 border-gray-600 text-gray-400 hover:bg-gray-800 rounded-xs"
+              >
+                Cancel
+              </Button>
+            </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* Project Creation Sheet */}
+      <Sheet open={projectModalOpen} onOpenChange={setProjectModalOpen}>
+        <SheetContent side="left" className="w-80 bg-gray-900 border-gray-700">
+          <SheetHeader>
+            <SheetTitle className="text-blue-400 flex items-center">
+              <Folder className="w-5 h-5 mr-2" />
+              Create New Project
+            </SheetTitle>
+          </SheetHeader>
+          
+          <div className="mt-6 space-y-4">
+            <div>
+              <Label htmlFor="project-name" className="text-sm font-medium text-gray-200">
+                Project Name *
+              </Label>
+              <Input
+                id="project-name"
+                value={projectForm.name}
+                onChange={(e) => setProjectForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter project name..."
+                className="mt-1 bg-gray-800 border-blue-400/30 text-gray-200 rounded-xs"
+                disabled={isCreating}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="project-description" className="text-sm font-medium text-gray-200">
+                Description
+              </Label>
+              <Textarea
+                id="project-description"
+                value={projectForm.description}
+                onChange={(e) => setProjectForm(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Brief description (optional)..."
+                className="mt-1 bg-gray-800 border-blue-400/30 text-gray-200 rounded-xs resize-none"
+                rows={3}
+                disabled={isCreating}
+              />
+            </div>
+
+            <div className="text-xs text-gray-400">
+              Will be created in: <span className="text-blue-400">{appContext?.vaults.find(v => v.id === appContext.current_vault_id)?.name || 'Default Vault'}</span>
+            </div>
+          </div>
+
+          <SheetFooter className="mt-6">
+            <div className="flex space-x-3 w-full">
+              <Button
+                onClick={handleCreateProject}
+                disabled={!projectForm.name.trim() || isCreating || !appContext?.current_vault_id}
+                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-xs"
+              >
+                {isCreating ? 'Creating...' : 'Create Project'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setProjectModalOpen(false)
+                  setProjectForm({ name: '', description: '' })
+                }}
+                disabled={isCreating}
+                className="flex-1 border-gray-600 text-gray-400 hover:bg-gray-800 rounded-xs"
+              >
+                Cancel
+              </Button>
+            </div>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     </>
