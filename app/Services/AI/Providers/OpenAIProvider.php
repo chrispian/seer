@@ -3,6 +3,7 @@
 namespace App\Services\AI\Providers;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Http;
 
 class OpenAIProvider extends AbstractAIProvider
 {
@@ -13,7 +14,7 @@ class OpenAIProvider extends AbstractAIProvider
 
     protected function getSupportedOperations(): array
     {
-        return ['text', 'embedding'];
+        return ['text', 'embedding', 'streaming'];
     }
 
     public function getConfigRequirements(): array
@@ -138,6 +139,95 @@ class OpenAIProvider extends AbstractAIProvider
                 'status' => 'failed',
                 'error' => $e->getMessage(),
             ];
+        }
+    }
+
+    /**
+     * Check if provider supports streaming
+     */
+    public function supportsStreaming(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Stream chat completions with real-time deltas
+     */
+    public function streamChat(array $messages, array $options = []): \Generator
+    {
+        $model = $options['model'] ?? 'gpt-4o-mini';
+        $maxTokens = $options['max_tokens'] ?? 1000;
+        $temperature = $options['temperature'] ?? 0.7;
+        $topP = $options['top_p'] ?? null;
+
+        $request = [
+            'model' => $model,
+            'messages' => $messages,
+            'max_tokens' => $maxTokens,
+            'temperature' => $temperature,
+            'stream' => true,
+        ];
+
+        // Add top_p if specified
+        if ($topP !== null) {
+            $request['top_p'] = $topP;
+        }
+
+        try {
+            $baseUrl = $this->getConfigValue('base') ?? 'https://api.openai.com/v1';
+
+            $response = Http::withOptions(['stream' => true, 'timeout' => 0])
+                ->withToken($this->getConfigValue('key'))
+                ->post("{$baseUrl}/chat/completions", $request);
+
+            if ($response->failed()) {
+                throw new \RuntimeException('OpenAI streaming request failed: ' . $response->body());
+            }
+
+            $body = $response->toPsrResponse()->getBody();
+            $buffer = '';
+
+            while (! $body->eof()) {
+                $chunk = $body->read(8192);
+                if ($chunk === '') {
+                    usleep(50_000);
+                    continue;
+                }
+                $buffer .= $chunk;
+
+                while (($pos = strpos($buffer, "\n")) !== false) {
+                    $line = trim(substr($buffer, 0, $pos));
+                    $buffer = substr($buffer, $pos + 1);
+
+                    if ($line === '' || ! str_starts_with($line, 'data: ')) {
+                        continue;
+                    }
+
+                    $data = substr($line, 6); // Remove "data: " prefix
+                    if ($data === '[DONE]') {
+                        return; // Stream complete
+                    }
+
+                    $json = json_decode($data, true);
+                    if (! is_array($json)) {
+                        continue;
+                    }
+
+                    // Yield streaming content
+                    if (isset($json['choices'][0]['delta']['content'])) {
+                        yield $json['choices'][0]['delta']['content'];
+                    }
+
+                    // Check if stream is complete
+                    if (isset($json['choices'][0]['finish_reason'])) {
+                        return $json; // Return final response with metadata
+                    }
+                }
+            }
+
+        } catch (\Exception $e) {
+            $this->logApiRequest('stream_chat', $request, null, $e);
+            throw $e;
         }
     }
 }

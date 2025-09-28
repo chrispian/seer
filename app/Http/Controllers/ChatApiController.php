@@ -69,52 +69,44 @@ class ChatApiController extends Controller
         // Retrieve and validate session
         $session = app(\App\Actions\RetrieveChatSession::class)($messageId);
 
-        // Validate streaming provider
-        $providerConfig = app(\App\Actions\ValidateStreamingProvider::class)($session['provider']);
-
-        // Configure HTTP client for provider
-        $response = app(\App\Actions\ConfigureProviderClient::class)(
-            $providerConfig,
-            $session['model'],
-            $session['messages']
-        );
-
-        return new StreamedResponse(function () use ($response, $session) {
+        return new StreamedResponse(function () use ($session) {
             @ini_set('output_buffering', 'off');
             @ini_set('zlib.output_compression', 0);
 
             // Start latency measurement
             $startTime = microtime(true);
 
-            // Handle failed response
-            if ($response->failed()) {
-                app(\App\Actions\HandleStreamingError::class)($response, function ($errorMessage) {
-                    echo 'data: '.json_encode(['type' => 'assistant_delta', 'content' => $errorMessage])."\n\n";
-                    echo 'data: '.json_encode(['type' => 'done'])."\n\n";
-                    @ob_flush();
-                    @flush();
-                });
-
+            try {
+                // Stream using the new provider system
+                $streamResult = app(\App\Actions\StreamChatProvider::class)(
+                    $session['provider'],
+                    $session['messages'],
+                    [
+                        'model' => $session['model'],
+                        'temperature' => 0.7, // Could be configurable
+                    ],
+                    // onDelta callback
+                    function ($delta) {
+                        echo 'data: '.json_encode(['type' => 'assistant_delta', 'content' => $delta])."\n\n";
+                        @ob_flush();
+                        @flush();
+                    },
+                    // onComplete callback
+                    function () {
+                        echo 'data: '.json_encode(['type' => 'done'])."\n\n";
+                        @ob_flush();
+                        @flush();
+                    }
+                );
+            } catch (\Exception $e) {
+                // Handle streaming errors
+                $errorMessage = "[Stream error: {$e->getMessage()}]";
+                echo 'data: '.json_encode(['type' => 'assistant_delta', 'content' => $errorMessage])."\n\n";
+                echo 'data: '.json_encode(['type' => 'done'])."\n\n";
+                @ob_flush();
+                @flush();
                 return;
             }
-
-            // Process streaming response
-            $streamResult = app(\App\Actions\StreamProviderResponse::class)(
-                $response,
-                $session['provider'],
-                // onDelta callback
-                function ($delta) {
-                    echo 'data: '.json_encode(['type' => 'assistant_delta', 'content' => $delta])."\n\n";
-                    @ob_flush();
-                    @flush();
-                },
-                // onComplete callback
-                function () {
-                    echo 'data: '.json_encode(['type' => 'done'])."\n\n";
-                    @ob_flush();
-                    @flush();
-                }
-            );
 
             // Calculate latency and extract token usage
             $latencyMs = round((microtime(true) - $startTime) * 1000, 2);
