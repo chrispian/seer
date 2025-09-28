@@ -97,7 +97,6 @@ function AppContent() {
             {/* Right Sidebar */}
             <RightRail />
           </div>
-        </SidebarProvider>
           
           {/* Toast Notifications */}
           <ToastContainer toasts={toasts} onRemove={removeToast} />
