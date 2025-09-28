@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ChatApiController extends Controller
@@ -17,30 +16,27 @@ class ChatApiController extends Controller
             'conversation_id' => 'nullable|string',
             'attachments' => 'array',
             'provider' => 'nullable|string',
-            'model'    => 'nullable|string',
+            'model' => 'nullable|string',
         ]);
 
         $messageId = (string) Str::uuid();
         $conversationId = $data['conversation_id'] ?? (string) Str::uuid();
 
-        // ✅ 1) Persist USER fragment (adjust to your schema)
-        // --- BEGIN: ADAPT THESE FIELDS TO MATCH YOUR FragmentController::store ---
-        $now = now();
-        $userFragmentId = DB::table('fragments')->insertGetId([
-            'type'         => 'log',                 // keep your current default type
-            'source'       => 'chat-user',           // came from chat UI
-            'message'      => $data['content'],      // body text/markdown
-            'metadata'     => json_encode([
+        // ✅ 1) Persist USER fragment using RouteFragment action
+        $routeFragment = app(\App\Actions\RouteFragment::class);
+        $fragment = $routeFragment($data['content']);
+        $userFragmentId = $fragment->id;
+
+        // Update the fragment with chat-specific metadata and source
+        $fragment->update([
+            'source' => 'chat-user',
+            'metadata' => array_merge($fragment->metadata ?? [], [
                 'turn' => 'prompt',
-                // you can add 'conversation_id' here until you formalize it
+                'conversation_id' => $conversationId,
+                'provider' => $data['provider'] ?? config('fragments.models.fallback_provider', 'ollama'),
+                'model' => $data['model'] ?? config('fragments.models.fallback_text_model', 'llama3:latest'),
             ]),
-            'vault'        => 'default',             // or derive from session/config
-            'created_at'   => $now,
-            'updated_at'   => $now,
-            // optional: 'tags' => json_encode([]),
-            // optional: 'project_id' => ...
         ]);
-        // --- END: ADAPT THESE FIELDS ---
 
         // Minimal chat history for the AI call (extend with real history later)
         $messages = [
@@ -49,27 +45,30 @@ class ChatApiController extends Controller
         ];
 
         cache()->put("msg:{$messageId}", [
-            'messages'         => $messages,      // system + user
-            'provider'         => $data['provider'] ?? config('fragments.models.fallback_provider', 'ollama'),
-            'model'            => $data['model']    ?? config('fragments.models.fallback_text_model', 'llama3:latest'),
+            'messages' => $messages,      // system + user
+            'provider' => $data['provider'] ?? config('fragments.models.fallback_provider', 'ollama'),
+            'model' => $data['model'] ?? config('fragments.models.fallback_text_model', 'llama3:latest'),
             'user_fragment_id' => $userFragmentId,
+            'conversation_id' => $conversationId,
         ], now()->addMinutes(10));
 
         return response()->json([
-            'message_id'      => $messageId,
+            'message_id' => $messageId,
             'conversation_id' => $conversationId,
-            'user_fragment_id'=> $userFragmentId,
+            'user_fragment_id' => $userFragmentId,
         ]);
     }
 
     public function stream(string $messageId)
     {
         $payload = cache()->get("msg:{$messageId}");
-        if (!$payload) abort(404, 'Message not found or expired');
+        if (! $payload) {
+            abort(404, 'Message not found or expired');
+        }
 
-        $provider       = $payload['provider']        ?? 'ollama';
-        $model          = $payload['model']           ?? 'llama3:latest';
-        $messages       = $payload['messages']        ?? [];
+        $provider = $payload['provider'] ?? 'ollama';
+        $model = $payload['model'] ?? 'llama3:latest';
+        $messages = $payload['messages'] ?? [];
         $conversationId = $payload['conversation_id'] ?? null;
         $userFragmentId = $payload['user_fragment_id'] ?? null;
 
@@ -85,66 +84,79 @@ class ChatApiController extends Controller
 
             $response = Http::withOptions(['stream' => true, 'timeout' => 0])
                 ->post(rtrim($ollamaBase, '/').'/api/chat', [
-                    'model'    => $model,
+                    'model' => $model,
                     'messages' => $messages,
-                    'stream'   => true,
+                    'stream' => true,
                 ]);
 
             if ($response->failed()) {
                 // surface an error to the client stream and stop
-                echo "data: " . json_encode(['type' => 'assistant_delta', 'content' => "[stream error: {$response->status()}]"]) . "\n\n";
-                echo "data: " . json_encode(['type' => 'done']) . "\n\n";
-                @ob_flush(); @flush();
+                echo 'data: '.json_encode(['type' => 'assistant_delta', 'content' => "[stream error: {$response->status()}]"])."\n\n";
+                echo 'data: '.json_encode(['type' => 'done'])."\n\n";
+                @ob_flush();
+                @flush();
+
                 return;
             }
 
-            $body   = $response->toPsrResponse()->getBody();
+            $body = $response->toPsrResponse()->getBody();
             $buffer = '';
-            $final  = ''; // accumulate assistant text
+            $final = ''; // accumulate assistant text
 
-            while (!$body->eof()) {
+            while (! $body->eof()) {
                 $chunk = $body->read(8192);
-                if ($chunk === '') { usleep(50_000); continue; }
+                if ($chunk === '') {
+                    usleep(50_000);
+
+                    continue;
+                }
                 $buffer .= $chunk;
 
                 while (($pos = strpos($buffer, "\n")) !== false) {
                     $line = trim(substr($buffer, 0, $pos));
                     $buffer = substr($buffer, $pos + 1);
-                    if ($line === '') continue;
+                    if ($line === '') {
+                        continue;
+                    }
 
                     $json = json_decode($line, true);
-                    if (!is_array($json)) continue;
+                    if (! is_array($json)) {
+                        continue;
+                    }
 
                     if (isset($json['message']['content'])) {
                         $delta = $json['message']['content'];
                         $final .= $delta;
-                        echo "data: " . json_encode(['type' => 'assistant_delta', 'content' => $delta]) . "\n\n";
-                        @ob_flush(); @flush();
+                        echo 'data: '.json_encode(['type' => 'assistant_delta', 'content' => $delta])."\n\n";
+                        @ob_flush();
+                        @flush();
                     }
 
                     if (($json['done'] ?? false) === true) {
-                        // persist assistant fragment
-                        $now = now();
-                        DB::table('fragments')->insert([
-                            'type'           => 'log',        // keep your domain type
-                            'source'         => 'chat-ai',    // model-generated in chat
-                            'message'        => $final,
-                            'model_provider' => $provider,    // <-- now in scope
-                            'model_name'     => $model,
-                            'relationships'  => json_encode([
+                        // Persist assistant fragment using RouteFragment action
+                        $routeFragment = app(\App\Actions\RouteFragment::class);
+                        $assistantFragment = $routeFragment($final);
+
+                        // Update the fragment with chat-specific metadata and source
+                        $assistantFragment->update([
+                            'source' => 'chat-ai',
+                            'model_provider' => $provider,
+                            'model_name' => $model,
+                            'relationships' => [
                                 'in_reply_to_id' => $userFragmentId,
-                                // 'conversation_id' => $conversationId, // add if you want to track it here
-                            ]),
-                            'metadata'       => json_encode([
+                                'conversation_id' => $conversationId,
+                            ],
+                            'metadata' => array_merge($assistantFragment->metadata ?? [], [
                                 'turn' => 'response',
+                                'conversation_id' => $conversationId,
+                                'provider' => $provider,
+                                'model' => $model,
                             ]),
-                            'vault'          => 'default',
-                            'created_at'     => $now,
-                            'updated_at'     => $now,
                         ]);
 
-                        echo "data: " . json_encode(['type' => 'done']) . "\n\n";
-                        @ob_flush(); @flush();
+                        echo 'data: '.json_encode(['type' => 'done'])."\n\n";
+                        @ob_flush();
+                        @flush();
                     }
                 }
             }
@@ -154,6 +166,4 @@ class ChatApiController extends Controller
             'X-Accel-Buffering' => 'no',
         ]);
     }
-
 }
-
