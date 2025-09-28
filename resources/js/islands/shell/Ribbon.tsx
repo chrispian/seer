@@ -8,12 +8,14 @@ import { Plus, Search, Settings, Archive, Folder, MessageCircle } from 'lucide-r
 import { useChatSession } from '@/contexts/ChatSessionContext'
 import { VaultCreateDialog } from '@/components/VaultCreateDialog'
 import { ProjectCreateDialog } from '@/components/ProjectCreateDialog'
+import { ChatCreateDialog } from '@/components/ChatCreateDialog'
 
 export function Ribbon() {
   const { createNewSession } = useChatSession()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [vaultDialogOpen, setVaultDialogOpen] = useState(false)
   const [projectDialogOpen, setProjectDialogOpen] = useState(false)
+  const [chatDialogOpen, setChatDialogOpen] = useState(false)
   const [toastVerbosity, setToastVerbosity] = useState<string>('normal')
 
   // Load toast verbosity from localStorage on mount
@@ -32,13 +34,8 @@ export function Ribbon() {
     setProjectDialogOpen(true)
   }
 
-  const handleNewChat = async () => {
-    try {
-      const newSession = await createNewSession()
-      console.log('Created new chat session:', newSession)
-    } catch (error) {
-      console.error('Failed to create new chat:', error)
-    }
+  const handleNewChat = () => {
+    setChatDialogOpen(true)
   }
 
   const handleSearch = () => {
@@ -203,6 +200,10 @@ export function Ribbon() {
       <ProjectCreateDialog 
         open={projectDialogOpen} 
         onOpenChange={setProjectDialogOpen} 
+      />
+      <ChatCreateDialog 
+        open={chatDialogOpen} 
+        onOpenChange={setChatDialogOpen} 
       />
     </>
   )

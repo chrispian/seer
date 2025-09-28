@@ -167,4 +167,47 @@ class VaultController extends Controller
             'message' => 'Vault deleted successfully',
         ]);
     }
+
+    public function setDefault(Vault $vault)
+    {
+        return DB::transaction(function () use ($vault) {
+            // Unset current default
+            Vault::where('is_default', true)->update(['is_default' => false]);
+            
+            // Set this vault as default
+            $vault->update(['is_default' => true]);
+            
+            // Get the default project for this vault
+            $defaultProject = Project::where('vault_id', $vault->id)
+                ->where('is_default', true)
+                ->first();
+            
+            // If no default project exists, set the first project as default
+            if (!$defaultProject) {
+                $defaultProject = Project::where('vault_id', $vault->id)
+                    ->ordered()
+                    ->first();
+                if ($defaultProject) {
+                    $defaultProject->update(['is_default' => true]);
+                }
+            }
+
+            return response()->json([
+                'vault' => [
+                    'id' => $vault->id,
+                    'name' => $vault->name,
+                    'description' => $vault->description,
+                    'is_default' => $vault->is_default,
+                    'sort_order' => $vault->sort_order,
+                    'created_at' => $vault->created_at,
+                    'updated_at' => $vault->updated_at,
+                    'projects_count' => $vault->projects()->count(),
+                    'chat_sessions_count' => $vault->chatSessions()->count(),
+                    'fragments_count' => $vault->fragments()->count(),
+                ],
+                'default_project_id' => $defaultProject?->id,
+                'context_updated' => true,
+            ]);
+        });
+    }
 }

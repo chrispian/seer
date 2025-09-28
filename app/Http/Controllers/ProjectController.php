@@ -203,4 +203,36 @@ class ProjectController extends Controller
             'projects' => $projects,
         ]);
     }
+
+    public function setDefault(Project $project)
+    {
+        return DB::transaction(function () use ($project) {
+            // Unset current default within the same vault
+            Project::where('vault_id', $project->vault_id)
+                ->where('is_default', true)
+                ->update(['is_default' => false]);
+            
+            // Set this project as default
+            $project->update(['is_default' => true]);
+            
+            $project->load('vault');
+
+            return response()->json([
+                'project' => [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                    'description' => $project->description,
+                    'vault_id' => $project->vault_id,
+                    'vault_name' => $project->vault->name,
+                    'is_default' => $project->is_default,
+                    'sort_order' => $project->sort_order,
+                    'created_at' => $project->created_at,
+                    'updated_at' => $project->updated_at,
+                    'chat_sessions_count' => $project->chatSessions()->count(),
+                    'fragments_count' => $project->fragments()->count(),
+                ],
+                'context_updated' => true,
+            ]);
+        });
+    }
 }

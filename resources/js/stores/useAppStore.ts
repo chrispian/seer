@@ -61,6 +61,11 @@ interface AppState {
   setCurrentProject: (projectId: number | null) => void;
   setCurrentSession: (sessionId: number | null) => void;
   
+  // Context switching with server sync
+  switchToVault: (vaultId: number, setAsDefault?: boolean) => Promise<void>;
+  switchToProject: (projectId: number, setAsDefault?: boolean) => Promise<void>;
+  initializeFromContext: (contextData: any) => void;
+  
   setVaults: (vaults: Vault[]) => void;
   setProjects: (projects: Project[]) => void;
   setChatSessions: (sessions: ChatSession[]) => void;
@@ -125,6 +130,94 @@ export const useAppStore = create<AppState>()(
       
       setCurrentSession: (sessionId) => {
         set({ currentSessionId: sessionId });
+      },
+
+      // Context switching with server sync
+      switchToVault: async (vaultId, setAsDefault = true) => {
+        // Optimistically update the store
+        set({ 
+          currentVaultId: vaultId,
+          currentProjectId: null,
+          currentSessionId: null,
+        });
+
+        if (setAsDefault) {
+          try {
+            const response = await fetch(`/api/vaults/${vaultId}/set-default`, {
+              method: 'POST',
+              headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+              },
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              
+              // Update vault in store
+              set((state) => ({
+                vaults: state.vaults.map(v => ({
+                  ...v,
+                  is_default: v.id === vaultId
+                })),
+                currentProjectId: data.default_project_id || null,
+              }));
+            }
+          } catch (error) {
+            console.error('Failed to set vault as default:', error);
+            // Don't revert optimistic update - the local state is still valid
+          }
+        }
+      },
+
+      switchToProject: async (projectId, setAsDefault = true) => {
+        // Find the project to get its vault_id
+        const state = get();
+        const project = state.projects.find(p => p.id === projectId);
+        
+        if (!project) {
+          console.error('Project not found in store:', projectId);
+          return;
+        }
+
+        // Optimistically update the store
+        set({ 
+          currentVaultId: project.vault_id,
+          currentProjectId: projectId,
+          currentSessionId: null,
+        });
+
+        if (setAsDefault) {
+          try {
+            const response = await fetch(`/api/projects/${projectId}/set-default`, {
+              method: 'POST',
+              headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+              },
+            });
+
+            if (response.ok) {
+              // Update project in store
+              set((state) => ({
+                projects: state.projects.map(p => ({
+                  ...p,
+                  is_default: p.vault_id === project.vault_id ? p.id === projectId : p.is_default
+                }))
+              }));
+            }
+          } catch (error) {
+            console.error('Failed to set project as default:', error);
+            // Don't revert optimistic update - the local state is still valid
+          }
+        }
+      },
+
+      initializeFromContext: (contextData) => {
+        set({
+          vaults: contextData.vaults || [],
+          projects: contextData.projects || [],
+          currentVaultId: contextData.current_vault_id || null,
+          currentProjectId: contextData.current_project_id || null,
+        });
       },
 
       // Data setters

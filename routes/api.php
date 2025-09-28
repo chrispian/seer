@@ -63,6 +63,7 @@ Route::post('/vaults', [VaultController::class, 'store']);
 Route::get('/vaults/{vault}', [VaultController::class, 'show']);
 Route::put('/vaults/{vault}', [VaultController::class, 'update']);
 Route::delete('/vaults/{vault}', [VaultController::class, 'destroy']);
+Route::post('/vaults/{vault}/set-default', [VaultController::class, 'setDefault']);
 
 // Project endpoints
 Route::get('/projects', [ProjectController::class, 'index']);
@@ -71,6 +72,7 @@ Route::get('/projects/{project}', [ProjectController::class, 'show']);
 Route::put('/projects/{project}', [ProjectController::class, 'update']);
 Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
 Route::get('/vaults/{vault}/projects', [ProjectController::class, 'getForVault']);
+Route::post('/projects/{project}/set-default', [ProjectController::class, 'setDefault']);
 
 // Search endpoints
 Route::get('/search/hybrid', [\App\Http\Controllers\FragmentController::class, 'hybridSearch'])->name('fragments.hybrid-search');

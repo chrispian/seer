@@ -1,3 +1,4 @@
+import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppStore, Vault } from '../stores/useAppStore';
 
@@ -88,29 +89,33 @@ const deleteVault = async (id: number): Promise<{ message: string }> => {
 export const useVaults = () => {
   const { setVaults, setLoadingVaults } = useAppStore();
   
-  return useQuery({
+  const query = useQuery({
     queryKey: ['vaults'],
     queryFn: fetchVaults,
-    onSuccess: (data) => {
-      setVaults(data.vaults);
-      setLoadingVaults(false);
-    },
-    onError: () => {
-      setLoadingVaults(false);
-    },
-    onLoading: () => {
-      setLoadingVaults(true);
-    },
   });
+
+  // Update store when data changes
+  React.useEffect(() => {
+    if (query.data) {
+      setVaults(query.data.vaults);
+    }
+  }, [query.data, setVaults]);
+
+  // Update loading state
+  React.useEffect(() => {
+    setLoadingVaults(query.isLoading);
+  }, [query.isLoading, setLoadingVaults]);
+
+  return query;
 };
 
 export const useCreateVault = () => {
   const queryClient = useQueryClient();
-  const { addVault, addProject, setCurrentVault, setCurrentProject } = useAppStore();
+  const { addVault, addProject, switchToVault } = useAppStore();
   
   return useMutation({
     mutationFn: createVault,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       // Add vault and default project to store
       addVault(data.vault);
       addProject({
@@ -120,9 +125,8 @@ export const useCreateVault = () => {
         fragments_count: 0,
       });
       
-      // Auto-switch to new vault and its default project
-      setCurrentVault(data.vault.id);
-      setCurrentProject(data.default_project.id);
+      // Auto-switch to new vault (this will set it as default and update projects)
+      await switchToVault(data.vault.id, true);
       
       // Invalidate queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ['vaults'] });
@@ -154,6 +158,24 @@ export const useDeleteVault = () => {
     onSuccess: (_, vaultId) => {
       removeVault(vaultId);
       queryClient.invalidateQueries({ queryKey: ['vaults'] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
+    },
+  });
+};
+
+// Hook for manually switching to a vault and setting it as default
+export const useSwitchToVault = () => {
+  const queryClient = useQueryClient();
+  const { switchToVault } = useAppStore();
+  
+  return useMutation({
+    mutationFn: async (vaultId: number) => {
+      await switchToVault(vaultId, true);
+      return vaultId;
+    },
+    onSuccess: () => {
+      // Invalidate all context-dependent queries
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
     },

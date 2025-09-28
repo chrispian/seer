@@ -1,3 +1,4 @@
+import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppStore, Project } from '../stores/useAppStore';
 
@@ -84,54 +85,62 @@ const deleteProject = async (id: number): Promise<{ message: string }> => {
 export const useProjects = (vaultId?: number) => {
   const { setProjects, setLoadingProjects } = useAppStore();
   
-  return useQuery({
+  const query = useQuery({
     queryKey: ['projects', vaultId],
     queryFn: () => fetchProjects(vaultId),
-    onSuccess: (data) => {
-      setProjects(data.projects);
-      setLoadingProjects(false);
-    },
-    onError: () => {
-      setLoadingProjects(false);
-    },
-    onLoading: () => {
-      setLoadingProjects(true);
-    },
   });
+
+  // Update store when data changes
+  React.useEffect(() => {
+    if (query.data) {
+      setProjects(query.data.projects);
+    }
+  }, [query.data, setProjects]);
+
+  // Update loading state
+  React.useEffect(() => {
+    setLoadingProjects(query.isLoading);
+  }, [query.isLoading, setLoadingProjects]);
+
+  return query;
 };
 
 export const useProjectsForVault = (vaultId: number) => {
   const { setProjects, setLoadingProjects } = useAppStore();
   
-  return useQuery({
+  const query = useQuery({
     queryKey: ['projects', 'vault', vaultId],
     queryFn: () => fetchProjectsForVault(vaultId),
     enabled: !!vaultId,
-    onSuccess: (data) => {
-      setProjects(data.projects);
-      setLoadingProjects(false);
-    },
-    onError: () => {
-      setLoadingProjects(false);
-    },
-    onLoading: () => {
-      setLoadingProjects(true);
-    },
   });
+
+  // Update store when data changes
+  React.useEffect(() => {
+    if (query.data) {
+      setProjects(query.data.projects);
+    }
+  }, [query.data, setProjects]);
+
+  // Update loading state
+  React.useEffect(() => {
+    setLoadingProjects(query.isLoading);
+  }, [query.isLoading, setLoadingProjects]);
+
+  return query;
 };
 
 export const useCreateProject = () => {
   const queryClient = useQueryClient();
-  const { addProject, setCurrentProject } = useAppStore();
+  const { addProject, switchToProject } = useAppStore();
   
   return useMutation({
     mutationFn: createProject,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       // Add project to store
       addProject(data.project);
       
-      // Auto-switch to new project
-      setCurrentProject(data.project.id);
+      // Auto-switch to new project (this will set it as default)
+      await switchToProject(data.project.id, true);
       
       // Invalidate queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -162,6 +171,23 @@ export const useDeleteProject = () => {
     onSuccess: (_, projectId) => {
       removeProject(projectId);
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
+    },
+  });
+};
+
+// Hook for manually switching to a project and setting it as default
+export const useSwitchToProject = () => {
+  const queryClient = useQueryClient();
+  const { switchToProject } = useAppStore();
+  
+  return useMutation({
+    mutationFn: async (projectId: number) => {
+      await switchToProject(projectId, true);
+      return projectId;
+    },
+    onSuccess: () => {
+      // Invalidate chat sessions to refresh for new project context
       queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
     },
   });

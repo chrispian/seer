@@ -270,6 +270,7 @@ class ChatSessionController extends Controller
 
         $defaultVault = $vaults->firstWhere('is_default', true);
         $projects = collect();
+        $defaultProject = null;
 
         if ($defaultVault) {
             $projects = Project::where('vault_id', $defaultVault['id'])
@@ -280,14 +281,19 @@ class ChatSessionController extends Controller
                     'name' => $project->name,
                     'description' => $project->description,
                     'vault_id' => $project->vault_id,
+                    'is_default' => $project->is_default,
                 ]);
+            
+            // Get the default project for this vault
+            $defaultProject = $projects->firstWhere('is_default', true);
         }
 
         return response()->json([
             'vaults' => $vaults,
             'projects' => $projects,
             'current_vault_id' => $defaultVault['id'] ?? null,
-            'current_project_id' => $projects->first()['id'] ?? null,
+            'current_project_id' => $defaultProject['id'] ?? $projects->first()['id'] ?? null,
+            'context_timestamp' => now()->timestamp,
         ]);
     }
 }
