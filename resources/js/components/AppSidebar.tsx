@@ -70,7 +70,6 @@ export function AppSidebar() {
   const { announceSessionSwitch, announceSuccess, announceError } = useScreenReaderAnnouncements()
   
   // Transform data for UI
-  const recentSessions = sessionsForCurrentContext.filter(session => !session.is_pinned)
   const pinnedSessions = pinnedSessionsQuery.data?.sessions.map(session => ({
     id: session.id,
     title: session.title,
@@ -82,6 +81,21 @@ export function AppSidebar() {
     vault_id: session.vault_id,
     project_id: session.project_id,
   })) || []
+  
+  // Get pinned session IDs to exclude from recent sessions
+  const pinnedSessionIds = new Set(pinnedSessions.map(session => session.id))
+  
+  // STRICT: Completely exclude any session that appears in pinned list from recent list
+  // This prevents ANY possibility of the same session appearing in both lists
+  const recentSessions = sessionsForCurrentContext.filter(session => {
+    // Exclude if it's in the pinned sessions list (regardless of is_pinned flag)
+    const isInPinnedList = pinnedSessionIds.has(session.id)
+    // Exclude if it has is_pinned flag set to true
+    const hasIsPinnedFlag = session.is_pinned === true
+    
+    // Only include if it's NOT in pinned list AND NOT marked as pinned
+    return !isInPinnedList && !hasIsPinnedFlag
+  })
 
   const [isCreating, setIsCreating] = useState(false)
   const [deletingSessions, setDeletingSessions] = useState<Set<number>>(new Set())
@@ -218,22 +232,22 @@ export function AppSidebar() {
     }
   }
 
-  const renderSessionItem = (session: ChatSession, showPinHandle = false, index?: number) => (
+  const renderSessionItem = (session: ChatSession, showPinHandle = false, index?: number, keyPrefix = '') => (
     <div
-      key={session.id}
-      className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all w-full ${
-        currentSession?.id === session.id
-          ? 'bg-gray-100 border-l-2 border-l-black'
-          : 'hover:bg-gray-50'
-      } ${dragOverIndex === index ? 'border-t-2 border-t-blue-500' : ''}`}
-      onClick={() => handleSwitchSession(session.id)}
-      draggable={showPinHandle}
-      onDragStart={showPinHandle ? (e) => handleDragStart(e, session) : undefined}
-      onDragEnd={showPinHandle ? handleDragEnd : undefined}
-      onDragOver={showPinHandle && typeof index === 'number' ? (e) => handleDragOver(e, index) : undefined}
-      onDragLeave={showPinHandle ? handleDragLeave : undefined}
-      onDrop={showPinHandle && typeof index === 'number' ? (e) => handleDrop(e, index) : undefined}
-    >
+      key={`${keyPrefix}${session.id}`}
+        className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all w-full ${
+          currentSession?.id === session.id
+            ? 'bg-gray-100 border-l-2 border-l-black'
+            : 'hover:bg-gray-50'
+        } ${dragOverIndex === index ? 'border-t-2 border-t-blue-500' : ''}`}
+        onClick={() => handleSwitchSession(session.id)}
+        draggable={showPinHandle}
+        onDragStart={showPinHandle ? (e) => handleDragStart(e, session) : undefined}
+        onDragEnd={showPinHandle ? handleDragEnd : undefined}
+        onDragOver={showPinHandle && typeof index === 'number' ? (e) => handleDragOver(e, index) : undefined}
+        onDragLeave={showPinHandle ? handleDragLeave : undefined}
+        onDrop={showPinHandle && typeof index === 'number' ? (e) => handleDrop(e, index) : undefined}
+      >
       <div className="flex items-center min-w-0 flex-1 max-w-[180px]">
         {showPinHandle && (
           <GripVertical className="w-3 h-3 text-gray-400 mr-2 cursor-grab flex-shrink-0" />
@@ -244,43 +258,47 @@ export function AppSidebar() {
         <Badge variant="secondary" className="text-xs">
           {session.message_count}
         </Badge>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-6 w-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="w-3 h-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={(e) => handleTogglePin(session.id, e)}>
-              {session.is_pinned ? (
-                <>
-                  <PinOff className="w-3 h-3 mr-2" />
-                  Unpin
-                </>
-              ) : (
-                <>
-                  <Pin className="w-3 h-3 mr-2" />
-                  Pin
-                </>
-              )}
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={(e) => handleDeleteSession(session.id, e)}
-              disabled={deletingSessions.has(session.id)}
-            >
-              <Trash2 className="w-3 h-3 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
-  )
+         <DropdownMenu>
+           <DropdownMenuTrigger asChild>
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="h-6 w-6"
+               onClick={(e) => e.stopPropagation()}
+             >
+               <MoreVertical className="w-3 h-3" />
+             </Button>
+           </DropdownMenuTrigger>
+           <DropdownMenuContent key={`${keyPrefix}dropdown-${session.id}`}>
+             <DropdownMenuItem 
+               key={`${keyPrefix}pin-${session.id}`}
+               onClick={(e) => handleTogglePin(session.id, e)}
+             >
+               {session.is_pinned ? (
+                 <>
+                   <PinOff className="w-3 h-3 mr-2" />
+                   Unpin
+                 </>
+               ) : (
+                 <>
+                   <Pin className="w-3 h-3 mr-2" />
+                   Pin
+                 </>
+               )}
+             </DropdownMenuItem>
+             <DropdownMenuItem 
+               key={`${keyPrefix}delete-${session.id}`}
+               onClick={(e) => handleDeleteSession(session.id, e)}
+               disabled={deletingSessions.has(session.id)}
+             >
+               <Trash2 className="w-3 h-3 mr-2" />
+               Delete
+             </DropdownMenuItem>
+           </DropdownMenuContent>
+         </DropdownMenu>
+       </div>
+     </div>
+   )
 
   // Show skeleton loading when initial data is loading
   if (isLoadingVaults && vaults.length === 0) {
@@ -364,7 +382,7 @@ export function AppSidebar() {
                         <ChatSessionSkeleton key={`pinned-skeleton-${i}`} />
                       ))
                     ) : (
-                      pinnedSessions.map((session, index) => renderSessionItem(session, true, index))
+                       pinnedSessions.map((session, index) => renderSessionItem(session, true, index, 'pinned-'))
                     )}
                   </div>
                 </ScrollArea>
@@ -409,7 +427,7 @@ export function AppSidebar() {
                     No recent chats
                   </div>
                 ) : (
-                  recentSessions.map((session) => renderSessionItem(session))
+                  recentSessions.map((session) => renderSessionItem(session, false, undefined, 'recent-'))
                 )}
               </div>
             </ScrollArea>
