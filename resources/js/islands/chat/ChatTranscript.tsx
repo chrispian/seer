@@ -20,9 +20,9 @@ interface ChatTranscriptProps {
   className?: string
 }
 
-export function ChatTranscript({ 
-  messages, 
-  onMessageDelete, 
+export function ChatTranscript({
+  messages,
+  onMessageDelete,
   onMessageBookmarkToggle,
   className = ""
 }: ChatTranscriptProps) {
@@ -31,16 +31,16 @@ export function ChatTranscript({
   // Auto-scroll when messages change
   React.useEffect(() => {
     if (scrollerRef.current) {
-      scrollerRef.current.scrollTo({ 
-        top: scrollerRef.current.scrollHeight, 
-        behavior: 'smooth' 
+      scrollerRef.current.scrollTo({
+        top: scrollerRef.current.scrollHeight,
+        behavior: 'smooth'
       })
     }
   }, [messages])
 
   if (messages.length === 0) {
     return (
-      <Card ref={scrollerRef} className={`p-3 h-[60vh] md:h-[70vh] overflow-y-auto rounded-sm border-0 bg-background ${className}`}>
+      <Card ref={scrollerRef} className={`p-3 h-[60vh] md:h-[70vh] overflow-y-auto border-0 bg-background ${className}`}>
         <div className="flex items-center justify-center h-full">
           <div className="text-center text-foreground">
             <div className="text-base font-medium mb-2">Start a conversation</div>
@@ -54,19 +54,19 @@ export function ChatTranscript({
   }
 
   return (
-    <Card ref={scrollerRef} className={`p-3 h-[60vh] md:h-[70vh] overflow-y-auto rounded-sm border-0 bg-background ${className}`}>
+    <Card ref={scrollerRef} className={`p-3 h-[60vh] md:h-[70vh] overflow-y-auto border-0 bg-background ${className}`}>
       <div className="space-y-2">
         {messages.map((message) => (
-          <div key={message.id} className="group flex gap-2 relative hover:bg-accent/5 p-2 rounded-sm transition-colors">
+          <div key={message.id} className="group flex gap-2 relative hover:bg-accent/5 p-2 transition-colors">
             {/* Avatar */}
             <div className="w-6 h-6 rounded-sm shrink-0 bg-primary text-primary-foreground grid place-items-center text-xs font-medium">
               {message.role === 'user' ? 'U' : 'A'}
             </div>
-            
+
             {/* Message Content */}
             <div className="flex-1 min-w-0">
               <div className="prose prose-sm max-w-none text-foreground">
-                <ReactMarkdown 
+                <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
                     // Custom link rendering for wiki-style links
@@ -86,7 +86,7 @@ export function ChatTranscript({
                         const parts = children.split(/(#\w+)/g)
                         return (
                           <p className="text-foreground" {...props}>
-                            {parts.map((part, index) => 
+                            {parts.map((part, index) =>
                               part.match(/^#\w+/) ? (
                                 <span key={index} className="bg-green-50 text-green-700 px-1 rounded-sm text-sm mr-1">
                                   {part}
@@ -118,7 +118,7 @@ export function ChatTranscript({
                 </ReactMarkdown>
               </div>
             </div>
-            
+
             {/* Message Actions */}
             <MessageActions
               messageId={message.id}
