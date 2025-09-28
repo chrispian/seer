@@ -78,11 +78,31 @@ const createChatSession = async (data: CreateChatSessionData): Promise<ChatSessi
   });
   
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to create chat session');
+    let errorMessage = 'Failed to create chat session';
+    try {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const error = await response.json();
+        errorMessage = error.message || errorMessage;
+      } else {
+        // Likely an HTML error page
+        const text = await response.text();
+        console.error('Non-JSON error response:', text);
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+    } catch (parseError) {
+      console.error('Error parsing response:', parseError);
+      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
   
-  return response.json();
+  try {
+    return await response.json();
+  } catch (parseError) {
+    console.error('Error parsing success response:', parseError);
+    throw new Error('Invalid JSON response from server');
+  }
 };
 
 const updateChatSession = async ({ id, ...data }: { id: number } & Partial<CreateChatSessionData>): Promise<ChatSessionResponse> => {

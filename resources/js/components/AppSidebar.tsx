@@ -91,13 +91,16 @@ export function AppSidebar() {
 
   const handleNewChat = async () => {
     if (isCreating) return
+    console.log('Creating new chat...')
     setIsCreating(true)
     try {
-      await createChatMutation.mutateAsync({
+      const result = await createChatMutation.mutateAsync({
         title: undefined, // Let backend generate default title
       })
+      console.log('Chat created successfully:', result)
     } catch (error) {
       console.error('Failed to create new chat:', error)
+      announceError('Failed to create new chat')
     } finally {
       setIsCreating(false)
     }
