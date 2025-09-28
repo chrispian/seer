@@ -292,7 +292,7 @@ class ChatSessionController extends Controller
             'vaults' => $vaults,
             'projects' => $projects,
             'current_vault_id' => $defaultVault['id'] ?? null,
-            'current_project_id' => $defaultProject['id'] ?? $projects->first()['id'] ?? null,
+            'current_project_id' => $defaultProject['id'] ?? optional($projects->first())->id ?? null,
             'context_timestamp' => now()->timestamp,
         ]);
     }
