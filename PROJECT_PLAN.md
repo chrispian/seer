@@ -45,10 +45,10 @@ Create or refresh these packets before handing work to another agent.
 - [x] Complete pipeline audit report with recommendations (docs/pipeline/eng-01-audit.md).
 
 **Follow-up Implementation Tasks (Priority Order):**
-- [ ] **PHASE 1:** Add deterministic temperature controls to all AI calls (ParseChaos=0.1, Enrich=0.3, TypeInference=0.1)
-- [ ] **PHASE 1:** Implement JSON schema validation for AI responses with retry logic
-- [ ] **PHASE 1:** Add correlation IDs to all pipeline logging with structured context
-- [ ] **PHASE 1:** Replace hardcoded Ollama model in ParseChaosFragment with ModelSelectionService
+- [x] **PHASE 1:** Add deterministic temperature controls to all AI calls (ParseChaos=0.1, Enrich=0.3, TypeInference=0.1)
+- [x] **PHASE 1:** Implement JSON schema validation for AI responses with retry logic
+- [ ] **PHASE 1:** Add correlation IDs to all pipeline logging with structured context (Delegation: `delegation/ENG-01-correlation-logging/`)
+- [ ] **PHASE 1:** Replace hardcoded Ollama model in ParseChaosFragment with ModelSelectionService (Delegation: `delegation/ENG-01-chaos-model-selection/`)
 - [ ] **PHASE 2:** Consolidate entity extraction (merge ParseAtomicFragment + ExtractMetadataEntities)
 - [ ] **PHASE 2:** Add model-specific confidence calibration (replace static 0.7 threshold)
 - [ ] **PHASE 2:** Optimize model assignments per pipeline stage per audit recommendations
