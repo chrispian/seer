@@ -39,12 +39,11 @@ export function Ribbon() {
 
   const handleNewChat = async () => {
     if (isCreatingChat) return
+    console.log('Creating new chat from ribbon...')
     setIsCreatingChat(true)
+    
     try {
-      console.log('Creating new chat from ribbon...')
-      const result = await createChatMutation.mutateAsync({
-        title: undefined, // Let backend generate default title
-      })
+      const result = await createNewSession()
       console.log('Chat created successfully from ribbon:', result)
     } catch (error) {
       console.error('Failed to create new chat from ribbon:', error)

@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
 import { useCurrentContext } from '@/hooks/useContext'
+import { useChatSession } from '@/contexts/ChatSessionContext'
 import { useChatSessions, usePinnedChatSessions, useCreateChatSession, useDeleteChatSession, useTogglePinChatSession } from '@/hooks/useChatSessions'
 import { useSwitchToVault } from '@/hooks/useVaults'
 import { useSwitchToProject } from '@/hooks/useProjects'
@@ -55,6 +56,7 @@ export function AppSidebar() {
     isLoadingSessions,
   } = useCurrentContext()
   
+  const { createNewSession } = useChatSession()
   const { setCurrentSession } = useAppStore()
   const chatSessionsQuery = useChatSessions()
   const pinnedSessionsQuery = usePinnedChatSessions()
@@ -93,10 +95,9 @@ export function AppSidebar() {
     if (isCreating) return
     console.log('Creating new chat...')
     setIsCreating(true)
+    
     try {
-      const result = await createChatMutation.mutateAsync({
-        title: undefined, // Let backend generate default title
-      })
+      const result = await createNewSession()
       console.log('Chat created successfully:', result)
     } catch (error) {
       console.error('Failed to create new chat:', error)
