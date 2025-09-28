@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\DTOs\CommandRequest;
 use App\Services\CommandRegistry;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class CommandController extends Controller
 {
@@ -30,7 +29,7 @@ class CommandController extends Controller
         $rawArguments = $parts[1] ?? '';
 
         // Parse arguments from the raw string
-        if (!empty($rawArguments) && empty($arguments)) {
+        if (! empty($rawArguments) && empty($arguments)) {
             $arguments = $this->parseArguments($rawArguments);
         }
 
@@ -91,25 +90,25 @@ class CommandController extends Controller
     private function parseArguments(string $rawArguments): array
     {
         $arguments = [];
-        
+
         // Simple argument parsing - can be enhanced
         // For now, just split by spaces and handle key:value pairs
         $parts = explode(' ', $rawArguments);
-        
+
         foreach ($parts as $part) {
             if (str_contains($part, ':')) {
                 [$key, $value] = explode(':', $part, 2);
                 $arguments[$key] = $value;
             } else {
                 // Treat as positional argument or add to 'identifier'
-                if (!isset($arguments['identifier'])) {
+                if (! isset($arguments['identifier'])) {
                     $arguments['identifier'] = $part;
                 } else {
-                    $arguments['identifier'] .= ' ' . $part;
+                    $arguments['identifier'] .= ' '.$part;
                 }
             }
         }
-        
+
         return $arguments;
     }
 }

@@ -126,7 +126,7 @@ class ProjectController extends Controller
 
         return DB::transaction(function () use ($request, $project) {
             // If this is being set as default for the vault, unset existing default
-            if ($request->input('is_default', false) && !$project->is_default) {
+            if ($request->input('is_default', false) && ! $project->is_default) {
                 Project::where('vault_id', $project->vault_id)
                     ->where('is_default', true)
                     ->update(['is_default' => false]);
@@ -211,10 +211,10 @@ class ProjectController extends Controller
             Project::where('vault_id', $project->vault_id)
                 ->where('is_default', true)
                 ->update(['is_default' => false]);
-            
+
             // Set this project as default
             $project->update(['is_default' => true]);
-            
+
             $project->load('vault');
 
             return response()->json([

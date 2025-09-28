@@ -24,8 +24,6 @@ test('applies enrichment parameters for fragment enrichment', function () {
     expect($result['parameters']['max_tokens'])->toBe(1000);
 });
 
-
-
 test('applies default enrichment parameters for generic text operations', function () {
     $modelSelection = app(ModelSelectionService::class);
     $context = ['operation_type' => 'text'];

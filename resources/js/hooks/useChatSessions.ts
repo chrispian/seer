@@ -135,6 +135,22 @@ const togglePinChatSession = async (id: number): Promise<ChatSessionResponse> =>
   return response.json();
 };
 
+const fetchChatSessionDetails = async (id: number): Promise<ChatSessionResponse> => {
+  const response = await fetch(`${API_BASE}/chat-sessions/${id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch chat session details');
+  }
+  
+  return response.json();
+};
+
 // React Query hooks
 export const useChatSessions = (limit = 20) => {
   const { currentVaultId, currentProjectId, setChatSessions, setLoadingSessions } = useAppStore();
@@ -179,6 +195,41 @@ export const usePinnedChatSessions = () => {
     queryFn: () => fetchPinnedChatSessions(currentVaultId || undefined, currentProjectId || undefined),
     enabled: !!currentVaultId,
   });
+};
+
+export const useChatSessionDetails = (sessionId: number | null) => {
+  const { updateChatSession: updateChatSessionInStore } = useAppStore();
+  
+  const query = useQuery({
+    queryKey: ['chat-session', sessionId],
+    queryFn: () => fetchChatSessionDetails(sessionId!),
+    enabled: !!sessionId,
+    staleTime: 1000 * 60 * 2, // 2 minutes - messages don't change often
+  });
+
+  // Update store when session details are loaded
+  React.useEffect(() => {
+    if (query.data?.session) {
+      const session: ChatSession = {
+        id: query.data.session.id,
+        title: query.data.session.title,
+        channel_display: query.data.session.channel_display,
+        message_count: query.data.session.message_count,
+        last_activity_at: query.data.session.last_activity_at,
+        is_pinned: query.data.session.is_pinned,
+        sort_order: query.data.session.sort_order,
+        vault_id: query.data.session.vault_id,
+        project_id: query.data.session.project_id,
+        messages: query.data.session.messages,
+        metadata: query.data.session.metadata,
+      };
+      
+      // Update the session in the store with full details
+      updateChatSessionInStore(session);
+    }
+  }, [query.data]); // Remove updateChatSessionInStore from deps
+
+  return query;
 };
 
 export const useCreateChatSession = () => {

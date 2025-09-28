@@ -15,7 +15,7 @@ class FileUploadController extends Controller
             'file' => [
                 'required',
                 File::types(['jpg', 'jpeg', 'png', 'gif', 'pdf', 'txt', 'md', 'doc', 'docx'])
-                    ->max(10 * 1024) // 10MB max
+                    ->max(10 * 1024), // 10MB max
             ],
         ]);
 
@@ -23,19 +23,19 @@ class FileUploadController extends Controller
         $originalName = $file->getClientOriginalName();
         $extension = $file->getClientOriginalExtension();
         $mimeType = $file->getMimeType();
-        
+
         // Generate unique filename
-        $filename = Str::uuid() . '.' . $extension;
-        
+        $filename = Str::uuid().'.'.$extension;
+
         // Store file in uploads directory
         $path = $file->storeAs('uploads', $filename, 'public');
-        
+
         // Generate public URL
         $url = Storage::url($path);
-        
+
         // Determine markdown format based on file type
         $markdown = $this->generateMarkdown($originalName, $url, $mimeType);
-        
+
         return response()->json([
             'success' => true,
             'file_id' => $filename,
@@ -53,15 +53,15 @@ class FileUploadController extends Controller
         if (str_starts_with($mimeType, 'image/')) {
             return "![{$originalName}]({$url})";
         }
-        
+
         if ($mimeType === 'application/pdf') {
             return "[📄 {$originalName}]({$url})";
         }
-        
+
         if (str_starts_with($mimeType, 'text/')) {
             return "[📝 {$originalName}]({$url})";
         }
-        
+
         // Default file link
         return "[📎 {$originalName}]({$url})";
     }

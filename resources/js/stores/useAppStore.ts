@@ -132,9 +132,13 @@ export const useAppStore = create<AppState>()(
         });
       },
       
-      setCurrentSession: (sessionId) => {
-        set({ currentSessionId: sessionId });
-      },
+  setCurrentSession: (sessionId) => {
+    // Optimistic update - immediately update UI
+    set({ currentSessionId: sessionId });
+    
+    // If session data isn't in store yet, we'll let React Query handle loading
+    // This provides immediate feedback while data loads in background
+  },
 
       // Context switching with server sync
       switchToVault: async (vaultId, setAsDefault = true) => {

@@ -14,8 +14,7 @@ class AppShellController extends Controller
         return view('app.chat', [
             'isAuthenticated' => $isAuthenticated,
             'hasUsers' => $hasUsers,
-            'user' => $isAuthenticated ? Auth::user()->only(['id','name','email']) : null,
+            'user' => $isAuthenticated ? Auth::user()->only(['id', 'name', 'email']) : null,
         ]);
     }
 }
-

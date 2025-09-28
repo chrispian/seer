@@ -8,10 +8,10 @@ use Illuminate\Support\Facades\Log;
 class StreamChatProvider
 {
     public function __invoke(
-        string $provider, 
-        array $messages, 
-        array $options, 
-        callable $onDelta, 
+        string $provider,
+        array $messages,
+        array $options,
+        callable $onDelta,
         callable $onComplete
     ): array {
         $startTime = microtime(true);
@@ -22,15 +22,15 @@ class StreamChatProvider
             $providerManager = app(AIProviderManager::class);
             $providerInstance = $providerManager->getProvider($provider);
 
-            if (!$providerInstance) {
+            if (! $providerInstance) {
                 throw new \RuntimeException("Provider '{$provider}' not found");
             }
 
-            if (!$providerInstance->supportsStreaming()) {
+            if (! $providerInstance->supportsStreaming()) {
                 throw new \RuntimeException("Provider '{$provider}' does not support streaming");
             }
 
-            if (!$providerInstance->isAvailable()) {
+            if (! $providerInstance->isAvailable()) {
                 throw new \RuntimeException("Provider '{$provider}' is not available");
             }
 
@@ -42,7 +42,7 @@ class StreamChatProvider
 
             // Stream the chat and collect deltas
             $streamGenerator = $providerInstance->streamChat($messages, $options);
-            
+
             foreach ($streamGenerator as $delta) {
                 $finalMessage .= $delta;
                 $onDelta($delta);
@@ -50,7 +50,7 @@ class StreamChatProvider
 
             // Get the final response from the generator return value
             $providerResponse = $streamGenerator->getReturn();
-            
+
             $onComplete();
 
             Log::info('Chat stream completed', [

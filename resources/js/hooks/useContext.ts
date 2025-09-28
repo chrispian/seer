@@ -63,18 +63,18 @@ export const useAppContext = () => {
     }
   }, [currentVaultId, currentProjectId]); // Remove queryClient from deps
 
-  // Auto-create session when context is ready but no sessions exist (temporarily disabled)
-  // const createSessionIfNeeded = useAppStore((state) => state.createSessionIfNeeded);
-  // useEffect(() => {
-  //   if (query.data && currentVaultId && currentProjectId) {
-  //     // Small delay to allow other queries to load first
-  //     const timer = setTimeout(() => {
-  //       createSessionIfNeeded();
-  //     }, 1000);
-  //     
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [query.data, currentVaultId, currentProjectId]);
+  // Auto-create session when context is ready but no sessions exist
+  const createSessionIfNeeded = useAppStore((state) => state.createSessionIfNeeded);
+  useEffect(() => {
+    if (query.data && currentVaultId && currentProjectId) {
+      // Small delay to allow other queries to load first
+      const timer = setTimeout(() => {
+        createSessionIfNeeded();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [query.data, currentVaultId, currentProjectId]); // createSessionIfNeeded removed from deps to prevent infinite loop
 
   return {
     ...query,

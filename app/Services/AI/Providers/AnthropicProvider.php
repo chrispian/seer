@@ -168,7 +168,7 @@ class AnthropicProvider extends AbstractAIProvider
                 ->post("{$baseUrl}/v1/messages", $request);
 
             if ($response->failed()) {
-                throw new \RuntimeException('Anthropic streaming request failed: ' . $response->body());
+                throw new \RuntimeException('Anthropic streaming request failed: '.$response->body());
             }
 
             $body = $response->toPsrResponse()->getBody();
@@ -178,6 +178,7 @@ class AnthropicProvider extends AbstractAIProvider
                 $chunk = $body->read(8192);
                 if ($chunk === '') {
                     usleep(50_000);
+
                     continue;
                 }
                 $buffer .= $chunk;

@@ -2,10 +2,7 @@
 
 namespace Tests\Feature\AI;
 
-use App\Actions\EnrichFragmentWithAI;
-use App\Models\Fragment;
 use App\Services\AI\ModelSelectionService;
-use App\Services\AI\TypeInferenceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;

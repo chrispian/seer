@@ -168,7 +168,7 @@ class OpenRouterProvider extends AbstractAIProvider
             $baseUrl = $this->getConfigValue('base') ?? 'https://openrouter.ai/api/v1';
 
             $headers = [
-                'Authorization' => 'Bearer ' . $this->getConfigValue('key'),
+                'Authorization' => 'Bearer '.$this->getConfigValue('key'),
                 'Content-Type' => 'application/json',
             ];
 
@@ -186,7 +186,7 @@ class OpenRouterProvider extends AbstractAIProvider
                 ->post("{$baseUrl}/chat/completions", $request);
 
             if ($response->failed()) {
-                throw new \RuntimeException('OpenRouter streaming request failed: ' . $response->body());
+                throw new \RuntimeException('OpenRouter streaming request failed: '.$response->body());
             }
 
             $body = $response->toPsrResponse()->getBody();
@@ -196,6 +196,7 @@ class OpenRouterProvider extends AbstractAIProvider
                 $chunk = $body->read(8192);
                 if ($chunk === '') {
                     usleep(50_000);
+
                     continue;
                 }
                 $buffer .= $chunk;

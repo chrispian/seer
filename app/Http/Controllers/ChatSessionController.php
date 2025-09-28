@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChatSession;
-use App\Models\Vault;
 use App\Models\Project;
+use App\Models\Vault;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -23,7 +23,7 @@ class ChatSessionController extends Controller
         $limit = $request->input('limit', 20);
 
         // Get default vault if none specified
-        if (!$vaultId) {
+        if (! $vaultId) {
             $defaultVault = Vault::where('is_default', true)->first();
             $vaultId = $defaultVault?->id;
         }
@@ -71,7 +71,7 @@ class ChatSessionController extends Controller
         $projectId = $request->input('project_id');
 
         // Get default vault if none specified
-        if (!$vaultId) {
+        if (! $vaultId) {
             $defaultVault = Vault::where('is_default', true)->first();
             $vaultId = $defaultVault?->id;
         }
@@ -116,12 +116,12 @@ class ChatSessionController extends Controller
         $projectId = $request->input('project_id');
 
         // Get default vault if none specified
-        if (!$vaultId) {
+        if (! $vaultId) {
             $defaultVault = Vault::where('is_default', true)->first();
             $vaultId = $defaultVault?->id;
         }
 
-        $session = new ChatSession();
+        $session = new ChatSession;
         $session->vault_id = $vaultId;
         $session->project_id = $projectId;
         $session->title = $request->input('title', 'New Chat');
@@ -193,7 +193,7 @@ class ChatSessionController extends Controller
         $chatSession->save();
 
         // Update title from messages if not explicitly set
-        if (!$request->has('title')) {
+        if (! $request->has('title')) {
             $chatSession->updateTitleFromMessages();
         }
 
@@ -283,7 +283,7 @@ class ChatSessionController extends Controller
                     'vault_id' => $project->vault_id,
                     'is_default' => $project->is_default,
                 ]);
-            
+
             // Get the default project for this vault
             $defaultProject = $projects->firstWhere('is_default', true);
         }

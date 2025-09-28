@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { ChatComposer } from './ChatComposer'
 import { ChatTranscript, ChatMessage } from './ChatTranscript'
 import { CommandResultModal } from './CommandResultModal'
-import { useChatSession } from '@/contexts/ChatSessionContext'
+import { useAppStore } from '@/stores/useAppStore'
+import { useChatSessionDetails, useUpdateChatSession } from '@/hooks/useChatSessions'
 
 const uuid = () => crypto.randomUUID()
 
@@ -19,17 +20,20 @@ export default function ChatIsland() {
   const csrf = useCsrf()
   const activeStreamRef = useRef<{ eventSource: EventSource; sessionId: number } | null>(null)
   
-  const { 
-    currentSession, 
-    isLoadingSession, 
-    updateSession 
-  } = useChatSession()
+  // Use Zustand store and React Query directly
+  const { currentSessionId, getCurrentSession } = useAppStore()
+  const sessionDetailsQuery = useChatSessionDetails(currentSessionId)
+  const updateSessionMutation = useUpdateChatSession()
+  
+  // Get current session from store (includes messages if loaded)
+  const currentSession = getCurrentSession()
+  const isLoadingSession = sessionDetailsQuery.isLoading
 
-  // Load messages from current session
+  // Load messages from current session (loaded via React Query)
   useEffect(() => {
-    if (currentSession?.messages) {
-      const sessionMessages: ChatMessage[] = currentSession.messages.map((msg: any, index: number) => ({
-        id: msg.id || `session-${currentSession.id}-${index}`,
+    if (sessionDetailsQuery.data?.session?.messages) {
+      const sessionMessages: ChatMessage[] = sessionDetailsQuery.data.session.messages.map((msg: any, index: number) => ({
+        id: msg.id || `session-${sessionDetailsQuery.data.session.id}-${index}`,
         role: msg.type === 'user' ? 'user' : 'assistant',
         md: msg.message || '',
         messageId: msg.id,
@@ -37,11 +41,11 @@ export default function ChatIsland() {
         isBookmarked: msg.is_bookmarked,
       }))
       setMessages(sessionMessages)
-    } else if (currentSession) {
-      // New session with no messages
+    } else if (currentSession && !sessionDetailsQuery.isLoading) {
+      // Session exists but has no messages or messages haven't loaded yet
       setMessages([])
     }
-  }, [currentSession])
+  }, [sessionDetailsQuery.data, currentSession, sessionDetailsQuery.isLoading])
 
   // Cleanup active streams when session changes
   useEffect(() => {
@@ -51,11 +55,11 @@ export default function ChatIsland() {
         activeStreamRef.current = null
       }
     }
-  }, [currentSession?.id])
+  }, [currentSessionId])
 
   // Save messages to current session
   const saveMessagesToSession = async (updatedMessages: ChatMessage[]) => {
-    if (!currentSession) return
+    if (!currentSessionId) return
 
     try {
       const sessionMessages = updatedMessages.map(msg => ({
@@ -67,7 +71,8 @@ export default function ChatIsland() {
         created_at: new Date().toISOString(),
       }))
 
-      await updateSession(currentSession.id, {
+      await updateSessionMutation.mutateAsync({
+        id: currentSessionId,
         messages: sessionMessages,
       })
     } catch (error) {
@@ -76,7 +81,7 @@ export default function ChatIsland() {
   }
 
   async function onSend(content: string, attachments?: Array<{markdown: string, url: string, filename: string}>) {
-    if (!content.trim() || isSending || !currentSession) return
+    if (!content.trim() || isSending || !currentSessionId) return
     
     // Close any existing stream before starting a new one
     if (activeStreamRef.current) {
@@ -87,7 +92,7 @@ export default function ChatIsland() {
     const userId = uuid()
     const userMessage: ChatMessage = { id: userId, role: 'user', md: content }
     const updatedMessages = [...messages, userMessage]
-    const streamSessionId = currentSession.id // Capture session ID at start of stream
+    const streamSessionId = currentSessionId // Capture session ID at start of stream
     setMessages(updatedMessages)
     setSending(true)
 
@@ -125,7 +130,7 @@ export default function ChatIsland() {
       es.onmessage = (evt) => {
         try {
           // Check if this stream is still for the current session
-          if (currentSession?.id !== streamSessionId) {
+          if (currentSessionId !== streamSessionId) {
             es.close()
             activeStreamRef.current = null
             return
@@ -147,7 +152,7 @@ export default function ChatIsland() {
             activeStreamRef.current = null
             setSending(false)
             // Only save if still in the same session
-            if (currentSession?.id === streamSessionId) {
+            if (currentSessionId === streamSessionId) {
               setMessages(currentMessages => {
                 saveMessagesToSession(currentMessages)
                 return currentMessages
@@ -224,7 +229,8 @@ export default function ChatIsland() {
     }
   }
 
-  if (!currentSession && !isLoadingSession) {
+  // Show "no session selected" only when there's truly no session selected
+  if (!currentSessionId) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <div className="text-muted-foreground mb-4">
@@ -235,10 +241,23 @@ export default function ChatIsland() {
     )
   }
 
-  if (isLoadingSession) {
+  // Show loading state when we have a session ID but are fetching its details
+  if (currentSessionId && sessionDetailsQuery.isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <div className="text-muted-foreground">Loading chat session...</div>
+      </div>
+    )
+  }
+
+  // Show error state if session details failed to load
+  if (currentSessionId && sessionDetailsQuery.isError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center">
+        <div className="text-muted-foreground mb-4">
+          <div className="text-lg font-medium mb-2">Failed to load chat session</div>
+          <div className="text-sm">There was an error loading the selected chat session.</div>
+        </div>
       </div>
     )
   }
@@ -258,9 +277,9 @@ export default function ChatIsland() {
       <ChatComposer 
         onSend={onSend}
         onCommand={handleCommand}
-        disabled={isSending || !currentSession}
+        disabled={isSending || !currentSessionId}
         placeholder={
-          currentSession 
+          currentSessionId 
             ? "Type a message... Use / for commands, [[ for links, # for tags"
             : "Select a chat session to start messaging"
         }

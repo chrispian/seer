@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vault;
 use App\Models\Project;
+use App\Models\Vault;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -60,7 +60,7 @@ class VaultController extends Controller
             $project = Project::create([
                 'vault_id' => $vault->id,
                 'name' => 'Default',
-                'description' => 'Default project for ' . $vault->name,
+                'description' => 'Default project for '.$vault->name,
                 'is_default' => true,
                 'sort_order' => 1,
                 'metadata' => [],
@@ -114,14 +114,14 @@ class VaultController extends Controller
     public function update(Request $request, Vault $vault)
     {
         $request->validate([
-            'name' => 'sometimes|required|string|max:255|unique:vaults,name,' . $vault->id,
+            'name' => 'sometimes|required|string|max:255|unique:vaults,name,'.$vault->id,
             'description' => 'nullable|string|max:1000',
             'is_default' => 'nullable|boolean',
         ]);
 
         return DB::transaction(function () use ($request, $vault) {
             // If this is being set as default, unset existing default
-            if ($request->input('is_default', false) && !$vault->is_default) {
+            if ($request->input('is_default', false) && ! $vault->is_default) {
                 Vault::where('is_default', true)->update(['is_default' => false]);
             }
 
@@ -173,17 +173,17 @@ class VaultController extends Controller
         return DB::transaction(function () use ($vault) {
             // Unset current default
             Vault::where('is_default', true)->update(['is_default' => false]);
-            
+
             // Set this vault as default
             $vault->update(['is_default' => true]);
-            
+
             // Get the default project for this vault
             $defaultProject = Project::where('vault_id', $vault->id)
                 ->where('is_default', true)
                 ->first();
-            
+
             // If no default project exists, set the first project as default
-            if (!$defaultProject) {
+            if (! $defaultProject) {
                 $defaultProject = Project::where('vault_id', $vault->id)
                     ->ordered()
                     ->first();

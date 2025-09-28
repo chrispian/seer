@@ -17,6 +17,10 @@ import { useAppStore, type ChatSession } from '@/stores/useAppStore'
 import { VaultCreateDialog } from '@/components/VaultCreateDialog'
 import { ProjectCreateDialog } from '@/components/ProjectCreateDialog'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { SidebarSkeleton, ChatSessionSkeleton, VaultProjectSelectorSkeleton } from '@/components/ui/skeleton'
+import { ErrorBoundary } from '@/components/ui/error-boundary'
+import { useScreenReaderAnnouncements } from '@/hooks/useKeyboardNavigation'
+import { trackUserFlow } from '@/lib/performance'
 
 export function LeftNav() {
   // Use direct hooks instead of context
@@ -27,6 +31,9 @@ export function LeftNav() {
     vaults,
     projectsForCurrentVault,
     sessionsForCurrentContext,
+    isLoadingVaults,
+    isLoadingProjects,
+    isLoadingSessions,
   } = useCurrentContext()
   
   const { setCurrentSession } = useAppStore()
@@ -37,6 +44,9 @@ export function LeftNav() {
   const togglePinMutation = useTogglePinChatSession()
   const switchVaultMutation = useSwitchToVault()
   const switchProjectMutation = useSwitchToProject()
+  
+  // Screen reader announcements
+  const { announceSessionSwitch, announceSuccess, announceError } = useScreenReaderAnnouncements()
   
   // Transform data for UI
   const recentSessions = sessionsForCurrentContext.filter(session => !session.is_pinned)
@@ -73,7 +83,19 @@ export function LeftNav() {
   }
 
   const handleSwitchSession = (sessionId: number) => {
+    // Track performance of session switching
+    const endTracking = trackUserFlow.chatSwitch(sessionId)
+    
     setCurrentSession(sessionId)
+    
+    // Find session title for screen reader announcement
+    const session = [...recentSessions, ...pinnedSessions].find(s => s.id === sessionId)
+    if (session) {
+      announceSessionSwitch(session.title)
+    }
+    
+    // End performance tracking after UI updates
+    setTimeout(endTracking, 0)
   }
 
   const handleDeleteSession = async (sessionId: number, e: React.MouseEvent) => {
@@ -242,10 +264,20 @@ export function LeftNav() {
     </Card>
   )
 
+  // Show skeleton loading when initial data is loading
+  if (isLoadingVaults && vaults.length === 0) {
+    return (
+      <div className="w-72 bg-white border-r flex flex-col">
+        <SidebarSkeleton />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-72 bg-white border-r flex flex-col">
-      {/* Vault Selection */}
-      <Card className="m-4">
+    <ErrorBoundary context="sidebar">
+      <div className="w-72 bg-white border-r flex flex-col">
+        {/* Vault Selection */}
+        <Card className="m-4">
         <CardHeader className="pb-2">
           <h3 className="text-xs font-medium text-muted-foreground flex items-center">
             <Archive className="w-3 h-3 mr-1" />
@@ -253,43 +285,47 @@ export function LeftNav() {
           </h3>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="flex space-x-1">
-            <div className="relative flex-1">
-              <select 
-                className={`w-full text-sm rounded-l p-2 border border-input bg-background transition-opacity ${
-                  switchVaultMutation.isPending ? 'opacity-50' : ''
-                }`}
-                value={currentVault?.id || ''}
-                onChange={(e) => {
-                  const vaultId = parseInt(e.target.value)
-                  if (vaultId && vaultId !== currentVault?.id) {
-                    switchVaultMutation.mutate(vaultId)
-                  }
-                }}
-                disabled={switchVaultMutation.isPending}
+          {isLoadingVaults ? (
+            <VaultProjectSelectorSkeleton />
+          ) : (
+            <div className="flex space-x-1">
+              <div className="relative flex-1">
+                <select 
+                  className={`w-full text-sm rounded-l p-2 border border-input bg-background transition-opacity ${
+                    switchVaultMutation.isPending ? 'opacity-50' : ''
+                  }`}
+                  value={currentVault?.id || ''}
+                  onChange={(e) => {
+                    const vaultId = parseInt(e.target.value)
+                    if (vaultId && vaultId !== currentVault?.id) {
+                      switchVaultMutation.mutate(vaultId)
+                    }
+                  }}
+                  disabled={switchVaultMutation.isPending}
+                >
+                  {vaults.map(vault => (
+                    <option key={vault.id} value={vault.id}>
+                      {vault.name}
+                    </option>
+                  ))}
+                </select>
+                {switchVaultMutation.isPending && (
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <LoadingSpinner size="sm" className="text-gray-400" />
+                  </div>
+                )}
+              </div>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="px-3"
+                title="Create New Vault"
+                onClick={() => setVaultDialogOpen(true)}
               >
-                {vaults.map(vault => (
-                  <option key={vault.id} value={vault.id}>
-                    {vault.name}
-                  </option>
-                ))}
-              </select>
-              {switchVaultMutation.isPending && (
-                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                  <LoadingSpinner size="sm" className="text-gray-400" />
-                </div>
-              )}
+                <Plus className="w-4 h-4" />
+              </Button>
             </div>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="px-3"
-              title="Create New Vault"
-              onClick={() => setVaultDialogOpen(true)}
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -302,55 +338,59 @@ export function LeftNav() {
           </h3>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="flex space-x-1">
-            <div className="relative flex-1">
-              <select 
-                className={`w-full text-sm rounded-l p-2 border border-input bg-background transition-opacity ${
-                  switchProjectMutation.isPending ? 'opacity-50' : ''
-                }`}
-                value={currentProject?.id || ''}
-                onChange={(e) => {
-                  const projectId = parseInt(e.target.value)
-                  if (projectId && projectId !== currentProject?.id) {
-                    switchProjectMutation.mutate(projectId)
-                  }
-                }}
-                disabled={switchProjectMutation.isPending || !projectsForCurrentVault.length}
-              >
-                {projectsForCurrentVault.length === 0 ? (
-                  <option value="">No projects available</option>
-                ) : (
-                  projectsForCurrentVault.map(project => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))
+          {isLoadingProjects ? (
+            <VaultProjectSelectorSkeleton />
+          ) : (
+            <div className="flex space-x-1">
+              <div className="relative flex-1">
+                <select 
+                  className={`w-full text-sm rounded-l p-2 border border-input bg-background transition-opacity ${
+                    switchProjectMutation.isPending ? 'opacity-50' : ''
+                  }`}
+                  value={currentProject?.id || ''}
+                  onChange={(e) => {
+                    const projectId = parseInt(e.target.value)
+                    if (projectId && projectId !== currentProject?.id) {
+                      switchProjectMutation.mutate(projectId)
+                    }
+                  }}
+                  disabled={switchProjectMutation.isPending || !projectsForCurrentVault.length}
+                >
+                  {projectsForCurrentVault.length === 0 ? (
+                    <option value="">No projects available</option>
+                  ) : (
+                    projectsForCurrentVault.map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))
+                  )}
+                </select>
+                {switchProjectMutation.isPending && (
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <LoadingSpinner size="sm" className="text-gray-400" />
+                  </div>
                 )}
-              </select>
-              {switchProjectMutation.isPending && (
-                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                  <LoadingSpinner size="sm" className="text-gray-400" />
-                </div>
-              )}
+              </div>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="px-3"
+                title="Create New Project"
+                disabled={!currentVault}
+                onClick={() => setProjectDialogOpen(true)}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
             </div>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="px-3"
-              title="Create New Project"
-              disabled={!currentVault}
-              onClick={() => setProjectDialogOpen(true)}
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Chat History */}
       <div className="flex-1 px-4 overflow-y-auto">
         {/* Pinned Chats */}
-        {pinnedSessions.length > 0 && (
+        {(pinnedSessionsQuery.isLoading || pinnedSessions.length > 0) && (
           <div className="mb-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-medium text-muted-foreground flex items-center">
@@ -359,7 +399,16 @@ export function LeftNav() {
               </h3>
             </div>
             <div className="space-y-1">
-              {pinnedSessions.map((session, index) => renderSessionItem(session, true, index))}
+              {pinnedSessionsQuery.isLoading ? (
+                // Show skeleton loading for pinned sessions
+                <>
+                  {Array.from({ length: 2 }).map((_, i) => (
+                    <ChatSessionSkeleton key={`pinned-skeleton-${i}`} />
+                  ))}
+                </>
+              ) : (
+                pinnedSessions.map((session, index) => renderSessionItem(session, true, index))
+              )}
             </div>
           </div>
         )}
@@ -382,11 +431,13 @@ export function LeftNav() {
         </div>
 
         <div className="space-y-1">
-          {chatSessionsQuery.isLoading ? (
-            <div className="text-center text-muted-foreground text-xs py-4">
-              <LoadingSpinner size="sm" className="mx-auto mb-2" />
-              Loading chats...
-            </div>
+          {isLoadingSessions ? (
+            // Show skeleton loading for sessions
+            <>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <ChatSessionSkeleton key={`recent-skeleton-${i}`} />
+              ))}
+            </>
           ) : recentSessions.length === 0 ? (
             <div className="text-center text-muted-foreground text-xs py-4">
               No recent chats
@@ -414,6 +465,7 @@ export function LeftNav() {
         open={projectDialogOpen} 
         onOpenChange={setProjectDialogOpen} 
       />
-    </div>
+      </div>
+    </ErrorBoundary>
   )
 }

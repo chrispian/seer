@@ -4,7 +4,6 @@ namespace App\Services\AI;
 
 use App\Models\Fragment;
 use App\Models\Type;
-use App\Services\AI\JsonSchemaValidator;
 use Illuminate\Support\Facades\Log;
 
 class TypeInferenceService
@@ -56,7 +55,7 @@ class TypeInferenceService
                 ]
             );
 
-            if (!$validationResult['success']) {
+            if (! $validationResult['success']) {
                 Log::error('Type inference JSON validation failed', [
                     'fragment_id' => $fragment->id,
                     'correlation_id' => $correlationId,
@@ -222,7 +221,6 @@ Instructions:
 Only respond with valid JSON, no additional text.
 PROMPT;
     }
-
 
     /**
      * Get available types from database

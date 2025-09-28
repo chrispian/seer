@@ -3,10 +3,8 @@
 use App\Services\AI\JsonSchemaValidator;
 
 beforeEach(function () {
-    $this->validator = new JsonSchemaValidator();
+    $this->validator = new JsonSchemaValidator;
 });
-
-
 
 test('validates fragment enrichment successfully', function () {
     $validJson = json_encode([
@@ -48,8 +46,6 @@ test('handles malformed JSON with retry logic', function () {
     expect($result['attempts'])->toBe(3); // Should attempt all retries
     expect($result['error'])->toContain('Syntax error');
 });
-
-
 
 test('handles missing required fields in fragment enrichment', function () {
     $invalidJson = json_encode([
@@ -114,8 +110,6 @@ test('includes correlation ID in result', function () {
     expect($result)->toHaveKey('correlation_id');
     expect($result['correlation_id'])->toBeString();
 });
-
-
 
 test('validates fragment enrichment with default values', function () {
     $minimalJson = json_encode([

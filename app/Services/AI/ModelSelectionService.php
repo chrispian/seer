@@ -72,15 +72,16 @@ class ModelSelectionService
     public function selectEmbeddingModel(array $context = []): array
     {
         $context['operation_type'] = 'embedding';
-        
+
         // Check for operation-specific configuration first
         $operationSelection = $this->selectModelForOperation($context);
         if ($operationSelection) {
             // Add AI parameters based on operation context
             $operationSelection['parameters'] = $this->getAIParameters($context);
+
             return $operationSelection;
         }
-        
+
         // Fall back to standard model selection
         $selection = $this->selectModelByType($context, 'embedding_models');
 
@@ -96,15 +97,16 @@ class ModelSelectionService
     public function selectTextModel(array $context = []): array
     {
         $context['operation_type'] = 'text';
-        
+
         // Check for operation-specific configuration first
         $operationSelection = $this->selectModelForOperation($context);
         if ($operationSelection) {
             // Add AI parameters based on operation context
             $operationSelection['parameters'] = $this->getAIParameters($context);
+
             return $operationSelection;
         }
-        
+
         // Fall back to standard model selection
         $selection = $this->selectModelByType($context, 'text_models');
 
@@ -436,50 +438,51 @@ class ModelSelectionService
     {
         $command = $context['command'] ?? null;
         $operationType = $context['operation_type'] ?? 'text';
-        
+
         // Map commands to operation types
         $operation = $this->mapCommandToOperation($command, $operationType);
-        
+
         // Check if operation is enabled
-        if (!$this->isOperationEnabled($operation)) {
+        if (! $this->isOperationEnabled($operation)) {
             throw new \Exception("AI operation '{$operation}' is disabled");
         }
-        
+
         // Get operation-specific configuration
         $operationConfig = $this->operations[$operation] ?? [];
-        
+
         // Check if operation has specific provider/model configured
         $provider = $operationConfig['provider'] ?? null;
         $model = $operationConfig['model'] ?? null;
-        
-        if (!$provider && !$model) {
+
+        if (! $provider && ! $model) {
             return null; // No operation-specific config, use standard selection
         }
-        
+
         // Use operation-specific provider, or fall back to default
         $finalProvider = $provider ?: $this->defaultProvider;
-        
+
         // Use operation-specific model, or get default for the provider based on operation type
         $finalModel = $model ?: $this->getDefaultModelForProviderAndOperation($finalProvider, $operation);
-        
+
         // Validate the selected model is available
-        if (!$this->isModelAvailable($finalProvider, $finalModel)) {
+        if (! $this->isModelAvailable($finalProvider, $finalModel)) {
             Log::warning('Operation-specific model not available, falling back to standard selection', [
                 'operation' => $operation,
                 'provider' => $finalProvider,
                 'model' => $finalModel,
                 'context' => $context,
             ]);
+
             return null;
         }
-        
+
         Log::info('Using operation-specific model configuration', [
             'operation' => $operation,
             'provider' => $finalProvider,
             'model' => $finalModel,
             'context' => $context,
         ]);
-        
+
         return [
             'provider' => $finalProvider,
             'model' => $finalModel,
@@ -523,19 +526,19 @@ class ModelSelectionService
         if ($provider === $this->defaultProvider) {
             return $this->defaultTextModel;
         }
-        
+
         if ($provider === $this->fallbackProvider) {
             return $this->fallbackTextModel;
         }
-        
+
         // Get first available text model for the provider
         $providerConfig = $this->providers[$provider] ?? [];
         $textModels = $providerConfig['text_models'] ?? [];
-        
+
         if (empty($textModels)) {
             throw new \Exception("Provider '{$provider}' has no text models configured");
         }
-        
+
         return array_key_first($textModels);
     }
 
@@ -548,7 +551,7 @@ class ModelSelectionService
         if ($operation === 'embedding') {
             return $this->getDefaultEmbeddingModelForProvider($provider);
         }
-        
+
         // For text operations, use text models
         return $this->getDefaultModelForProvider($provider);
     }
@@ -560,12 +563,12 @@ class ModelSelectionService
     {
         $providerConfig = $this->providers[$provider] ?? [];
         $embeddingModels = $providerConfig['embedding_models'] ?? [];
-        
+
         if (empty($embeddingModels)) {
             // Fall back to text model if no embedding models configured
             return $this->getDefaultModelForProvider($provider);
         }
-        
+
         return array_key_first($embeddingModels);
     }
 

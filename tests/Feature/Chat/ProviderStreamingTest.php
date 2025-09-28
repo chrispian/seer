@@ -30,16 +30,16 @@ describe('Provider Streaming Integration', function () {
                 200,
                 ['Content-Type' => 'application/x-ndjson']
             ),
-            
+
             // OpenAI mock response
             'api.openai.com/*' => Http::response(
-                "data: " . json_encode([
+                'data: '.json_encode([
                     'choices' => [['delta' => ['content' => 'Hello ']]],
                 ])."\n\n".
-                "data: " . json_encode([
+                'data: '.json_encode([
                     'choices' => [['delta' => ['content' => 'from OpenAI!']]],
                 ])."\n\n".
-                "data: " . json_encode([
+                'data: '.json_encode([
                     'choices' => [['finish_reason' => 'stop']],
                     'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 5],
                 ])."\n\n".
@@ -52,13 +52,13 @@ describe('Provider Streaming Integration', function () {
 
     test('provider manager validates streaming providers', function () {
         $providerManager = app(AIProviderManager::class);
-        
+
         // Test Ollama provider
         $ollama = $providerManager->getProvider('ollama');
         expect($ollama)->not->toBeNull();
         expect($ollama->supportsStreaming())->toBeTrue();
         expect($ollama->supports('streaming'))->toBeTrue();
-        
+
         // Test OpenAI provider
         $openai = $providerManager->getProvider('openai');
         expect($openai)->not->toBeNull();
@@ -69,24 +69,24 @@ describe('Provider Streaming Integration', function () {
     test('ollama provider streams correctly', function () {
         // Set Ollama base URL to ensure it uses our mock
         config(['prism.providers.ollama.url' => 'http://localhost:11434']);
-        
+
         $providerManager = app(AIProviderManager::class);
         $provider = $providerManager->getProvider('ollama');
-        
+
         $messages = [
-            ['role' => 'user', 'content' => 'Hello']
+            ['role' => 'user', 'content' => 'Hello'],
         ];
-        
+
         $deltas = [];
         $generator = $provider->streamChat($messages, ['model' => 'llama3:latest']);
-        
+
         foreach ($generator as $delta) {
             $deltas[] = $delta;
         }
-        
+
         expect(count($deltas))->toBeGreaterThan(0);
         expect(strlen(implode('', $deltas)))->toBeGreaterThan(0);
-        
+
         $finalResponse = $generator->getReturn();
         expect($finalResponse)->toHaveKey('done');
         expect($finalResponse['done'])->toBeTrue();
@@ -105,10 +105,10 @@ describe('Provider Streaming Integration', function () {
 
         // Stream the response
         $streamResponse = $this->get("/api/chat/stream/{$data['message_id']}");
-        
+
         expect($streamResponse->getStatusCode())->toBe(200);
         expect($streamResponse->headers->get('Content-Type'))->toContain('text/event-stream');
-        
+
         // Verify the streaming endpoint is accessible and returns correct headers
         // Content testing is complex in test environment due to streaming nature
     });
@@ -126,10 +126,10 @@ describe('Provider Streaming Integration', function () {
 
         // Stream should handle the invalid provider
         $streamResponse = $this->get("/api/chat/stream/{$data['message_id']}");
-        
+
         // The request succeeds but the stream content depends on the error handling
         expect($streamResponse->getStatusCode())->toBe(200);
-        
+
         // Just verify that the streaming endpoint responds
         // The exact content will depend on error handling implementation
         expect($streamResponse->headers->get('Content-Type'))->toContain('text/event-stream');
@@ -137,15 +137,15 @@ describe('Provider Streaming Integration', function () {
 
     test('validate streaming provider action works with new system', function () {
         $action = app(\App\Actions\ValidateStreamingProvider::class);
-        
+
         // Test valid provider
         $result = $action('ollama');
         expect($result['provider'])->toBe('ollama');
         expect($result['supports_streaming'])->toBeTrue();
         expect($result['is_available'])->toBeTrue();
-        
+
         // Test invalid provider
-        expect(fn() => $action('invalid-provider'))
+        expect(fn () => $action('invalid-provider'))
             ->toThrow(Symfony\Component\HttpKernel\Exception\HttpException::class);
     });
 

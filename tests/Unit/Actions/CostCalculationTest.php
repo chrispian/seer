@@ -1,9 +1,6 @@
 <?php
 
 use App\Actions\EnrichAssistantMetadata;
-use App\Models\Fragment;
-use App\Models\Project;
-use App\Models\Vault;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use ReflectionClass;
 
