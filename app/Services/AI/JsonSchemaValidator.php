@@ -195,14 +195,20 @@ class JsonSchemaValidator
             }
         }
 
-        return [
+        $result = [
             'type' => $data['type'],
             'message' => $data['message'],
-            'tags' => $data['tags'] ?? [],
             'metadata' => $data['metadata'] ?? ['confidence' => 0.9],
             'state' => $data['state'] ?? ['status' => 'open'],
             'vault' => $data['vault'] ?? 'default',
         ];
+
+        // Only set tags if explicitly provided to preserve inheritance
+        if (isset($data['tags'])) {
+            $result['tags'] = $data['tags'];
+        }
+
+        return $result;
     }
 
     /**

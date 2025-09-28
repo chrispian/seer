@@ -65,7 +65,7 @@ class EnrichAssistantMetadata
             $payload['json_links'] = $jsonMetadata['links'];
         }
 
-        return $next($payload);
+        return $next($payload['fragment']);
     }
 
     /**
