@@ -1,6 +1,7 @@
 import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppStore, ChatSession } from '../stores/useAppStore';
+import { useToast } from './useToast';
 
 const API_BASE = '/api';
 
@@ -183,6 +184,7 @@ export const usePinnedChatSessions = () => {
 export const useCreateChatSession = () => {
   const queryClient = useQueryClient();
   const { currentVaultId, currentProjectId, addChatSession, setCurrentSession } = useAppStore();
+  const { success, error } = useToast();
   
   return useMutation({
     mutationFn: (data: Partial<CreateChatSessionData> = {}) => {
@@ -211,6 +213,12 @@ export const useCreateChatSession = () => {
       
       // Invalidate queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
+      
+      // Show success notification
+      success('Chat Created', `Started new conversation: "${data.session.title}"`);
+    },
+    onError: (err) => {
+      error('Failed to Create Chat', err instanceof Error ? err.message : 'An unexpected error occurred.');
     },
   });
 };

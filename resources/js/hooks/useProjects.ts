@@ -1,6 +1,7 @@
 import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppStore, Project } from '../stores/useAppStore';
+import { useToast } from './useToast';
 
 const API_BASE = '/api';
 
@@ -132,6 +133,7 @@ export const useProjectsForVault = (vaultId: number) => {
 export const useCreateProject = () => {
   const queryClient = useQueryClient();
   const { addProject, switchToProject } = useAppStore();
+  const { success, error } = useToast();
   
   return useMutation({
     mutationFn: createProject,
@@ -145,6 +147,12 @@ export const useCreateProject = () => {
       // Invalidate queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
+      
+      // Show success notification
+      success('Project Created', `Successfully created "${data.project.name}" and switched to it.`);
+    },
+    onError: (err) => {
+      error('Failed to Create Project', err instanceof Error ? err.message : 'An unexpected error occurred.');
     },
   });
 };
@@ -180,15 +188,25 @@ export const useDeleteProject = () => {
 export const useSwitchToProject = () => {
   const queryClient = useQueryClient();
   const { switchToProject } = useAppStore();
+  const { projects } = useAppStore((state) => ({ projects: state.projects }));
+  const { success, error } = useToast();
   
   return useMutation({
     mutationFn: async (projectId: number) => {
       await switchToProject(projectId, true);
       return projectId;
     },
-    onSuccess: () => {
+    onSuccess: (projectId) => {
       // Invalidate chat sessions to refresh for new project context
       queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
+      
+      const project = projects.find(p => p.id === projectId);
+      if (project) {
+        success('Switched Project', `Now working in "${project.name}"`);
+      }
+    },
+    onError: (err) => {
+      error('Failed to Switch Project', err instanceof Error ? err.message : 'An unexpected error occurred.');
     },
   });
 };

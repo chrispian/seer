@@ -8,7 +8,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
-import { Plus, MessageSquare, Terminal, Pin, Trash2, PinOff, MoreVertical, GripVertical, Archive, Folder } from 'lucide-react'
+import { Plus, MessageSquare, Terminal, Pin, Trash2, PinOff, MoreVertical, GripVertical, Archive, Folder, Loader2 } from 'lucide-react'
 import { useCurrentContext } from '@/hooks/useContext'
 import { useChatSessions, usePinnedChatSessions, useCreateChatSession, useDeleteChatSession, useTogglePinChatSession } from '@/hooks/useChatSessions'
 import { useSwitchToVault } from '@/hooks/useVaults'
@@ -16,6 +16,7 @@ import { useSwitchToProject } from '@/hooks/useProjects'
 import { useAppStore, type ChatSession } from '@/stores/useAppStore'
 import { VaultCreateDialog } from '@/components/VaultCreateDialog'
 import { ProjectCreateDialog } from '@/components/ProjectCreateDialog'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 export function LeftNav() {
   // Use direct hooks instead of context
@@ -253,24 +254,32 @@ export function LeftNav() {
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex space-x-1">
-            <select 
-              className="flex-1 text-sm rounded-l p-2 border border-input bg-background"
-              value={currentVault?.id || ''}
-              onChange={(e) => {
-                const vaultId = parseInt(e.target.value)
-                if (vaultId && vaultId !== currentVault?.id) {
-                  switchVaultMutation.mutate(vaultId)
-                }
-              }}
-              disabled={switchVaultMutation.isPending}
-              className={switchVaultMutation.isPending ? 'opacity-50' : ''}
-            >
-              {vaults.map(vault => (
-                <option key={vault.id} value={vault.id}>
-                  {vault.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative flex-1">
+              <select 
+                className={`w-full text-sm rounded-l p-2 border border-input bg-background transition-opacity ${
+                  switchVaultMutation.isPending ? 'opacity-50' : ''
+                }`}
+                value={currentVault?.id || ''}
+                onChange={(e) => {
+                  const vaultId = parseInt(e.target.value)
+                  if (vaultId && vaultId !== currentVault?.id) {
+                    switchVaultMutation.mutate(vaultId)
+                  }
+                }}
+                disabled={switchVaultMutation.isPending}
+              >
+                {vaults.map(vault => (
+                  <option key={vault.id} value={vault.id}>
+                    {vault.name}
+                  </option>
+                ))}
+              </select>
+              {switchVaultMutation.isPending && (
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                  <LoadingSpinner size="sm" className="text-gray-400" />
+                </div>
+              )}
+            </div>
             <Button 
               variant="outline" 
               size="icon" 
@@ -294,28 +303,36 @@ export function LeftNav() {
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex space-x-1">
-            <select 
-              className="flex-1 text-sm rounded-l p-2 border border-input bg-background"
-              value={currentProject?.id || ''}
-              onChange={(e) => {
-                const projectId = parseInt(e.target.value)
-                if (projectId && projectId !== currentProject?.id) {
-                  switchProjectMutation.mutate(projectId)
-                }
-              }}
-              disabled={switchProjectMutation.isPending || !projectsForCurrentVault.length}
-              className={switchProjectMutation.isPending ? 'opacity-50' : ''}
-            >
-              {projectsForCurrentVault.length === 0 ? (
-                <option value="">No projects available</option>
-              ) : (
-                projectsForCurrentVault.map(project => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))
+            <div className="relative flex-1">
+              <select 
+                className={`w-full text-sm rounded-l p-2 border border-input bg-background transition-opacity ${
+                  switchProjectMutation.isPending ? 'opacity-50' : ''
+                }`}
+                value={currentProject?.id || ''}
+                onChange={(e) => {
+                  const projectId = parseInt(e.target.value)
+                  if (projectId && projectId !== currentProject?.id) {
+                    switchProjectMutation.mutate(projectId)
+                  }
+                }}
+                disabled={switchProjectMutation.isPending || !projectsForCurrentVault.length}
+              >
+                {projectsForCurrentVault.length === 0 ? (
+                  <option value="">No projects available</option>
+                ) : (
+                  projectsForCurrentVault.map(project => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))
+                )}
+              </select>
+              {switchProjectMutation.isPending && (
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                  <LoadingSpinner size="sm" className="text-gray-400" />
+                </div>
               )}
-            </select>
+            </div>
             <Button 
               variant="outline" 
               size="icon" 
@@ -365,7 +382,12 @@ export function LeftNav() {
         </div>
 
         <div className="space-y-1">
-          {recentSessions.length === 0 ? (
+          {chatSessionsQuery.isLoading ? (
+            <div className="text-center text-muted-foreground text-xs py-4">
+              <LoadingSpinner size="sm" className="mx-auto mb-2" />
+              Loading chats...
+            </div>
+          ) : recentSessions.length === 0 ? (
             <div className="text-center text-muted-foreground text-xs py-4">
               No recent chats
             </div>

@@ -66,6 +66,10 @@ interface AppState {
   switchToProject: (projectId: number, setAsDefault?: boolean) => Promise<void>;
   initializeFromContext: (contextData: any) => void;
   
+  // Auto-session management
+  shouldCreateSession: () => boolean;
+  createSessionIfNeeded: () => Promise<void>;
+  
   setVaults: (vaults: Vault[]) => void;
   setProjects: (projects: Project[]) => void;
   setChatSessions: (sessions: ChatSession[]) => void;
@@ -218,6 +222,62 @@ export const useAppStore = create<AppState>()(
           currentVaultId: contextData.current_vault_id || null,
           currentProjectId: contextData.current_project_id || null,
         });
+      },
+
+      // Auto-session management
+      shouldCreateSession: () => {
+        const state = get();
+        return (
+          state.currentVaultId && 
+          state.currentProjectId && 
+          !state.currentSessionId && 
+          state.chatSessions.length === 0 &&
+          !state.isLoadingSessions
+        );
+      },
+
+      createSessionIfNeeded: async () => {
+        const state = get();
+        if (!state.shouldCreateSession()) return;
+
+        try {
+          const response = await fetch('/api/chat-sessions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+            body: JSON.stringify({
+              vault_id: state.currentVaultId,
+              project_id: state.currentProjectId,
+              title: 'Welcome Chat',
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const newSession: ChatSession = {
+              id: data.session.id,
+              title: data.session.title,
+              channel_display: data.session.channel_display,
+              message_count: data.session.message_count,
+              last_activity_at: data.session.last_activity_at,
+              is_pinned: data.session.is_pinned,
+              sort_order: data.session.sort_order,
+              vault_id: data.session.vault_id,
+              project_id: data.session.project_id,
+            };
+
+            set((state) => ({
+              chatSessions: [newSession, ...state.chatSessions],
+              currentSessionId: newSession.id,
+            }));
+
+            console.log('✨ Auto-created welcome session for new context');
+          }
+        } catch (error) {
+          console.error('Failed to auto-create session:', error);
+        }
       },
 
       // Data setters

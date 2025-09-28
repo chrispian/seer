@@ -1,6 +1,7 @@
 import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppStore, Vault } from '../stores/useAppStore';
+import { useToast } from './useToast';
 
 const API_BASE = '/api';
 
@@ -112,6 +113,7 @@ export const useVaults = () => {
 export const useCreateVault = () => {
   const queryClient = useQueryClient();
   const { addVault, addProject, switchToVault } = useAppStore();
+  const { success, error } = useToast();
   
   return useMutation({
     mutationFn: createVault,
@@ -132,6 +134,12 @@ export const useCreateVault = () => {
       queryClient.invalidateQueries({ queryKey: ['vaults'] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
+      
+      // Show success notification
+      success('Vault Created', `Successfully created "${data.vault.name}" and switched to it.`);
+    },
+    onError: (err) => {
+      error('Failed to Create Vault', err instanceof Error ? err.message : 'An unexpected error occurred.');
     },
   });
 };
@@ -168,16 +176,26 @@ export const useDeleteVault = () => {
 export const useSwitchToVault = () => {
   const queryClient = useQueryClient();
   const { switchToVault } = useAppStore();
+  const { vaults } = useAppStore((state) => ({ vaults: state.vaults }));
+  const { success, error } = useToast();
   
   return useMutation({
     mutationFn: async (vaultId: number) => {
       await switchToVault(vaultId, true);
       return vaultId;
     },
-    onSuccess: () => {
+    onSuccess: (vaultId) => {
       // Invalidate all context-dependent queries
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
+      
+      const vault = vaults.find(v => v.id === vaultId);
+      if (vault) {
+        success('Switched Vault', `Now working in "${vault.name}"`);
+      }
+    },
+    onError: (err) => {
+      error('Failed to Switch Vault', err instanceof Error ? err.message : 'An unexpected error occurred.');
     },
   });
 };
