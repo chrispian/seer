@@ -4,6 +4,7 @@ use App\Http\Controllers\AnalyzeFragmentController;
 use App\Http\Controllers\AutocompleteController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\ChatApiController;
+use App\Http\Controllers\ChatSessionController;
 use App\Http\Controllers\CommandController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FileUploadController;
@@ -42,6 +43,17 @@ Route::post('/files', [FileUploadController::class, 'store']);
 
 // Command execution endpoints
 Route::post('/commands/execute', [CommandController::class, 'execute']);
+
+// Chat session endpoints
+Route::get('/chat-sessions', [ChatSessionController::class, 'index']);
+Route::get('/chat-sessions/pinned', [ChatSessionController::class, 'pinned']);
+Route::post('/chat-sessions', [ChatSessionController::class, 'store']);
+Route::get('/chat-sessions/context', [ChatSessionController::class, 'getContext']);
+Route::get('/chat-sessions/{chatSession}', [ChatSessionController::class, 'show']);
+Route::put('/chat-sessions/{chatSession}', [ChatSessionController::class, 'update']);
+Route::delete('/chat-sessions/{chatSession}', [ChatSessionController::class, 'destroy']);
+Route::post('/chat-sessions/{chatSession}/pin', [ChatSessionController::class, 'togglePin']);
+Route::post('/chat-sessions/pin-order', [ChatSessionController::class, 'updatePinOrder']);
 
 // Search endpoints
 Route::get('/search/hybrid', [\App\Http\Controllers\FragmentController::class, 'hybridSearch'])->name('fragments.hybrid-search');
