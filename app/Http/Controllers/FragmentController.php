@@ -52,7 +52,7 @@ class FragmentController extends Controller
                         \App\Actions\ParseAtomicFragment::class,
                         \App\Actions\ExtractMetadataEntities::class,
                         \App\Actions\GenerateAutoTitle::class,
-                        \App\Actions\EnrichFragmentWithLlama::class,
+                        \App\Actions\EnrichFragmentWithAI::class,
                         \App\Actions\InferFragmentType::class,
                         \App\Actions\SuggestTags::class,
                         \App\Actions\RouteToVault::class,

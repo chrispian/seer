@@ -75,7 +75,7 @@ test('returns available parameter types', function () {
     $modelSelection = app(ModelSelectionService::class);
     $types = $modelSelection->getAvailableParameterTypes();
 
-    $expectedTypes = ['classification', 'enrichment', 'parsing', 'embedding'];
+    $expectedTypes = ['classification', 'enrichment', 'embedding', 'tagging', 'title_generation'];
     expect($types)->toBe($expectedTypes);
 });
 

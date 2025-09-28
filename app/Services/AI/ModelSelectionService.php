@@ -22,6 +22,8 @@ class ModelSelectionService
 
     protected array $aiParameters;
 
+    protected array $operations;
+
     public function __construct()
     {
         $config = config('fragments.models');
@@ -33,6 +35,7 @@ class ModelSelectionService
         $this->fallbackProvider = $config['fallback_provider'] ?? 'ollama';
         $this->fallbackTextModel = $config['fallback_text_model'] ?? 'llama3:latest';
         $this->aiParameters = $config['parameters'] ?? [];
+        $this->operations = $config['operations'] ?? [];
     }
 
     /**
@@ -69,6 +72,16 @@ class ModelSelectionService
     public function selectEmbeddingModel(array $context = []): array
     {
         $context['operation_type'] = 'embedding';
+        
+        // Check for operation-specific configuration first
+        $operationSelection = $this->selectModelForOperation($context);
+        if ($operationSelection) {
+            // Add AI parameters based on operation context
+            $operationSelection['parameters'] = $this->getAIParameters($context);
+            return $operationSelection;
+        }
+        
+        // Fall back to standard model selection
         $selection = $this->selectModelByType($context, 'embedding_models');
 
         // Add AI parameters for embedding operations
@@ -83,6 +96,16 @@ class ModelSelectionService
     public function selectTextModel(array $context = []): array
     {
         $context['operation_type'] = 'text';
+        
+        // Check for operation-specific configuration first
+        $operationSelection = $this->selectModelForOperation($context);
+        if ($operationSelection) {
+            // Add AI parameters based on operation context
+            $operationSelection['parameters'] = $this->getAIParameters($context);
+            return $operationSelection;
+        }
+        
+        // Fall back to standard model selection
         $selection = $this->selectModelByType($context, 'text_models');
 
         // Add AI parameters based on operation context
@@ -407,6 +430,116 @@ class ModelSelectionService
     }
 
     /**
+     * Select model for specific operation if configured
+     */
+    protected function selectModelForOperation(array $context): ?array
+    {
+        $command = $context['command'] ?? null;
+        $operationType = $context['operation_type'] ?? 'text';
+        
+        // Map commands to operation types
+        $operation = $this->mapCommandToOperation($command, $operationType);
+        
+        // Check if operation is enabled
+        if (!$this->isOperationEnabled($operation)) {
+            throw new \Exception("AI operation '{$operation}' is disabled");
+        }
+        
+        // Get operation-specific configuration
+        $operationConfig = $this->operations[$operation] ?? [];
+        
+        // Check if operation has specific provider/model configured
+        $provider = $operationConfig['provider'] ?? null;
+        $model = $operationConfig['model'] ?? null;
+        
+        if (!$provider && !$model) {
+            return null; // No operation-specific config, use standard selection
+        }
+        
+        // Use operation-specific provider, or fall back to default
+        $finalProvider = $provider ?: $this->defaultProvider;
+        
+        // Use operation-specific model, or get default for the provider
+        $finalModel = $model ?: $this->getDefaultModelForProvider($finalProvider);
+        
+        // Validate the selected model is available
+        if (!$this->isModelAvailable($finalProvider, $finalModel)) {
+            Log::warning('Operation-specific model not available, falling back to standard selection', [
+                'operation' => $operation,
+                'provider' => $finalProvider,
+                'model' => $finalModel,
+                'context' => $context,
+            ]);
+            return null;
+        }
+        
+        Log::info('Using operation-specific model configuration', [
+            'operation' => $operation,
+            'provider' => $finalProvider,
+            'model' => $finalModel,
+            'context' => $context,
+        ]);
+        
+        return [
+            'provider' => $finalProvider,
+            'model' => $finalModel,
+            'source' => 'operation_specific',
+        ];
+    }
+
+    /**
+     * Map command to operation type
+     */
+    protected function mapCommandToOperation(?string $command, string $operationType): string
+    {
+        return match ($command) {
+            'enrich_fragment' => 'enrichment',
+            'type_inference' => 'classification',
+            'suggest_tags' => 'tagging',
+            'generate_title' => 'title_generation',
+            'embed_text' => 'embedding',
+            default => match ($operationType) {
+                'embedding' => 'embedding',
+                'classification' => 'classification',
+                'text' => 'enrichment', // Default text operations
+                default => 'enrichment',
+            }
+        };
+    }
+
+    /**
+     * Check if operation is enabled
+     */
+    protected function isOperationEnabled(string $operation): bool
+    {
+        return $this->operations[$operation]['enabled'] ?? true;
+    }
+
+    /**
+     * Get default model for a provider
+     */
+    protected function getDefaultModelForProvider(string $provider): string
+    {
+        if ($provider === $this->defaultProvider) {
+            return $this->defaultTextModel;
+        }
+        
+        if ($provider === $this->fallbackProvider) {
+            return $this->fallbackTextModel;
+        }
+        
+        // Get first available text model for the provider
+        $providerConfig = $this->providers[$provider] ?? [];
+        $textModels = $providerConfig['text_models'] ?? [];
+        
+        if (empty($textModels)) {
+            throw new \Exception("Provider '{$provider}' has no text models configured");
+        }
+        
+        return array_key_first($textModels);
+    }
+
+    /**
      * Get AI parameters based on operation context
      */
     public function getAIParameters(array $context): array
@@ -418,6 +551,9 @@ class ModelSelectionService
         $parameterType = match ($command) {
             'type_inference' => 'classification',
             'enrich_fragment' => 'enrichment',
+            'suggest_tags' => 'tagging',
+            'generate_title' => 'title_generation',
+            'embed_text' => 'embedding',
             default => match ($operationType) {
                 'embedding' => 'embedding',
                 'text' => 'enrichment', // Default text operations use enrichment params

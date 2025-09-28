@@ -54,7 +54,16 @@ class EmbedFragment implements ShouldQueue
         }
 
         try {
-            $res = $emb->embed($text, $this->provider); // returns ['dims'=>..,'vector'=>[..],'provider'=>..,'model'=>..]
+            // Build context for operation-specific embedding selection
+            $context = [
+                'operation_type' => 'embedding',
+                'command' => 'embed_text',
+                'fragment_id' => $fragment->id,
+                'vault' => $fragment->vault,
+                'project_id' => $fragment->project_id,
+            ];
+            
+            $res = $emb->embed($text, $context); // returns ['dims'=>..,'vector'=>[..],'provider'=>..,'model'=>..]
             $vec = '['.implode(',', $res['vector']).']';
 
             DB::statement('

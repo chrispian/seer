@@ -8,7 +8,7 @@ use App\Services\AI\JsonSchemaValidator;
 use App\Services\AI\ModelSelectionService;
 use Illuminate\Support\Facades\Log;
 
-class EnrichFragmentWithLlama
+class EnrichFragmentWithAI
 {
     protected ModelSelectionService $modelSelection;
 
@@ -30,7 +30,7 @@ class EnrichFragmentWithLlama
             return $fragment;
         }
 
-        Log::debug('EnrichFragmentWithLlama::invoke()');
+        Log::debug('EnrichFragmentWithAI::invoke()');
 
         // Build context for model selection with enrichment-specific parameters
         $context = [
