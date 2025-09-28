@@ -15,23 +15,6 @@ import {
   Terminal,
   Loader2 
 } from 'lucide-react'
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupAction,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuAction,
-  SidebarMenuBadge,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSkeleton,
-  SidebarSeparator,
-} from '@/components/ui/sidebar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -230,51 +213,47 @@ export function AppSidebar() {
   }
 
   const renderSessionItem = (session: ChatSession, showPinHandle = false, index?: number) => (
-    <SidebarMenuItem key={session.id}>
-      <div
-        className={`relative ${
-          currentSession?.id === session.id
-            ? 'bg-sidebar-accent border-l-2 border-l-sidebar-primary'
-            : ''
-        } ${dragOverIndex === index ? 'border-t-2 border-t-blue-500' : ''}`}
-        draggable={showPinHandle}
-        onDragStart={showPinHandle ? (e) => handleDragStart(e, session) : undefined}
-        onDragEnd={showPinHandle ? handleDragEnd : undefined}
-        onDragOver={showPinHandle && typeof index === 'number' ? (e) => handleDragOver(e, index) : undefined}
-        onDragLeave={showPinHandle ? handleDragLeave : undefined}
-        onDrop={showPinHandle && typeof index === 'number' ? (e) => handleDrop(e, index) : undefined}
-      >
-        <SidebarMenuButton
-          onClick={() => handleSwitchSession(session.id)}
-          isActive={currentSession?.id === session.id}
-          className="w-full justify-start h-7 px-2 py-1"
-          size="sm"
-        >
-          {showPinHandle && (
-            <GripVertical className="w-3 h-3 text-sidebar-foreground/50 cursor-grab" />
-          )}
-          <span className="truncate">{session.channel_display}</span>
-          <SidebarMenuBadge className="ml-auto">
-            {session.message_count}
-          </SidebarMenuBadge>
-        </SidebarMenuButton>
-        
+    <div
+      key={session.id}
+      className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all ${
+        currentSession?.id === session.id
+          ? 'bg-gray-100 border-l-2 border-l-black'
+          : 'hover:bg-gray-50'
+      } ${dragOverIndex === index ? 'border-t-2 border-t-blue-500' : ''}`}
+      onClick={() => handleSwitchSession(session.id)}
+      draggable={showPinHandle}
+      onDragStart={showPinHandle ? (e) => handleDragStart(e, session) : undefined}
+      onDragEnd={showPinHandle ? handleDragEnd : undefined}
+      onDragOver={showPinHandle && typeof index === 'number' ? (e) => handleDragOver(e, index) : undefined}
+      onDragLeave={showPinHandle ? handleDragLeave : undefined}
+      onDrop={showPinHandle && typeof index === 'number' ? (e) => handleDrop(e, index) : undefined}
+    >
+      <div className="flex items-center min-w-0 flex-1">
+        {showPinHandle && (
+          <GripVertical className="w-3 h-3 text-gray-400 mr-2 cursor-grab" />
+        )}
+        <span className="text-sm truncate">{session.channel_display}</span>
+      </div>
+      <div className="flex items-center space-x-1 ml-2">
+        <Badge variant="secondary" className="text-xs">
+          {session.message_count}
+        </Badge>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuAction showOnHover>
-              <MoreVertical className="w-4 h-4" />
-            </SidebarMenuAction>
+            <Button variant="ghost" size="icon" className="h-6 w-6">
+              <MoreVertical className="w-3 h-3" />
+            </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="start">
+          <DropdownMenuContent>
             <DropdownMenuItem onClick={(e) => handleTogglePin(session.id, e)}>
               {session.is_pinned ? (
                 <>
-                  <PinOff className="w-4 h-4 mr-2" />
+                  <PinOff className="w-3 h-3 mr-2" />
                   Unpin
                 </>
               ) : (
                 <>
-                  <Pin className="w-4 h-4 mr-2" />
+                  <Pin className="w-3 h-3 mr-2" />
                   Pin
                 </>
               )}
@@ -283,244 +262,241 @@ export function AppSidebar() {
               onClick={(e) => handleDeleteSession(session.id, e)}
               disabled={deletingSessions.has(session.id)}
             >
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="w-3 h-3 mr-2" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </SidebarMenuItem>
+    </div>
   )
 
   // Show skeleton loading when initial data is loading
   if (isLoadingVaults && vaults.length === 0) {
     return (
-      <Sidebar className="border-r">
-        <SidebarContent>
-          <div className="p-4">
-            <SidebarSkeleton />
-          </div>
-        </SidebarContent>
-      </Sidebar>
+      <div className="w-72 bg-white border-r flex flex-col">
+        <div className="p-4">
+          <SidebarSkeleton />
+        </div>
+      </div>
     );
   }
 
   return (
     <ErrorBoundary context="sidebar">
-      <Sidebar className="border-r">
+      <div className="w-72 bg-white border-r flex flex-col">
         {/* Vault Selection Header */}
-        <SidebarHeader className="p-2">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton 
-                    size="lg" 
-                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                  >
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                      <Archive className="size-4" />
-                    </div>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        {currentVault?.name || 'Loading...'}
-                      </span>
-                      <span className="truncate text-xs">Vault</span>
-                    </div>
-                    <ChevronDown className="ml-auto" />
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                  side="bottom"
-                  align="start"
-                  sideOffset={4}
+        <div className="p-3 border-b">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost"
+                className="w-full justify-start h-12 px-3 data-[state=open]:bg-gray-100"
+              >
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-black text-white mr-3">
+                  <Archive className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">
+                    {currentVault?.name || 'Loading...'}
+                  </span>
+                  <span className="truncate text-xs text-gray-500">Vault</span>
+                </div>
+                <ChevronDown className="ml-auto" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+              side="bottom"
+              align="start"
+              sideOffset={4}
+            >
+              {vaults.map((vault) => (
+                <DropdownMenuItem
+                  key={vault.id}
+                  onClick={() => switchVaultMutation.mutate(vault.id)}
+                  className="gap-2 p-2"
                 >
-                  {vaults.map((vault) => (
-                    <DropdownMenuItem
-                      key={vault.id}
-                      onClick={() => switchVaultMutation.mutate(vault.id)}
-                      className="gap-2 p-2"
-                    >
-                      <div className="flex size-6 items-center justify-center rounded-sm border">
-                        <Archive className="size-4 shrink-0" />
-                      </div>
-                      {vault.name}
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setVaultDialogOpen(true)} className="gap-2 p-2">
-                    <div className="flex size-6 items-center justify-center rounded-md border border-dashed">
-                      <Plus className="size-4" />
-                    </div>
-                    <div className="font-medium text-muted-foreground">Add vault</div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
+                  <div className="flex size-6 items-center justify-center rounded-sm border">
+                    <Archive className="size-4 shrink-0" />
+                  </div>
+                  {vault.name}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setVaultDialogOpen(true)} className="gap-2 p-2">
+                <div className="flex size-6 items-center justify-center rounded-md border border-dashed">
+                  <Plus className="size-4" />
+                </div>
+                <div className="font-medium text-gray-500">Add vault</div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
-        <SidebarContent>
+        {/* Main Content */}
+        <div className="flex-1 overflow-y-auto px-2">
           {/* Pinned Chats */}
           {(pinnedSessionsQuery.isLoading || pinnedSessions.length > 0) && (
             <>
-              <SidebarGroup className="py-1">
-                <SidebarGroupLabel className="px-2 py-1 h-6">
-                  <Pin className="w-4 h-4" />
-                  Pinned Chats
-                </SidebarGroupLabel>
-                <SidebarGroupContent className="px-2">
-                  <ScrollArea className="h-[200px]">
-                    <SidebarMenu className="gap-0.5">
-                      {pinnedSessionsQuery.isLoading ? (
-                        Array.from({ length: 2 }).map((_, i) => (
-                          <SidebarMenuItem key={`pinned-skeleton-${i}`}>
-                            <SidebarMenuSkeleton showIcon />
-                          </SidebarMenuItem>
-                        ))
-                      ) : (
-                        pinnedSessions.map((session, index) => renderSessionItem(session, true, index))
-                      )}
-                    </SidebarMenu>
-                  </ScrollArea>
-                </SidebarGroupContent>
-              </SidebarGroup>
-              <SidebarSeparator className="my-1" />
+              <div className="py-2">
+                <div className="flex items-center justify-between mb-2 px-2">
+                  <h3 className="text-xs font-medium text-gray-500 flex items-center">
+                    <Pin className="w-3 h-3 mr-1" />
+                    Pinned Chats
+                  </h3>
+                </div>
+                <ScrollArea className="h-[200px]">
+                  <div className="space-y-1">
+                    {pinnedSessionsQuery.isLoading ? (
+                      Array.from({ length: 2 }).map((_, i) => (
+                        <ChatSessionSkeleton key={`pinned-skeleton-${i}`} />
+                      ))
+                    ) : (
+                      pinnedSessions.map((session, index) => renderSessionItem(session, true, index))
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+              <div className="border-t mx-2 mb-2" />
             </>
           )}
 
           {/* Recent Chats */}
-          <SidebarGroup className="py-1">
-            <SidebarGroupLabel className="px-2 py-1 h-6">
-              <MessageSquare className="w-4 h-4" />
-              Recent Chats
-            </SidebarGroupLabel>
-            <SidebarGroupAction onClick={handleNewChat} disabled={isCreating}>
-              <Plus className="w-4 h-4" />
-              <span className="sr-only">Add Chat</span>
-            </SidebarGroupAction>
-            <SidebarGroupContent className="px-2">
-              <ScrollArea className="h-[300px]">
-                <SidebarMenu className="gap-0.5">
-                  {isLoadingSessions ? (
-                    Array.from({ length: 3 }).map((_, i) => (
-                      <SidebarMenuItem key={`recent-skeleton-${i}`}>
-                        <SidebarMenuSkeleton showIcon />
-                      </SidebarMenuItem>
-                    ))
-                  ) : recentSessions.length === 0 ? (
-                    <div className="text-center text-sidebar-foreground/50 text-xs py-8">
-                      No recent chats
-                    </div>
-                  ) : (
-                    recentSessions.map((session) => renderSessionItem(session))
-                  )}
-                </SidebarMenu>
-              </ScrollArea>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <div className="py-2">
+            <div className="flex items-center justify-between mb-2 px-2">
+              <h3 className="text-xs font-medium text-gray-500 flex items-center">
+                <MessageSquare className="w-3 h-3 mr-1" />
+                Recent Chats
+              </h3>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-5 w-5"
+                onClick={handleNewChat}
+                disabled={isCreating}
+              >
+                <Plus className="w-3 h-3" />
+              </Button>
+            </div>
+            <ScrollArea className="h-[300px]">
+              <div className="space-y-1">
+                {isLoadingSessions ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <ChatSessionSkeleton key={`recent-skeleton-${i}`} />
+                  ))
+                ) : recentSessions.length === 0 ? (
+                  <div className="text-center text-gray-400 text-xs py-8">
+                    No recent chats
+                  </div>
+                ) : (
+                  recentSessions.map((session) => renderSessionItem(session))
+                )}
+              </div>
+            </ScrollArea>
+          </div>
 
-          <SidebarSeparator className="my-1" />
+          <div className="border-t mx-2 mb-2" />
 
           {/* Projects */}
-          <SidebarGroup className="py-1">
-            <SidebarGroupLabel className="px-2 py-1 h-6">
-              <Folder className="w-4 h-4" />
-              Projects
-            </SidebarGroupLabel>
-            <SidebarGroupAction onClick={() => setProjectDialogOpen(true)} disabled={!currentVault}>
-              <Plus className="w-4 h-4" />
-              <span className="sr-only">Add Project</span>
-            </SidebarGroupAction>
-            <SidebarGroupContent className="px-2">
-              <ScrollArea className="h-[200px]">
-                <SidebarMenu className="gap-0.5">
-                  {isLoadingProjects ? (
-                    Array.from({ length: 2 }).map((_, i) => (
-                      <SidebarMenuItem key={`project-skeleton-${i}`}>
-                        <SidebarMenuSkeleton showIcon />
-                      </SidebarMenuItem>
-                    ))
-                  ) : projectsForCurrentVault.length === 0 ? (
-                    <div className="text-center text-sidebar-foreground/50 text-xs py-8">
-                      No projects available
+          <div className="py-2">
+            <div className="flex items-center justify-between mb-2 px-2">
+              <h3 className="text-xs font-medium text-gray-500 flex items-center">
+                <Folder className="w-3 h-3 mr-1" />
+                Projects
+              </h3>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-5 w-5"
+                onClick={() => setProjectDialogOpen(true)} 
+                disabled={!currentVault}
+              >
+                <Plus className="w-3 h-3" />
+              </Button>
+            </div>
+            <ScrollArea className="h-[200px]">
+              <div className="space-y-1">
+                {isLoadingProjects ? (
+                  Array.from({ length: 2 }).map((_, i) => (
+                    <ChatSessionSkeleton key={`project-skeleton-${i}`} />
+                  ))
+                ) : projectsForCurrentVault.length === 0 ? (
+                  <div className="text-center text-gray-400 text-xs py-8">
+                    No projects available
+                  </div>
+                ) : (
+                  projectsForCurrentVault.map((project) => (
+                    <div
+                      key={project.id}
+                      className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all ${
+                        currentProject?.id === project.id
+                          ? 'bg-gray-100'
+                          : 'hover:bg-gray-50'
+                      }`}
+                      onClick={() => switchProjectMutation.mutate(project.id)}
+                    >
+                      <div className="flex items-center min-w-0 flex-1">
+                        <Folder className="w-4 h-4 mr-2 text-gray-400" />
+                        <span className="text-sm truncate">{project.name}</span>
+                      </div>
+                      {switchProjectMutation.isPending && (
+                        <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                      )}
                     </div>
-                  ) : (
-                    projectsForCurrentVault.map((project) => (
-                      <SidebarMenuItem key={project.id}>
-                        <SidebarMenuButton
-                          onClick={() => switchProjectMutation.mutate(project.id)}
-                          isActive={currentProject?.id === project.id}
-                          disabled={switchProjectMutation.isPending}
-                          className="h-7 px-2 py-1"
-                          size="sm"
-                        >
-                          <Folder className="w-4 h-4" />
-                          <span className="truncate">{project.name}</span>
-                          {switchProjectMutation.isPending && (
-                            <Loader2 className="w-4 h-4 ml-auto animate-spin" />
-                          )}
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))
-                  )}
-                </SidebarMenu>
-              </ScrollArea>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        </div>
 
         {/* User Menu Footer */}
-        <SidebarFooter className="p-2">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton
-                    size="lg"
-                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                  >
-                    <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage 
-                        src={`https://www.gravatar.com/avatar/${GRAVATAR_HASH}?d=mp&s=32`} 
-                        alt="chrispian@gmail.com" 
-                      />
-                      <AvatarFallback className="rounded-lg">CP</AvatarFallback>
-                    </Avatar>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">chrispian</span>
-                      <span className="truncate text-xs">chrispian@gmail.com</span>
-                    </div>
-                    <ChevronUp className="ml-auto size-4" />
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                  side="top"
-                  align="start"
-                  sideOffset={4}
-                >
-                  <DropdownMenuItem>
-                    <User className="w-4 h-4 mr-2" />
-                    Account
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => {
-                    // Future: Open command palette (Ctrl+K)
-                    console.log('Command palette not yet implemented')
-                  }}>
-                    <Terminal className="w-4 h-4 mr-2" />
-                    Commands
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
+        <div className="p-3 border-t">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-12 px-3 data-[state=open]:bg-gray-100"
+              >
+                <Avatar className="h-8 w-8 rounded-lg mr-3">
+                  <AvatarImage 
+                    src={`https://www.gravatar.com/avatar/${GRAVATAR_HASH}?d=mp&s=32`} 
+                    alt="chrispian@gmail.com" 
+                  />
+                  <AvatarFallback className="rounded-lg">CP</AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">chrispian</span>
+                  <span className="truncate text-xs text-gray-500">chrispian@gmail.com</span>
+                </div>
+                <ChevronUp className="ml-auto size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+              side="top"
+              align="start"
+              sideOffset={4}
+            >
+              <DropdownMenuItem>
+                <User className="w-4 h-4 mr-2" />
+                Account
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                // Future: Open command palette (Ctrl+K)
+                console.log('Command palette not yet implemented')
+              }}>
+                <Terminal className="w-4 h-4 mr-2" />
+                Commands
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         {/* Creation Dialogs */}
         <VaultCreateDialog 
@@ -531,7 +507,7 @@ export function AppSidebar() {
           open={projectDialogOpen} 
           onOpenChange={setProjectDialogOpen} 
         />
-      </Sidebar>
+      </div>
     </ErrorBoundary>
   )
 }

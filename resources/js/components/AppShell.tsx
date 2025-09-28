@@ -66,41 +66,25 @@ function AppContent() {
   return (
     <ErrorBoundary>
       <ChatSessionProvider>
-        <SidebarProvider
-          style={{
-            "--sidebar-width": "18rem", // Back to original width (288px)
-            "--sidebar-width-mobile": "18rem",
-          }}
-        >
-          <div className="h-screen flex bg-background">
-            {/* Far Left Ribbon */}
-            <Ribbon />
-            
-            {/* Compact Sidebar */}
-            <AppSidebar />
-            
-            {/* Main Content with proper inset */}
-            <SidebarInset className="flex-1">
-              <div className="flex flex-col h-full">
-                <div className="flex items-center gap-2 px-4 py-2 border-b">
-                  <SidebarTrigger className="-ml-1" />
-                  <div className="flex-1">
-                    <ChatHeader />
-                  </div>
-                </div>
-                <div className="flex-1 min-h-0">
-                  <ChatIsland />
-                </div>
-              </div>
-            </SidebarInset>
-            
-            {/* Right Sidebar */}
-            <RightRail />
+        <div className="h-screen flex bg-background">
+          {/* Far Left Ribbon */}
+          <Ribbon />
+          
+          {/* Compact Sidebar */}
+          <AppSidebar />
+          
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col min-w-0">
+            <ChatHeader />
+            <ChatIsland />
           </div>
           
-          {/* Toast Notifications */}
-          <ToastContainer toasts={toasts} onRemove={removeToast} />
-        </SidebarProvider>
+          {/* Right Sidebar */}
+          <RightRail />
+        </div>
+        
+        {/* Toast Notifications */}
+        <ToastContainer toasts={toasts} onRemove={removeToast} />
       </ChatSessionProvider>
     </ErrorBoundary>
   );
