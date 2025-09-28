@@ -100,12 +100,12 @@ export const useVaults = () => {
     if (query.data) {
       setVaults(query.data.vaults);
     }
-  }, [query.data, setVaults]);
+  }, [query.data]); // Remove setVaults from deps
 
   // Update loading state
   React.useEffect(() => {
     setLoadingVaults(query.isLoading);
-  }, [query.isLoading, setLoadingVaults]);
+  }, [query.isLoading]); // Remove setLoadingVaults from deps
 
   return query;
 };
@@ -176,7 +176,7 @@ export const useDeleteVault = () => {
 export const useSwitchToVault = () => {
   const queryClient = useQueryClient();
   const { switchToVault } = useAppStore();
-  const { vaults } = useAppStore((state) => ({ vaults: state.vaults }));
+  const vaults = useAppStore((state) => state.vaults);
   const { success, error } = useToast();
   
   return useMutation({

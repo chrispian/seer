@@ -96,12 +96,12 @@ export const useProjects = (vaultId?: number) => {
     if (query.data) {
       setProjects(query.data.projects);
     }
-  }, [query.data, setProjects]);
+  }, [query.data]); // Remove setProjects from deps
 
   // Update loading state
   React.useEffect(() => {
     setLoadingProjects(query.isLoading);
-  }, [query.isLoading, setLoadingProjects]);
+  }, [query.isLoading]); // Remove setLoadingProjects from deps
 
   return query;
 };
@@ -120,12 +120,12 @@ export const useProjectsForVault = (vaultId: number) => {
     if (query.data) {
       setProjects(query.data.projects);
     }
-  }, [query.data, setProjects]);
+  }, [query.data]); // Remove setProjects from deps
 
   // Update loading state
   React.useEffect(() => {
     setLoadingProjects(query.isLoading);
-  }, [query.isLoading, setLoadingProjects]);
+  }, [query.isLoading]); // Remove setLoadingProjects from deps
 
   return query;
 };
@@ -188,7 +188,7 @@ export const useDeleteProject = () => {
 export const useSwitchToProject = () => {
   const queryClient = useQueryClient();
   const { switchToProject } = useAppStore();
-  const { projects } = useAppStore((state) => ({ projects: state.projects }));
+  const projects = useAppStore((state) => state.projects);
   const { success, error } = useToast();
   
   return useMutation({

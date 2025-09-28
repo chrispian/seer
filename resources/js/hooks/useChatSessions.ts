@@ -161,12 +161,12 @@ export const useChatSessions = (limit = 20) => {
       }));
       setChatSessions(sessions);
     }
-  }, [query.data, setChatSessions]);
+  }, [query.data]); // Remove setChatSessions from deps
 
   // Update loading state
   React.useEffect(() => {
     setLoadingSessions(query.isLoading);
-  }, [query.isLoading, setLoadingSessions]);
+  }, [query.isLoading]); // Remove setLoadingSessions from deps
 
   return query;
 };

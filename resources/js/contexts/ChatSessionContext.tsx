@@ -79,8 +79,8 @@ export function ChatSessionProvider({ children }: { children: React.ReactNode })
     currentProjectId
   } = useAppStore()
   
-  // Use the new hook system
-  const contextQuery = useAppContext()
+  // Use the new hook system (simplified to avoid conflicts)
+  // const contextQuery = useAppContext() // Moved to AppContent to avoid conflicts
   const chatSessionsQuery = useChatSessions()
   const pinnedSessionsQuery = usePinnedChatSessions()
   const createChatMutation = useCreateChatSession()
@@ -124,8 +124,9 @@ export function ChatSessionProvider({ children }: { children: React.ReactNode })
 
   // Delegate to new hook system
   const loadContext = useCallback(async () => {
-    contextQuery.refetch()
-  }, [contextQuery])
+    // contextQuery.refetch() // Simplified to avoid conflicts
+    console.log('loadContext called - delegating to AppContent useAppContext')
+  }, [])
 
   const loadSessions = useCallback(async () => {
     chatSessionsQuery.refetch()
@@ -195,7 +196,7 @@ export function ChatSessionProvider({ children }: { children: React.ReactNode })
     recentSessions,
     pinnedSessions,
     appContext,
-    isLoadingContext: contextQuery.isLoading,
+    isLoadingContext: false, // Simplified for debugging
     createNewSession,
     switchToSession,
     updateSession,

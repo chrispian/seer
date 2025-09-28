@@ -47,7 +47,7 @@ export const useAppContext = () => {
     if (query.data) {
       initializeFromContext(query.data);
     }
-  }, [query.data, initializeFromContext]);
+  }, [query.data]); // Remove initializeFromContext from deps to prevent infinite loop
 
   // Function to manually refresh context (useful after major changes)
   const refreshContext = () => {
@@ -61,20 +61,20 @@ export const useAppContext = () => {
       queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     }
-  }, [currentVaultId, currentProjectId, queryClient]);
+  }, [currentVaultId, currentProjectId]); // Remove queryClient from deps
 
-  // Auto-create session when context is ready but no sessions exist
-  const { createSessionIfNeeded } = useAppStore();
-  useEffect(() => {
-    if (query.data && currentVaultId && currentProjectId) {
-      // Small delay to allow other queries to load first
-      const timer = setTimeout(() => {
-        createSessionIfNeeded();
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [query.data, currentVaultId, currentProjectId, createSessionIfNeeded]);
+  // Auto-create session when context is ready but no sessions exist (temporarily disabled)
+  // const createSessionIfNeeded = useAppStore((state) => state.createSessionIfNeeded);
+  // useEffect(() => {
+  //   if (query.data && currentVaultId && currentProjectId) {
+  //     // Small delay to allow other queries to load first
+  //     const timer = setTimeout(() => {
+  //       createSessionIfNeeded();
+  //     }, 1000);
+  //     
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [query.data, currentVaultId, currentProjectId]);
 
   return {
     ...query,

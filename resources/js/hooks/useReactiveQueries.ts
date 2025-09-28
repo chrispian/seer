@@ -21,7 +21,7 @@ export const useReactiveQueries = () => {
       
       console.log(`🔄 Vault context changed to ${currentVaultId} - invalidating dependent queries`);
     }
-  }, [currentVaultId, queryClient]);
+  }, [currentVaultId]); // Remove queryClient from deps
 
   // Invalidate session-dependent queries when project changes
   useEffect(() => {
@@ -32,7 +32,7 @@ export const useReactiveQueries = () => {
       
       console.log(`🔄 Project context changed to ${currentProjectId} - invalidating dependent queries`);
     }
-  }, [currentProjectId, queryClient]);
+  }, [currentProjectId]); // Remove queryClient from deps
 
   // Invalidate current session data when session changes
   useEffect(() => {
@@ -42,7 +42,7 @@ export const useReactiveQueries = () => {
       
       console.log(`🔄 Session context changed to ${currentSessionId} - invalidating session queries`);
     }
-  }, [currentSessionId, queryClient]);
+  }, [currentSessionId]); // Remove queryClient from deps
 
   return {
     invalidateAllQueries: () => {

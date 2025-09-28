@@ -30,8 +30,8 @@ function AppContent() {
   // Initialize app context on mount - this loads the context and initializes Zustand
   useAppContext();
   
-  // Enable reactive query invalidation based on context changes
-  useReactiveQueries();
+  // Enable reactive query invalidation based on context changes (temporarily disabled for debugging)
+  // useReactiveQueries();
   
   // Toast notification system
   const { toasts, removeToast } = useToast();
