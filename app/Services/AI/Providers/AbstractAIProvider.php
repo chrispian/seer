@@ -176,4 +176,20 @@ abstract class AbstractAIProvider implements AIProviderInterface
      * Perform provider-specific health check
      */
     abstract protected function performHealthCheck(): array;
+
+    /**
+     * Default streaming implementation - providers should override this
+     */
+    public function streamChat(array $messages, array $options = []): \Generator
+    {
+        throw new \RuntimeException("Streaming not implemented for provider: {$this->getName()}");
+    }
+
+    /**
+     * Check if provider supports streaming - default to false
+     */
+    public function supportsStreaming(): bool
+    {
+        return false;
+    }
 }

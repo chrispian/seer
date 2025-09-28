@@ -48,4 +48,18 @@ interface AIProviderInterface
      * Get available models for this provider
      */
     public function getAvailableModels(): array;
+
+    /**
+     * Stream chat completions with real-time deltas
+     * 
+     * @param array $messages Array of messages in OpenAI format
+     * @param array $options Provider-specific options (model, temperature, etc.)
+     * @return \Generator Yields streaming deltas as strings
+     */
+    public function streamChat(array $messages, array $options = []): \Generator;
+
+    /**
+     * Check if provider supports streaming
+     */
+    public function supportsStreaming(): bool;
 }

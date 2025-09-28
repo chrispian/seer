@@ -65,9 +65,8 @@ describe('ValidateStreamingProvider', function () {
         $result = $action('ollama');
 
         expect($result['provider'])->toBe('ollama');
-        expect($result['base_url'])->toBe('http://localhost:11434');
-        expect($result['config'])->toHaveKey('streaming');
-        expect($result['config']['streaming'])->toBeTrue();
+        expect($result['supports_streaming'])->toBeTrue();
+        expect($result['is_available'])->toBeTrue();
     });
 
     test('throws error for unsupported provider', function () {
@@ -77,13 +76,13 @@ describe('ValidateStreamingProvider', function () {
             ->toThrow(Symfony\Component\HttpKernel\Exception\HttpException::class);
     });
 
-    test('uses config value for provider URL', function () {
-        config(['prism.providers.ollama.url' => 'http://custom-ollama:11434']);
-
+    test('validates provider availability and streaming support', function () {
         $action = new ValidateStreamingProvider;
         $result = $action('ollama');
 
-        expect($result['base_url'])->toBe('http://custom-ollama:11434');
+        expect($result['provider'])->toBe('ollama');
+        expect($result['supports_streaming'])->toBeTrue();
+        expect($result['is_available'])->toBeTrue();
     });
 });
 

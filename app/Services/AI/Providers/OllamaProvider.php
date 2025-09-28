@@ -2,6 +2,7 @@
 
 namespace App\Services\AI\Providers;
 
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class OllamaProvider extends AbstractAIProvider
@@ -13,7 +14,7 @@ class OllamaProvider extends AbstractAIProvider
 
     protected function getSupportedOperations(): array
     {
-        return ['text', 'embedding'];
+        return ['text', 'embedding', 'streaming'];
     }
 
     public function getConfigRequirements(): array
@@ -173,6 +174,95 @@ class OllamaProvider extends AbstractAIProvider
             ]);
 
             return [];
+        }
+    }
+
+    /**
+     * Check if provider supports streaming
+     */
+    public function supportsStreaming(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Stream chat completions with real-time deltas
+     */
+    public function streamChat(array $messages, array $options = []): \Generator
+    {
+        $model = $options['model'] ?? 'llama3:latest';
+        $temperature = $options['temperature'] ?? 0.7;
+        $topP = $options['top_p'] ?? null;
+        $maxTokens = $options['max_tokens'] ?? null;
+
+        $request = [
+            'model' => $model,
+            'messages' => $messages,
+            'stream' => true,
+            'options' => [
+                'temperature' => $temperature,
+            ],
+        ];
+
+        // Add top_p if specified
+        if ($topP !== null) {
+            $request['options']['top_p'] = $topP;
+        }
+
+        // Add num_predict if max_tokens specified
+        if ($maxTokens !== null) {
+            $request['options']['num_predict'] = $maxTokens;
+        }
+
+        try {
+            $baseUrl = rtrim($this->getConfigValue('base') ?? 'http://127.0.0.1:11434', '/');
+
+            $response = Http::withOptions(['stream' => true, 'timeout' => 0])
+                ->post("{$baseUrl}/api/chat", $request);
+
+            if ($response->failed()) {
+                throw new \RuntimeException('Ollama streaming request failed: ' . $response->body());
+            }
+
+            $body = $response->toPsrResponse()->getBody();
+            $buffer = '';
+
+            while (! $body->eof()) {
+                $chunk = $body->read(8192);
+                if ($chunk === '') {
+                    usleep(50_000);
+                    continue;
+                }
+                $buffer .= $chunk;
+
+                while (($pos = strpos($buffer, "\n")) !== false) {
+                    $line = trim(substr($buffer, 0, $pos));
+                    $buffer = substr($buffer, $pos + 1);
+
+                    if ($line === '') {
+                        continue;
+                    }
+
+                    $json = json_decode($line, true);
+                    if (! is_array($json)) {
+                        continue;
+                    }
+
+                    // Yield streaming content
+                    if (isset($json['message']['content'])) {
+                        yield $json['message']['content'];
+                    }
+
+                    // Check if stream is complete
+                    if (($json['done'] ?? false) === true) {
+                        return $json; // Return final response with metadata
+                    }
+                }
+            }
+
+        } catch (\Exception $e) {
+            $this->logApiRequest('stream_chat', $request, null, $e);
+            throw $e;
         }
     }
 }

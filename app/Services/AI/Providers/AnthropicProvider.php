@@ -2,6 +2,8 @@
 
 namespace App\Services\AI\Providers;
 
+use Illuminate\Support\Facades\Http;
+
 class AnthropicProvider extends AbstractAIProvider
 {
     protected function getProviderName(): string
@@ -11,7 +13,7 @@ class AnthropicProvider extends AbstractAIProvider
 
     protected function getSupportedOperations(): array
     {
-        return ['text']; // Anthropic doesn't provide embeddings
+        return ['text', 'streaming']; // Anthropic doesn't provide embeddings
     }
 
     public function getConfigRequirements(): array
@@ -125,6 +127,90 @@ class AnthropicProvider extends AbstractAIProvider
                 'status' => 'failed',
                 'error' => $e->getMessage(),
             ];
+        }
+    }
+
+    /**
+     * Check if provider supports streaming
+     */
+    public function supportsStreaming(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Stream chat completions with real-time deltas
+     */
+    public function streamChat(array $messages, array $options = []): \Generator
+    {
+        $model = $options['model'] ?? 'claude-3-5-sonnet-latest';
+        $maxTokens = $options['max_tokens'] ?? 1000;
+        $temperature = $options['temperature'] ?? 0.7;
+
+        $request = [
+            'model' => $model,
+            'messages' => $messages,
+            'max_tokens' => $maxTokens,
+            'temperature' => $temperature,
+            'stream' => true,
+        ];
+
+        try {
+            $baseUrl = $this->getConfigValue('base') ?? 'https://api.anthropic.com';
+            $version = $this->getConfigValue('version') ?? '2023-06-01';
+
+            $response = Http::withOptions(['stream' => true, 'timeout' => 0])
+                ->withHeaders([
+                    'x-api-key' => $this->getConfigValue('key'),
+                    'anthropic-version' => $version,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post("{$baseUrl}/v1/messages", $request);
+
+            if ($response->failed()) {
+                throw new \RuntimeException('Anthropic streaming request failed: ' . $response->body());
+            }
+
+            $body = $response->toPsrResponse()->getBody();
+            $buffer = '';
+
+            while (! $body->eof()) {
+                $chunk = $body->read(8192);
+                if ($chunk === '') {
+                    usleep(50_000);
+                    continue;
+                }
+                $buffer .= $chunk;
+
+                while (($pos = strpos($buffer, "\n")) !== false) {
+                    $line = trim(substr($buffer, 0, $pos));
+                    $buffer = substr($buffer, $pos + 1);
+
+                    if ($line === '' || ! str_starts_with($line, 'data: ')) {
+                        continue;
+                    }
+
+                    $data = substr($line, 6); // Remove "data: " prefix
+                    $json = json_decode($data, true);
+                    if (! is_array($json)) {
+                        continue;
+                    }
+
+                    // Yield streaming content
+                    if (($json['type'] ?? '') === 'content_block_delta' && isset($json['delta']['text'])) {
+                        yield $json['delta']['text'];
+                    }
+
+                    // Check if stream is complete
+                    if (($json['type'] ?? '') === 'message_stop') {
+                        return $json; // Return final response with metadata
+                    }
+                }
+            }
+
+        } catch (\Exception $e) {
+            $this->logApiRequest('stream_chat', $request, null, $e);
+            throw $e;
         }
     }
 }
