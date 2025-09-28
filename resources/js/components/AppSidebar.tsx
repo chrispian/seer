@@ -240,7 +240,12 @@ export function AppSidebar() {
         </Badge>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6"
+              onClick={(e) => e.stopPropagation()}
+            >
               <MoreVertical className="w-3 h-3" />
             </Button>
           </DropdownMenuTrigger>
@@ -335,7 +340,7 @@ export function AppSidebar() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto px-2">
+        <div className="flex-1 overflow-hidden px-2">
           {/* Pinned Chats */}
           {(pinnedSessionsQuery.isLoading || pinnedSessions.length > 0) && (
             <>
@@ -372,11 +377,19 @@ export function AppSidebar() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-5 w-5"
-                onClick={handleNewChat}
+                className="h-6 w-6"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleNewChat()
+                }}
                 disabled={isCreating}
+                title="Create New Chat"
               >
-                <Plus className="w-3 h-3" />
+                {isCreating ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Plus className="w-3 h-3" />
+                )}
               </Button>
             </div>
             <ScrollArea className="h-[300px]">
@@ -408,9 +421,13 @@ export function AppSidebar() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-5 w-5"
-                onClick={() => setProjectDialogOpen(true)} 
+                className="h-6 w-6"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setProjectDialogOpen(true)
+                }} 
                 disabled={!currentVault}
+                title="Create New Project"
               >
                 <Plus className="w-3 h-3" />
               </Button>
