@@ -78,9 +78,15 @@ class ChatApiController extends Controller
 
         $ollamaBase = config('prism.providers.ollama.url', 'http://localhost:11434');
 
-        return new StreamedResponse(function () use ($ollamaBase, $model, $messages, $conversationId, $userFragmentId, $provider) {
+        // Generate session ID for tracking (extend from payload if needed)
+        $sessionId = $payload['session_id'] ?? (string) Str::uuid();
+
+        return new StreamedResponse(function () use ($ollamaBase, $model, $messages, $conversationId, $userFragmentId, $provider, $sessionId) {
             @ini_set('output_buffering', 'off');
             @ini_set('zlib.output_compression', 0);
+
+            // Start latency measurement
+            $startTime = microtime(true);
 
             $response = Http::withOptions(['stream' => true, 'timeout' => 0])
                 ->post(rtrim($ollamaBase, '/').'/api/chat', [
@@ -102,6 +108,8 @@ class ChatApiController extends Controller
             $body = $response->toPsrResponse()->getBody();
             $buffer = '';
             $final = ''; // accumulate assistant text
+            $tokenUsage = ['input' => null, 'output' => null];
+            $ollamaResponse = null;
 
             while (! $body->eof()) {
                 $chunk = $body->read(8192);
@@ -133,25 +141,25 @@ class ChatApiController extends Controller
                     }
 
                     if (($json['done'] ?? false) === true) {
-                        // Persist assistant fragment using RouteFragment action
-                        $routeFragment = app(\App\Actions\RouteFragment::class);
-                        $assistantFragment = $routeFragment($final);
+                        // Capture full Ollama response for token usage
+                        $ollamaResponse = $json;
+                        // Calculate latency and extract token usage
+                        $latencyMs = round((microtime(true) - $startTime) * 1000, 2);
 
-                        // Update the fragment with chat-specific metadata and source
-                        $assistantFragment->update([
-                            'source' => 'chat-ai',
-                            'model_provider' => $provider,
-                            'model_name' => $model,
-                            'relationships' => [
-                                'in_reply_to_id' => $userFragmentId,
-                                'conversation_id' => $conversationId,
-                            ],
-                            'metadata' => array_merge($assistantFragment->metadata ?? [], [
-                                'turn' => 'response',
-                                'conversation_id' => $conversationId,
-                                'provider' => $provider,
-                                'model' => $model,
-                            ]),
+                        // Extract token usage from provider response
+                        $tokenUsage = $this->extractTokenUsage($provider, $ollamaResponse);
+
+                        // Process assistant fragment using pipeline
+                        $processAssistant = app(\App\Actions\ProcessAssistantFragment::class);
+                        $assistantFragment = $processAssistant([
+                            'message' => $final,
+                            'provider' => $provider,
+                            'model' => $model,
+                            'conversation_id' => $conversationId,
+                            'session_id' => $sessionId,
+                            'user_fragment_id' => $userFragmentId,
+                            'latency_ms' => $latencyMs,
+                            'token_usage' => $tokenUsage,
                         ]);
 
                         echo 'data: '.json_encode(['type' => 'done'])."\n\n";
@@ -165,5 +173,36 @@ class ChatApiController extends Controller
             'Cache-Control' => 'no-cache, no-transform',
             'X-Accel-Buffering' => 'no',
         ]);
+    }
+
+    /**
+     * Extract token usage from provider response
+     */
+    private function extractTokenUsage(string $provider, ?array $response): array
+    {
+        if (! $response) {
+            return ['input' => null, 'output' => null];
+        }
+
+        return match ($provider) {
+            'openai' => [
+                'input' => $response['usage']['prompt_tokens'] ?? null,
+                'output' => $response['usage']['completion_tokens'] ?? null,
+            ],
+            'anthropic' => [
+                'input' => $response['usage']['input_tokens'] ?? null,
+                'output' => $response['usage']['output_tokens'] ?? null,
+            ],
+            'ollama' => [
+                'input' => $response['prompt_eval_count'] ?? null,
+                'output' => $response['eval_count'] ?? null,
+            ],
+            'openrouter' => [
+                // OpenRouter typically uses OpenAI format
+                'input' => $response['usage']['prompt_tokens'] ?? null,
+                'output' => $response['usage']['completion_tokens'] ?? null,
+            ],
+            default => ['input' => null, 'output' => null],
+        };
     }
 }
