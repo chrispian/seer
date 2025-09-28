@@ -281,9 +281,9 @@ export default function ChatIsland() {
   }
 
   return (
-    <div className="flex flex-col gap-1 h-full">
+    <div className="flex flex-col h-full">
       {/* Enhanced Transcript with Message Actions */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 mb-2">
         <ChatTranscript
           messages={messages}
           onMessageDelete={handleMessageDelete}
@@ -292,16 +292,18 @@ export default function ChatIsland() {
       </div>
 
       {/* Enhanced Composer with TipTap */}
-      <ChatComposer
-        onSend={onSend}
-        onCommand={handleCommand}
-        disabled={isSending || !currentSessionId}
-        placeholder={
-          currentSessionId
-            ? "Type a message... Use / for commands, [[ for links, # for tags"
-            : "Select a chat session to start messaging"
-        }
-      />
+      <div className="flex-shrink-0">
+        <ChatComposer
+          onSend={onSend}
+          onCommand={handleCommand}
+          disabled={isSending || !currentSessionId}
+          placeholder={
+            currentSessionId
+              ? "Type a message... Use / for commands, [[ for links, # for tags"
+              : "Select a chat session to start messaging"
+          }
+        />
+      </div>
 
       {/* Command Result Modal */}
       <CommandResultModal
