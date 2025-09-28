@@ -5,16 +5,18 @@ import { Card } from '@/components/ui/card'
 import { MessageActions } from './MessageActions'
 
 export interface ChatMessage {
-  id: string
+  id: string // Client-side UUID for React keys
   role: 'user' | 'assistant'
   md: string
   isBookmarked?: boolean
+  messageId?: string // Server-side message ID from API
+  fragmentId?: string // Server-side fragment ID if message becomes a fragment
 }
 
 interface ChatTranscriptProps {
   messages: ChatMessage[]
   onMessageDelete?: (messageId: string) => void
-  onMessageBookmarkToggle?: (messageId: string, bookmarked: boolean) => void
+  onMessageBookmarkToggle?: (messageId: string, bookmarked: boolean, fragmentId?: string) => void
   className?: string
 }
 
@@ -120,6 +122,8 @@ export function ChatTranscript({
             {/* Message Actions */}
             <MessageActions
               messageId={message.id}
+              serverMessageId={message.messageId}
+              serverFragmentId={message.fragmentId}
               content={message.md}
               isBookmarked={message.isBookmarked}
               onDelete={onMessageDelete}

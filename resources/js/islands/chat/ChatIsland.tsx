@@ -21,7 +21,8 @@ export default function ChatIsland() {
     if (!content.trim() || isSending) return
     
     const userId = uuid()
-    setMessages(m => [...m, { id: userId, role: 'user', md: content }])
+    const userMessage: ChatMessage = { id: userId, role: 'user', md: content }
+    setMessages(m => [...m, userMessage])
     setSending(true)
 
     try {
@@ -38,6 +39,11 @@ export default function ChatIsland() {
       })
       const { message_id } = await resp.json()
 
+      // Update user message with server message ID
+      setMessages(m => m.map(msg => 
+        msg.id === userId ? { ...msg, messageId: message_id } : msg
+      ))
+
       // 2) Stream reply
       const es = new EventSource(`/api/chat/stream/${message_id}`)
       const assistantId = uuid()
@@ -53,7 +59,7 @@ export default function ChatIsland() {
               if (last?.id === assistantId) {
                 const copy = [...m]; copy[copy.length - 1] = { ...last, md: acc }; return copy
               }
-              return [...m, { id: assistantId, role: 'assistant', md: acc }]
+              return [...m, { id: assistantId, role: 'assistant', md: acc, messageId: message_id }]
             })
           }
           if (data.type === 'done') { es.close(); setSending(false) }
@@ -70,9 +76,13 @@ export default function ChatIsland() {
     setMessages(m => m.filter(msg => msg.id !== messageId))
   }
 
-  const handleMessageBookmarkToggle = (messageId: string, bookmarked: boolean) => {
+  const handleMessageBookmarkToggle = (messageId: string, bookmarked: boolean, fragmentId?: string) => {
     setMessages(m => m.map(msg => 
-      msg.id === messageId ? { ...msg, isBookmarked: bookmarked } : msg
+      msg.id === messageId ? { 
+        ...msg, 
+        isBookmarked: bookmarked,
+        fragmentId: fragmentId || msg.fragmentId 
+      } : msg
     ))
   }
 

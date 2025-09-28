@@ -19,11 +19,13 @@ import {
 import { Copy, Bookmark, Trash2, MoreVertical } from 'lucide-react'
 
 interface MessageActionsProps {
-  messageId: string
+  messageId: string // Client-side ID for React
+  serverMessageId?: string // Server-side message ID from API
+  serverFragmentId?: string // Server-side fragment ID if exists
   content: string
   isBookmarked?: boolean
   onDelete?: (messageId: string) => void
-  onBookmarkToggle?: (messageId: string, bookmarked: boolean) => void
+  onBookmarkToggle?: (messageId: string, bookmarked: boolean, fragmentId?: string) => void
   className?: string
 }
 
@@ -32,7 +34,9 @@ function useCsrf() {
 }
 
 export function MessageActions({ 
-  messageId, 
+  messageId,
+  serverMessageId,
+  serverFragmentId,
   content, 
   isBookmarked = false,
   onDelete,
@@ -85,48 +89,82 @@ export function MessageActions({
     setIsTogglingBookmark(true)
     try {
       if (!bookmarked) {
-        // Create a new fragment from the chat message
-        const response = await fetch('/api/fragment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrf,
-          },
-          body: JSON.stringify({
-            message: content,
-            type: 'chat', // or some appropriate type for chat messages
-          }),
-        })
-        
-        if (!response.ok) {
-          throw new Error('Failed to create fragment')
+        // If we already have a fragment ID, bookmark it directly
+        if (serverFragmentId) {
+          const bookmarkResponse = await fetch(`/api/fragments/${serverFragmentId}/bookmark`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrf,
+            },
+          })
+          
+          if (!bookmarkResponse.ok) {
+            throw new Error('Failed to bookmark existing fragment')
+          }
+          
+          setBookmarked(true)
+          onBookmarkToggle?.(messageId, true, serverFragmentId)
+        } else {
+          // Create a new fragment from the chat message
+          const response = await fetch('/api/fragment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrf,
+            },
+            body: JSON.stringify({
+              message: content,
+              type: 'chat',
+            }),
+          })
+          
+          if (!response.ok) {
+            throw new Error('Failed to create fragment')
+          }
+          
+          const fragmentData = await response.json()
+          const fragmentId = fragmentData.id
+          
+          // Now bookmark the created fragment
+          const bookmarkResponse = await fetch(`/api/fragments/${fragmentId}/bookmark`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrf,
+            },
+          })
+          
+          if (!bookmarkResponse.ok) {
+            throw new Error('Failed to bookmark fragment')
+          }
+          
+          setBookmarked(true)
+          onBookmarkToggle?.(messageId, true, fragmentId)
         }
-        
-        const fragmentData = await response.json()
-        const fragmentId = fragmentData.id
-        
-        // Now bookmark the created fragment
-        const bookmarkResponse = await fetch(`/api/fragments/${fragmentId}/bookmark`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrf,
-          },
-        })
-        
-        if (!bookmarkResponse.ok) {
-          throw new Error('Failed to bookmark fragment')
-        }
-        
-        setBookmarked(true)
-        onBookmarkToggle?.(messageId, true)
       } else {
-        // For now, we can't easily remove bookmarks from chat messages
-        // since we don't store the fragment ID mapping
-        // This could be enhanced by storing fragment IDs with chat messages
-        console.log('Removing bookmark not implemented for chat messages')
-        setBookmarked(false)
-        onBookmarkToggle?.(messageId, false)
+        // Remove bookmark if we have a fragment ID
+        if (serverFragmentId) {
+          const bookmarkResponse = await fetch(`/api/fragments/${serverFragmentId}/bookmark`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrf,
+            },
+          })
+          
+          if (!bookmarkResponse.ok) {
+            throw new Error('Failed to unbookmark fragment')
+          }
+          
+          setBookmarked(false)
+          onBookmarkToggle?.(messageId, false)
+        } else {
+          console.log('Cannot remove bookmark: no fragment ID available')
+          // Just update local state for now
+          setBookmarked(false)
+          onBookmarkToggle?.(messageId, false)
+        }
       }
     } catch (error) {
       console.error('Failed to toggle bookmark:', error)
@@ -141,13 +179,29 @@ export function MessageActions({
     
     setIsDeleting(true)
     try {
-      // For chat messages, we just remove them from local state
-      // No API call needed since they're not stored as fragments
+      // If we have a server fragment ID, try to delete it from the server
+      if (serverFragmentId) {
+        const response = await fetch(`/api/fragments/${serverFragmentId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrf,
+          },
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to delete fragment from server')
+        }
+      }
+      
+      // Always remove from local state (even if server delete fails)
       onDelete?.(messageId)
       setShowDeleteDialog(false)
     } catch (error) {
       console.error('Failed to delete message:', error)
-      // Could show error toast here
+      // Still remove from local state even if server delete failed
+      onDelete?.(messageId)
+      setShowDeleteDialog(false)
     } finally {
       setIsDeleting(false)
     }
