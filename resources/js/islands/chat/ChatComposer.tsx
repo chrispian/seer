@@ -23,7 +23,7 @@ import {
 } from './tiptap/extensions/FileUpload'
 
 interface ChatComposerProps {
-  onSend: (content: string) => void
+  onSend: (content: string, attachments?: Array<{markdown: string, url: string, filename: string}>) => void
   disabled?: boolean
   placeholder?: string
 }
@@ -35,6 +35,7 @@ export function ChatComposer({
 }: ChatComposerProps) {
   const [isListening, setIsListening] = useState(false)
   const [speechSupported, setSpeechSupported] = useState(false)
+  const [pendingAttachments, setPendingAttachments] = useState<Array<{markdown: string, url: string, filename: string}>>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
 
@@ -124,9 +125,19 @@ export function ChatComposer({
     const markdown = editor.storage.markdown.getMarkdown()
     const trimmed = markdown.trim()
     
-    if (trimmed) {
-      onSend(trimmed)
+    // Combine text content with file attachments
+    if (trimmed || pendingAttachments.length > 0) {
+      let finalContent = trimmed
+      
+      // Add file references at the end
+      if (pendingAttachments.length > 0) {
+        const fileReferences = pendingAttachments.map(att => att.markdown).join('\n')
+        finalContent = trimmed ? `${trimmed}\n\n${fileReferences}` : fileReferences
+      }
+      
+      onSend(finalContent, pendingAttachments)
       editor.commands.clearContent()
+      setPendingAttachments([])
     }
   }
 
@@ -154,8 +165,8 @@ export function ChatComposer({
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
-    if (!files || !editor) {
-      console.log('No files or editor not ready')
+    if (!files) {
+      console.log('No files selected')
       return
     }
     
@@ -165,23 +176,24 @@ export function ChatComposer({
       try {
         console.log('Starting upload for file:', file.name, 'size:', file.size, 'type:', file.type)
         
-        // Show some loading state could be added here
-        const result = await uploadFile(file)
-        console.log('Upload successful, result:', result)
+        const uploadResult = await uploadFile(file)
+        console.log('Upload successful, result:', uploadResult)
         
-        if (result.markdown) {
-          const success = editor.commands.insertContent(result.markdown + ' ')
-          console.log('Markdown inserted:', result.markdown, 'success:', success)
+        if (uploadResult.markdown) {
+          // Add to pending attachments instead of inserting into editor
+          const attachment = {
+            markdown: uploadResult.markdown,
+            url: uploadResult.url || '',
+            filename: file.name
+          }
           
-          // Focus the editor after insertion
-          editor.commands.focus()
+          setPendingAttachments(prev => [...prev, attachment])
+          console.log('Added attachment:', attachment)
         } else {
-          console.error('No markdown in result:', result)
+          console.error('No markdown in result:', uploadResult)
         }
       } catch (error) {
         console.error('File upload failed for', file.name, ':', error)
-        // For now, insert a simple fallback
-        editor.commands.insertContent(`[Upload failed: ${file.name}] `)
       }
     }
     
@@ -193,6 +205,29 @@ export function ChatComposer({
 
   return (
     <Card className="p-3">
+      {/* Pending Attachments Preview */}
+      {pendingAttachments.length > 0 && (
+        <div className="mb-3 p-2 bg-muted rounded-md">
+          <div className="text-xs text-muted-foreground mb-1">Attachments ({pendingAttachments.length}):</div>
+          <div className="space-y-1">
+            {pendingAttachments.map((attachment, index) => (
+              <div key={index} className="flex items-center gap-2 text-xs">
+                <Paperclip className="w-3 h-3" />
+                <span className="flex-1 truncate">{attachment.filename}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-4 w-4"
+                  onClick={() => setPendingAttachments(prev => prev.filter((_, i) => i !== index))}
+                >
+                  ×
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
       <div className="flex items-end gap-3">
         <div className="flex-1 relative">
           <EditorContent 
@@ -237,7 +272,7 @@ export function ChatComposer({
           {/* Send Button */}
           <Button 
             onClick={handleSend} 
-            disabled={disabled || isEmpty}
+            disabled={disabled || (isEmpty && pendingAttachments.length === 0)}
             className="min-w-[80px]"
           >
             {disabled ? 'Sending…' : 'Send'}

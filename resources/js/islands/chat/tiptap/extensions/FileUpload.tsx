@@ -112,7 +112,7 @@ export const FileUpload = Extension.create<FileUploadOptions>({
   },
 })
 
-export async function uploadFile(file: File): Promise<{ markdown: string }> {
+export async function uploadFile(file: File): Promise<{ markdown: string; url?: string }> {
   console.log('uploadFile called with:', file.name, file.size, file.type)
   
   const formData = new FormData()
@@ -150,5 +150,5 @@ export async function uploadFile(file: File): Promise<{ markdown: string }> {
     throw new Error('Upload failed: ' + (data.message || 'Unknown error'))
   }
   
-  return { markdown: data.markdown }
+  return { markdown: data.markdown, url: data.url }
 }

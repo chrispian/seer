@@ -13,7 +13,7 @@ export default function ChatIsland() {
   const [isSending, setSending] = useState(false)
   const csrf = useCsrf()
 
-  async function onSend(content: string) {
+  async function onSend(content: string, attachments?: Array<{markdown: string, url: string, filename: string}>) {
     if (!content.trim() || isSending) return
     
     const userId = uuid()
@@ -21,11 +21,16 @@ export default function ChatIsland() {
     setSending(true)
 
     try {
-      // 1) Create message -> get message_id
+      // 1) Create message -> get message_id (include attachments if any)
+      const payload: any = { content }
+      if (attachments && attachments.length > 0) {
+        payload.attachments = attachments
+      }
+      
       const resp = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify(payload),
       })
       const { message_id } = await resp.json()
 
