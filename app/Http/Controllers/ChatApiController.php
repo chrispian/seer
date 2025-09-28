@@ -28,6 +28,7 @@ class ChatApiController extends Controller
         $userFragmentId = $fragment->id;
 
         // Update the fragment with chat-specific metadata and source
+        // TODO: Should this logic be in the pipeline code? Feels wrong to have this here.
         $fragment->update([
             'source' => 'chat-user',
             'metadata' => array_merge($fragment->metadata ?? [], [
@@ -39,11 +40,14 @@ class ChatApiController extends Controller
         ]);
 
         // Minimal chat history for the AI call (extend with real history later)
+        // TODO: Implement real history
+        // TODO: Implement real system message system so they aren't hard coded.
         $messages = [
             ['role' => 'system', 'content' => 'You are a helpful assistant.'],
             ['role' => 'user',   'content' => $data['content']],
         ];
 
+        // TODO: The cache section seems like it should extracted to either a helper or service or similar pattern.
         cache()->put("msg:{$messageId}", [
             'messages' => $messages,      // system + user
             'provider' => $data['provider'] ?? config('fragments.models.fallback_provider', 'ollama'),
@@ -61,148 +65,75 @@ class ChatApiController extends Controller
 
     public function stream(string $messageId)
     {
-        $payload = cache()->get("msg:{$messageId}");
-        if (! $payload) {
-            abort(404, 'Message not found or expired');
-        }
+        // Retrieve and validate session
+        $session = app(\App\Actions\RetrieveChatSession::class)($messageId);
 
-        $provider = $payload['provider'] ?? 'ollama';
-        $model = $payload['model'] ?? 'llama3:latest';
-        $messages = $payload['messages'] ?? [];
-        $conversationId = $payload['conversation_id'] ?? null;
-        $userFragmentId = $payload['user_fragment_id'] ?? null;
+        // Validate streaming provider
+        $providerConfig = app(\App\Actions\ValidateStreamingProvider::class)($session['provider']);
 
-        if ($provider !== 'ollama') {
-            abort(400, 'Only ollama streaming enabled for now');
-        }
+        // Configure HTTP client for provider
+        $response = app(\App\Actions\ConfigureProviderClient::class)(
+            $providerConfig,
+            $session['model'],
+            $session['messages']
+        );
 
-        $ollamaBase = config('prism.providers.ollama.url', 'http://localhost:11434');
-
-        // Generate session ID for tracking (extend from payload if needed)
-        $sessionId = $payload['session_id'] ?? (string) Str::uuid();
-
-        return new StreamedResponse(function () use ($ollamaBase, $model, $messages, $conversationId, $userFragmentId, $provider, $sessionId) {
+        return new StreamedResponse(function () use ($response, $session) {
             @ini_set('output_buffering', 'off');
             @ini_set('zlib.output_compression', 0);
 
             // Start latency measurement
             $startTime = microtime(true);
 
-            $response = Http::withOptions(['stream' => true, 'timeout' => 0])
-                ->post(rtrim($ollamaBase, '/').'/api/chat', [
-                    'model' => $model,
-                    'messages' => $messages,
-                    'stream' => true,
-                ]);
-
+            // Handle failed response
             if ($response->failed()) {
-                // surface an error to the client stream and stop
-                echo 'data: '.json_encode(['type' => 'assistant_delta', 'content' => "[stream error: {$response->status()}]"])."\n\n";
-                echo 'data: '.json_encode(['type' => 'done'])."\n\n";
-                @ob_flush();
-                @flush();
+                app(\App\Actions\HandleStreamingError::class)($response, function ($errorMessage) {
+                    echo 'data: '.json_encode(['type' => 'assistant_delta', 'content' => $errorMessage])."\n\n";
+                    echo 'data: '.json_encode(['type' => 'done'])."\n\n";
+                    @ob_flush();
+                    @flush();
+                });
 
                 return;
             }
 
-            $body = $response->toPsrResponse()->getBody();
-            $buffer = '';
-            $final = ''; // accumulate assistant text
-            $tokenUsage = ['input' => null, 'output' => null];
-            $ollamaResponse = null;
-
-            while (! $body->eof()) {
-                $chunk = $body->read(8192);
-                if ($chunk === '') {
-                    usleep(50_000);
-
-                    continue;
+            // Process streaming response
+            $streamResult = app(\App\Actions\StreamProviderResponse::class)(
+                $response,
+                $session['provider'],
+                // onDelta callback
+                function ($delta) {
+                    echo 'data: '.json_encode(['type' => 'assistant_delta', 'content' => $delta])."\n\n";
+                    @ob_flush();
+                    @flush();
+                },
+                // onComplete callback
+                function () {
+                    echo 'data: '.json_encode(['type' => 'done'])."\n\n";
+                    @ob_flush();
+                    @flush();
                 }
-                $buffer .= $chunk;
+            );
 
-                while (($pos = strpos($buffer, "\n")) !== false) {
-                    $line = trim(substr($buffer, 0, $pos));
-                    $buffer = substr($buffer, $pos + 1);
-                    if ($line === '') {
-                        continue;
-                    }
+            // Calculate latency and extract token usage
+            $latencyMs = round((microtime(true) - $startTime) * 1000, 2);
+            $tokenUsage = app(\App\Actions\ExtractTokenUsage::class)($session['provider'], $streamResult['provider_response']);
 
-                    $json = json_decode($line, true);
-                    if (! is_array($json)) {
-                        continue;
-                    }
-
-                    if (isset($json['message']['content'])) {
-                        $delta = $json['message']['content'];
-                        $final .= $delta;
-                        echo 'data: '.json_encode(['type' => 'assistant_delta', 'content' => $delta])."\n\n";
-                        @ob_flush();
-                        @flush();
-                    }
-
-                    if (($json['done'] ?? false) === true) {
-                        // Capture full Ollama response for token usage
-                        $ollamaResponse = $json;
-                        // Calculate latency and extract token usage
-                        $latencyMs = round((microtime(true) - $startTime) * 1000, 2);
-
-                        // Extract token usage from provider response
-                        $tokenUsage = $this->extractTokenUsage($provider, $ollamaResponse);
-
-                        // Process assistant fragment using pipeline
-                        $processAssistant = app(\App\Actions\ProcessAssistantFragment::class);
-                        $assistantFragment = $processAssistant([
-                            'message' => $final,
-                            'provider' => $provider,
-                            'model' => $model,
-                            'conversation_id' => $conversationId,
-                            'session_id' => $sessionId,
-                            'user_fragment_id' => $userFragmentId,
-                            'latency_ms' => $latencyMs,
-                            'token_usage' => $tokenUsage,
-                        ]);
-
-                        echo 'data: '.json_encode(['type' => 'done'])."\n\n";
-                        @ob_flush();
-                        @flush();
-                    }
-                }
-            }
+            // Process assistant fragment using pipeline
+            app(\App\Actions\ProcessAssistantFragment::class)([
+                'message' => $streamResult['final_message'],
+                'provider' => $session['provider'],
+                'model' => $session['model'],
+                'conversation_id' => $session['conversation_id'],
+                'session_id' => $session['session_id'],
+                'user_fragment_id' => $session['user_fragment_id'],
+                'latency_ms' => $latencyMs,
+                'token_usage' => $tokenUsage,
+            ]);
         }, 200, [
             'Content-Type' => 'text/event-stream',
             'Cache-Control' => 'no-cache, no-transform',
             'X-Accel-Buffering' => 'no',
         ]);
-    }
-
-    /**
-     * Extract token usage from provider response
-     */
-    private function extractTokenUsage(string $provider, ?array $response): array
-    {
-        if (! $response) {
-            return ['input' => null, 'output' => null];
-        }
-
-        return match ($provider) {
-            'openai' => [
-                'input' => $response['usage']['prompt_tokens'] ?? null,
-                'output' => $response['usage']['completion_tokens'] ?? null,
-            ],
-            'anthropic' => [
-                'input' => $response['usage']['input_tokens'] ?? null,
-                'output' => $response['usage']['output_tokens'] ?? null,
-            ],
-            'ollama' => [
-                'input' => $response['prompt_eval_count'] ?? null,
-                'output' => $response['eval_count'] ?? null,
-            ],
-            'openrouter' => [
-                // OpenRouter typically uses OpenAI format
-                'input' => $response['usage']['prompt_tokens'] ?? null,
-                'output' => $response['usage']['completion_tokens'] ?? null,
-            ],
-            default => ['input' => null, 'output' => null],
-        };
     }
 }
