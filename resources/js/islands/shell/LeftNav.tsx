@@ -1,9 +1,7 @@
 import React from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { Plus, MessageSquare, Terminal, Pin, Trash2 } from 'lucide-react'
 
 export function LeftNav() {
@@ -15,38 +13,38 @@ export function LeftNav() {
   ]
 
   return (
-    <div className="w-72 bg-gray-900/95 border-r border-gray-700 flex flex-col">
+    <div className="w-72 bg-white border-r flex flex-col">
       {/* Vault Selection */}
-      <Card className="m-4 bg-gray-800 border-pink-500/20">
+      <Card className="m-4">
         <CardHeader className="pb-2">
-          <h3 className="text-xs font-medium text-pink-400">Vault</h3>
+          <h3 className="text-xs font-medium text-muted-foreground">Vault</h3>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex space-x-1">
-            <select className="flex-1 bg-gray-700 text-sm text-pink-400 rounded-l p-2 border border-pink-500/20 focus:border-pink-500">
+            <select className="flex-1 text-sm rounded-l p-2 border border-input bg-background">
               <option>work</option>
               <option>personal</option>
               <option>clients</option>
             </select>
-            <Button variant="outline" size="icon" className="px-3 bg-gray-700 border-pink-500/20 hover:bg-pink-500/20">
-              <Plus className="w-4 h-4 text-pink-500" />
+            <Button variant="outline" size="icon" className="px-3">
+              <Plus className="w-4 h-4" />
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Project Selection */}
-      <Card className="mx-4 mb-4 bg-gray-800 border-blue-500/20">
+      <Card className="mx-4 mb-4">
         <CardHeader className="pb-2">
-          <h3 className="text-xs font-medium text-blue-400">Project</h3>
+          <h3 className="text-xs font-medium text-muted-foreground">Project</h3>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex space-x-1">
-            <select className="flex-1 bg-gray-700 text-sm text-blue-400 rounded-l p-2 border border-blue-500/20 focus:border-blue-500">
+            <select className="flex-1 text-sm rounded-l p-2 border border-input bg-background">
               <option>Engineering</option>
             </select>
-            <Button variant="outline" size="icon" className="px-3 bg-gray-700 border-blue-500/20 hover:bg-blue-500/20">
-              <Plus className="w-4 h-4 text-blue-500" />
+            <Button variant="outline" size="icon" className="px-3">
+              <Plus className="w-4 h-4" />
             </Button>
           </div>
         </CardContent>
@@ -55,7 +53,7 @@ export function LeftNav() {
       {/* Chat History */}
       <div className="flex-1 px-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-medium text-blue-400 flex items-center">
+          <h3 className="text-xs font-medium text-muted-foreground flex items-center">
             <MessageSquare className="w-3 h-3 mr-1" />
             Recent Chats
           </h3>
@@ -67,26 +65,17 @@ export function LeftNav() {
               key={chat.id}
               className={`p-2 cursor-pointer transition-all ${
                 chat.active
-                  ? 'bg-pink-500/20 border-l-2 border-l-pink-500 border-r border-t border-b border-pink-500/20'
-                  : 'bg-gray-800 hover:bg-blue-500/10 border border-gray-700'
+                  ? 'bg-accent border-l-2 border-l-primary'
+                  : 'hover:bg-accent/50'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0 mr-2">
-                  <span className={`text-sm truncate block ${
-                    chat.active ? 'text-pink-400' : 'text-gray-300'
-                  }`}>
+                  <span className="text-sm truncate block">
                     {chat.title}
                   </span>
                 </div>
-                <Badge 
-                  variant="secondary" 
-                  className={`${
-                    chat.active 
-                      ? 'bg-pink-500/30 text-pink-400' 
-                      : 'bg-blue-500/20 text-blue-400'
-                  }`}
-                >
+                <Badge variant="secondary">
                   {chat.count}
                 </Badge>
                 <div className="flex items-center space-x-1 ml-2">
@@ -104,12 +93,12 @@ export function LeftNav() {
       </div>
 
       {/* New Chat & Commands */}
-      <div className="p-4 border-t border-gray-700 space-y-2">
-        <Button className="w-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/40">
+      <div className="p-4 border-t space-y-2">
+        <Button variant="outline" className="w-full">
           <Plus className="w-4 h-4 mr-1" />
           New Chat
         </Button>
-        <Button className="w-full bg-pink-600 hover:bg-pink-700 text-white">
+        <Button className="w-full">
           <Terminal className="w-4 h-4 mr-1" />
           Commands
         </Button>

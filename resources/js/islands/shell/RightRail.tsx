@@ -31,23 +31,23 @@ export function RightRail() {
   }
 
   return (
-    <div className="w-80 bg-gray-900/95 border-l border-gray-700 flex flex-col">
+    <div className="w-80 bg-white border-l flex flex-col">
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {/* Today's Activity Stats */}
-        <Card className="bg-gray-800 border border-pink-500/20">
+        <Card>
           <CardHeader className="pb-2">
-            <h4 className="text-xs font-medium text-pink-400">Today's Activity</h4>
+            <h4 className="text-xs font-medium">Today's Activity</h4>
           </CardHeader>
           <CardContent className="pt-0 space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">Messages</span>
-              <Badge variant="secondary" className="bg-pink-500/20 text-pink-400">
+              <span className="text-xs text-muted-foreground">Messages</span>
+              <Badge variant="secondary">
                 {todayStats.messages}
               </Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">Commands</span>
-              <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
+              <span className="text-xs text-muted-foreground">Commands</span>
+              <Badge variant="secondary">
                 {todayStats.commands}
               </Badge>
             </div>
@@ -55,15 +55,15 @@ export function RightRail() {
         </Card>
 
         {/* Recent Bookmarks Widget */}
-        <Card className="bg-gray-800 border border-cyan-500/20">
+        <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-medium text-cyan-400">Recent Bookmarks</h4>
+              <h4 className="text-xs font-medium">Recent Bookmarks</h4>
               {!bookmarkSearchMode ? (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 text-gray-400 hover:text-cyan-400"
+                  className="h-6 w-6"
                   onClick={() => setBookmarkSearchMode(true)}
                 >
                   <Search className="w-3 h-3" />
@@ -72,7 +72,7 @@ export function RightRail() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 text-gray-400 hover:text-cyan-400"
+                  className="h-6 w-6"
                   onClick={clearBookmarkSearch}
                 >
                   <X className="w-3 h-3" />
@@ -88,7 +88,7 @@ export function RightRail() {
                   value={bookmarkSearchQuery}
                   onChange={(e) => handleBookmarkSearch(e.target.value)}
                   placeholder="Search bookmarks..."
-                  className="bg-gray-700 text-gray-300 text-xs border-cyan-500/40 focus:border-cyan-500"
+                  className="text-xs"
                   autoFocus
                 />
               </div>
@@ -97,20 +97,20 @@ export function RightRail() {
             {/* Bookmarks List */}
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {recentBookmarks.length === 0 ? (
-                <div className="text-center text-gray-500 text-xs py-4">
+                <div className="text-center text-muted-foreground text-xs py-4">
                   {bookmarkSearchMode ? 'No results found' : 'No bookmarks yet'}
                 </div>
               ) : (
                 recentBookmarks.map((bookmark) => (
                   <div
                     key={bookmark.id}
-                    className="flex items-center space-x-2 text-xs cursor-pointer hover:bg-cyan-500/10 p-2 rounded transition-colors"
+                    className="flex items-center space-x-2 text-xs cursor-pointer hover:bg-accent p-2 rounded transition-colors"
                   >
-                    <Bookmark className="w-3 h-3 text-pink-500 flex-shrink-0" />
-                    <span className="text-gray-300 flex-1 truncate" title={bookmark.fragment_title}>
+                    <Bookmark className="w-3 h-3 flex-shrink-0" />
+                    <span className="flex-1 truncate" title={bookmark.fragment_title}>
                       {bookmark.name}
                     </span>
-                    <span className="text-gray-500 text-xs flex-shrink-0">{bookmark.updated_at}</span>
+                    <span className="text-muted-foreground text-xs flex-shrink-0">{bookmark.updated_at}</span>
                   </div>
                 ))
               )}
@@ -118,20 +118,20 @@ export function RightRail() {
           </CardContent>
         </Card>
 
-        {/* Placeholder for additional widgets */}
-        <Card className="bg-gray-800 border border-gray-600">
+        {/* Quick Actions */}
+        <Card>
           <CardHeader className="pb-2">
-            <h4 className="text-xs font-medium text-gray-400">Quick Actions</h4>
+            <h4 className="text-xs font-medium">Quick Actions</h4>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2">
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start bg-gray-700 hover:bg-gray-600">
+              <Button variant="outline" size="sm" className="w-full text-xs justify-start">
                 🔍 Search All
               </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start bg-gray-700 hover:bg-gray-600">
+              <Button variant="outline" size="sm" className="w-full text-xs justify-start">
                 📝 New Note
               </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start bg-gray-700 hover:bg-gray-600">
+              <Button variant="outline" size="sm" className="w-full text-xs justify-start">
                 ⚙️ Settings
               </Button>
             </div>

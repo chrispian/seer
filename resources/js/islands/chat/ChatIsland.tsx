@@ -72,7 +72,7 @@ export default function ChatIsland() {
           {messages.map(m => (
             <div key={m.id} className="flex gap-3">
               <div className="w-8 h-8 rounded-full shrink-0 bg-black text-white grid place-items-center text-xs">
-                {m.role === 'user' ? 'U' : 'AI'}
+                {m.role === 'user' ? 'CB' : 'AI'}
               </div>
               <div className="prose prose-sm max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.md}</ReactMarkdown>
