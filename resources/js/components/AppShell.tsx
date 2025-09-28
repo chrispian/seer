@@ -68,8 +68,8 @@ function AppContent() {
       <ChatSessionProvider>
         <SidebarProvider
           style={{
-            "--sidebar-width": "13rem", // Very compact width (208px vs 288px)
-            "--sidebar-width-mobile": "15rem",
+            "--sidebar-width": "18rem", // Back to original width (288px)
+            "--sidebar-width-mobile": "18rem",
           }}
         >
           <div className="h-screen flex bg-background">
@@ -79,22 +79,25 @@ function AppContent() {
             {/* Compact Sidebar */}
             <AppSidebar />
             
-            {/* Main Content */}
-            <SidebarInset>
-              <div className="flex-1 flex flex-col min-w-0">
+            {/* Main Content with proper inset */}
+            <SidebarInset className="flex-1">
+              <div className="flex flex-col h-full">
                 <div className="flex items-center gap-2 px-4 py-2 border-b">
                   <SidebarTrigger className="-ml-1" />
                   <div className="flex-1">
                     <ChatHeader />
                   </div>
                 </div>
-                <ChatIsland />
+                <div className="flex-1 min-h-0">
+                  <ChatIsland />
+                </div>
               </div>
             </SidebarInset>
             
             {/* Right Sidebar */}
             <RightRail />
           </div>
+        </SidebarProvider>
           
           {/* Toast Notifications */}
           <ToastContainer toasts={toasts} onRemove={removeToast} />

@@ -247,7 +247,8 @@ export function AppSidebar() {
         <SidebarMenuButton
           onClick={() => handleSwitchSession(session.id)}
           isActive={currentSession?.id === session.id}
-          className="w-full justify-start"
+          className="w-full justify-start h-7 px-2 py-1"
+          size="sm"
         >
           {showPinHandle && (
             <GripVertical className="w-3 h-3 text-sidebar-foreground/50 cursor-grab" />
@@ -308,7 +309,7 @@ export function AppSidebar() {
     <ErrorBoundary context="sidebar">
       <Sidebar className="border-r">
         {/* Vault Selection Header */}
-        <SidebarHeader>
+        <SidebarHeader className="p-2">
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>
@@ -364,14 +365,14 @@ export function AppSidebar() {
           {/* Pinned Chats */}
           {(pinnedSessionsQuery.isLoading || pinnedSessions.length > 0) && (
             <>
-              <SidebarGroup>
-                <SidebarGroupLabel>
+              <SidebarGroup className="py-1">
+                <SidebarGroupLabel className="px-2 py-1 h-6">
                   <Pin className="w-4 h-4" />
                   Pinned Chats
                 </SidebarGroupLabel>
-                <SidebarGroupContent>
+                <SidebarGroupContent className="px-2">
                   <ScrollArea className="h-[200px]">
-                    <SidebarMenu>
+                    <SidebarMenu className="gap-0.5">
                       {pinnedSessionsQuery.isLoading ? (
                         Array.from({ length: 2 }).map((_, i) => (
                           <SidebarMenuItem key={`pinned-skeleton-${i}`}>
@@ -385,13 +386,13 @@ export function AppSidebar() {
                   </ScrollArea>
                 </SidebarGroupContent>
               </SidebarGroup>
-              <SidebarSeparator />
+              <SidebarSeparator className="my-1" />
             </>
           )}
 
           {/* Recent Chats */}
-          <SidebarGroup>
-            <SidebarGroupLabel>
+          <SidebarGroup className="py-1">
+            <SidebarGroupLabel className="px-2 py-1 h-6">
               <MessageSquare className="w-4 h-4" />
               Recent Chats
             </SidebarGroupLabel>
@@ -399,9 +400,9 @@ export function AppSidebar() {
               <Plus className="w-4 h-4" />
               <span className="sr-only">Add Chat</span>
             </SidebarGroupAction>
-            <SidebarGroupContent>
+            <SidebarGroupContent className="px-2">
               <ScrollArea className="h-[300px]">
-                <SidebarMenu>
+                <SidebarMenu className="gap-0.5">
                   {isLoadingSessions ? (
                     Array.from({ length: 3 }).map((_, i) => (
                       <SidebarMenuItem key={`recent-skeleton-${i}`}>
@@ -420,11 +421,11 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          <SidebarSeparator />
+          <SidebarSeparator className="my-1" />
 
           {/* Projects */}
-          <SidebarGroup>
-            <SidebarGroupLabel>
+          <SidebarGroup className="py-1">
+            <SidebarGroupLabel className="px-2 py-1 h-6">
               <Folder className="w-4 h-4" />
               Projects
             </SidebarGroupLabel>
@@ -432,9 +433,9 @@ export function AppSidebar() {
               <Plus className="w-4 h-4" />
               <span className="sr-only">Add Project</span>
             </SidebarGroupAction>
-            <SidebarGroupContent>
+            <SidebarGroupContent className="px-2">
               <ScrollArea className="h-[200px]">
-                <SidebarMenu>
+                <SidebarMenu className="gap-0.5">
                   {isLoadingProjects ? (
                     Array.from({ length: 2 }).map((_, i) => (
                       <SidebarMenuItem key={`project-skeleton-${i}`}>
@@ -452,6 +453,8 @@ export function AppSidebar() {
                           onClick={() => switchProjectMutation.mutate(project.id)}
                           isActive={currentProject?.id === project.id}
                           disabled={switchProjectMutation.isPending}
+                          className="h-7 px-2 py-1"
+                          size="sm"
                         >
                           <Folder className="w-4 h-4" />
                           <span className="truncate">{project.name}</span>
@@ -469,7 +472,7 @@ export function AppSidebar() {
         </SidebarContent>
 
         {/* User Menu Footer */}
-        <SidebarFooter>
+        <SidebarFooter className="p-2">
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>
