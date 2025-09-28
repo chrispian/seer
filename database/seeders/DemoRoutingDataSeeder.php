@@ -34,7 +34,7 @@ class DemoRoutingDataSeeder extends Seeder
             ['name' => 'personal'],
             [
                 'description' => 'Personal thoughts, ideas, and tasks',
-                'is_default' => false,
+                'is_default' => true,
                 'sort_order' => 2,
             ]
         );

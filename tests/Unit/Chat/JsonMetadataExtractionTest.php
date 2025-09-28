@@ -1,158 +1,166 @@
 <?php
 
 use App\Actions\ExtractJsonMetadata;
+use App\Models\Fragment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use ReflectionClass;
 
 uses(RefreshDatabase::class);
 
-test('extractJsonMetadata correctly parses valid JSON block', function () {
-    $extractor = new ExtractJsonMetadata;
-    $reflection = new ReflectionClass($extractor);
-    $method = $reflection->getMethod('extractJsonMetadata');
-    $method->setAccessible(true);
+test('extracts valid JSON metadata from assistant response', function () {
+    $fragment = Fragment::factory()->create(['message' => 'Initial message']);
 
-    $message = <<<'MESSAGE'
-Hello! Here's my response.
+    $action = new ExtractJsonMetadata;
+    $payload = [
+        'fragment' => $fragment,
+        'data' => [
+            'message' => 'Here is my response.
 
 <<<JSON_METADATA>>>
 {
+    "facets": {"intent": "helpful_response"},
     "tags": ["helpful", "response"],
-    "facets": {"category": "assistance", "priority": "high"},
-    "links": ["https://example.com"]
+    "links": [{"url": "https://example.com", "title": "Example"}]
 }
-<<<END_JSON_METADATA>>>
+<<<END_JSON_METADATA>>>',
+        ],
+    ];
 
-That's all folks!
-MESSAGE;
+    $result = $action->handle($payload, fn ($p) => $p);
 
-    $result = $method->invokeArgs($extractor, [$message]);
+    expect($result['json_metadata']['found'])->toBeTrue();
+    expect($result['json_metadata']['metadata'])->toBe(['intent' => 'helpful_response']);
+    expect($result['json_metadata']['tags'])->toBe(['helpful', 'response']);
+    expect($result['json_metadata']['links'])->toBe([['url' => 'https://example.com', 'title' => 'Example']]);
 
-    expect($result['found'])->toBeTrue();
-    expect($result['tags'])->toBe(['helpful', 'response']);
-    expect($result['metadata'])->toBe(['category' => 'assistance', 'priority' => 'high']);
-    expect($result['links'])->toBe(['https://example.com']);
-    expect($result['cleaned_message'])->toBe("Hello! Here's my response.\n\n\n\nThat's all folks!");
+    // Fragment should be updated with cleaned message
+    $fragment->refresh();
+    expect($fragment->message)->toBe('Here is my response.');
 });
 
-test('extractJsonMetadata handles malformed JSON gracefully', function () {
-    $extractor = new ExtractJsonMetadata;
-    $reflection = new ReflectionClass($extractor);
-    $method = $reflection->getMethod('extractJsonMetadata');
-    $method->setAccessible(true);
+test('handles malformed JSON metadata gracefully', function () {
+    $fragment = Fragment::factory()->create(['message' => 'Initial message']);
 
-    $message = <<<'MESSAGE'
-Response with bad JSON.
+    $action = new ExtractJsonMetadata;
+    $payload = [
+        'fragment' => $fragment,
+        'data' => [
+            'message' => 'Response with bad JSON.
 
 <<<JSON_METADATA>>>
-{
-    "tags": ["test",
-    "broken": json
-}
-<<<END_JSON_METADATA>>>
-MESSAGE;
+{invalid json here
+<<<END_JSON_METADATA>>>',
+        ],
+    ];
 
-    $result = $method->invokeArgs($extractor, [$message]);
+    $result = $action->handle($payload, fn ($p) => $p);
 
-    expect($result['found'])->toBeTrue();
-    expect($result['tags'])->toBeNull();
-    expect($result['metadata'])->toBeNull();
-    expect($result['links'])->toBeNull();
-    expect($result['cleaned_message'])->toBe('Response with bad JSON.');
+    expect($result['json_metadata']['found'])->toBeTrue();
+    expect($result['json_metadata']['metadata'])->toBeNull();
+    expect($result['json_metadata']['tags'])->toBeNull();
+    expect($result['json_metadata']['links'])->toBeNull();
+
+    // Fragment should still be updated with cleaned message
+    $fragment->refresh();
+    expect($fragment->message)->toBe('Response with bad JSON.');
 });
 
-test('extractJsonMetadata returns correct result when no JSON block present', function () {
-    $extractor = new ExtractJsonMetadata;
-    $reflection = new ReflectionClass($extractor);
-    $method = $reflection->getMethod('extractJsonMetadata');
-    $method->setAccessible(true);
+test('handles missing JSON metadata block', function () {
+    $fragment = Fragment::factory()->create(['message' => 'Initial message']);
 
-    $message = 'This is a normal response without any JSON metadata.';
+    $action = new ExtractJsonMetadata;
+    $payload = [
+        'fragment' => $fragment,
+        'data' => [
+            'message' => 'Regular response with no metadata.',
+        ],
+    ];
 
-    $result = $method->invokeArgs($extractor, [$message]);
+    $result = $action->handle($payload, fn ($p) => $p);
 
-    expect($result['found'])->toBeFalse();
-    expect($result['tags'])->toBeNull();
-    expect($result['metadata'])->toBeNull();
-    expect($result['links'])->toBeNull();
-    expect($result['cleaned_message'])->toBe('This is a normal response without any JSON metadata.');
+    expect($result['json_metadata']['found'])->toBeFalse();
+
+    // Fragment message should remain unchanged
+    $fragment->refresh();
+    expect($fragment->message)->toBe('Initial message');
 });
 
-test('extractJsonMetadata handles empty JSON object', function () {
-    $extractor = new ExtractJsonMetadata;
-    $reflection = new ReflectionClass($extractor);
-    $method = $reflection->getMethod('extractJsonMetadata');
-    $method->setAccessible(true);
+test('handles empty JSON metadata block', function () {
+    $fragment = Fragment::factory()->create(['message' => 'Initial message']);
 
-    $message = <<<'MESSAGE'
-Response with empty JSON.
+    $action = new ExtractJsonMetadata;
+    $payload = [
+        'fragment' => $fragment,
+        'data' => [
+            'message' => 'Response with empty block.
 
 <<<JSON_METADATA>>>
-{}
-<<<END_JSON_METADATA>>>
-MESSAGE;
+<<<END_JSON_METADATA>>>',
+        ],
+    ];
 
-    $result = $method->invokeArgs($extractor, [$message]);
+    $result = $action->handle($payload, fn ($p) => $p);
 
-    expect($result['found'])->toBeTrue();
-    expect($result['tags'])->toBeNull();
-    expect($result['metadata'])->toBeNull();
-    expect($result['links'])->toBeNull();
-    expect($result['cleaned_message'])->toBe('Response with empty JSON.');
+    expect($result['json_metadata']['found'])->toBeTrue();
+    expect($result['json_metadata']['metadata'])->toBeNull();
+
+    $fragment->refresh();
+    expect($fragment->message)->toBe('Response with empty block.');
 });
 
-test('extractJsonMetadata handles partial JSON fields', function () {
-    $extractor = new ExtractJsonMetadata;
-    $reflection = new ReflectionClass($extractor);
-    $method = $reflection->getMethod('extractJsonMetadata');
-    $method->setAccessible(true);
+test('handles partial JSON metadata', function () {
+    $fragment = Fragment::factory()->create(['message' => 'Initial message']);
 
-    $message = <<<'MESSAGE'
-Response with only tags.
+    $action = new ExtractJsonMetadata;
+    $payload = [
+        'fragment' => $fragment,
+        'data' => [
+            'message' => 'Response with partial data.
 
 <<<JSON_METADATA>>>
-{
-    "tags": ["only-tags"]
-}
-<<<END_JSON_METADATA>>>
-MESSAGE;
+{"tags": ["only-tags"]}
+<<<END_JSON_METADATA>>>',
+        ],
+    ];
 
-    $result = $method->invokeArgs($extractor, [$message]);
+    $result = $action->handle($payload, fn ($p) => $p);
 
-    expect($result['found'])->toBeTrue();
-    expect($result['tags'])->toBe(['only-tags']);
-    expect($result['metadata'])->toBeNull();
-    expect($result['links'])->toBeNull();
-    expect($result['cleaned_message'])->toBe('Response with only tags.');
+    expect($result['json_metadata']['found'])->toBeTrue();
+    expect($result['json_metadata']['metadata'])->toBeNull();
+    expect($result['json_metadata']['tags'])->toBe(['only-tags']);
+    expect($result['json_metadata']['links'])->toBeNull();
 });
 
-test('extractJsonMetadata processes multiple JSON blocks (first match)', function () {
-    $extractor = new ExtractJsonMetadata;
-    $reflection = new ReflectionClass($extractor);
-    $method = $reflection->getMethod('extractJsonMetadata');
-    $method->setAccessible(true);
+test('handles multiple JSON metadata blocks by taking first', function () {
+    $fragment = Fragment::factory()->create(['message' => 'Initial message']);
 
-    $message = <<<'MESSAGE'
-First block.
-
-<<<JSON_METADATA>>>
-{
-    "tags": ["first"]
-}
-<<<END_JSON_METADATA>>>
-
-Second block.
+    $action = new ExtractJsonMetadata;
+    $payload = [
+        'fragment' => $fragment,
+        'data' => [
+            'message' => 'Response with multiple blocks.
 
 <<<JSON_METADATA>>>
-{
-    "tags": ["second"]
-}
+{"tags": ["first"]}
 <<<END_JSON_METADATA>>>
-MESSAGE;
 
-    $result = $method->invokeArgs($extractor, [$message]);
+Some text.
 
-    expect($result['found'])->toBeTrue();
-    expect($result['tags'])->toBe(['first']); // Should process first match
-    expect($result['cleaned_message'])->not->toContain('<<<JSON_METADATA>>>');
+<<<JSON_METADATA>>>
+{"tags": ["second"]}
+<<<END_JSON_METADATA>>>',
+        ],
+    ];
+
+    $result = $action->handle($payload, fn ($p) => $p);
+
+    expect($result['json_metadata']['found'])->toBeTrue();
+    expect($result['json_metadata']['tags'])->toBe(['first']);
+
+    // Should remove all JSON blocks
+    $fragment->refresh();
+    expect($fragment->message)->toBe('Response with multiple blocks.
+
+
+
+Some text.');
 });

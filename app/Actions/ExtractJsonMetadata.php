@@ -46,7 +46,7 @@ class ExtractJsonMetadata
         $jsonString = trim($matches[1]);
         $decoded = json_decode($jsonString, true);
 
-        // Clean the message by removing the JSON block
+        // Clean the message by removing all JSON blocks
         $cleanedMessage = preg_replace($pattern, '', $message);
         $cleanedMessage = trim($cleanedMessage);
 
