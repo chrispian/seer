@@ -3,6 +3,7 @@
 use App\Http\Controllers\AnalyzeFragmentController;
 use App\Http\Controllers\AutocompleteController;
 use App\Http\Controllers\BookmarkController;
+use App\Http\Controllers\ChatApiController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FragmentController;
 use App\Http\Controllers\FragmentDetailController;
@@ -35,3 +36,9 @@ Route::post('/bookmarks/{id}/mark-viewed', [BookmarkController::class, 'markAsVi
 
 // Search endpoints
 Route::get('/search/hybrid', [\App\Http\Controllers\FragmentController::class, 'hybridSearch'])->name('fragments.hybrid-search');
+
+
+Route::middleware('web')->group(function () {
+    Route::post('/messages', [ChatApiController::class, 'send']);
+    Route::get('/chat/stream/{messageId}', [ChatApiController::class, 'stream']);
+});
