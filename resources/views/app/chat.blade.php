@@ -2,6 +2,7 @@
 
 @section('content')
   <div id="app-root" class="h-screen"></div>
+  <div id="overlays-root"></div>
 
   <script>
     window.__APP_BOOT__ = {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { ChatComposer } from './ChatComposer'
 import { ChatTranscript, ChatMessage } from './ChatTranscript'
 import { CommandResultModal } from './CommandResultModal'
@@ -17,6 +17,7 @@ export default function ChatIsland() {
   const [isCommandModalOpen, setIsCommandModalOpen] = useState(false)
   const [lastCommand, setLastCommand] = useState('')
   const csrf = useCsrf()
+  const activeStreamRef = useRef<{ eventSource: EventSource; sessionId: number } | null>(null)
   
   const { 
     currentSession, 
@@ -41,6 +42,16 @@ export default function ChatIsland() {
       setMessages([])
     }
   }, [currentSession])
+
+  // Cleanup active streams when session changes
+  useEffect(() => {
+    return () => {
+      if (activeStreamRef.current) {
+        activeStreamRef.current.eventSource.close()
+        activeStreamRef.current = null
+      }
+    }
+  }, [currentSession?.id])
 
   // Save messages to current session
   const saveMessagesToSession = async (updatedMessages: ChatMessage[]) => {
@@ -67,9 +78,16 @@ export default function ChatIsland() {
   async function onSend(content: string, attachments?: Array<{markdown: string, url: string, filename: string}>) {
     if (!content.trim() || isSending || !currentSession) return
     
+    // Close any existing stream before starting a new one
+    if (activeStreamRef.current) {
+      activeStreamRef.current.eventSource.close()
+      activeStreamRef.current = null
+    }
+
     const userId = uuid()
     const userMessage: ChatMessage = { id: userId, role: 'user', md: content }
     const updatedMessages = [...messages, userMessage]
+    const streamSessionId = currentSession.id // Capture session ID at start of stream
     setMessages(updatedMessages)
     setSending(true)
 
@@ -77,12 +95,12 @@ export default function ChatIsland() {
       // 1) Create message -> get message_id (include attachments if any)
       const payload: any = { 
         content,
-        session_id: currentSession.id,
+        session_id: streamSessionId,
       }
       if (attachments && attachments.length > 0) {
         payload.attachments = attachments
       }
-      
+
       const resp = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
@@ -101,8 +119,18 @@ export default function ChatIsland() {
       const assistantId = uuid()
       let acc = ''
 
+      // Track the active stream
+      activeStreamRef.current = { eventSource: es, sessionId: streamSessionId }
+
       es.onmessage = (evt) => {
         try {
+          // Check if this stream is still for the current session
+          if (currentSession?.id !== streamSessionId) {
+            es.close()
+            activeStreamRef.current = null
+            return
+          }
+
           const data = JSON.parse(evt.data)
           if (data.type === 'assistant_delta') {
             acc += data.content
@@ -116,19 +144,28 @@ export default function ChatIsland() {
           }
           if (data.type === 'done') { 
             es.close()
+            activeStreamRef.current = null
             setSending(false)
-            // Save final messages to session
-            setMessages(currentMessages => {
-              saveMessagesToSession(currentMessages)
-              return currentMessages
-            })
+            // Only save if still in the same session
+            if (currentSession?.id === streamSessionId) {
+              setMessages(currentMessages => {
+                saveMessagesToSession(currentMessages)
+                return currentMessages
+              })
+            }
           }
         } catch {/* ignore */}
       }
-      es.onerror = () => { es.close(); setSending(false) }
+      
+      es.onerror = () => { 
+        es.close()
+        activeStreamRef.current = null
+        setSending(false) 
+      }
     } catch (error) {
       console.error('Failed to send message:', error)
       setSending(false)
+      activeStreamRef.current = null
     }
   }
 
