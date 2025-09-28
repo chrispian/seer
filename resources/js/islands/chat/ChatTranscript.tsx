@@ -40,7 +40,7 @@ export function ChatTranscript({
 
   if (messages.length === 0) {
     return (
-      <Card ref={scrollerRef} className={`p-3 h-[60vh] md:h-[70vh] overflow-y-auto border-0 bg-background ${className}`}>
+      <Card ref={scrollerRef} className={`p-3 flex-1 overflow-y-auto border-0 bg-background ${className}`}>
         <div className="flex items-center justify-center h-full">
           <div className="text-center text-foreground">
             <div className="text-base font-medium mb-2">Start a conversation</div>
@@ -54,7 +54,7 @@ export function ChatTranscript({
   }
 
   return (
-    <Card ref={scrollerRef} className={`p-3 h-[60vh] md:h-[70vh] overflow-y-auto border-0 bg-background ${className}`}>
+    <Card ref={scrollerRef} className={`p-3 flex-1 overflow-y-auto border-0 bg-background ${className}`}>
       <div className="space-y-2">
         {messages.map((message) => (
           <div key={message.id} className="group flex gap-2 relative hover:bg-accent/5 p-2 transition-colors">

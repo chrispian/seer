@@ -13,6 +13,7 @@ use App\Http\Controllers\FragmentDetailController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SeerLogController;
 use App\Http\Controllers\VaultController;
+use App\Http\Controllers\WidgetApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/fragment', [FragmentController::class, 'store']);
@@ -80,4 +81,11 @@ Route::get('/search/hybrid', [\App\Http\Controllers\FragmentController::class, '
 Route::middleware('web')->group(function () {
     Route::post('/messages', [ChatApiController::class, 'send']);
     Route::get('/chat/stream/{messageId}', [ChatApiController::class, 'stream']);
+});
+
+// Widget API routes
+Route::prefix('widgets')->group(function () {
+    Route::get('/today-activity', [WidgetApiController::class, 'todayActivity']);
+    Route::get('/bookmarks', [WidgetApiController::class, 'bookmarks']);
+    Route::get('/tool-calls', [WidgetApiController::class, 'toolCalls']);
 });
