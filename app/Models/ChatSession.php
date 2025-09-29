@@ -188,7 +188,7 @@ class ChatSession extends Model
     {
         $maxAttempts = 100;
         $attempt = 0;
-        
+
         while ($attempt < $maxAttempts) {
             // Find the highest existing number including soft-deleted - PostgreSQL compatible
             $lastCode = static::withTrashed()
@@ -203,17 +203,17 @@ class ChatSession extends Model
             }
 
             $candidate = 'c'.$nextNumber;
-            
+
             // Check if this code already exists (including soft-deleted)
-            if (!static::withTrashed()->where('short_code', $candidate)->exists()) {
+            if (! static::withTrashed()->where('short_code', $candidate)->exists()) {
                 return $candidate;
             }
-            
+
             $attempt++;
         }
-        
+
         // Fallback: use timestamp-based code if all attempts fail
-        return 'c' . time() . rand(10, 99);
+        return 'c'.time().rand(10, 99);
     }
 
     /**

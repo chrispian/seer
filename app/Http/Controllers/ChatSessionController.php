@@ -151,19 +151,37 @@ class ChatSessionController extends Controller
 
     public function show(ChatSession $chatSession)
     {
+        // Load relationships
+        $chatSession->load(['vault', 'project']);
+
+        // Determine if session is active (has activity in last hour)
+        $isActive = $chatSession->last_activity_at &&
+                   $chatSession->last_activity_at->diffInMinutes(now()) < 60;
+
         return response()->json([
             'session' => [
                 'id' => $chatSession->id,
                 'title' => $chatSession->title,
                 'channel_display' => $chatSession->channel_display,
                 'message_count' => $chatSession->message_count,
-                'last_activity_at' => $chatSession->last_activity_at?->diffForHumans(),
+                'last_activity_at' => $chatSession->last_activity_at?->toISOString(),
                 'is_pinned' => $chatSession->is_pinned,
+                'is_active' => $isActive,
                 'sort_order' => $chatSession->sort_order,
                 'vault_id' => $chatSession->vault_id,
                 'project_id' => $chatSession->project_id,
                 'messages' => $chatSession->messages,
                 'metadata' => $chatSession->metadata,
+                'model_provider' => $chatSession->model_provider,
+                'model_name' => $chatSession->model_name,
+                'vault' => $chatSession->vault ? [
+                    'id' => $chatSession->vault->id,
+                    'name' => $chatSession->vault->name,
+                ] : null,
+                'project' => $chatSession->project ? [
+                    'id' => $chatSession->project->id,
+                    'name' => $chatSession->project->name,
+                ] : null,
             ],
         ]);
     }

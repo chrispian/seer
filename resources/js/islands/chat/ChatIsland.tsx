@@ -4,6 +4,7 @@ import { ChatTranscript, ChatMessage } from './ChatTranscript'
 import { CommandResultModal } from './CommandResultModal'
 import { useAppStore } from '@/stores/useAppStore'
 import { useChatSessionDetails, useUpdateChatSession } from '@/hooks/useChatSessions'
+import { useQueryClient } from '@tanstack/react-query'
 
 const uuid = (prefix?: string) => {
   const id = crypto.randomUUID()
@@ -23,6 +24,7 @@ export default function ChatIsland() {
   const [lastCommand, setLastCommand] = useState('')
   const csrf = useCsrf()
   const activeStreamRef = useRef<{ eventSource: EventSource; sessionId: number } | null>(null)
+  const queryClient = useQueryClient()
 
   // Use Zustand store and React Query directly
   const { currentSessionId, getCurrentSession } = useAppStore()
@@ -175,6 +177,9 @@ export default function ChatIsland() {
                 saveMessagesToSession(currentMessages)
                 return currentMessages
               })
+              
+              // Invalidate activity cache when messages complete (creates fragments)
+              queryClient.invalidateQueries({ queryKey: ['widgets', 'today-activity'] })
             }
           }
         } catch {/* ignore */}
@@ -230,6 +235,11 @@ export default function ChatIsland() {
       setCommandResult(result)
       setIsCommandModalOpen(true)
 
+      // Invalidate activity cache when command is executed successfully
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: ['widgets', 'today-activity'] })
+      }
+
       // Handle special actions
       if (result.success && result.shouldResetChat) {
         setMessages([])
@@ -281,9 +291,9 @@ export default function ChatIsland() {
   }
 
   return (
-    <div className="flex flex-col gap-1 h-full">
-      {/* Enhanced Transcript with Message Actions */}
-      <div className="flex-1 min-h-0">
+    <div className="flex flex-col h-full">
+      {/* Enhanced Transcript with Message Actions - Adaptive Middle Row */}
+      <div className="flex-1 min-h-0 pb-3">
         <ChatTranscript
           messages={messages}
           onMessageDelete={handleMessageDelete}
@@ -291,17 +301,19 @@ export default function ChatIsland() {
         />
       </div>
 
-      {/* Enhanced Composer with TipTap */}
-      <ChatComposer
-        onSend={onSend}
-        onCommand={handleCommand}
-        disabled={isSending || !currentSessionId}
-        placeholder={
-          currentSessionId
-            ? "Type a message... Use / for commands, [[ for links, # for tags"
-            : "Select a chat session to start messaging"
-        }
-      />
+      {/* Enhanced Composer with TipTap - Fixed Bottom Row */}
+      <div className="flex-shrink-0 px-3 pb-3">
+        <ChatComposer
+          onSend={onSend}
+          onCommand={handleCommand}
+          disabled={isSending || !currentSessionId}
+          placeholder={
+            currentSessionId
+              ? "Type a message... Use / for commands, [[ for links, # for tags"
+              : "Select a chat session to start messaging"
+          }
+        />
+      </div>
 
       {/* Command Result Modal */}
       <CommandResultModal
