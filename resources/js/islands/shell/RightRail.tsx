@@ -9,9 +9,9 @@ import {
 
 export function RightRail() {
   return (
-    <div className="w-80 bg-white border-l flex flex-col">
+    <div className="w-80 bg-white border-l flex flex-col overflow-hidden">
       <ScrollArea className="flex-1">
-        <div className="px-1 py-1 space-y-2">
+        <div className="px-1 py-1 space-y-2 overflow-hidden">
           {/* Today's Activity Widget */}
           <TodayActivityWidget />
 

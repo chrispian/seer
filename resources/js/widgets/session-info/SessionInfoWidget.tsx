@@ -50,16 +50,24 @@ export function SessionInfoWidget() {
 
   const session = sessionData?.session
 
-  const formatLastActivity = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+  const formatLastActivity = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Never'
     
-    if (diffInMinutes < 1) return 'Just now'
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-    const diffInHours = Math.floor(diffInMinutes / 60)
-    if (diffInHours < 24) return `${diffInHours}h ago`
-    return date.toLocaleDateString()
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return 'Invalid date'
+      
+      const now = new Date()
+      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+      
+      if (diffInMinutes < 1) return 'Just now'
+      if (diffInMinutes < 60) return `${diffInMinutes}m ago`
+      const diffInHours = Math.floor(diffInMinutes / 60)
+      if (diffInHours < 24) return `${diffInHours}h ago`
+      return date.toLocaleDateString()
+    } catch (error) {
+      return 'Invalid date'
+    }
   }
 
   return (
@@ -83,14 +91,14 @@ export function SessionInfoWidget() {
         </div>
 
         {/* Model Info */}
-        {session?.model_provider && (
+        {(session?.model_provider || session?.model_name) && (
           <div className="flex justify-between items-center">
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Bot className="w-3 h-3" />
               Model
             </span>
             <Badge variant="secondary" className="text-xs">
-              {session.model_name || session.model_provider}
+              {session.model_name || session.model_provider || 'Unknown'}
             </Badge>
           </div>
         )}

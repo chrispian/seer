@@ -4,6 +4,7 @@ import { ChatTranscript, ChatMessage } from './ChatTranscript'
 import { CommandResultModal } from './CommandResultModal'
 import { useAppStore } from '@/stores/useAppStore'
 import { useChatSessionDetails, useUpdateChatSession } from '@/hooks/useChatSessions'
+import { useQueryClient } from '@tanstack/react-query'
 
 const uuid = (prefix?: string) => {
   const id = crypto.randomUUID()
@@ -23,6 +24,7 @@ export default function ChatIsland() {
   const [lastCommand, setLastCommand] = useState('')
   const csrf = useCsrf()
   const activeStreamRef = useRef<{ eventSource: EventSource; sessionId: number } | null>(null)
+  const queryClient = useQueryClient()
 
   // Use Zustand store and React Query directly
   const { currentSessionId, getCurrentSession } = useAppStore()
@@ -175,6 +177,9 @@ export default function ChatIsland() {
                 saveMessagesToSession(currentMessages)
                 return currentMessages
               })
+              
+              // Invalidate activity cache when messages complete (creates fragments)
+              queryClient.invalidateQueries({ queryKey: ['widgets', 'today-activity'] })
             }
           }
         } catch {/* ignore */}
@@ -229,6 +234,11 @@ export default function ChatIsland() {
       // Show result in modal
       setCommandResult(result)
       setIsCommandModalOpen(true)
+
+      // Invalidate activity cache when command is executed successfully
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: ['widgets', 'today-activity'] })
+      }
 
       // Handle special actions
       if (result.success && result.shouldResetChat) {

@@ -2,76 +2,97 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Fragment;
 use App\Models\Bookmark;
-use App\Models\ChatSession;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Models\Fragment;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class WidgetApiController extends Controller
 {
     public function todayActivity(Request $request)
     {
-        $today = Carbon::today();
-        
-        // Get today's fragments with AI response metadata
-        $fragments = Fragment::whereDate('created_at', $today)
+        // Look at the last 24 hours instead of calendar day to handle timezone issues
+        $today = Carbon::now()->subDay();
+
+        // Get last 24 hours of fragments with AI response metadata
+        $fragments = Fragment::where('created_at', '>=', $today)
             ->whereJsonContains('metadata->turn', 'response')
             ->get();
 
-        $messages = Fragment::whereDate('created_at', $today)
+        $messages = Fragment::where('created_at', '>=', $today)
             ->whereJsonContains('metadata->turn', 'prompt')
             ->count();
 
-        $commands = 0; // TODO: Count commands from fragments or command logs
+        $commands = Fragment::where('created_at', '>=', $today)
+            ->whereJsonContains('metadata->turn', 'command')
+            ->count();
 
         $totalTokensIn = 0;
         $totalTokensOut = 0;
         $totalCost = 0.0;
         $latencies = [];
         $modelsUsed = [];
+        $providersUsed = [];
 
         foreach ($fragments as $fragment) {
             $metadata = $fragment->metadata ?? [];
-            
+
             if (isset($metadata['token_usage'])) {
                 $totalTokensIn += $metadata['token_usage']['input'] ?? 0;
                 $totalTokensOut += $metadata['token_usage']['output'] ?? 0;
             }
-            
+
             if (isset($metadata['cost_usd'])) {
                 $totalCost += $metadata['cost_usd'];
             }
-            
+
             if (isset($metadata['latency_ms'])) {
                 $latencies[] = $metadata['latency_ms'];
             }
-            
-            if (isset($metadata['model']) && !in_array($metadata['model'], $modelsUsed)) {
+
+            // Collect models from primary metadata
+            if (isset($metadata['model']) && ! in_array($metadata['model'], $modelsUsed)) {
                 $modelsUsed[] = $metadata['model'];
+            }
+
+            // Collect models from chaos_lineage (for cases where OpenAI is used for processing)
+            if (isset($metadata['chaos_lineage']['model']) && ! in_array($metadata['chaos_lineage']['model'], $modelsUsed)) {
+                $modelsUsed[] = $metadata['chaos_lineage']['model'];
+            }
+
+            // Track providers used
+            if (isset($metadata['provider']) && ! in_array($metadata['provider'], $providersUsed)) {
+                $providersUsed[] = $metadata['provider'];
+            }
+
+            if (isset($metadata['chaos_lineage']['provider']) && ! in_array($metadata['chaos_lineage']['provider'], $providersUsed)) {
+                $providersUsed[] = $metadata['chaos_lineage']['provider'];
             }
         }
 
         $avgResponseTime = count($latencies) > 0 ? array_sum($latencies) / count($latencies) : 0;
 
-        // Generate hourly chart data for today
+        // Generate hourly chart data for last 24 hours
         $chartData = [];
         for ($hour = 0; $hour < 24; $hour++) {
             $hourStart = $today->copy()->addHours($hour);
             $hourEnd = $hourStart->copy()->addHour();
-            
+
             $hourFragments = Fragment::whereBetween('created_at', [$hourStart, $hourEnd])
                 ->whereJsonContains('metadata->turn', 'response')
                 ->get();
-            
+
             $hourMessages = Fragment::whereBetween('created_at', [$hourStart, $hourEnd])
                 ->whereJsonContains('metadata->turn', 'prompt')
                 ->count();
-            
+
+            $hourCommands = Fragment::whereBetween('created_at', [$hourStart, $hourEnd])
+                ->whereJsonContains('metadata->turn', 'command')
+                ->count();
+
             $hourTokens = 0;
             $hourCost = 0.0;
-            
+
             foreach ($hourFragments as $fragment) {
                 $metadata = $fragment->metadata ?? [];
                 if (isset($metadata['token_usage'])) {
@@ -81,10 +102,11 @@ class WidgetApiController extends Controller
                     $hourCost += $metadata['cost_usd'];
                 }
             }
-            
+
             $chartData[] = [
                 'hour' => $hourStart->format('H:00'),
                 'messages' => $hourMessages,
+                'commands' => $hourCommands,
                 'tokens' => $hourTokens,
                 'cost' => $hourCost,
             ];
@@ -98,6 +120,7 @@ class WidgetApiController extends Controller
             'totalCost' => $totalCost,
             'avgResponseTime' => $avgResponseTime,
             'modelsUsed' => $modelsUsed,
+            'providersUsed' => $providersUsed,
             'chartData' => $chartData,
         ]);
     }
@@ -115,15 +138,28 @@ class WidgetApiController extends Controller
             ->orderBy('updated_at', 'desc');
 
         // Add vault and project scoping
-        if ($vaultId) {
-            $bookmarksQuery->where('vault_id', $vaultId);
+        // Include bookmarks that match current context OR have no vault/project (legacy bookmarks)
+        if ($vaultId || $projectId) {
+            $bookmarksQuery->where(function ($query) use ($vaultId, $projectId) {
+                // Match current context
+                if ($vaultId && $projectId) {
+                    $query->where(function ($q) use ($vaultId, $projectId) {
+                        $q->where('vault_id', $vaultId)
+                            ->where('project_id', $projectId);
+                    });
+                } elseif ($vaultId) {
+                    $query->where('vault_id', $vaultId);
+                }
+
+                // OR include unscoped bookmarks (legacy)
+                $query->orWhere(function ($q) {
+                    $q->whereNull('vault_id')
+                        ->whereNull('project_id');
+                });
+            });
         }
-        
-        if ($projectId) {
-            $bookmarksQuery->where('project_id', $projectId);
-        }
-        
-        if (!empty($query)) {
+
+        if (! empty($query)) {
             $bookmarksQuery->where('name', 'ILIKE', "%{$query}%");
         }
 
@@ -134,11 +170,11 @@ class WidgetApiController extends Controller
         $enhancedBookmarks = $bookmarks->map(function ($bookmark) {
             $fragmentIds = $bookmark->fragment_ids ?? [];
             $firstFragment = null;
-            
-            if (!empty($fragmentIds)) {
+
+            if (! empty($fragmentIds)) {
                 $firstFragment = Fragment::find($fragmentIds[0]);
             }
-            
+
             return [
                 'id' => $bookmark->id,
                 'name' => $bookmark->name,
@@ -149,7 +185,7 @@ class WidgetApiController extends Controller
                 'fragment_title' => $firstFragment?->title,
                 'fragment_preview' => $firstFragment ? substr($firstFragment->message, 0, 100) : null,
                 'vault_id' => $bookmark->vault_id,
-                'project_id' => $bookmark->project_id
+                'project_id' => $bookmark->project_id,
             ];
         });
 
@@ -172,7 +208,7 @@ class WidgetApiController extends Controller
         $query = Fragment::whereNotNull('metadata')
             ->where(function ($q) {
                 $q->whereJsonContains('metadata->turn', 'response')
-                  ->orWhereJsonContains('metadata->reasoning', true);
+                    ->orWhereJsonContains('metadata->reasoning', true);
             })
             ->orderBy('created_at', 'desc');
 
@@ -188,10 +224,10 @@ class WidgetApiController extends Controller
 
         $toolCalls = $fragments->map(function ($fragment) {
             $metadata = $fragment->metadata ?? [];
-            
+
             // Determine type based on metadata
             $type = 'model_response';
-            if (isset($metadata['tools_used']) && !empty($metadata['tools_used'])) {
+            if (isset($metadata['tools_used']) && ! empty($metadata['tools_used'])) {
                 $type = 'tool_call';
             } elseif (isset($metadata['reasoning'])) {
                 $type = 'cot_reasoning';
@@ -202,7 +238,7 @@ class WidgetApiController extends Controller
                 'timestamp' => $fragment->created_at->toISOString(),
                 'type' => $type,
                 'title' => $fragment->title ?: 'AI Response',
-                'summary' => substr($fragment->message, 0, 100) . '...',
+                'summary' => substr($fragment->message, 0, 100).'...',
                 'provider' => $metadata['provider'] ?? 'unknown',
                 'model' => $metadata['model'] ?? 'unknown',
                 'tokenUsage' => [

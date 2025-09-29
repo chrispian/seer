@@ -47,7 +47,7 @@ export function RecentBookmarksWidget() {
 
   if (error) {
     return (
-      <Card className="border-0 shadow-none border-b border-gray-200">
+    <Card className="border-0 shadow-none border-b border-gray-200 overflow-hidden">
         <CardHeader className="pb-1">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-medium">Recent Bookmarks</h4>
@@ -56,7 +56,7 @@ export function RecentBookmarksWidget() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
+      <CardContent className="pt-0 max-w-full overflow-hidden">
           <div className="text-center text-muted-foreground text-xs py-4">
             Failed to load bookmarks
           </div>
@@ -66,7 +66,7 @@ export function RecentBookmarksWidget() {
   }
 
   return (
-    <Card className="border-0 shadow-none border-b border-gray-200">
+      <Card className="border-0 shadow-none border-b border-gray-200 overflow-hidden">
       <CardHeader className="pb-1">
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-medium">Recent Bookmarks</h4>
@@ -80,7 +80,7 @@ export function RecentBookmarksWidget() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+        <CardContent className="pt-0 max-w-full overflow-hidden">
         {/* Search Input */}
         {isSearchMode && (
           <div className="mb-3">
@@ -96,7 +96,7 @@ export function RecentBookmarksWidget() {
 
         {/* Bookmarks List */}
         <ScrollArea className="h-48">
-          <div className="space-y-1">
+          <div className="space-y-1 max-w-full overflow-hidden">
             {isLoading ? (
               // Loading skeleton
               [...Array(3)].map((_, i) => (
@@ -115,22 +115,17 @@ export function RecentBookmarksWidget() {
             ) : (
               <>
                 {bookmarks.map((bookmark) => (
-                  <div
-                    key={bookmark.id}
-                    className="flex items-center space-x-2 text-xs cursor-pointer hover:bg-accent p-1 rounded transition-colors group"
-                    onClick={() => handleBookmarkClick(bookmark)}
-                  >
+                   <div
+                     key={bookmark.id}
+                     className="flex items-center space-x-2 text-xs cursor-pointer hover:bg-accent p-1 rounded transition-colors group overflow-hidden"
+                     onClick={() => handleBookmarkClick(bookmark)}
+                   >
                     <Bookmark className="w-3 h-3 flex-shrink-0 text-muted-foreground" />
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate font-medium" title={bookmark.fragment_title || bookmark.name}>
-                        {bookmark.name}
-                      </div>
-                      {bookmark.fragment_preview && (
-                        <div className="truncate text-muted-foreground text-xs" title={bookmark.fragment_preview}>
-                          {bookmark.fragment_preview}
-                        </div>
-                      )}
-                    </div>
+                     <div className="flex-1 min-w-0 overflow-hidden">
+                       <div className="truncate font-medium" title={bookmark.fragment_title || bookmark.name}>
+                         {bookmark.name.length > 28 ? bookmark.name.substring(0, 28) + '...' : bookmark.name}
+                       </div>
+                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <span className="text-muted-foreground text-xs">
                         {formatTimeAgo(bookmark.updated_at)}

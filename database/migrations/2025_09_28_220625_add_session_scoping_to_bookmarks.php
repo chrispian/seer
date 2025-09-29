@@ -11,10 +11,10 @@ return new class extends Migration
         Schema::table('bookmarks', function (Blueprint $table) {
             $table->unsignedBigInteger('vault_id')->nullable()->after('fragment_ids');
             $table->unsignedBigInteger('project_id')->nullable()->after('vault_id');
-            
+
             $table->foreign('vault_id')->references('id')->on('vaults')->onDelete('cascade');
             $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
-            
+
             $table->index(['vault_id', 'project_id', 'last_viewed_at'], 'bookmarks_scope_idx');
         });
     }

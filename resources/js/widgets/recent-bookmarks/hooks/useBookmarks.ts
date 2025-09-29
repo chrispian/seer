@@ -30,8 +30,10 @@ export function useBookmarks() {
 
   const filters = useMemo(() => ({
     query: debouncedQuery,
-    vault_id: currentVaultId || undefined,
-    project_id: currentProjectId || undefined,
+    // Only apply vault/project filtering if we're in a specific context
+    // This allows legacy bookmarks (with null vault/project) to show
+    vault_id: currentVaultId,
+    project_id: currentProjectId,
     limit: 5,
     offset: 0,
   }), [debouncedQuery, currentVaultId, currentProjectId])

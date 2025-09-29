@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Copy, Bookmark, Trash2, MoreVertical } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface MessageActionsProps {
   messageId: string // Client-side ID for React
@@ -48,6 +49,7 @@ export function MessageActions({
   const [isTogglingBookmark, setIsTogglingBookmark] = useState(false)
   const [bookmarked, setBookmarked] = useState(isBookmarked)
   const csrf = useCsrf()
+  const queryClient = useQueryClient()
 
   const handleCopy = async () => {
     try {
@@ -105,6 +107,9 @@ export function MessageActions({
           
           setBookmarked(true)
           onBookmarkToggle?.(messageId, true, serverFragmentId)
+          
+          // Invalidate bookmark queries to refresh the widget
+          queryClient.invalidateQueries({ queryKey: ['widgets', 'bookmarks'] })
         } else {
           // Create a new fragment from the chat message
           const response = await fetch('/api/fragment', {
@@ -141,6 +146,9 @@ export function MessageActions({
           
           setBookmarked(true)
           onBookmarkToggle?.(messageId, true, fragmentId)
+          
+          // Invalidate bookmark queries to refresh the widget
+          queryClient.invalidateQueries({ queryKey: ['widgets', 'bookmarks'] })
         }
       } else {
         // Remove bookmark if we have a fragment ID
@@ -159,11 +167,17 @@ export function MessageActions({
           
           setBookmarked(false)
           onBookmarkToggle?.(messageId, false)
+          
+          // Invalidate bookmark queries to refresh the widget
+          queryClient.invalidateQueries({ queryKey: ['widgets', 'bookmarks'] })
         } else {
           console.log('Cannot remove bookmark: no fragment ID available')
           // Just update local state for now
           setBookmarked(false)
           onBookmarkToggle?.(messageId, false)
+          
+          // Still invalidate queries in case of local state changes
+          queryClient.invalidateQueries({ queryKey: ['widgets', 'bookmarks'] })
         }
       }
     } catch (error) {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\DTOs\CommandRequest;
+use App\Models\Fragment;
 use App\Services\CommandRegistry;
 use Illuminate\Http\Request;
 
@@ -34,6 +35,8 @@ class CommandController extends Controller
         }
 
         try {
+            $startTime = microtime(true);
+
             // Find the command class
             $commandClass = CommandRegistry::find($commandName);
 
@@ -47,6 +50,11 @@ class CommandController extends Controller
             // Execute the command
             $commandInstance = app($commandClass);
             $response = $commandInstance->handle($commandRequest);
+
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2); // milliseconds
+
+            // Log command execution as a fragment for activity tracking
+            $this->logCommandExecution($commandName, $commandText, $arguments, $response, $executionTime, true);
 
             return response()->json([
                 'success' => true,
@@ -63,6 +71,9 @@ class CommandController extends Controller
             ]);
 
         } catch (\InvalidArgumentException $e) {
+            // Log failed command execution
+            $this->logCommandExecution($commandName, $commandText, $arguments, null, 0, false, $e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -71,6 +82,9 @@ class CommandController extends Controller
             ], 400);
 
         } catch (\Exception $e) {
+            // Log failed command execution
+            $this->logCommandExecution($commandName, $commandText, $arguments, null, 0, false, $e->getMessage());
+
             \Log::error('Command execution failed', [
                 'command' => $commandName,
                 'arguments' => $arguments,
@@ -110,5 +124,63 @@ class CommandController extends Controller
         }
 
         return $arguments;
+    }
+
+    /**
+     * Log command execution as a fragment for activity tracking
+     */
+    private function logCommandExecution(
+        string $commandName,
+        string $commandText,
+        array $arguments,
+        $response = null,
+        float $executionTimeMs = 0,
+        bool $success = true,
+        ?string $errorMessage = null
+    ): void {
+        try {
+            $fragment = new Fragment;
+            $fragment->message = $commandText;
+            $fragment->title = "Command: /{$commandName}";
+            $fragment->type = 'command';
+
+            // Build metadata for activity tracking
+            $metadata = [
+                'turn' => 'command',
+                'command_name' => $commandName,
+                'command_arguments' => $arguments,
+                'execution_time_ms' => $executionTimeMs,
+                'success' => $success,
+                'response_type' => $response?->type ?? null,
+                'timestamp' => now()->toISOString(),
+            ];
+
+            if (! $success && $errorMessage) {
+                $metadata['error'] = $errorMessage;
+            }
+
+            if ($success && $response) {
+                $metadata['response_data'] = [
+                    'type' => $response->type,
+                    'fragments_count' => is_array($response->fragments) ? count($response->fragments) : 0,
+                    'has_panel_data' => ! empty($response->panelData),
+                ];
+            }
+
+            // Add session context if available from request
+            if ($sessionId = request()->header('X-Session-ID')) {
+                $metadata['session_id'] = $sessionId;
+            }
+
+            $fragment->metadata = $metadata;
+            $fragment->save();
+
+        } catch (\Exception $e) {
+            // Don't fail the command if logging fails
+            \Log::warning('Failed to log command execution', [
+                'command' => $commandName,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

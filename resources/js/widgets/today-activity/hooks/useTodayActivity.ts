@@ -2,9 +2,14 @@ import { useQuery } from '@tanstack/react-query'
 import { TodayActivityData } from '../types'
 
 const fetchTodayActivity = async (): Promise<TodayActivityData> => {
-  const response = await fetch('/api/widgets/today-activity')
+  const response = await fetch('/api/widgets/today-activity', {
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+  })
   if (!response.ok) {
-    throw new Error('Failed to fetch today activity data')
+    throw new Error(`Failed to fetch today activity data: ${response.status}`)
   }
   return response.json()
 }

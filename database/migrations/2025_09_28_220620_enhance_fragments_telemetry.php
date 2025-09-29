@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -17,8 +15,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::statement("DROP INDEX IF EXISTS fragments_turn_created_idx");
-        DB::statement("DROP INDEX IF EXISTS fragments_session_created_idx");
-        DB::statement("DROP INDEX IF EXISTS fragments_provider_created_idx");
+        DB::statement('DROP INDEX IF EXISTS fragments_turn_created_idx');
+        DB::statement('DROP INDEX IF EXISTS fragments_session_created_idx');
+        DB::statement('DROP INDEX IF EXISTS fragments_provider_created_idx');
     }
 };
