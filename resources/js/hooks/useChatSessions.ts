@@ -19,11 +19,22 @@ interface ChatSessionResponse {
     message_count: number;
     last_activity_at: string;
     is_pinned: boolean;
+    is_active: boolean;
     sort_order: number;
     vault_id: number;
     project_id: number;
     messages: any[];
     metadata: any;
+    model_provider: string;
+    model_name: string;
+    vault: {
+      id: number;
+      name: string;
+    } | null;
+    project: {
+      id: number;
+      name: string;
+    } | null;
   };
 }
 
