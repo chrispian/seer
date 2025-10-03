@@ -34,6 +34,8 @@ class Fragment extends Model
         'hash_bucket' => 'integer',
         'model_provider' => 'string',
         'model_name' => 'string',
+        'inbox_at' => 'datetime',
+        'reviewed_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -45,6 +47,14 @@ class Fragment extends Model
 
             $fragment->tags = self::ensureArray($fragment->tags);
             $fragment->relationships = self::ensureArray($fragment->relationships);
+            
+            // Set default inbox fields if not specified
+            if (!isset($fragment->inbox_status)) {
+                $fragment->inbox_status = 'pending';
+            }
+            if (!isset($fragment->inbox_at)) {
+                $fragment->inbox_at = now();
+            }
             
             // Validate state against type schema if validation is enabled
             $fragment->validateTypeSchema();
@@ -321,6 +331,95 @@ class Fragment extends Model
         return $status === 'completed'
             ? $query->completedTodos()
             : $query->openTodos();
+    }
+
+    // Inbox scopes
+    public function scopeInInbox($query)
+    {
+        return $query->where('inbox_status', 'pending');
+    }
+
+    public function scopeAccepted($query)
+    {
+        return $query->where('inbox_status', 'accepted');
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->where('inbox_status', 'archived');
+    }
+
+    public function scopeByInboxStatus($query, string $status)
+    {
+        return $query->where('inbox_status', $status);
+    }
+
+    public function scopeInboxSortDefault($query)
+    {
+        return $query->orderBy('inbox_at', 'desc')
+            ->orderBy('type', 'asc')
+            ->orderBy('created_at', 'desc');
+    }
+
+    public function scopeReviewedBy($query, $userId)
+    {
+        return $query->where('reviewed_by', $userId);
+    }
+
+    // Inbox action methods
+    public function acceptInInbox($userId, array $edits = []): bool
+    {
+        // Apply any edits to the fragment
+        if (!empty($edits)) {
+            $this->fill($edits);
+        }
+
+        // Clear edited_message if it was used for temporary edits
+        if (isset($edits['edited_message']) && $edits['edited_message'] === $this->edited_message) {
+            $this->edited_message = null;
+        }
+
+        // Mark as accepted
+        $this->inbox_status = 'accepted';
+        $this->reviewed_at = now();
+        $this->reviewed_by = $userId;
+
+        return $this->save();
+    }
+
+    public function archiveInInbox($userId, string $reason = null): bool
+    {
+        $this->inbox_status = 'archived';
+        $this->reviewed_at = now();
+        $this->reviewed_by = $userId;
+        
+        if ($reason) {
+            $this->inbox_reason = $reason;
+        }
+
+        return $this->save();
+    }
+
+    public function skipInInbox($userId, string $reason = null): bool
+    {
+        $this->inbox_status = 'skipped';
+        $this->reviewed_at = now();
+        $this->reviewed_by = $userId;
+        
+        if ($reason) {
+            $this->inbox_reason = $reason;
+        }
+
+        return $this->save();
+    }
+
+    public function reopenInInbox(): bool
+    {
+        $this->inbox_status = 'pending';
+        $this->reviewed_at = null;
+        $this->reviewed_by = null;
+
+        return $this->save();
     }
 
     public function newEloquentBuilder($query): JsonCastingBuilder

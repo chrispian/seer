@@ -10,6 +10,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\FragmentController;
 use App\Http\Controllers\FragmentDetailController;
+use App\Http\Controllers\InboxController;
 use App\Http\Controllers\ModelController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SeerLogController;
@@ -93,4 +94,17 @@ Route::prefix('widgets')->group(function () {
     Route::get('/today-activity', [WidgetApiController::class, 'todayActivity']);
     Route::get('/bookmarks', [WidgetApiController::class, 'bookmarks']);
     Route::get('/tool-calls', [WidgetApiController::class, 'toolCalls']);
+});
+
+// Inbox API routes
+Route::prefix('inbox')->group(function () {
+    Route::get('/', [InboxController::class, 'index']);
+    Route::get('/stats', [InboxController::class, 'stats']);
+    Route::get('/{fragmentId}/ai-assist', [InboxController::class, 'aiAssist']);
+    Route::post('/{fragmentId}/accept', [InboxController::class, 'accept']);
+    Route::post('/{fragmentId}/archive', [InboxController::class, 'archive']);
+    Route::post('/{fragmentId}/skip', [InboxController::class, 'skip']);
+    Route::post('/{fragmentId}/reopen', [InboxController::class, 'reopen']);
+    Route::post('/accept-multiple', [InboxController::class, 'acceptMultiple']);
+    Route::post('/accept-all', [InboxController::class, 'acceptAll']);
 });

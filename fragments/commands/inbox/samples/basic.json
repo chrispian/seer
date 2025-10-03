@@ -1,0 +1,11 @@
+{
+  "ctx": {
+    "type": null,
+    "tags": null,
+    "category": null,
+    "vault": null,
+    "limit": 5,
+    "user_id": 1,
+    "session_id": "test-session-inbox"
+  }
+}
