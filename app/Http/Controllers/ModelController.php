@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AICredential;
+use App\Services\AI\AIProviderManager;
 use Illuminate\Http\JsonResponse;
 
 class ModelController extends Controller
@@ -13,13 +13,18 @@ class ModelController extends Controller
     public function available(): JsonResponse
     {
         $providers = config('fragments.models.providers', []);
+        $providerManager = app(AIProviderManager::class);
         $availableModels = [];
 
         foreach ($providers as $providerKey => $provider) {
-            // Check if provider has valid credentials
-            $hasCredentials = $this->hasValidCredentials($providerKey, $provider['config_keys'] ?? []);
-
-            if (! $hasCredentials) {
+            // Check if provider is available (handles both database credentials and config/env)
+            try {
+                $providerInstance = $providerManager->getProvider($providerKey);
+                if (!$providerInstance || !$providerInstance->isAvailable()) {
+                    continue;
+                }
+            } catch (\Exception $e) {
+                // Provider not found or not properly configured
                 continue;
             }
 
@@ -56,26 +61,5 @@ class ModelController extends Controller
             'success' => true,
             'data' => $availableModels,
         ]);
-    }
-
-    /**
-     * Check if provider has valid credentials
-     */
-    private function hasValidCredentials(string $providerKey, array $configKeys): bool
-    {
-        if (empty($configKeys)) {
-            return false;
-        }
-
-        // Check if provider has active credentials
-        $credential = AICredential::getActiveCredential($providerKey);
-
-        if (! $credential) {
-            return false;
-        }
-
-        // For additional validation, we could check if the credentials are properly configured
-        // but for now, just checking if they exist is sufficient
-        return true;
     }
 }
