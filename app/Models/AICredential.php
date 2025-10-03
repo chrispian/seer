@@ -80,20 +80,21 @@ class AICredential extends Model
         array $metadata = [],
         ?\DateTime $expiresAt = null
     ): self {
+        // Encrypt the credentials first
+        $encryptedCredentials = Crypt::encrypt(json_encode($credentials));
+        
         $credential = static::updateOrCreate(
             [
                 'provider' => $provider,
                 'credential_type' => $type,
             ],
             [
+                'encrypted_credentials' => $encryptedCredentials,
                 'metadata' => $metadata,
                 'expires_at' => $expiresAt,
                 'is_active' => true,
             ]
         );
-
-        $credential->setCredentials($credentials);
-        $credential->save();
 
         return $credential;
     }

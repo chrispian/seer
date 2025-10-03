@@ -1,0 +1,15 @@
+name: Reminder
+slug: remind
+version: 1.0.0
+requires: { secrets: [], capabilities: ["fragment.create"] }
+steps:
+  - id: create
+    type: fragment.create
+    with:
+      type: todo
+      title: "Reminder: {{ ctx.payload.message }}"
+      content: "{{ ctx.payload.message }}"
+      state: { status: "open", due_at: "{{ ctx.payload.due_at_iso }}" }
+  - id: ok
+    type: notify
+    with: { message: "⏰ Reminder queued", level: success }

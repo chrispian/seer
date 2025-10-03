@@ -333,7 +333,23 @@ export const useUpdateChatSession = () => {
       };
       
       updateChatSessionInStore(session);
-      queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
+      
+      // Update the specific session details cache with the updated data
+      queryClient.setQueryData(['chat-session', data.session.id], (oldData: any) => {
+        if (oldData?.session) {
+          return {
+            ...oldData,
+            session: {
+              ...oldData.session,
+              ...data.session,
+            }
+          }
+        }
+        return oldData
+      });
+      
+      // Only invalidate the sessions list, not individual session details
+      queryClient.invalidateQueries({ queryKey: ['chat-sessions'], exact: true });
     },
   });
 };

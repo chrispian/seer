@@ -360,7 +360,7 @@
 
 /* Synthwave Markdown Styles */
 .prose {
-    color: rgb(229 231 235); /* text-gray-200 - base text */
+    color: #1b1b18; /* text-gray-200 - base text */
 }
 
 .prose h1 {
@@ -403,7 +403,7 @@
 }
 
 .prose h5, .prose h6 {
-    color: rgb(156 163 175); /* text-gray-400 */
+    color: #1b1b18; /* text-gray-400 */
     font-weight: 600;
     margin-bottom: 0.5rem;
     margin-top: 0.75rem;
@@ -501,7 +501,7 @@
 
 .prose ol li {
     margin-bottom: 0.5rem;
-    color: rgb(229 231 235); /* text-gray-200 */
+    color: #1b1b18; /* text-gray-200 */
 }
 
 .prose ol li::marker {

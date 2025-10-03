@@ -21,19 +21,24 @@ import {
   FileUpload,
   uploadFile
 } from './tiptap/extensions/FileUpload'
+import { ChatToolbar } from '@/components/ChatToolbar'
 
 interface ChatComposerProps {
   onSend: (content: string, attachments?: Array<{markdown: string, url: string, filename: string}>) => void
   onCommand?: (command: string) => void
   disabled?: boolean
   placeholder?: string
+  selectedModel?: string
+  onModelChange?: (model: string) => void
 }
 
 export function ChatComposer({
   onSend,
   onCommand,
   disabled = false,
-  placeholder = "Type a message... Use / for commands, [[ for links, # for tags"
+  placeholder = "Type a message... Use / for commands, [[ for links, # for tags",
+  selectedModel = '',
+  onModelChange
 }: ChatComposerProps) {
   const [isListening, setIsListening] = useState(false)
   const [speechSupported, setSpeechSupported] = useState(false)
@@ -240,8 +245,9 @@ export function ChatComposer({
   }, [editor])
 
   return (
-    <Card className="p-2 rounded-sm border-0 bg-background">
-      {/* Pending Attachments Preview */}
+    <div className="relative">
+      <Card className="p-2 border-0 bg-background">
+        {/* Pending Attachments Preview */}
       {pendingAttachments.length > 0 && (
         <div className="mb-2 p-2 bg-muted rounded-sm">
           <div className="text-xs text-foreground mb-1">Attachments ({pendingAttachments.length}):</div>
@@ -266,11 +272,18 @@ export function ChatComposer({
 
       <div className="flex items-end gap-2">
         <div className="flex-1 relative">
-          <EditorContent
-            editor={editor}
-            onKeyDown={handleKeyDown}
-            className="border border-input rounded-sm min-h-[60px] focus-within:border-ring"
-          />
+          <div className="border border-input rounded-sm focus-within:border-ring">
+            <EditorContent
+              editor={editor}
+              onKeyDown={handleKeyDown}
+              className="min-h-[60px] p-2"
+            />
+            <ChatToolbar
+              selectedModel={selectedModel}
+              onModelChange={onModelChange}
+              disabled={disabled}
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-1">
@@ -326,6 +339,7 @@ export function ChatComposer({
         multiple
         accept="image/*,.pdf,.txt,.md,.doc,.docx"
       />
-    </Card>
+      </Card>
+    </div>
   )
 }
