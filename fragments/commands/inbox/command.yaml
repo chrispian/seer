@@ -1,9 +1,9 @@
-name: "List Inbox Fragments"
-slug: inbox
+name: "List Inbox Fragments (API Info)"
+slug: inbox-api
 version: 1.0.0
 triggers:
-  slash: "/inbox"
-  aliases: ["/pending"]
+  slash: "/inbox-api"
+  aliases: ["/pending-api"]
   input_mode: "inline"
 reserved: true
 

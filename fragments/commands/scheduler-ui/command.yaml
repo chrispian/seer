@@ -1,0 +1,22 @@
+name: "Open Scheduler Management Interface"
+slug: scheduler-ui
+version: 1.0.0
+triggers:
+  slash: "/scheduler"
+  aliases: ["/schedules", "/cron", "/automation"]
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: ["fragment.read"]
+
+steps:
+  - id: open-scheduler-ui
+    type: notify
+    with:
+      message: "Opening Scheduler Management Interface..."
+      level: "info"
+      panel_data:
+        action: "open_modal"
+        modal_type: "scheduler"

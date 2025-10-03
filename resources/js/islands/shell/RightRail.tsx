@@ -4,7 +4,7 @@ import {
   TodayActivityWidget, 
   RecentBookmarksWidget, 
   SessionInfoWidget, 
-  ToolCallsWidget 
+  ToolCallsWidget
 } from '@/widgets'
 
 export function RightRail() {
