@@ -1,0 +1,52 @@
+# Hot fields for performance optimization
+hot_fields:
+  status:
+    type: "string"
+    path: "status"
+    indexed: true
+    description: "Todo status for filtering and sorting"
+    
+  due_at:
+    type: "timestamp"
+    path: "due_at"
+    indexed: true
+    description: "Due date for deadline tracking"
+    
+  priority:
+    type: "string" 
+    path: "priority"
+    indexed: true
+    description: "Priority level for sorting"
+    
+  completed_at:
+    type: "timestamp"
+    path: "completed_at"
+    indexed: true
+    description: "Completion date for reporting"
+
+# Partial indexes scoped by type
+partial_indexes:
+  open_todos:
+    condition: "type = 'todo' AND (state->>'status') IN ('open', 'in_progress', 'blocked')"
+    fields: ["due_at", "priority", "created_at"]
+    description: "Index for active todos"
+    
+  completed_todos:
+    condition: "type = 'todo' AND (state->>'status') = 'complete'"
+    fields: ["completed_at", "priority"]
+    description: "Index for completed todos"
+    
+  overdue_todos:
+    condition: "type = 'todo' AND (state->>'due_at')::timestamp < NOW() AND (state->>'status') != 'complete'"
+    fields: ["due_at", "priority"] 
+    description: "Index for overdue todos"
+
+# Composite indexes for common queries
+composite_indexes:
+  status_priority_due:
+    fields: ["(state->>'status')", "(state->>'priority')", "(state->>'due_at')::timestamp"]
+    description: "Multi-field index for todo dashboard queries"
+    
+  assignee_status:
+    fields: ["(state->>'assignee')", "(state->>'status')"]
+    description: "Index for filtering todos by assignee and status"
