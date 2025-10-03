@@ -60,11 +60,23 @@ class Fragment extends Model
             $fragment->validateTypeSchema();
         });
 
+        static::created(function (self $fragment) {
+            event(new \App\Events\Fragments\FragmentCreated($fragment));
+        });
+
         static::updating(function (self $fragment) {
             // Validate state changes against type schema
             if ($fragment->isDirty('state') || $fragment->isDirty('type')) {
                 $fragment->validateTypeSchema();
             }
+        });
+
+        static::updated(function (self $fragment) {
+            event(new \App\Events\Fragments\FragmentUpdated($fragment));
+        });
+
+        static::deleted(function (self $fragment) {
+            event(new \App\Events\Fragments\FragmentDeleted($fragment));
         });
     }
 
