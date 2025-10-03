@@ -174,4 +174,44 @@ return [
             'rebuild_on_deploy' => env('FRAGMENT_REGISTRY_REBUILD_DEPLOY', true),
         ],
     ],
+
+    'tools' => [
+        // Tool system configuration
+        'allowed' => env('FRAGMENT_TOOLS_ALLOWED') ? 
+            explode(',', env('FRAGMENT_TOOLS_ALLOWED')) : 
+            [], // Empty by default for security
+
+        // Shell tool configuration
+        'shell' => [
+            'enabled' => env('FRAGMENT_TOOLS_SHELL_ENABLED', false),
+            'allowlist' => env('FRAGMENT_TOOLS_SHELL_ALLOWLIST') ? 
+                explode(',', env('FRAGMENT_TOOLS_SHELL_ALLOWLIST')) : 
+                ['ls', 'pwd', 'echo', 'cat', 'grep', 'find'], // Safe commands only
+            'timeout_seconds' => env('FRAGMENT_TOOLS_SHELL_TIMEOUT', 15),
+            'workdir' => env('FRAGMENT_TOOLS_SHELL_WORKDIR', base_path()),
+        ],
+
+        // File system tool configuration
+        'fs' => [
+            'enabled' => env('FRAGMENT_TOOLS_FS_ENABLED', false),
+            'root' => env('FRAGMENT_TOOLS_FS_ROOT', storage_path('app/tools')),
+            'max_file_size' => env('FRAGMENT_TOOLS_FS_MAX_FILE_SIZE', 1024 * 1024), // 1MB
+            'max_write_size' => env('FRAGMENT_TOOLS_FS_MAX_WRITE_SIZE', 1024 * 1024), // 1MB
+        ],
+
+        // MCP (Model Context Protocol) tool configuration
+        'mcp' => [
+            'enabled' => env('FRAGMENT_TOOLS_MCP_ENABLED', false),
+            'allowed_servers' => env('FRAGMENT_TOOLS_MCP_ALLOWED_SERVERS') ? 
+                explode(',', env('FRAGMENT_TOOLS_MCP_ALLOWED_SERVERS')) : 
+                [],
+            'servers' => [
+                // Example MCP server configurations
+                // 'example' => [
+                //     'url' => 'http://localhost:3000',
+                //     'headers' => ['Authorization' => 'Bearer token'],
+                // ],
+            ],
+        ],
+    ],
 ];

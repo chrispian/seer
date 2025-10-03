@@ -161,6 +161,22 @@ Create or refresh these packets before handing work to another agent.
 - [ ] Introduce iconography/severity levels.
 - [ ] Add configuration for toast verbosity per user.
 
+### UX-02 Shadcn Blocks Integration
+- [ ] Delegation packet: `delegation/UX-02-shadcn-blocks-integration/` (layout modernization, widget system enhancement, responsive design).
+- [ ] Enhance AppSidebar with collapsible/expandable functionality using shadcn sidebar blocks.
+- [ ] Implement dashboard block patterns for main content area organization.
+- [ ] Refactor RightRail and widget containers with responsive grid patterns.
+- [ ] Add comprehensive responsive breakpoints and container queries.
+- [ ] Establish user customization foundation with layout slot system.
+
+### UX-03 User Setup System
+- [ ] Delegation packet: `delegation/backlog/UX-03-user-setup-system/` (setup wizard, profile management, NativePHP optimization).
+- [ ] Enhance database schema with profile fields (display_name, avatar_path, use_gravatar, profile_settings).
+- [ ] Develop backend services for avatar management and Gravatar integration.
+- [ ] Create multi-step setup wizard using shadcn components to replace authentication.
+- [ ] Implement comprehensive avatar system with upload and Gravatar integration.
+- [ ] Build settings page with tabbed interface for user preference management.
+
 ## Developer Experience (DEV)
 
 ### DEV-01 Testing Infrastructure
