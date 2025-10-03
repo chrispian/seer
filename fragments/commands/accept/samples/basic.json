@@ -1,0 +1,8 @@
+{
+  "ctx": {
+    "body": "123",
+    "fragment_id": 123,
+    "user_id": 1,
+    "session_id": "test-session-789"
+  }
+}
