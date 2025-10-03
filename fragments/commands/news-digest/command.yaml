@@ -1,0 +1,58 @@
+name: "Generate News Digest"
+slug: news-digest
+version: 1.0.0
+triggers:
+  slash: "/news-digest"
+  aliases: ["/digest", "/news"]
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: ["OPENAI_API_KEY"]
+  capabilities: ["fragment.create", "ai.generate"]
+
+steps:
+  - id: get-topics
+    type: transform
+    template: |
+      {{ ctx.topics | default: "technology, programming, AI, software development" }}
+
+  - id: generate-digest
+    type: ai.generate
+    with:
+      model: "gpt-4"
+      prompt: |
+        Generate a brief news digest about current events in these topics: {{ steps.get-topics.output }}
+        
+        Create a well-structured digest with:
+        - 3-5 key headlines or developments
+        - Brief 1-2 sentence summaries for each
+        - Focus on factual, recent information
+        - Keep the total length under 500 words
+        
+        Format as markdown with clear headings and bullet points.
+      max_tokens: 800
+      temperature: 0.3
+
+  - id: create-digest-fragment
+    type: fragment.create
+    with:
+      type: "news-digest"
+      title: "News Digest - {{ now | date: 'Y-m-d' }}"
+      content: "{{ steps.generate-digest.output }}"
+      state:
+        type: "news-digest"
+        generated_at: "{{ now }}"
+        topics: "{{ steps.get-topics.output }}"
+        model_used: "gpt-4"
+      tags: ["news", "digest", "ai-generated", "daily"]
+      metadata:
+        command: "news-digest"
+        created_via: "scheduled_command"
+        generation_source: "ai"
+
+  - id: notify
+    type: notify
+    with:
+      message: "📰 Daily news digest generated successfully"
+      level: "success"

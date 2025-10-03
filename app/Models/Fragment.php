@@ -45,6 +45,16 @@ class Fragment extends Model
 
             $fragment->tags = self::ensureArray($fragment->tags);
             $fragment->relationships = self::ensureArray($fragment->relationships);
+            
+            // Validate state against type schema if validation is enabled
+            $fragment->validateTypeSchema();
+        });
+
+        static::updating(function (self $fragment) {
+            // Validate state changes against type schema
+            if ($fragment->isDirty('state') || $fragment->isDirty('type')) {
+                $fragment->validateTypeSchema();
+            }
         });
     }
 
@@ -271,31 +281,39 @@ class Fragment extends Model
 
     public function scopeOpenTodos($query)
     {
-        $todoType = \App\Models\Type::where('value', 'todo')->first();
-        if (! $todoType) {
-            return $query->whereRaw('1 = 0');
-        }
-
-        return $query->where('type_id', $todoType->id)
+        return $query->where('type', 'todo')
             ->where(function ($q) {
-                $q->whereRaw("(state::jsonb->>'status') = ?", ['open'])
-                    ->orWhereNull('state')
+                $q->whereRaw("(state::jsonb->>'status') IN ('open', 'in_progress', 'blocked')")
                     ->orWhere(function ($subq) {
-                        $subq->whereNotNull('state')
-                            ->whereRaw("(state::jsonb->>'status') IS NULL");
+                        $subq->whereNull('state')
+                            ->orWhereRaw("(state::jsonb->>'status') IS NULL");
                     });
             });
     }
 
     public function scopeCompletedTodos($query)
     {
-        $todoType = \App\Models\Type::where('value', 'todo')->first();
-        if (! $todoType) {
-            return $query->whereRaw('1 = 0');
-        }
+        return $query->where('type', 'todo')
+            ->whereRaw("(state::jsonb->>'status') = 'complete'");
+    }
 
-        return $query->where('type_id', $todoType->id)
-            ->whereRaw("(state::jsonb->>'status') = ?", ['complete']);
+    /**
+     * Scope for overdue todos
+     */
+    public function scopeOverdueTodos($query)
+    {
+        return $query->where('type', 'todo')
+            ->whereRaw("(state::jsonb->>'due_at')::timestamp < NOW()")
+            ->whereRaw("(state::jsonb->>'status') != 'complete'");
+    }
+
+    /**
+     * Scope for todos by priority
+     */
+    public function scopeTodosByPriority($query, string $priority)
+    {
+        return $query->where('type', 'todo')
+            ->whereRaw("(state::jsonb->>'priority') = ?", [$priority]);
     }
 
     public function scopeTodosByStatus($query, string $status)
@@ -402,5 +420,68 @@ class Fragment extends Model
     public function getBodyAttribute(): string
     {
         return $this->edited_message ?? $this->message ?? '';
+    }
+
+    /**
+     * Validate fragment state against type schema
+     */
+    protected function validateTypeSchema(): void
+    {
+        // Skip validation if disabled or no type/state
+        if (!config('fragments.types.validation.enabled') || !$this->type || !$this->state) {
+            return;
+        }
+
+        try {
+            $validator = app(\App\Services\TypeSystem\TypePackValidator::class);
+            $this->state = $validator->validateFragmentState($this->state, $this->type);
+        } catch (\Exception $e) {
+            // In strict mode, throw the exception
+            if (config('fragments.types.validation.strict_mode')) {
+                throw $e;
+            }
+            
+            // Otherwise, log the error and continue
+            \Log::warning('Fragment type validation failed', [
+                'fragment_id' => $this->id,
+                'type' => $this->type,
+                'error' => $e->getMessage(),
+                'state' => $this->state,
+            ]);
+        }
+    }
+
+    /**
+     * Check if fragment state is valid for its type
+     */
+    public function hasValidState(): bool
+    {
+        if (!$this->type || !$this->state) {
+            return true; // No validation needed
+        }
+
+        try {
+            $validator = app(\App\Services\TypeSystem\TypePackValidator::class);
+            return $validator->isValidState($this->state, $this->type);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get validation errors for current state
+     */
+    public function getStateValidationErrors(): array
+    {
+        if (!$this->type || !$this->state) {
+            return [];
+        }
+
+        try {
+            $validator = app(\App\Services\TypeSystem\TypePackValidator::class);
+            return $validator->getValidationErrors($this->state, $this->type);
+        } catch (\Exception $e) {
+            return ['general' => [$e->getMessage()]];
+        }
     }
 }

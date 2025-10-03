@@ -146,4 +146,32 @@ return [
             'show_in_chat_sessions' => env('AI_SHOW_IN_CHAT_SESSIONS', true),
         ],
     ],
+
+    'types' => [
+        // Type system configuration
+        'validation' => [
+            'enabled' => env('FRAGMENT_TYPE_VALIDATION', false),
+            'strict_mode' => env('FRAGMENT_TYPE_STRICT', false),
+            'cache_ttl' => env('FRAGMENT_TYPE_CACHE_TTL', 3600),
+        ],
+
+        // Search paths for type packs (in precedence order)
+        'search_paths' => [
+            'storage/app/fragments/types',  // Storage override
+            'fragments/types',              // Project types
+            'modules/*/fragments/types',    // Module types
+        ],
+
+        // Performance optimization
+        'hot_fields' => [
+            'enabled' => env('FRAGMENT_HOT_FIELDS_ENABLED', true),
+            'auto_index' => env('FRAGMENT_HOT_FIELDS_AUTO_INDEX', true),
+        ],
+
+        // Registry cache settings
+        'registry' => [
+            'auto_update' => env('FRAGMENT_REGISTRY_AUTO_UPDATE', true),
+            'rebuild_on_deploy' => env('FRAGMENT_REGISTRY_REBUILD_DEPLOY', true),
+        ],
+    ],
 ];

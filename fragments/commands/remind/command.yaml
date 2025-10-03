@@ -1,0 +1,41 @@
+name: "Create Reminder"
+slug: remind
+version: 1.0.0
+triggers:
+  slash: "/remind"
+  aliases: ["/reminder"]
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: ["fragment.create"]
+
+steps:
+  - id: extract-reminder-text
+    type: transform
+    template: |
+      {{ ctx.body | default: ctx.selection | trim }}
+
+  - id: create-reminder-fragment
+    type: fragment.create
+    with:
+      type: "reminder"
+      title: "Reminder: {{ steps.extract-reminder-text.output | take: 40 }}"
+      content: "{{ steps.extract-reminder-text.output }}"
+      state:
+        type: "reminder"
+        created_at: "{{ now }}"
+        reminded_at: "{{ now }}"
+        status: "active"
+      tags: ["reminder", "scheduled"]
+      metadata:
+        command: "remind"
+        created_via: "scheduled_command"
+        reminder_source: "scheduler"
+
+  - id: notify
+    type: notify
+    with:
+      message: "⏰ Reminder: {{ steps.extract-reminder-text.output }}"
+      level: "info"

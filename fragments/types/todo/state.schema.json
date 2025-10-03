@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Todo State Schema",
+  "description": "Schema for todo fragment state data",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["open", "in_progress", "blocked", "complete", "cancelled"],
+      "description": "Current status of the todo item"
+    },
+    "priority": {
+      "type": "string", 
+      "enum": ["low", "medium", "high", "urgent"],
+      "default": "medium",
+      "description": "Priority level of the todo item"
+    },
+    "due_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When the todo is due (ISO 8601 format)"
+    },
+    "completed_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When the todo was completed (ISO 8601 format)"
+    },
+    "created_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When the todo was created (ISO 8601 format)"
+    },
+    "estimated_minutes": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "Estimated time to complete in minutes"
+    },
+    "assignee": {
+      "type": ["string", "null"],
+      "description": "Person assigned to this todo"
+    },
+    "project": {
+      "type": ["string", "null"],
+      "description": "Project this todo belongs to"
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Additional labels for categorization"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "Fragment IDs this todo depends on"
+    },
+    "notes": {
+      "type": ["string", "null"],
+      "description": "Additional notes or context"
+    }
+  },
+  "required": ["status"],
+  "additionalProperties": false
+}

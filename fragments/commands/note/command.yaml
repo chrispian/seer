@@ -1,0 +1,43 @@
+name: "Create Note"
+slug: note
+version: 1.0.0
+triggers:
+  slash: "/note"
+  aliases: ["/n"]
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: ["fragment.create"]
+
+steps:
+  - id: coerce-input
+    type: transform
+    template: |
+      {{ ctx.body | default: ctx.selection | trim }}
+
+  - id: extract-title
+    type: transform
+    template: |
+      {{ steps.coerce-input.output | take: 50 }}
+
+  - id: create-fragment
+    type: fragment.create
+    with:
+      type: "document"
+      title: "{{ steps.extract-title.output }}"
+      content: "{{ steps.coerce-input.output }}"
+      state:
+        type: "note"
+        created_at: "{{ now }}"
+      tags: ["note", "document"]
+      metadata:
+        command: "note"
+        created_via: "slash_command"
+
+  - id: notify
+    type: notify
+    with:
+      message: "✅ Note created successfully"
+      level: "success"

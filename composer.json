@@ -19,6 +19,7 @@
         "filament/support": "^4.0",
         "filament/tables": "^4.0",
         "filament/widgets": "^4.0",
+        "justinrainbow/json-schema": "^6.5",
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.33",
         "laravel/reverb": "^1.0",
@@ -30,7 +31,8 @@
         "predis/predis": "^3.2",
         "prism-php/prism": "^0.86.0",
         "pusher/pusher-php-server": "^7.2",
-        "spatie/laravel-markdown": "^2.7"
+        "spatie/laravel-markdown": "^2.7",
+        "symfony/yaml": "^7.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

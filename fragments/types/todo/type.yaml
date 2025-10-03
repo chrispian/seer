@@ -1,0 +1,39 @@
+name: "Todo"
+description: "Task and todo item management"
+version: "1.0.0"
+author: "Fragments Engine"
+
+# Type capabilities
+capabilities:
+  - "state_validation"
+  - "hot_fields"
+  - "due_date_tracking" 
+  - "priority_sorting"
+  - "status_management"
+
+# UI configuration
+ui:
+  icon: "check-square"
+  color: "#10B981"
+  display_name: "Todo"
+  plural_name: "Todos"
+
+# Default state when creating new fragments of this type
+default_state:
+  status: "open"
+  priority: "medium"
+  created_at: null
+  due_at: null
+  completed_at: null
+
+# Required fields for this type
+required_fields:
+  - "status"
+
+# Metadata
+metadata:
+  tags:
+    - "task"
+    - "todo"
+  category: "productivity"
+  documentation: "fragments/types/todo/README.md"

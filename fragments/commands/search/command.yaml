@@ -1,0 +1,29 @@
+name: "Search Fragments"
+slug: search
+version: 1.0.0
+triggers:
+  slash: "/search"
+  aliases: ["/s", "/find"]
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: ["search.query"]
+
+steps:
+  - id: coerce-input
+    type: transform
+    template: |
+      {{ ctx.body | default: ctx.selection | trim }}
+
+  - id: perform-search
+    type: search.query
+    query: "{{ steps.coerce-input.output }}"
+    limit: 10
+
+  - id: notify
+    type: notify
+    with:
+      message: "🔍 Found {{ steps.perform-search.output.count }} results for '{{ steps.coerce-input.output }}'"
+      level: "info"

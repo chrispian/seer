@@ -1,0 +1,34 @@
+name: "Recall"
+slug: recall
+version: 1.0.0
+triggers:
+  slash: "/recall"
+  aliases: []
+  input_mode: "inline"
+reserved: false
+
+requires:
+  secrets: []
+  capabilities: ["fragment.create"]
+
+steps:
+  - id: coerce-input
+    type: transform
+    template: |
+      {{ ctx.body | default: ctx.selection | trim }}
+
+  - id: create-fragment
+    type: fragment.create
+    with:
+      type: "log"
+      content: "{{ steps.coerce-input.output }}"
+      tags: ["recall"]
+      metadata:
+        command: "recall"
+        created_via: "slash_command"
+
+  - id: notify
+    type: notify
+    with:
+      message: "✅ Recall created successfully"
+      level: "success"
