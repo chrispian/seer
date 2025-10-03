@@ -192,6 +192,8 @@ class ChatSessionController extends Controller
             'title' => 'nullable|string|max:255',
             'messages' => 'nullable|array',
             'metadata' => 'nullable|array',
+            'model_provider' => 'nullable|string|max:255',
+            'model_name' => 'nullable|string|max:255',
         ]);
 
         if ($request->has('title')) {
@@ -205,6 +207,14 @@ class ChatSessionController extends Controller
 
         if ($request->has('metadata')) {
             $chatSession->metadata = $request->input('metadata');
+        }
+
+        if ($request->has('model_provider')) {
+            $chatSession->model_provider = $request->input('model_provider');
+        }
+
+        if ($request->has('model_name')) {
+            $chatSession->model_name = $request->input('model_name');
         }
 
         $chatSession->last_activity_at = now();
@@ -312,6 +322,37 @@ class ChatSessionController extends Controller
             'current_vault_id' => $defaultVault['id'] ?? null,
             'current_project_id' => $defaultProject['id'] ?? optional($projects->first())->id ?? null,
             'context_timestamp' => now()->timestamp,
+        ]);
+    }
+
+    /**
+     * Update the model for a chat session
+     */
+    public function updateModel(Request $request, ChatSession $chatSession)
+    {
+        $request->validate([
+            'model_value' => 'required|string',
+        ]);
+
+        $modelValue = $request->input('model_value');
+
+        // Parse the model value (format: "provider:model_name")
+        if (strpos($modelValue, ':') !== false) {
+            [$provider, $modelName] = explode(':', $modelValue, 2);
+
+            $chatSession->update([
+                'model_provider' => $provider,
+                'model_name' => $modelName,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $chatSession->id,
+                'model_provider' => $chatSession->model_provider,
+                'model_name' => $chatSession->model_name,
+            ],
         ]);
     }
 }

@@ -23,10 +23,25 @@ class ChatApiController extends Controller
         $conversationId = $data['conversation_id'] ?? (string) Str::uuid();
         $sessionId = $data['session_id'] ?? null;
 
+        // Get session-specific model settings if session_id provided
+        $sessionProvider = null;
+        $sessionModel = null;
+        if ($sessionId) {
+            $chatSession = \App\Models\ChatSession::find($sessionId);
+            if ($chatSession && $chatSession->model_provider && $chatSession->model_name) {
+                $sessionProvider = $chatSession->model_provider;
+                $sessionModel = $chatSession->model_name;
+            }
+        }
+
         // ✅ 1) Create USER fragment using chat-specific action (bypasses deduplication)
         $createChatFragment = app(\App\Actions\CreateChatFragment::class);
         $fragment = $createChatFragment($data['content']);
         $userFragmentId = $fragment->id;
+
+        // Determine which provider and model to use (priority: request > session > fallback)
+        $useProvider = $data['provider'] ?? $sessionProvider ?? config('fragments.models.fallback_provider', 'ollama');
+        $useModel = $data['model'] ?? $sessionModel ?? config('fragments.models.fallback_text_model', 'llama3:latest');
 
         // Update the fragment with chat-specific metadata
         $fragment->update([
@@ -34,8 +49,8 @@ class ChatApiController extends Controller
                 'turn' => 'prompt',
                 'conversation_id' => $conversationId,
                 'session_id' => $sessionId,
-                'provider' => $data['provider'] ?? config('fragments.models.fallback_provider', 'ollama'),
-                'model' => $data['model'] ?? config('fragments.models.fallback_text_model', 'llama3:latest'),
+                'provider' => $useProvider,
+                'model' => $useModel,
             ]),
         ]);
 
@@ -51,8 +66,8 @@ class ChatApiController extends Controller
         app(\App\Actions\CacheChatSession::class)(
             $messageId,
             $messages,
-            $data['provider'] ?? config('fragments.models.fallback_provider', 'ollama'),
-            $data['model'] ?? config('fragments.models.fallback_text_model', 'llama3:latest'),
+            $useProvider,
+            $useModel,
             $userFragmentId,
             $conversationId
         );

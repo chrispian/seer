@@ -1,0 +1,14 @@
+name: Quick Note
+slug: note
+version: 1.0.0
+requires: { secrets: [], capabilities: ["fragment.create"] }
+steps:
+  - id: content
+    type: transform
+    template: "{{ ctx.body }}"
+  - id: create
+    type: fragment.create
+    with:
+      type: document
+      title: "{{ steps.content.output }}"
+      content: "{{ steps.content.output }}"

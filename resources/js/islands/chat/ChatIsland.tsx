@@ -5,6 +5,7 @@ import { CommandResultModal } from './CommandResultModal'
 import { useAppStore } from '@/stores/useAppStore'
 import { useChatSessionDetails, useUpdateChatSession } from '@/hooks/useChatSessions'
 import { useQueryClient } from '@tanstack/react-query'
+import { useModelSelection } from '@/hooks/useModelSelection'
 
 const uuid = (prefix?: string) => {
   const id = crypto.randomUUID()
@@ -34,6 +35,17 @@ export default function ChatIsland() {
   // Get current session from store (includes messages if loaded)
   const currentSession = getCurrentSession()
   const isLoadingSession = sessionDetailsQuery.isLoading
+
+  // Model selection state - use session details data which includes model info
+  const sessionData = sessionDetailsQuery.data?.session
+  const currentModelValue = sessionData?.model_provider && sessionData?.model_name 
+    ? `${sessionData.model_provider}:${sessionData.model_name}` 
+    : ''
+  
+  const { selectedModel, updateModel } = useModelSelection({
+    sessionId: currentSessionId,
+    defaultModel: currentModelValue,
+  })
 
   // Load messages from current session (loaded via React Query)
   useEffect(() => {
@@ -122,6 +134,14 @@ export default function ChatIsland() {
         content,
         session_id: streamSessionId,
       }
+      
+      // Add selected model if available
+      if (selectedModel && selectedModel.includes(':')) {
+        const [provider, model] = selectedModel.split(':', 2)
+        payload.provider = provider
+        payload.model = model
+      }
+      
       if (attachments && attachments.length > 0) {
         payload.attachments = attachments
       }
@@ -312,6 +332,8 @@ export default function ChatIsland() {
               ? "Type a message... Use / for commands, [[ for links, # for tags"
               : "Select a chat session to start messaging"
           }
+          selectedModel={selectedModel}
+          onModelChange={updateModel}
         />
       </div>
 

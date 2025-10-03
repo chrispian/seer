@@ -10,6 +10,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\FragmentController;
 use App\Http\Controllers\FragmentDetailController;
+use App\Http\Controllers\ModelController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SeerLogController;
 use App\Http\Controllers\VaultController;
@@ -47,6 +48,9 @@ Route::post('/files', [FileUploadController::class, 'store']);
 // Command execution endpoints
 Route::post('/commands/execute', [CommandController::class, 'execute']);
 
+// Model endpoints
+Route::get('/models/available', [ModelController::class, 'available']);
+
 // Chat session endpoints
 Route::get('/chat-sessions', [ChatSessionController::class, 'index']);
 Route::get('/chat-sessions/pinned', [ChatSessionController::class, 'pinned']);
@@ -54,6 +58,7 @@ Route::post('/chat-sessions', [ChatSessionController::class, 'store']);
 Route::get('/chat-sessions/context', [ChatSessionController::class, 'getContext']);
 Route::get('/chat-sessions/{chatSession}', [ChatSessionController::class, 'show']);
 Route::put('/chat-sessions/{chatSession}', [ChatSessionController::class, 'update']);
+Route::put('/chat-sessions/{chatSession}/model', [ChatSessionController::class, 'updateModel']);
 Route::delete('/chat-sessions/{chatSession}', [ChatSessionController::class, 'destroy']);
 Route::post('/chat-sessions/{chatSession}/pin', [ChatSessionController::class, 'togglePin']);
 Route::post('/chat-sessions/pin-order', [ChatSessionController::class, 'updatePinOrder']);
