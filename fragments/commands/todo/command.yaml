@@ -1,0 +1,49 @@
+name: "Create Todo"
+slug: todo
+version: 1.0.0
+triggers:
+  slash: "/todo"
+  aliases: ["/t"]
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: ["ai.generate", "fragment.create"]
+
+steps:
+  - id: coerce-input
+    type: transform
+    template: |
+      {{ ctx.body | default: ctx.selection | trim }}
+
+  - id: parse-todo
+    type: ai.generate
+    prompt: |
+      {{ prompts.parse }}
+      
+      User input: {{ steps.coerce-input.output }}
+    expect: json
+    max_tokens: 300
+
+  - id: create-fragment
+    type: fragment.create
+    with:
+      type: "todo"
+      title: "{{ steps.parse-todo.output.title }}"
+      content: "{{ steps.coerce-input.output }}"
+      state:
+        status: "{{ steps.parse-todo.output.status | default: 'open' }}"
+        priority: "{{ steps.parse-todo.output.priority | default: 'medium' }}"
+        due_at: "{{ steps.parse-todo.output.due_at }}"
+        created_at: "{{ now }}"
+      tags: ["todo"]
+      metadata:
+        command: "todo"
+        created_via: "slash_command"
+
+  - id: notify
+    type: notify
+    with:
+      message: "✅ Todo created: {{ steps.parse-todo.output.title }}"
+      level: "success"

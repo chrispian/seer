@@ -1,0 +1,16 @@
+{
+    "ctx": {
+        "body": "Sample input for note command",
+        "selection": "",
+        "user": {
+            "id": 1,
+            "name": "Test User"
+        },
+        "workspace": {
+            "id": 1
+        },
+        "session": {
+            "id": "test-session"
+        }
+    }
+}
