@@ -8,14 +8,19 @@ use App\Events\Tools\ToolCompleted;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class ToolCallStep implements Step
+class ToolCallStep extends Step
 {
     public function __construct(protected ToolRegistry $tools) {}
 
-    public function execute(array $definition, array $scope): array
+    public function getType(): string
     {
-        $toolName = data_get($definition, 'with.tool');
-        $args = data_get($definition, 'with.args', []);
+        return 'tool.call';
+    }
+
+    public function execute(array $config, array $context, bool $dryRun = false): mixed
+    {
+        $toolName = data_get($config, 'with.tool');
+        $args = data_get($config, 'with.args', []);
         
         if (!$toolName) {
             throw new \InvalidArgumentException('Missing required parameter: tool');
@@ -38,18 +43,18 @@ class ToolCallStep implements Step
 
         $tool = $this->tools->get($toolName);
         
-        // Build context
-        $context = [
-            'user' => data_get($scope, 'ctx.user'),
-            'fragment_id' => data_get($scope, 'ctx.fragment_id'),
-            'command_slug' => data_get($scope, 'ctx.command_slug'),
-            'session_id' => data_get($scope, 'ctx.session_id'),
+        // Build tool context
+        $toolContext = [
+            'user' => data_get($context, 'ctx.user'),
+            'fragment_id' => data_get($context, 'ctx.fragment_id'),
+            'command_slug' => data_get($context, 'ctx.command_slug'),
+            'session_id' => data_get($context, 'ctx.session_id'),
         ];
 
         $invocationId = (string) Str::uuid();
-        $userId = data_get($context, 'user.id', data_get($scope, 'ctx.user_id'));
-        $commandSlug = data_get($context, 'command_slug');
-        $fragmentId = data_get($context, 'fragment_id');
+        $userId = data_get($toolContext, 'user.id', data_get($context, 'ctx.user_id'));
+        $commandSlug = data_get($toolContext, 'command_slug');
+        $fragmentId = data_get($toolContext, 'fragment_id');
 
         // Fire tool invoked event
         event(new ToolInvoked(
@@ -65,7 +70,7 @@ class ToolCallStep implements Step
         $response = [];
 
         try {
-            $response = $tool->call($args, $context);
+            $response = $tool->call($args, $toolContext);
             return $response;
 
         } catch (\Throwable $e) {

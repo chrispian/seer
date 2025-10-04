@@ -46,12 +46,20 @@ class ShellTool implements Tool
             throw new \InvalidArgumentException('Missing required parameter: cmd');
         }
 
-        // Check against allowlist
+        // Check against allowlist and prevent command injection
         $allowlist = Config::get('fragments.tools.shell.allowlist', []);
         if (!empty($allowlist)) {
             $binary = explode(' ', trim($cmd))[0];
             if (!in_array($binary, $allowlist, true)) {
                 throw new \RuntimeException("Command not allowed: {$binary}");
+            }
+            
+            // Security: Prevent command injection by rejecting shell control characters
+            $dangerousChars = ['&', '|', ';', '`', '$', '(', ')', '<', '>', '"', "'", '\\', "\n", "\r"];
+            foreach ($dangerousChars as $char) {
+                if (strpos($cmd, $char) !== false) {
+                    throw new \RuntimeException("Command contains dangerous characters and is not allowed");
+                }
             }
         }
 
