@@ -59,6 +59,16 @@ class DbQueryTool implements ToolContract
                     $q->where($field, 'like', '%' . $value . '%'); break;
                 case 'json_contains':
                     $q->whereJsonContains($field, $value); break;
+                case 'fulltext':
+                    // Use Laravel's whereFullText for full-text search
+                    // Falls back to LIKE search if full-text indexes aren't available
+                    try {
+                        $q->whereFullText($field, $value);
+                    } catch (\Exception $e) {
+                        // Fallback to LIKE search if full-text not supported
+                        $q->where($field, 'like', '%' . $value . '%');
+                    }
+                    break;
                 default:
                     $q->where($field, $op, $value);
             }
