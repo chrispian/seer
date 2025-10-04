@@ -66,12 +66,16 @@ function AppContent() {
   return (
     <ErrorBoundary>
       <ChatSessionProvider>
-        <div className="h-screen flex bg-background">
-          {/* Far Left Ribbon */}
+      <div className="h-screen flex bg-background">
+        {/* Far Left Ribbon - Hidden on mobile/tablet */}
+        <div className="hidden lg:block h-full">
           <Ribbon />
-          
-          {/* Compact Sidebar */}
+        </div>
+        
+        {/* Compact Sidebar - Responsive behavior */}
+        <div className="hidden md:block h-full">
           <AppSidebar />
+        </div>
           
           {/* Main Content - Dashboard Layout */}
           <main className="flex-1 flex flex-col min-w-0 bg-muted/20">
@@ -81,13 +85,13 @@ function AppContent() {
             </header>
             
             {/* Dashboard Content Grid */}
-            <div className="flex-1 min-h-0 p-4 md:p-6 lg:p-8">
-              <div className="h-full max-w-[1400px] mx-auto">
+            <div className="flex-1 min-h-0 p-2 sm:p-4 md:p-6 lg:p-8">
+              <div className="h-full max-w-full sm:max-w-[1200px] lg:max-w-[1400px] mx-auto">
                 {/* Dashboard Grid Container */}
-                <div className="grid grid-cols-1 gap-4 md:gap-6 h-full">
+                <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 h-full">
                   {/* Main Content Area */}
                   <div className="min-h-0">
-                    <div className="h-full rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
+                    <div className="h-full rounded-md sm:rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
                       <ChatIsland />
                     </div>
                   </div>
@@ -102,8 +106,10 @@ function AppContent() {
             </div>
           </main>
           
-          {/* Right Sidebar */}
+        {/* Right Sidebar - Hidden on mobile/tablet, visible on large screens */}
+        <div className="hidden xl:block h-full">
           <RightRail />
+        </div>
         </div>
         
         {/* Toast Notifications */}

@@ -306,7 +306,7 @@ export function AppSidebar() {
   // Show skeleton loading when initial data is loading
   if (isLoadingVaults && vaults.length === 0) {
     return (
-      <div className={`${isCollapsed ? 'w-16' : 'w-72'} bg-white border-r flex flex-col transition-all duration-200`}>
+      <div className={`${isCollapsed ? 'w-16' : 'w-72'} h-full bg-white border-r flex flex-col transition-all duration-200`}>
         <div className="p-4">
           <SidebarSkeleton />
         </div>
@@ -316,22 +316,22 @@ export function AppSidebar() {
 
   return (
     <ErrorBoundary context="sidebar">
-      <div className={`${isCollapsed ? 'w-16' : 'w-72'} bg-white border-r flex flex-col transition-all duration-200`}>
+      <div className={`${isCollapsed ? 'w-12 md:w-16' : 'w-64 md:w-72'} h-full bg-white border-r flex flex-col transition-all duration-200`}>
         {/* Collapse Toggle */}
-        <div className="p-2 border-b flex justify-end">
+        <div className="p-1 md:p-2 border-b flex justify-end">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="h-6 w-6"
+            className="h-5 w-5 md:h-6 md:w-6"
           >
-            {isCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            {isCollapsed ? <PanelLeftOpen className="h-3 w-3 md:h-4 md:w-4" /> : <PanelLeftClose className="h-3 w-3 md:h-4 md:w-4" />}
           </Button>
         </div>
 
         {/* Vault Selection Header */}
         {!isCollapsed && (
-        <div className="p-3 border-b">
+        <div className="p-2 md:p-3 border-b">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -382,7 +382,7 @@ export function AppSidebar() {
 
         {/* Main Content */}
         {!isCollapsed && (
-        <div className="flex-1 overflow-hidden px-2">
+        <div className="flex-1 overflow-hidden px-1 md:px-2">
           {/* Pinned Chats */}
           {(pinnedSessionsQuery.isLoading || pinnedSessions.length > 0) && (
             <>
@@ -513,7 +513,7 @@ export function AppSidebar() {
 
         {/* User Menu Footer */}
         {!isCollapsed && (
-        <div className="p-3 border-t">
+        <div className="p-2 md:p-3 border-t">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
