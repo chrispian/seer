@@ -6,6 +6,7 @@ export { ToolCallsWidget } from './tool-calls/ToolCallsWidget'
 export { InboxWidget } from './inbox/InboxWidget'
 export { TypeSystemWidget } from './type-system/TypeSystemWidget'
 export { SchedulerWidget } from './scheduler/SchedulerWidget'
+export { TodoWidget } from './todos/TodoWidget'
 
 // Widget types
 export type { TodayActivityData } from './today-activity/types'

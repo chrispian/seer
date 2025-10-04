@@ -7,6 +7,7 @@ import {
   InboxWidget,
   TypeSystemWidget,
   SchedulerWidget,
+  TodoWidget,
 } from '@/widgets'
 
 // Widget registry for dynamic loading
@@ -18,6 +19,7 @@ export const widgetRegistry = {
   InboxWidget,
   TypeSystemWidget,
   SchedulerWidget,
+  TodoWidget,
 } as const
 
 export type WidgetComponentName = keyof typeof widgetRegistry
@@ -107,6 +109,16 @@ export const widgetMetadata: Record<string, WidgetMetadata> = {
     defaultEnabled: true,
     minHeight: 100,
     maxHeight: 150,
+  },
+  'todos': {
+    id: 'todos',
+    name: 'Recent Todos',
+    description: 'Shows recent todos with quick status toggle and management',
+    component: 'TodoWidget',
+    category: 'productivity',
+    defaultEnabled: true,
+    minHeight: 200,
+    maxHeight: 350,
   },
 }
 

@@ -191,18 +191,18 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
     }
   }, [isOpen, loadTodos])
 
-  // Reload todos when filters change
+  // Reload todos when status/tags filters change (not search - that's client-side)
   useEffect(() => {
     if (isOpen) {
       const todoFilters: TodoFilters = {
         status: filters.status,
-        search: filters.search || undefined,
+        // Don't send search to server - handle client-side for instant results
         tags: filters.tags.length > 0 ? filters.tags : undefined,
         limit: 100,
       }
       loadTodos(todoFilters)
     }
-  }, [filters, isOpen, loadTodos])
+  }, [filters.status, filters.tags, isOpen, loadTodos])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -320,6 +320,7 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
         checked={isCompleted}
         onCheckedChange={onToggle}
         className={`
+          rounded-none
           ${isInProgress ? 'data-[state=unchecked]:border-blue-500 data-[state=unchecked]:bg-blue-50' : ''}
           ${isBlocked ? 'data-[state=unchecked]:border-red-500 data-[state=unchecked]:bg-red-50' : ''}
         `}
