@@ -1,0 +1,156 @@
+{
+  "migration_matrix": {
+    "priority_factors": {
+      "usage_frequency": {
+        "high": 3,
+        "medium": 2, 
+        "low": 1,
+        "none": 0
+      },
+      "business_impact": {
+        "critical": 4,
+        "high": 3,
+        "medium": 2,
+        "low": 1,
+        "none": 0
+      },
+      "migration_difficulty": {
+        "trivial": 4,
+        "easy": 3,
+        "medium": 2,
+        "hard": 1,
+        "very_hard": 0
+      },
+      "user_experience": {
+        "improves": 3,
+        "maintains": 2,
+        "degrades": 1,
+        "breaks": 0
+      }
+    },
+    "command_scores": [
+      {
+        "command": "todo-original",
+        "scores": {
+          "usage_frequency": 0,
+          "business_impact": 0,
+          "migration_difficulty": 4,
+          "user_experience": 2
+        },
+        "total_score": 6,
+        "priority_tier": "completed",
+        "action": "deprecate"
+      },
+      {
+        "command": "news-digest",
+        "scores": {
+          "usage_frequency": 2,
+          "business_impact": 2,
+          "migration_difficulty": 1,
+          "user_experience": 2
+        },
+        "total_score": 7,
+        "priority_tier": "medium",
+        "action": "hybrid_migration"
+      },
+      {
+        "command": "news-digest-ai",
+        "scores": {
+          "usage_frequency": 0,
+          "business_impact": 1,
+          "migration_difficulty": 0,
+          "user_experience": 2
+        },
+        "total_score": 3,
+        "priority_tier": "low",
+        "action": "deprecate"
+      },
+      {
+        "command": "delegation/todo",
+        "scores": {
+          "usage_frequency": 0,
+          "business_impact": 0,
+          "migration_difficulty": 4,
+          "user_experience": 2
+        },
+        "total_score": 6,
+        "priority_tier": "completed",
+        "action": "remove"
+      }
+    ],
+    "priority_tiers": {
+      "high": {
+        "score_range": "10-16",
+        "commands": [],
+        "description": "Critical commands requiring immediate migration"
+      },
+      "medium": {
+        "score_range": "6-9", 
+        "commands": ["news-digest"],
+        "description": "Important commands for planned migration"
+      },
+      "low": {
+        "score_range": "1-5",
+        "commands": ["news-digest-ai"],
+        "description": "Lower priority or deprecation candidates"
+      },
+      "completed": {
+        "score_range": "n/a",
+        "commands": ["todo-original", "delegation/todo"],
+        "description": "Already migrated or obsolete"
+      }
+    }
+  },
+  "migration_roadmap": {
+    "sprint_51": {
+      "focus": "News Digest Hybrid Migration",
+      "tasks": [
+        {
+          "task": "MIGRATE-NEWS-001",
+          "title": "RSS Feed Integration",
+          "effort": "20-25 hours",
+          "description": "Implement RSS/news feed aggregation as deterministic foundation"
+        },
+        {
+          "task": "MIGRATE-NEWS-002", 
+          "title": "Template-Based Digest",
+          "effort": "15-20 hours",
+          "description": "Create template system for news digest formatting"
+        }
+      ],
+      "deliverable": "Hybrid news digest with deterministic foundation + optional AI enhancement"
+    },
+    "sprint_52": {
+      "focus": "Legacy Cleanup",
+      "tasks": [
+        {
+          "task": "CLEANUP-001",
+          "title": "Deprecate Legacy Commands",
+          "effort": "5-10 hours", 
+          "description": "Remove or disable legacy AI-dependent commands"
+        },
+        {
+          "task": "AUDIT-AI-002",
+          "title": "AI Step Optimization",
+          "effort": "10-15 hours",
+          "description": "Improve AiGenerateStep performance and reliability"
+        }
+      ],
+      "deliverable": "Clean command registry with optimized remaining AI usage"
+    }
+  },
+  "resource_requirements": {
+    "total_migration_effort": "50-70 hours",
+    "skill_requirements": [
+      "RSS/news feed processing",
+      "Template engine expertise", 
+      "Content aggregation APIs",
+      "Command registry management"
+    ],
+    "infrastructure_needs": [
+      "News feed API access",
+      "Content aggregation services",
+      "Template caching system"
+    ]
+  }
+}

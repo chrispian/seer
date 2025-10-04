@@ -29,6 +29,15 @@ class StepFactory
         'model.create' => ModelCreateStep::class,
         'model.update' => ModelUpdateStep::class,
         'model.delete' => ModelDeleteStep::class,
+
+        // Text processing operations
+        'text.parse' => TextParseStep::class,
+        
+        // Utility steps for data manipulation
+        'context.merge' => ContextMergeStep::class,
+        'string.format' => StringFormatStep::class,
+        'list.map' => ListMapStep::class,
+        'data.transform' => DataTransformStep::class,
     ];
 
     /**

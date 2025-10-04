@@ -179,8 +179,14 @@ class TemplateEngine
      */
     protected function isExpression(string $variable): bool
     {
-        // Check for mathematical operators
-        if (preg_match('/[+\-*\/]/', $variable)) {
+        // Check for mathematical operators with surrounding context to avoid matching hyphens in variable names
+        // Only match operators that have spaces around them or are between numbers/variables
+        if (preg_match('/\s[+\-*\/]\s|^\s*[+\-*\/]\s|\s[+\-*\/]\s*$/', $variable)) {
+            return true;
+        }
+
+        // Also check for operators between alphanumeric tokens (like var1+var2)
+        if (preg_match('/[a-zA-Z0-9_\]]\s*[+*\/]\s*[a-zA-Z0-9_\[]/', $variable)) {
             return true;
         }
 

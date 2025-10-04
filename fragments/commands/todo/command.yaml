@@ -1,6 +1,6 @@
-name: "Todo Management (Unified)"
+name: "Todo Management (Deterministic)"
 slug: todo
-version: 2.0.0
+version: 3.0.0
 triggers:
   slash: "/todo"
   aliases: ["/t"]
@@ -9,7 +9,7 @@ reserved: true
 
 requires:
   secrets: []
-  capabilities: ["ai.generate", "fragment.create"]
+  capabilities: ["text.parse", "fragment.create"]
 
 steps:
   - id: coerce-input
@@ -18,53 +18,35 @@ steps:
       {{ ctx.body | default: ctx.selection | trim }}
 
   - id: parse-todo
-    type: ai.generate
-    prompt: |
-      You are a helpful assistant that parses user input to create structured todo items.
-      
-      Parse the user input and extract:
-      - title: A concise title for the todo (required)
-      - status: Current status (default: "open")
-      - priority: Priority level (default: "medium") 
-      - due_at: Due date/time in ISO 8601 format if mentioned (optional)
-      
-      Valid Values:
-      - status: "open", "in_progress", "blocked", "complete", "cancelled"
-      - priority: "low", "medium", "high", "urgent"
-      
-      Return a JSON object with the extracted information:
-      
-      {
-        "title": "Concise todo title",
-        "status": "open", 
-        "priority": "medium",
-        "due_at": "2025-10-05T10:00:00Z"
-      }
-      
-      Keep titles concise but descriptive. Infer priority from keywords like "urgent", "asap", "critical", "high priority". If no due date mentioned, omit the due_at field. Always include title, status, and priority.
-      
-      User input: {{ ctx.body }}
-    expect: json
-    max_tokens: 300
+    type: text.parse
+    with:
+      input: "{{ ctx.body }}"
+      parser: "todo"
+      rules:
+        extract_due_date: true
+        extract_priority: true
+        extract_tags: true
 
   - id: create-fragment
     type: fragment.create
     with:
       type: "todo"
-      title: "{{ steps.parse-todo.output.title }}"
-      message: "{{ ctx.body }}"
+      title: "{{ steps.parse-todo.output.output.title }}"
+      message: "{{ steps.coerce-input.output }}"
       state:
-        status: "{{ steps.parse-todo.output.status | default: 'open' }}"
-        priority: "{{ steps.parse-todo.output.priority | default: 'medium' }}"
-        due_at: "{{ steps.parse-todo.output.due_at }}"
+        status: "{{ steps.parse-todo.output.output.status | default: 'open' }}"
+        priority: "{{ steps.parse-todo.output.output.priority | default: 'medium' }}"
+        due_at: "{{ steps.parse-todo.output.output.due_date }}"
         created_at: "{{ now }}"
-      tags: ["todo"]
+      tags: "{{ steps.parse-todo.output.output.tags }}"
       metadata:
         command: "todo"
         created_via: "slash_command"
+        deterministic_parsing: true
+        parsing_time_ms: "{{ steps.parse-todo.parsing_time_ms }}"
 
   - id: notify
     type: notify
     with:
-      message: "✅ Todo created: {{ steps.parse-todo.output.title }}"
+      message: "✅ Todo created: {{ steps.parse-todo.output.output.title }}"
       level: "success"
