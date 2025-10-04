@@ -73,15 +73,34 @@ function AppContent() {
           {/* Compact Sidebar */}
           <AppSidebar />
           
-          {/* Main Content */}
-          <div className="flex-1 flex flex-col min-w-0">
-            <div className="flex-shrink-0">
+          {/* Main Content - Dashboard Layout */}
+          <main className="flex-1 flex flex-col min-w-0 bg-muted/20">
+            {/* Dashboard Header Section */}
+            <header className="flex-shrink-0 bg-background border-b">
               <ChatHeader />
+            </header>
+            
+            {/* Dashboard Content Grid */}
+            <div className="flex-1 min-h-0 p-4 md:p-6 lg:p-8">
+              <div className="h-full max-w-[1400px] mx-auto">
+                {/* Dashboard Grid Container */}
+                <div className="grid grid-cols-1 gap-4 md:gap-6 h-full">
+                  {/* Main Content Area */}
+                  <div className="min-h-0">
+                    <div className="h-full rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
+                      <ChatIsland />
+                    </div>
+                  </div>
+                  
+                  {/* Future: Could add dashboard widgets here if needed
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Dashboard widgets would go here -->
+                      </div>
+                  */}
+                </div>
+              </div>
             </div>
-            <div className="flex-1 min-h-0">
-              <ChatIsland />
-            </div>
-          </div>
+          </main>
           
           {/* Right Sidebar */}
           <RightRail />
