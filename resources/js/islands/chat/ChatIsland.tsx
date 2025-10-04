@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { ChatComposer } from './ChatComposer'
 import { ChatTranscript, ChatMessage } from './ChatTranscript'
 import { CommandResultModal } from './CommandResultModal'
+import { TodoManagementModal } from './TodoManagementModal'
 import { InboxModal } from '../system/InboxModal'
 import { TypeSystemModal } from '../system/TypeSystemModal'
 import { SchedulerModal } from '../system/SchedulerModal'
@@ -31,6 +32,7 @@ export default function ChatIsland() {
   const [isInboxModalOpen, setIsInboxModalOpen] = useState(false)
   const [isTypeSystemModalOpen, setIsTypeSystemModalOpen] = useState(false)
   const [isSchedulerModalOpen, setIsSchedulerModalOpen] = useState(false)
+  const [isTodoModalOpen, setIsTodoModalOpen] = useState(false)
   const csrf = useCsrf()
   const activeStreamRef = useRef<{ eventSource: EventSource; sessionId: number } | null>(null)
   const queryClient = useQueryClient()
@@ -262,6 +264,11 @@ export default function ChatIsland() {
       setIsSchedulerModalOpen(true)
       return
     }
+    
+    if (command === 'todos-ui' || command === 'todos' || command === 'todo-list' || command === 'todo-manager' || command === 'todo-management') {
+      setIsTodoModalOpen(true)
+      return
+    }
 
     try {
       const response = await fetch('/api/commands/execute', {
@@ -393,7 +400,12 @@ export default function ChatIsland() {
       <SchedulerModal
         isOpen={isSchedulerModalOpen}
         onClose={() => setIsSchedulerModalOpen(false)}
-        />
+      />
+      
+      <TodoManagementModal
+        isOpen={isTodoModalOpen}
+        onClose={() => setIsTodoModalOpen(false)}
+      />
         </div>
       </div>
   )

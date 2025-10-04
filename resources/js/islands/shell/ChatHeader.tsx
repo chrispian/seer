@@ -39,7 +39,7 @@ export function ChatHeader() {
         </div>
       </div>
 
-      {/* Chat Header Right: TODO: Context aware menu */}
+
       <div className="flex items-center space-x-4">
         <div className="relative">
           <div className="flex items-center">

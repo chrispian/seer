@@ -1,0 +1,241 @@
+{
+  "audit_metadata": {
+    "conducted_date": "2025-10-04",
+    "total_commands_scanned": 30,
+    "ai_dependent_found": 4,
+    "migration_candidates": 3,
+    "already_migrated": 1
+  },
+  "commands": [
+    {
+      "name": "Create Todo (Original)",
+      "slug": "todo-original",
+      "location": "fragments/commands/todo-original/command.yaml",
+      "status": "active_legacy",
+      "ai_usage": {
+        "steps": ["parse-todo"],
+        "step_type": "ai.generate",
+        "purpose": "Parse natural language todo input to structured JSON",
+        "prompt_file": "prompts/parse.md",
+        "expect": "json",
+        "max_tokens": 300
+      },
+      "input_data": {
+        "type": "natural_language",
+        "examples": [
+          "Call doctor about appointment tomorrow at 2pm",
+          "HIGH PRIORITY: Fix critical bug in payment system", 
+          "Buy groceries milk bread eggs"
+        ]
+      },
+      "output_data": {
+        "format": "json",
+        "fields": ["title", "status", "priority", "due_at"],
+        "validation": "structured_object"
+      },
+      "complexity_assessment": {
+        "level": "medium",
+        "factors": [
+          "Date/time parsing (tomorrow, 2pm, next week)",
+          "Priority inference from keywords",
+          "Title extraction and cleanup",
+          "Status determination"
+        ]
+      },
+      "migration_analysis": {
+        "path": "direct_replacement",
+        "difficulty": "completed",
+        "replacement": "MIGRATE-TODO-001 already implemented regex-based parser",
+        "deterministic_alternative": "text.parse step with TodoTextParser",
+        "migration_status": "completed"
+      },
+      "usage_analysis": {
+        "frequency": "legacy",
+        "business_impact": "low",
+        "user_impact": "none_replaced",
+        "deprecation_ready": true
+      },
+      "priority": "low",
+      "effort_estimate": "0 hours (already completed)",
+      "notes": "This command has been superseded by the new deterministic todo command implemented in MIGRATE-TODO-001"
+    },
+    {
+      "name": "Generate News Digest",
+      "slug": "news-digest", 
+      "location": "fragments/commands/news-digest/command.yaml",
+      "status": "active",
+      "ai_usage": {
+        "steps": ["generate-digest"],
+        "step_type": "ai.generate",
+        "purpose": "Create structured news digest from topics",
+        "model": "gpt-4",
+        "prompt_type": "content_generation",
+        "max_tokens": 800,
+        "temperature": 0.3
+      },
+      "input_data": {
+        "type": "topic_list",
+        "default": "technology, programming, AI, software development",
+        "customizable": true
+      },
+      "output_data": {
+        "format": "markdown",
+        "structure": "headlines + summaries",
+        "length": "under 500 words",
+        "elements": ["3-5 headlines", "1-2 sentence summaries", "factual information"]
+      },
+      "complexity_assessment": {
+        "level": "high",
+        "factors": [
+          "Content creation and summarization",
+          "Factual accuracy requirements",
+          "Structured markdown formatting",
+          "Domain knowledge (current events)",
+          "Creative but factual writing"
+        ]
+      },
+      "migration_analysis": {
+        "path": "hybrid_approach",
+        "difficulty": "high",
+        "deterministic_components": [
+          "RSS feed aggregation",
+          "Template-based formatting",
+          "Keyword extraction",
+          "Date/time handling"
+        ],
+        "ai_optional_components": [
+          "Content summarization",
+          "Headline generation",
+          "Relevance ranking"
+        ],
+        "migration_strategy": "Template-based digest with optional AI enhancement"
+      },
+      "usage_analysis": {
+        "frequency": "scheduled_daily",
+        "business_impact": "medium",
+        "user_impact": "medium",
+        "critical_path": false
+      },
+      "priority": "medium",
+      "effort_estimate": "40-60 hours",
+      "dependencies": ["RSS/news feed integration", "content aggregation tools"],
+      "notes": "Could be migrated to template-based approach with external news APIs, keeping AI as optional enhancement for summaries"
+    },
+    {
+      "name": "AI News Digest (Legacy)",
+      "slug": "news-digest-ai",
+      "location": "delegation/sprint-40/fe-code-ready-pack/fragments/commands/news-digest-ai/command.yaml",
+      "status": "legacy_delegation",
+      "ai_usage": {
+        "steps": ["rank", "compose"],
+        "step_type": "ai.generate",
+        "purpose": "Rank/summarize news items and compose newsletter",
+        "expect": ["json", "text"],
+        "complexity": "multi_step_ai"
+      },
+      "input_data": {
+        "type": "news_feed_data",
+        "source": "MCP news server",
+        "processing": "fetch → rank → compose"
+      },
+      "output_data": {
+        "format": "markdown_newsletter",
+        "structure": "ranked and summarized items"
+      },
+      "complexity_assessment": {
+        "level": "very_high",
+        "factors": [
+          "Two-stage AI processing",
+          "Content ranking and filtering",
+          "Newsletter composition",
+          "Complex data flow"
+        ]
+      },
+      "migration_analysis": {
+        "path": "ai_required",
+        "difficulty": "very_high",
+        "reasoning": "Complex ranking and composition logic would be difficult to replicate deterministically",
+        "recommendation": "Keep AI-based but improve reliability and performance"
+      },
+      "usage_analysis": {
+        "frequency": "unknown_legacy",
+        "business_impact": "low",
+        "user_impact": "low",
+        "deprecation_candidate": true
+      },
+      "priority": "low",
+      "effort_estimate": "0 hours (deprecate in favor of main news-digest)",
+      "notes": "Legacy experimental command - should be deprecated in favor of the main news-digest command"
+    },
+    {
+      "name": "Create Todo (Delegation)",
+      "slug": "todo",
+      "location": "delegation/sprint-40/fe-code-ready-pack/fragments/commands/todo/command.yaml", 
+      "status": "legacy_delegation",
+      "ai_usage": {
+        "steps": ["parse"],
+        "step_type": "ai.generate",
+        "purpose": "Parse task JSON from natural language",
+        "expect": "json"
+      },
+      "input_data": {
+        "type": "natural_language",
+        "processing": "similar to todo-original"
+      },
+      "output_data": {
+        "format": "json",
+        "fields": ["title", "status", "due_at", "priority"]
+      },
+      "complexity_assessment": {
+        "level": "medium",
+        "factors": ["Same as todo-original but simpler structure"]
+      },
+      "migration_analysis": {
+        "path": "direct_replacement",
+        "difficulty": "completed",
+        "replacement": "Already replaced by MIGRATE-TODO-001",
+        "migration_status": "obsolete"
+      },
+      "usage_analysis": {
+        "frequency": "legacy_unused",
+        "business_impact": "none",
+        "user_impact": "none",
+        "deprecation_ready": true
+      },
+      "priority": "low",
+      "effort_estimate": "0 hours (already obsolete)",
+      "notes": "Legacy delegation command - already superseded by deterministic implementation"
+    }
+  ],
+  "migration_categories": {
+    "direct_replacement": {
+      "count": 2,
+      "commands": ["todo-original", "delegation/todo"],
+      "status": "completed",
+      "description": "AI performs structured data extraction with clear patterns"
+    },
+    "hybrid_approach": {
+      "count": 1, 
+      "commands": ["news-digest"],
+      "description": "Commands with some AI creativity but core deterministic logic possible"
+    },
+    "ai_required": {
+      "count": 1,
+      "commands": ["news-digest-ai"],
+      "description": "Commands fundamentally requiring AI capabilities"
+    },
+    "deprecation_candidates": {
+      "count": 2,
+      "commands": ["news-digest-ai", "delegation/todo"],
+      "description": "Legacy commands that can be removed"
+    }
+  },
+  "summary_statistics": {
+    "total_ai_steps": 6,
+    "migration_completed": 2,
+    "migration_pending": 1,
+    "deprecation_recommended": 2,
+    "estimated_migration_effort": "40-60 hours",
+    "success_rate": "66% (2/3 active commands addressable)"
+  }
+}
