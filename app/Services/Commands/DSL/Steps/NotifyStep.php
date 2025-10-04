@@ -14,10 +14,12 @@ class NotifyStep extends Step
         $message = $config['with']['message'] ?? '';
         $level = $config['with']['level'] ?? 'info';
         $panelData = $config['with']['panel_data'] ?? null;
+        $responseData = $config['with']['response_data'] ?? null;
 
-        if (! $message) {
-            throw new \InvalidArgumentException('Notify step requires a message');
-        }
+        // Message is optional for some response types (like clear)
+        // if (! $message && ! $responseData) {
+        //     throw new \InvalidArgumentException('Notify step requires a message or response_data');
+        // }
 
         if ($dryRun) {
             $result = [
@@ -29,16 +31,21 @@ class NotifyStep extends Step
             if ($panelData) {
                 $result['panel_data'] = $panelData;
             }
+            if ($responseData) {
+                $result['response_data'] = $responseData;
+            }
 
             return $result;
         }
 
-        // Log the notification
-        \Log::info('Command notification', [
-            'message' => $message,
-            'level' => $level,
-            'context' => 'slash_command',
-        ]);
+        // Log the notification (only if there's a message)
+        if ($message) {
+            \Log::info('Command notification', [
+                'message' => $message,
+                'level' => $level,
+                'context' => 'slash_command',
+            ]);
+        }
 
         $result = [
             'message' => $message,
@@ -50,11 +57,17 @@ class NotifyStep extends Step
             $result['panel_data'] = $panelData;
         }
 
+        if ($responseData) {
+            $result['response_data'] = $responseData;
+        }
+
         return $result;
     }
 
     public function validate(array $config): bool
     {
-        return isset($config['with']['message']);
+        $with = $config['with'] ?? [];
+        // Either message or response_data should be present
+        return isset($with['message']) || isset($with['response_data']);
     }
 }

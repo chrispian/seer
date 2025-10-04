@@ -27,9 +27,9 @@ class CommandRegistry
         'session' => SessionCommand::class,
         'recall' => RecallCommand::class,
         'bookmark' => BookmarkCommand::class,
-        'help' => HelpCommand::class,
-        'clear' => ClearCommand::class,
-        'frag' => FragCommand::class,
+        // 'help' => HelpCommand::class, // Migrated to YAML
+        // 'clear' => ClearCommand::class, // Migrated to YAML
+        // 'frag' => FragCommand::class, // Migrated to YAML (simplified)
         'search' => SearchCommand::class,
         's' => SearchCommand::class, // alias for search
         'todo' => TodoCommand::class,
@@ -37,7 +37,7 @@ class CommandRegistry
         'join' => JoinCommand::class,
         'j' => JoinCommand::class, // alias for join
         'channels' => ChannelsCommand::class,
-        'name' => NameCommand::class,
+        // 'name' => NameCommand::class, // Migrated to YAML (simplified)
         'routing' => RoutingCommand::class,
 
         // New CMD-01 commands

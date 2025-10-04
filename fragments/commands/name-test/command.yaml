@@ -1,0 +1,27 @@
+name: "Set Channel Name Test"
+slug: name-test
+version: 2.0.0
+triggers:
+  slash: "/name-test"
+  aliases: []
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: []
+
+steps:
+  - id: show-help
+    type: transform
+    template: |
+      # Set Channel Name (Test Migration)
+
+      This is the simplified YAML version of the name command.
+  
+  - id: help-panel
+    type: response.panel
+    with:
+      type: "help"
+      panel_data:
+        message: "{{ steps.show-help.output }}"
