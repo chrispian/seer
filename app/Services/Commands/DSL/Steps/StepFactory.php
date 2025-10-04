@@ -12,17 +12,23 @@ class StepFactory
         'search.query' => SearchQueryStep::class,
         'notify' => NotifyStep::class,
         'tool.call' => ToolCallStep::class,
-        
+
         // Phase 1 DSL extensions for command migration
         'fragment.query' => FragmentQueryStep::class,
         'fragment.update' => FragmentUpdateStep::class,
         'condition' => ConditionStep::class,
         'response.panel' => ResponsePanelStep::class,
-        
+
         // Additional step types for complex commands
         'database.update' => DatabaseUpdateStep::class,
         'validate' => ValidateStep::class,
         'job.dispatch' => JobDispatchStep::class,
+
+        // Database model operations
+        'model.query' => ModelQueryStep::class,
+        'model.create' => ModelCreateStep::class,
+        'model.update' => ModelUpdateStep::class,
+        'model.delete' => ModelDeleteStep::class,
     ];
 
     /**

@@ -12,20 +12,190 @@ requires:
   capabilities: ["fragment.query", "fragment.create"]
 
 steps:
-  - id: create-bookmark
-    type: fragment.create
-    with:
-      type: "bookmark"
-      title: "Bookmark {{ now | date: 'M j H:i' }}"
-      message: "Bookmark created: {{ ctx.body | default: 'current context' }}"
-      tags: ["bookmark"]
-      metadata:
-        command: "bookmark"
-        created_via: "slash_command"
-        user_input: "{{ ctx.body }}"
-        
-  - id: notify-created
-    type: notify
-    with:
-      message: "✅ Bookmark created successfully"
-      level: "success"
+  - id: determine-mode
+    type: condition
+    condition: "{{ ctx.body == 'list' }}"
+    then:
+      # List all bookmarks
+      - id: query-bookmarks
+        type: model.query
+        with:
+          model: "bookmark"
+          order: "created_at DESC"
+      
+      - id: check-bookmarks-exist
+        type: condition
+        condition: "{{ steps.query-bookmarks.output | length > 0 }}"
+        then:
+          - id: format-bookmark-list
+            type: transform
+            template: |
+              📑 **Bookmarks ({{ steps.query-bookmarks.output | length }}):**
+              {% for bookmark in steps.query-bookmarks.output %}
+              - `{{ bookmark.name }}` ({{ bookmark.fragment_ids | length }} fragment{% if bookmark.fragment_ids | length != 1 %}s{% endif %})
+              {% endfor %}
+          
+          - id: show-bookmark-list
+            type: response.panel
+            with:
+              type: "bookmark"
+              panel_data:
+                action: "list"
+                message: "{{ steps.format-bookmark-list.output }}"
+                bookmarks: "{{ steps.query-bookmarks.output }}"
+        else:
+          - id: show-no-bookmarks
+            type: response.panel
+            with:
+              type: "bookmark"
+              message: "No bookmarks found"
+              should_show_error_toast: true
+    else:
+      - id: check-show-mode
+        type: condition
+        condition: "{{ ctx.body | default: '' | regex_test: '^show\\s+' }}"
+        then:
+          # Show specific bookmark
+          - id: extract-bookmark-name
+            type: transform
+            template: "{{ ctx.body | regex_replace: '^show\\s+', '' | trim }}"
+          
+          - id: query-specific-bookmark
+            type: model.query
+            with:
+              model: "bookmark"
+              conditions:
+                - field: "name"
+                  operator: "like"
+                  value: "%{{ steps.extract-bookmark-name.output }}%"
+              order: "created_at DESC"
+              limit: 1
+          
+          - id: check-bookmark-found
+            type: condition
+            condition: "{{ steps.query-specific-bookmark.output | length > 0 }}"
+            then:
+              - id: get-bookmark-fragments
+                type: fragment.query
+                with:
+                  filters:
+                    id: "{{ steps.query-specific-bookmark.output.0.fragment_ids }}"
+                  order: "id"
+              
+              - id: format-bookmark-show
+                type: transform
+                template: |
+                  🔖 **Showing bookmark `{{ steps.query-specific-bookmark.output.0.name }}`** ({{ steps.get-bookmark-fragments.output.results | length }} fragment{% if steps.get-bookmark-fragments.output.results | length != 1 %}s{% endif %}):
+                  
+                  {% for fragment in steps.get-bookmark-fragments.output.results %}
+                  - {{ fragment.message | truncate: 80 }}
+                  {% endfor %}
+              
+              - id: show-bookmark-details
+                type: response.panel
+                with:
+                  type: "bookmark"
+                  panel_data:
+                    action: "show"
+                    message: "{{ steps.format-bookmark-show.output }}"
+                    bookmark: "{{ steps.query-specific-bookmark.output.0 }}"
+                    fragments: "{{ steps.get-bookmark-fragments.output.results }}"
+            else:
+              - id: show-bookmark-not-found
+                type: response.panel
+                with:
+                  type: "bookmark"
+                  message: "No bookmark found matching `{{ steps.extract-bookmark-name.output }}`"
+                  should_show_error_toast: true
+        else:
+          - id: check-forget-mode
+            type: condition
+            condition: "{{ ctx.body | default: '' | regex_test: '^(forget|del|rm)\\s+' }}"
+            then:
+              # Delete specific bookmark
+              - id: extract-forget-name
+                type: transform
+                template: "{{ ctx.body | regex_replace: '^(forget|del|rm)\\s+', '' | trim }}"
+              
+              - id: query-bookmark-to-delete
+                type: model.query
+                with:
+                  model: "bookmark"
+                  conditions:
+                    - field: "name"
+                      operator: "like"
+                      value: "%{{ steps.extract-forget-name.output }}%"
+                  order: "created_at DESC"
+                  limit: 1
+              
+              - id: check-bookmark-to-delete
+                type: condition
+                condition: "{{ steps.query-bookmark-to-delete.output | length > 0 }}"
+                then:
+                  - id: delete-bookmark
+                    type: model.delete
+                    with:
+                      model: "bookmark"
+                      conditions:
+                        - field: "id"
+                          operator: "="
+                          value: "{{ steps.query-bookmark-to-delete.output.0.id }}"
+                  
+                  - id: notify-deleted
+                    type: notify
+                    with:
+                      message: "Bookmark `{{ steps.query-bookmark-to-delete.output.0.name }}` deleted"
+                      level: "success"
+                      response_data:
+                        type: "bookmark"
+                        shouldShowSuccessToast: true
+                else:
+                  - id: show-bookmark-delete-not-found
+                    type: notify
+                    with:
+                      message: "No bookmark found matching `{{ steps.extract-forget-name.output }}`"
+                      level: "error"
+                      response_data:
+                        type: "bookmark"
+                        shouldShowErrorToast: true
+            else:
+              # Create new bookmark (default mode)
+              - id: query-latest-fragment
+                type: fragment.query
+                with:
+                  limit: 1
+                  order: "latest"
+              
+              - id: check-fragment-exists
+                type: condition
+                condition: "{{ steps.query-latest-fragment.output.count > 0 }}"
+                then:
+                  - id: generate-bookmark-name
+                    type: transform
+                    template: "{{ steps.query-latest-fragment.output.results.0.message | truncate: 30 | slug }}-{{ now | date: 'His' }}"
+                  
+                  - id: create-bookmark-record
+                    type: model.create
+                    with:
+                      model: "bookmark"
+                      data:
+                        name: "{{ steps.generate-bookmark-name.output }}"
+                        fragment_ids: ["{{ steps.query-latest-fragment.output.results.0.id }}"]
+                  
+                  - id: notify-created
+                    type: notify
+                    with:
+                      message: "Bookmarked as `{{ steps.generate-bookmark-name.output }}`"
+                      level: "success"
+                      response_data:
+                        type: "bookmark"
+                        shouldShowSuccessToast: true
+                else:
+                  - id: notify-no-fragments
+                    type: notify
+                    with:
+                      message: "No fragments found to bookmark"
+                      level: "error"
+                      response_data:
+                        type: "bookmark"
+                        shouldShowErrorToast: true

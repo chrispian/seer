@@ -12,30 +12,214 @@ requires:
   capabilities: []
 
 steps:
-  - id: show-help
-    type: transform
-    template: |
-      # Join Channel
-      
-      **Usage:**
-      - `/join #c5` – Join channel #c5 directly  
-      - `/join #` – Show all available channels
-      - `/join project` – Search for channels containing "project"
-      
-      **Examples:**
-      - `/join #c1` – Switch to channel #c1
-      - `/join bug` – Find channels about "bug"
-      
-      **Input provided:** {{ ctx.body | default: '(none)' }}
-      
-      **Note:** Channel switching functionality is being migrated to the new DSL system.
-      For now, use the web interface to switch between channels.
-
-  - id: show-panel
-    type: response.panel
-    with:
-      type: "help"
-      message: "{{ steps.show-help.output }}"
-      panel_data:
-        command: "join"
-        input: "{{ ctx.body }}"
+  - id: check-empty-input
+    type: condition
+    condition: "{{ ctx.body | default: '' | trim | length == 0 }}"
+    then:
+      # No input - show help
+      - id: show-help
+        type: response.panel
+        with:
+          type: "help"
+          panel_data:
+            message: |
+              # Join Channel
+              
+              **Usage:**
+              - `/join #c5` – Join channel #c5 directly  
+              - `/join #` – Show all available channels
+              - `/join project` – Search for channels containing "project"
+              
+              **Examples:**
+              - `/join #c1` – Switch to channel #c1
+              - `/join bug` – Find channels about "bug"
+    else:
+      - id: check-autocomplete-mode
+        type: condition
+        condition: "{{ ctx.body | trim == '#' }}"
+        then:
+          # Show all available channels
+          - id: query-all-channels
+            type: model.query
+            with:
+              model: "chat_session"
+              conditions:
+                - field: "vault_id"
+                  operator: "="
+                  value: "{{ ctx.vault_id }}"
+              order: "last_activity_at DESC"
+              limit: 10
+          
+          - id: format-channels-list
+            type: transform
+            template: |
+              **Available Channels**
+              
+              {% for session in steps.query-all-channels.output %}
+              - `#{{ session.short_code }}` – {{ session.title | default: session.custom_name | default: 'Untitled' }}
+              {% endfor %}
+              
+              Type `/join #c5` to join a specific channel.
+          
+          - id: show-channels-list
+            type: response.panel
+            with:
+              type: "join-channels"
+              panel_data:
+                message: "{{ steps.format-channels-list.output }}"
+                channels: "{{ steps.query-all-channels.output }}"
+        else:
+          - id: check-channel-join
+            type: condition
+            condition: "{{ ctx.body | regex_test: '^#' }}"
+            then:
+              # Direct channel join
+              - id: extract-channel-id
+                type: transform
+                template: "{{ ctx.body | regex_replace: '^#', '' | trim }}"
+              
+              - id: find-channel-by-code
+                type: model.query
+                with:
+                  model: "chat_session"
+                  conditions:
+                    - field: "short_code"
+                      operator: "="
+                      value: "{{ steps.extract-channel-id.output }}"
+                    - field: "vault_id"
+                      operator: "="
+                      value: "{{ ctx.vault_id }}"
+                  limit: 1
+              
+              - id: check-channel-found-by-code
+                type: condition
+                condition: "{{ steps.find-channel-by-code.output | length > 0 }}"
+                then:
+                  - id: join-channel-success
+                    type: notify
+                    with:
+                      message: "Switched to {{ steps.find-channel-by-code.output.0.title | default: steps.find-channel-by-code.output.0.custom_name | default: '#' + steps.find-channel-by-code.output.0.short_code }}"
+                      level: "success"
+                      response_data:
+                        type: "join-success"
+                        shouldOpenPanel: false
+                        shouldShowSuccessToast: true
+                        data:
+                          action: "switch_chat"
+                          chat_session_id: "{{ steps.find-channel-by-code.output.0.id }}"
+                          channel_name: "{{ steps.find-channel-by-code.output.0.title | default: steps.find-channel-by-code.output.0.custom_name }}"
+                        toastData:
+                          title: "Channel Joined"
+                          message: "Switched to #{{ steps.find-channel-by-code.output.0.short_code }}"
+                else:
+                  # Try finding by custom name
+                  - id: find-channel-by-name
+                    type: model.query
+                    with:
+                      model: "chat_session"
+                      conditions:
+                        - field: "custom_name"
+                          operator: "="
+                          value: "{{ steps.extract-channel-id.output }}"
+                        - field: "vault_id"
+                          operator: "="
+                          value: "{{ ctx.vault_id }}"
+                      limit: 1
+                  
+                  - id: check-channel-found-by-name
+                    type: condition
+                    condition: "{{ steps.find-channel-by-name.output | length > 0 }}"
+                    then:
+                      - id: join-channel-by-name-success
+                        type: notify
+                        with:
+                          message: "Switched to {{ steps.find-channel-by-name.output.0.title | default: steps.find-channel-by-name.output.0.custom_name }}"
+                          level: "success"
+                          response_data:
+                            type: "join-success"
+                            shouldOpenPanel: false
+                            shouldShowSuccessToast: true
+                            data:
+                              action: "switch_chat"
+                              chat_session_id: "{{ steps.find-channel-by-name.output.0.id }}"
+                              channel_name: "{{ steps.find-channel-by-name.output.0.title | default: steps.find-channel-by-name.output.0.custom_name }}"
+                            toastData:
+                              title: "Channel Joined"
+                              message: "Switched to #{{ steps.find-channel-by-name.output.0.short_code }}"
+                    else:
+                      - id: channel-not-found
+                        type: notify
+                        with:
+                          message: "Channel #{{ steps.extract-channel-id.output }} not found. Try /join # to see available channels or /channels to list all."
+                          level: "error"
+                          response_data:
+                            type: "join-error"
+                            shouldShowErrorToast: true
+            else:
+              # Search mode
+              - id: search-channels
+                type: model.query
+                with:
+                  model: "chat_session"
+                  conditions:
+                    - field: "vault_id"
+                      operator: "="
+                      value: "{{ ctx.vault_id }}"
+                  search: "{{ ctx.body | trim }}"
+                  order: "last_activity_at DESC"
+                  limit: 5
+              
+              - id: check-search-results
+                type: condition
+                condition: "{{ steps.search-channels.output | length > 0 }}"
+                then:
+                  - id: check-single-result
+                    type: condition
+                    condition: "{{ steps.search-channels.output | length == 1 }}"
+                    then:
+                      # Single result - join directly
+                      - id: join-single-result
+                        type: notify
+                        with:
+                          message: "Switched to {{ steps.search-channels.output.0.title | default: steps.search-channels.output.0.custom_name }}"
+                          level: "success"
+                          response_data:
+                            type: "join-success"
+                            shouldOpenPanel: false
+                            shouldShowSuccessToast: true
+                            data:
+                              action: "switch_chat"
+                              chat_session_id: "{{ steps.search-channels.output.0.id }}"
+                              channel_name: "{{ steps.search-channels.output.0.title | default: steps.search-channels.output.0.custom_name }}"
+                            toastData:
+                              title: "Channel Joined"
+                              message: "Switched to #{{ steps.search-channels.output.0.short_code }}"
+                    else:
+                      # Multiple results - show selection
+                      - id: format-search-results
+                        type: transform
+                        template: |
+                          **Channels matching '{{ ctx.body | trim }}'**
+                          
+                          {% for session in steps.search-channels.output %}
+                          - `#{{ session.short_code }}` – {{ session.title | default: session.custom_name | default: 'Untitled' }}
+                          {% endfor %}
+                          
+                          Type `/join #c5` to join a specific channel.
+                      
+                      - id: show-search-results
+                        type: response.panel
+                        with:
+                          type: "join-channels"
+                          panel_data:
+                            message: "{{ steps.format-search-results.output }}"
+                            channels: "{{ steps.search-channels.output }}"
+                else:
+                  - id: no-search-results
+                    type: notify
+                    with:
+                      message: "No channels found matching '{{ ctx.body | trim }}'. Try /join # to see all channels."
+                      level: "error"
+                      response_data:
+                        type: "join-error"
+                        shouldShowErrorToast: true
