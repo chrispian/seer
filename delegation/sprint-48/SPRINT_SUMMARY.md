@@ -1,201 +1,127 @@
-# Sprint 48: Command System Continuation & Optimization
+# Sprint 48: Delegation Workflow → Fragments Engine Migration
 
-## Sprint Overview
-**Duration**: 2-3 days  
-**Focus**: Continue command system unification using Sprint 46 foundations  
-**Priority**: High - Build on proven Sprint 46 success
+**Sprint Goal**: Migrate our current delegation workflow to leverage Fragments Engine agent orchestration capabilities via MCP, making sprint/task management universally available to any Claude Code agent across any project.
+
+**Duration**: 4 weeks (estimated)  
+**Dependencies**: ENG-09-01 (Tool SDK), ENG-09-04 (Agent Memory), ENG-09-05 (Prompt Orchestrator), UX-04-02 (Agent Manager)
 
 ## Sprint Objectives
 
-### **Primary Goal**: Complete Medium-Complexity Command Migrations
-Using the proven patterns and enhanced DSL framework from Sprint 46, systematically migrate remaining medium-complexity commands while maintaining zero functionality regression.
+### **Primary Goals**
+1. **Universal Agent Orchestration**: Enable any Claude Code agent to use Fragments Engine for sprint/task management
+2. **Sub-Agent Governance**: Enforce agent profile usage and FE orchestration for all sub-agents
+3. **Project Manager Agent**: Implement internal/system agent for request handling and task assignment
+4. **Context Migration**: Move from file-based to database-backed with RAG capabilities
+5. **Cross-Project Compatibility**: Ensure workflow works across any project type
 
-### **Secondary Goal**: Resolve Remaining Command Conflicts  
-Address the remaining command conflicts (`todo`, `inbox`, `search`) using the successful conflict resolution pattern established with the `recall` command unification.
+### **Key Principles**
+- **Agent Profile Enforcement**: All sub-agents must use FE agent profiles and orchestration
+- **System Agent Coordination**: Internal project manager handles incoming requests and assignment
+- **Universal Access**: Any Claude Code instance can leverage FE orchestration
+- **Context Preservation**: RAG-searchable task/sprint context for intelligent agent collaboration
+- **Non-Destructive Migration**: Maintain current workflow during transition
 
-## Sprint Tasks
+## Tasks Overview
 
-### **ENG-09-01: Remaining Conflict Resolution** (2-3 hours) ✅ COMPLETED
-**Priority**: High  
-**Objective**: Resolve remaining command conflicts using proven unification patterns
-
-- **`todo` Command Unification**: Merge hardcoded CRUD operations with YAML AI-assisted creation
-- **`inbox` Command Unification**: Combine multi-view system with API documentation features  
-- **`search` Command Unification**: Integrate advanced filtering with basic search capabilities
-
-**Success Criteria**: ✅ ACHIEVED
-- 3 unified commands replacing 6 conflicting implementations
-- Full feature parity maintained for all existing functionality
-- Backward compatibility preserved
-
-### **ENG-09-02: Medium-Complexity Command Migration** (3-4 hours) ✅ COMPLETED
-**Priority**: High  
-**Objective**: Migrate straightforward commands using established DSL patterns
-
-**Target Commands**: ✅ ALL MIGRATED
-- **`bookmark`**: Fragment bookmarking and management
-- **`join`**: Channel/workspace joining functionality  
-- **`channels`**: Channel listing and management
-- **`routing`**: Request routing and navigation
-- **`session`**: Session management operations
-
-**Success Criteria**: ✅ ACHIEVED
-- 5 commands successfully migrated to YAML DSL
-- Performance maintained or improved
-- All aliases and shortcuts functional
-- Zero functionality regression
-
-### **ENG-09-03: Performance Analysis & Optimization** (1-2 hours) ✅ COMPLETED
-**Priority**: Medium  
-**Objective**: Analyze migration performance and optimize DSL framework
-
-**Activities**: ✅ COMPLETED
-- Benchmark migrated commands vs original implementations
-- Identify performance bottlenecks in DSL execution
-- Implement targeted optimizations for command loading
-- Document performance improvements
-
-**Success Criteria**: ✅ ACHIEVED
-- Performance benchmarks documented
-- DSL execution optimized for production
-- Command loading times improved
-- Memory usage optimized
-
-### **ENG-09-04: Command Mode Restoration** (16-22 hours) 🆕 NEW TASK
-**Priority**: Critical  
-**Objective**: Restore full functionality to migrated commands that were simplified during initial migration
-
-**Issue Identified**: Commands like `/bookmark list`, `/join #c5`, `/session start` don't work - simplified versions only support basic functionality
-
-**Target Commands**:
-- **`bookmark`**: Restore list, show, forget modes with database operations
-- **`join`**: Restore channel joining, search, autocomplete functionality
-- **`channels`**: Replace static content with dynamic database queries
-- **`session`**: Restore start, end, list, show session management
-- **`routing`**: Add real routing rule management capabilities
-
-**Success Criteria**:
-- All original command modes and arguments work correctly
-- Database operations function properly (queries, creates, updates)
-- User workflows maintain complete backward compatibility
-- No performance regressions from enhanced functionality
-
-### **ENG-09-05: Condition Framework Enhancement** (4-6 hours) 🆕 NEW TASK
-**Priority**: High  
-**Objective**: Fix condition step template processing to enable complex command argument parsing
-
-**Issue Identified**: Condition steps fail with template expressions like `{{ ctx.body == 'list' }}` but work with literal conditions
-
-**Enhancements Needed**:
-- Fix template rendering in condition steps 
-- Support step references in conditions: `{{ steps.input.output == 'test' }}`
-- Add logical operators (AND, OR, NOT) and grouping
-- Enhanced string manipulation filters for argument parsing
-
-**Success Criteria**:
-- Complex template expressions work in all condition contexts
-- Command mode detection and argument parsing becomes possible
-- Framework supports sophisticated conditional logic patterns
-- No regressions in existing condition functionality
-
-### **ENG-09-06: Database Step Enhancement** (6-8 hours) 🆕 NEW TASK
-**Priority**: Medium  
-**Objective**: Extend DSL framework with comprehensive database access capabilities
-
-**Issue Identified**: Current fragment.query step insufficient for complex command database operations
-
-**New Step Types Needed**:
-- `model.query` - Direct model access for complex queries
-- `model.create` - Model creation with validation
-- `model.update` - Model updates with relationship handling
-- `model.delete` - Safe model deletion operations
-
-**Success Criteria**:
-- Commands can perform all original database operations in DSL
-- Query construction is safe from SQL injection
-- Performance matches original hardcoded implementations
-- Comprehensive error handling and validation
-
-## Technical Foundation
-
-### **Established from Sprint 46**
-- ✅ **12-step DSL framework** with proven capability
-- ✅ **Enhanced template engine** with expressions and control structures
-- ✅ **Migration patterns documented** for systematic approach
-- ✅ **Conflict resolution strategy** proven with `recall` unification
-- ✅ **Zero regression testing** validated and operational
-
-### **Available DSL Steps for Sprint 47**
-- `fragment.query` - Advanced database queries
-- `fragment.update` - Fragment modification
-- `condition` - Branching logic
-- `response.panel` - UI panel responses
-- `database.update` - Direct database operations
-- `validate` - Input validation
-- `job.dispatch` - Background job processing
-- Plus all original steps (transform, ai.generate, fragment.create, etc.)
-
-## Expected Outcomes
-
-### **Technical Deliverables**
-- **8 additional commands migrated** (3 unified + 5 medium-complexity)
-- **Comprehensive performance analysis** with optimization results
-- **Enhanced migration documentation** based on Sprint 47 experience
-
-### **System Impact**
-- **75% command migration completion** (11 of 18 commands migrated)
-- **Zero dual-system conflicts** remaining
-- **Improved system performance** through optimization
-- **Simplified command development** workflow established
-
-### **Strategic Progress**
-- **Proven scalability** of DSL framework approach
-- **Clear roadmap** for remaining complex commands
-- **Performance validation** for production readiness
-- **Team confidence** in systematic migration approach
-
-## Risk Mitigation
-
-### **Technical Risks**
-- **Complexity Escalation**: Use Sprint 46 patterns to maintain predictable complexity
-- **Performance Impact**: Continuous benchmarking and optimization
-- **Regression Risk**: Comprehensive testing at each migration step
-
-### **Mitigation Strategies**
-- **Pattern Replication**: Strict adherence to proven Sprint 46 patterns
-- **Incremental Testing**: Validate each command migration individually
-- **Rollback Planning**: Maintain dual system until all validations complete
+| Task ID | Title | Priority | Status |
+|---------|-------|----------|---------|
+| MIGRATE-001 | Update Task Dependencies | Critical | Pending |
+| MIGRATE-002 | MCP Integration Layer | High | Pending |
+| MIGRATE-003 | Agent Profile Migration | High | Pending |
+| MIGRATE-004 | System Project Manager Agent | High | Pending |
+| MIGRATE-005 | Workflow Command Migration | Medium | Pending |
+| MIGRATE-006 | Context & Memory Integration | Medium | Pending |
+| MIGRATE-007 | Universal Access Framework | Low | Pending |
 
 ## Success Metrics
 
-### **Quantitative Targets**
-- [x] 8 commands successfully migrated with zero regression ✅ ACHIEVED
-- [x] Performance maintained or improved across all migrations ✅ ACHIEVED
-- [x] 100% test coverage for all migrated commands ✅ ACHIEVED
-- [x] Documentation complete for all new patterns ✅ ACHIEVED
-- [ ] 🆕 Command mode restoration completed for all 5 migrated commands
-- [ ] 🆕 Framework enhancements enable complex conditional logic
-- [ ] 🆕 Database operations fully supported in DSL framework
+### **Technical Metrics**
+- [ ] All delegation commands migrated to MCP calls
+- [ ] 7 agent profiles successfully imported to FE
+- [ ] System project manager agent operational
+- [ ] Context storage and RAG retrieval functional
+- [ ] Cross-project sprint management verified
 
-### **Qualitative Targets**
-- [x] Team confidence in systematic migration approach ✅ ACHIEVED
-- [x] Clear patterns established for future complex command migrations ✅ ACHIEVED
-- [x] Strategic foundation ready for final complex command phase ✅ ACHIEVED
-- [x] Production-ready DSL framework validation ✅ ACHIEVED
-- [ ] 🆕 User experience parity with original hardcoded commands
-- [ ] 🆕 Framework capabilities support sophisticated command patterns
-- [ ] 🆕 Foundation ready for advanced command development
+### **Workflow Metrics**
+- [ ] Sub-agents consistently use FE orchestration
+- [ ] Task assignment automation via project manager
+- [ ] Agent handoff workflows operational
+- [ ] Sprint creation/management via FE
+- [ ] Progress tracking automated
 
-## Post-Sprint Planning
+### **User Experience Metrics**
+- [ ] Commands work identically from any Claude Code instance
+- [ ] Context is preserved and searchable across sprints
+- [ ] Agent coordination is seamless and automated
+- [ ] Performance equals or exceeds current workflow
 
-### **Sprint 48 Preparation**
-Based on Sprint 47 outcomes, prepare for final complex command migrations:
-- **`vault`**: Security operations and access control
-- **`project`**: Context management and workspace integration
-- **`context`**: Session state and complex validation
-- **`compose`**: AI integration and template processing
+## Dependencies & Blockers
 
-### **System Cleanup Planning** 
-Validate readiness for comprehensive system cleanup (ENG-08-04) based on migration completion percentage and performance analysis.
+### **External Dependencies**
+- **ENG-09-01**: Tool SDK Foundation (contracts, registry, telemetry)
+- **ENG-09-04**: Agent Memory Foundation (notes, decisions, vectors)
+- **ENG-09-05**: Prompt Orchestrator (dynamic prompt assembly)
+- **UX-04-02**: Agent Manager System (profiles, modes, avatars)
 
-Sprint 47 represents the systematic continuation of Sprint 46's success, building toward complete command system unification with confidence and proven patterns.
+### **Internal Dependencies**
+- Context broker system (referenced in other sprints)
+- MCP server infrastructure for FE
+- Agent memory MCP server implementation
+- Database schema for agent orchestration
+
+## Migration Strategy
+
+### **Phase 1: Foundation** (Week 1)
+- Update dependencies and confirm readiness
+- Create MCP integration layer
+- Set up basic agent profile migration
+
+### **Phase 2: Core Migration** (Week 2)
+- Migrate agent profiles to FE system
+- Implement system project manager agent
+- Begin command migration
+
+### **Phase 3: Workflow Integration** (Week 3)
+- Complete command migration
+- Integrate context and memory systems
+- Test agent coordination workflows
+
+### **Phase 4: Universal Access** (Week 4)
+- Finalize universal access framework
+- Complete testing across project types
+- Documentation and deployment
+
+## Risk Assessment
+
+### **High Risk**
+- **Dependency Delays**: Core FE features may not be ready
+- **Migration Complexity**: Workflow changes may break existing processes
+- **Agent Coordination**: Complex handoff logic between agents
+
+### **Medium Risk**
+- **Performance Impact**: Database calls vs file operations
+- **Context Loss**: Information may be lost in migration
+- **Cross-Project Compatibility**: Different project structures
+
+### **Low Risk**
+- **Command Mapping**: Straightforward MCP integration
+- **Agent Profile Migration**: Well-defined structure exists
+
+## Post-Sprint Goals
+
+### **Immediate (Sprint 49)**
+- Performance optimization and monitoring
+- Advanced agent coordination features
+- Additional context integration capabilities
+
+### **Future Sprints**
+- Multi-project sprint coordination
+- Advanced RAG features for context retrieval
+- Agent learning and improvement systems
+- Integration with external project management tools
+
+---
+
+**Sprint Owner**: Agent Orchestration Specialist  
+**Created**: $(date)  
+**Last Updated**: $(date)

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Route;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,5 +36,10 @@ class AppServiceProvider extends ServiceProvider
             // Prevent accessing missing attributes to catch issues early
             Model::preventAccessingMissingAttributes();
         }
+
+        // Register internal tool routes
+        Route::middleware('api')
+            ->prefix('api/internal')
+            ->group(base_path('routes/internal.php'));
     }
 }

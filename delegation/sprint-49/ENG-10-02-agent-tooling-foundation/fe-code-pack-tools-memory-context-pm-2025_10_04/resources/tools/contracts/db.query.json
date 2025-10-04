@@ -1,0 +1,114 @@
+{
+  "name": "db.query",
+  "scope": "read/db.query",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "entity": {
+        "type": "string",
+        "enum": [
+          "fragments",
+          "contacts",
+          "quotes",
+          "books",
+          "work_items"
+        ]
+      },
+      "filters": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "string"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "=",
+                "!=",
+                "in",
+                "nin",
+                "lt",
+                "lte",
+                "gt",
+                "gte",
+                "like",
+                "ilike",
+                "fulltext",
+                "json_contains"
+              ]
+            },
+            "value": {}
+          },
+          "required": [
+            "field",
+            "op",
+            "value"
+          ]
+        }
+      },
+      "search": {
+        "type": "string"
+      },
+      "boosts": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "number"
+        }
+      },
+      "order_by": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "string"
+            },
+            "dir": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          "required": [
+            "field"
+          ]
+        }
+      },
+      "limit": {
+        "type": "integer",
+        "default": 50
+      },
+      "offset": {
+        "type": "integer",
+        "default": 0
+      }
+    },
+    "required": [
+      "entity"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      },
+      "cursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "explain": {
+        "type": "object"
+      }
+    }
+  }
+}

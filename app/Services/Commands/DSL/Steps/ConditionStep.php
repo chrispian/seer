@@ -21,6 +21,8 @@ class ConditionStep extends Step
         $thenSteps = $config['then'] ?? [];
         $elseSteps = $config['else'] ?? [];
 
+
+
         if (empty($condition)) {
             throw new \InvalidArgumentException('Condition step requires a condition');
         }

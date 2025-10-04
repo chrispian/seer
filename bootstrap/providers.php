@@ -6,4 +6,5 @@ return [
     App\Providers\Filament\FragmentsPanelProvider::class,
     App\Providers\HorizonServiceProvider::class,
     App\Providers\FragmentsPipelineEventServiceProvider::class,
+    App\Providers\ToolServiceProvider::class,
 ];
