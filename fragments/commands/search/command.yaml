@@ -1,6 +1,6 @@
-name: "Search Fragments"
+name: "Fragment Search (Unified)"
 slug: search
-version: 1.0.0
+version: 2.0.0
 triggers:
   slash: "/search"
   aliases: ["/s", "/find"]
@@ -9,21 +9,37 @@ reserved: true
 
 requires:
   secrets: []
-  capabilities: ["search.query"]
+  capabilities: ["fragment.query", "search.query"]
 
 steps:
   - id: coerce-input
     type: transform
     template: |
-      {{ ctx.body | default: ctx.selection | trim }}
+      {{ ctx.body }}
 
-  - id: perform-search
-    type: search.query
-    query: "{{ steps.coerce-input.output }}"
-    limit: 10
-
-  - id: notify
-    type: notify
+  - id: validate-query
+    type: validate
     with:
-      message: "🔍 Found {{ steps.perform-search.output.count }} results for '{{ steps.coerce-input.output }}'"
-      level: "info"
+      rules:
+        query_not_empty: "{{ steps.coerce-input.output | length > 0 }}"
+      messages:
+        query_not_empty: "No search query provided. Please try `/search your query here`"
+
+  - id: basic-search
+    type: fragment.query
+    with:
+      search: "{{ steps.coerce-input.output }}"
+      limit: 20
+      order: "created_at desc"
+      with_relations: ["type"]
+
+  - id: display-results
+    type: response.panel
+    with:
+      type: "search"
+      message: "🔍 Found search results for: {{ steps.coerce-input.output }}"
+      shouldOpenPanel: true
+      panel_data:
+        query: "{{ steps.coerce-input.output }}"
+        fragments: "{{ steps.basic-search.output.fragments }}"
+        search_mode: "text-only"

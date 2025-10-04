@@ -1,0 +1,51 @@
+{
+  "name": "fs.write",
+  "version": "1.0.0",
+  "scope": "fs.write",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "create",
+          "overwrite",
+          "append"
+        ],
+        "default": "create"
+      },
+      "dry_run": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "required": [
+      "path",
+      "content"
+    ]
+  },
+  "policies": {
+    "allowlist_paths": [
+      "storage/app/exports",
+      "storage/app/tmp",
+      "bootstrap/cache"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "written": {
+        "type": "boolean"
+      },
+      "sha256": {
+        "type": "string"
+      }
+    }
+  }
+}

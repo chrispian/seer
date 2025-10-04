@@ -35,23 +35,33 @@ class AiGenerateStep extends Step
 
         try {
             // Use the AI provider to generate content
-            $messages = [
-                ['role' => 'user', 'content' => $prompt],
-            ];
-
-            $response = $this->aiProvider->chat($messages, [
+            $response = $this->aiProvider->generateText($prompt, [], [
                 'max_tokens' => $maxTokens,
                 'temperature' => 0.3,
             ]);
 
-            $result = $response['choices'][0]['message']['content'] ?? '';
+            // Log the full response to debug the structure
+            \Log::info('AI Provider Full Response', ['response' => $response]);
+
+            $result = $response['content'] ?? $response['text'] ?? $response ?? '';
 
             // Handle expected output type
             if ($expect === 'json') {
+                // Log the raw AI response for debugging
+                \Log::info('AI Generate Step Raw Response', ['result' => $result]);
+                
+                // Try to extract JSON from the response
+                $jsonResult = $this->extractJson($result);
+                
                 try {
-                    return json_decode($result, true, 512, JSON_THROW_ON_ERROR);
+                    return json_decode($jsonResult, true, 512, JSON_THROW_ON_ERROR);
                 } catch (\JsonException $e) {
-                    throw new \InvalidArgumentException("AI generate step expected JSON but got invalid JSON: {$e->getMessage()}");
+                    \Log::error('AI Generate JSON Parse Error', [
+                        'raw_result' => $result,
+                        'extracted_json' => $jsonResult,
+                        'error' => $e->getMessage()
+                    ]);
+                    throw new \InvalidArgumentException("AI generate step expected JSON but got invalid JSON: {$e->getMessage()}. Raw response: " . substr($result, 0, 200));
                 }
             }
 
@@ -60,6 +70,28 @@ class AiGenerateStep extends Step
         } catch (\Exception $e) {
             throw new \RuntimeException("AI generation failed: {$e->getMessage()}");
         }
+    }
+
+    /**
+     * Extract JSON from AI response that might contain extra text
+     */
+    private function extractJson(string $text): string
+    {
+        // Remove common AI response prefixes/suffixes
+        $text = trim($text);
+        
+        // Look for JSON object patterns
+        if (preg_match('/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/', $text, $matches)) {
+            return $matches[0];
+        }
+        
+        // Look for JSON array patterns
+        if (preg_match('/\[[^\[\]]*(?:\[[^\[\]]*\][^\[\]]*)*\]/', $text, $matches)) {
+            return $matches[0];
+        }
+        
+        // If no JSON pattern found, return original text
+        return $text;
     }
 
     public function validate(array $config): bool

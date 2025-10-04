@@ -1,0 +1,27 @@
+{
+  "name": "fs.read",
+  "version": "1.0.0",
+  "scope": "fs.read",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "content": {
+        "type": "string"
+      },
+      "sha256": {
+        "type": "string"
+      }
+    }
+  }
+}

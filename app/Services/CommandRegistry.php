@@ -30,10 +30,10 @@ class CommandRegistry
         // 'help' => HelpCommand::class, // Migrated to YAML
         // 'clear' => ClearCommand::class, // Migrated to YAML
         // 'frag' => FragCommand::class, // Migrated to YAML (simplified)
-        'search' => SearchCommand::class,
-        's' => SearchCommand::class, // alias for search
-        'todo' => TodoCommand::class,
-        't' => TodoCommand::class, // alias for todo
+        // 'search' => SearchCommand::class, // Migrated to YAML (unified)
+        // 's' => SearchCommand::class, // alias for search
+        // 'todo' => TodoCommand::class, // Migrated to YAML (unified)
+        // 't' => TodoCommand::class, // alias for todo
         'join' => JoinCommand::class,
         'j' => JoinCommand::class, // alias for join
         'channels' => ChannelsCommand::class,
@@ -47,7 +47,7 @@ class CommandRegistry
         'p' => ProjectCommand::class, // alias for project
         'context' => ContextCommand::class,
         'ctx' => ContextCommand::class, // alias for context
-        'inbox' => InboxCommand::class,
+        // 'inbox' => InboxCommand::class, // Migrated to YAML (unified)
         'in' => InboxCommand::class, // alias for inbox
         'compose' => ComposeCommand::class,
         'c' => ComposeCommand::class, // alias for compose

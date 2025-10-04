@@ -6,6 +6,13 @@
                 "./artisan",
                 "boost:mcp"
             ]
+        },
+        "delegation-system": {
+            "command": "php",
+            "args": [
+                "./artisan",
+                "delegation:mcp"
+            ]
         }
     }
 }

@@ -235,6 +235,17 @@ class CommandController extends Controller
                 }
             }
             
+            // Handle simple notify steps (just message)
+            if ($step['type'] === 'notify' && isset($stepOutput['message']) && 
+                !isset($stepOutput['panel_data']) && !isset($stepOutput['response_data'])) {
+                $response->message = $stepOutput['message'];
+                if (isset($stepOutput['level']) && $stepOutput['level'] === 'success') {
+                    $response->shouldShowSuccessToast = true;
+                } elseif (isset($stepOutput['level']) && $stepOutput['level'] === 'error') {
+                    $response->shouldShowErrorToast = true;
+                }
+            }
+            
             // Handle response.panel steps
             if ($step['type'] === 'response.panel' && isset($stepOutput['shouldOpenPanel'])) {
                 $response->type = $stepOutput['type'] ?? 'panel';
