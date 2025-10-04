@@ -29,7 +29,7 @@ class ValidateTypePackCommand extends Command
         $validator = app(TypePackValidator::class);
 
         // If no sample provided, prompt for interactive input
-        if (!$samplePath) {
+        if (! $samplePath) {
             return $this->interactiveValidation($validator, $slug);
         }
 
@@ -70,8 +70,9 @@ class ValidateTypePackCommand extends Command
      */
     protected function validateSampleFile(TypePackValidator $validator, string $slug, string $samplePath): int
     {
-        if (!File::exists($samplePath)) {
+        if (! File::exists($samplePath)) {
             $this->error("Sample file not found: {$samplePath}");
+
             return self::FAILURE;
         }
 
@@ -80,10 +81,12 @@ class ValidateTypePackCommand extends Command
             $data = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
 
             $this->info("Validating sample file: {$samplePath}");
+
             return $this->validateData($validator, $slug, $data) ? self::SUCCESS : self::FAILURE;
 
         } catch (\JsonException $e) {
             $this->error("Invalid JSON in sample file: {$e->getMessage()}");
+
             return self::FAILURE;
         }
     }
@@ -95,13 +98,13 @@ class ValidateTypePackCommand extends Command
     {
         try {
             $validatedData = $validator->validateFragmentState($data, $slug);
-            
-            $this->info("✅ Validation successful!");
-            $this->line("Input data:");
+
+            $this->info('✅ Validation successful!');
+            $this->line('Input data:');
             $this->line(json_encode($data, JSON_PRETTY_PRINT));
-            
+
             if ($validatedData !== $data) {
-                $this->line("Normalized data:");
+                $this->line('Normalized data:');
                 $this->line(json_encode($validatedData, JSON_PRETTY_PRINT));
             }
 
@@ -109,11 +112,11 @@ class ValidateTypePackCommand extends Command
 
         } catch (\Exception $e) {
             $this->error("❌ Validation failed: {$e->getMessage()}");
-            
+
             // Get detailed validation errors
             $errors = $validator->getValidationErrors($data, $slug);
-            if (!empty($errors)) {
-                $this->line("Validation errors:");
+            if (! empty($errors)) {
+                $this->line('Validation errors:');
                 foreach ($errors as $field => $fieldErrors) {
                     foreach ($fieldErrors as $error) {
                         $this->line("  • {$field}: {$error}");

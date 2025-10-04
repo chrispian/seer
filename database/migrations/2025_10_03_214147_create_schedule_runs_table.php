@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('job_id')->nullable(); // Queue job ID for tracking
             $table->string('dedupe_key')->nullable(); // For idempotency
             $table->timestamps();
-            
+
             // Unique constraint for idempotency
             $table->unique(['schedule_id', 'planned_run_at']);
             $table->index(['status', 'started_at']);

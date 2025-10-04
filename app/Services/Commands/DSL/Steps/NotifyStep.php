@@ -15,7 +15,7 @@ class NotifyStep extends Step
         $level = $config['with']['level'] ?? 'info';
         $panelData = $config['with']['panel_data'] ?? null;
 
-        if (!$message) {
+        if (! $message) {
             throw new \InvalidArgumentException('Notify step requires a message');
         }
 
@@ -29,6 +29,7 @@ class NotifyStep extends Step
             if ($panelData) {
                 $result['panel_data'] = $panelData;
             }
+
             return $result;
         }
 
@@ -44,7 +45,7 @@ class NotifyStep extends Step
             'level' => $level,
             'notified' => true,
         ];
-        
+
         if ($panelData) {
             $result['panel_data'] = $panelData;
         }

@@ -14,7 +14,7 @@ class TransformStep extends Step
         $template = $config['template'] ?? '';
         $output = $config['output'] ?? 'text';
 
-        if (!$template) {
+        if (! $template) {
             throw new \InvalidArgumentException('Transform step requires a template');
         }
 

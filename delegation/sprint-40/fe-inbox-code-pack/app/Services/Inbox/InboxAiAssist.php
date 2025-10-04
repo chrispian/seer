@@ -2,8 +2,8 @@
 
 namespace App\Services\Inbox;
 
-use Illuminate\Support\Facades\Config;
 use App\Services\Inbox\Prompts\PromptFactory;
+use Illuminate\Support\Facades\Config;
 
 class InboxAiAssist
 {
@@ -32,12 +32,14 @@ class InboxAiAssist
                 $result['edited_message'] = $suggested;
             }
         }
+
         return $result;
     }
 
     protected function generate(string $kind, array $frag, array $updates, array $cfg): ?string
     {
         $prompt = PromptFactory::make($kind, $frag, $updates);
+
         // TODO: call your LLM client here using $cfg['model'].
         // Return placeholder for now.
         return null; // Keep deterministic for MVP unless enabled with a client.

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('status')->default('ok'); // ok|error
             $table->float('duration_ms')->nullable();
             $table->timestampTz('created_at')->useCurrent();
-            
+
             // Indexes for querying
             $table->index(['tool_slug', 'created_at']);
             $table->index(['user_id', 'created_at']);

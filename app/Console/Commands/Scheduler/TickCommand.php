@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 class TickCommand extends Command
 {
     protected $signature = 'frag:scheduler:tick';
-    
+
     protected $description = 'Process scheduled commands that are due to run';
 
     public function __construct(
@@ -29,6 +29,7 @@ class TickCommand extends Command
 
         if ($dueSchedules->isEmpty()) {
             $this->info('No schedules due to run');
+
             return self::SUCCESS;
         }
 
@@ -41,18 +42,18 @@ class TickCommand extends Command
             try {
                 $this->processSchedule($schedule, $now);
                 $processedCount++;
-                
+
                 $this->line("✓ Processed schedule {$schedule->id}: {$schedule->name}");
             } catch (\Exception $e) {
                 $errorCount++;
                 $this->error("✗ Failed to process schedule {$schedule->id}: {$e->getMessage()}");
-                
+
                 // Log the full error for debugging
                 \Log::error('Scheduler failed to process schedule', [
                     'schedule_id' => $schedule->id,
                     'schedule_name' => $schedule->name,
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
+                    'trace' => $e->getTraceAsString(),
                 ]);
             }
         }
@@ -68,12 +69,14 @@ class TickCommand extends Command
         // Skip if this is a one-off schedule that has already run
         if ($schedule->recurrence_type === 'one_off' && $schedule->scheduleRuns()->exists()) {
             $this->line("  Skipping one-off schedule {$schedule->id} (already executed)");
+
             return;
         }
 
         // Lock the schedule for processing
-        if (!$schedule->lock()) {
+        if (! $schedule->lock()) {
             $this->line("  Schedule {$schedule->id} is locked, skipping");
+
             return;
         }
 
@@ -102,14 +105,14 @@ class TickCommand extends Command
                     // Don't fail the entire process, but log it
                     \Log::warning('Failed to calculate next run for schedule', [
                         'schedule_id' => $schedule->id,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                     $schedule->unlock();
                 }
             } else {
                 // One-off schedule - mark as completed after running
                 $schedule->update(['status' => 'completed']);
-                $this->line("  One-off schedule marked as completed");
+                $this->line('  One-off schedule marked as completed');
             }
         } catch (\Exception $e) {
             $schedule->unlock();

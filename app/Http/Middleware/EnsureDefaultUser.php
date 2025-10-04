@@ -16,7 +16,7 @@ class EnsureDefaultUser
     public function handle(Request $request, Closure $next): Response
     {
         // Always ensure we have a default user logged in
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             $user = $this->getOrCreateDefaultUser();
             Auth::login($user);
         }
@@ -28,8 +28,8 @@ class EnsureDefaultUser
     {
         // Get the first user or create a default one
         $user = User::first();
-        
-        if (!$user) {
+
+        if (! $user) {
             $user = User::create([
                 'name' => 'User',
                 'email' => 'user@fragments.local',

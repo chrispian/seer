@@ -21,7 +21,7 @@ return new class extends Migration
             $table->json('requires_secrets')->nullable();
             $table->boolean('reserved')->default(false);
             $table->timestamps();
-            
+
             // Indexes for performance
             $table->index(['slug', 'version']);
             $table->index('steps_hash');

@@ -22,14 +22,16 @@ class RunScheduledCommandJob implements ShouldQueue
     public function handle(): void
     {
         $scheduleRun = ScheduleRun::find($this->scheduleRunId);
-        if (!$scheduleRun) {
+        if (! $scheduleRun) {
             Log::warning('Schedule run not found', ['id' => $this->scheduleRunId]);
+
             return;
         }
 
         $schedule = $scheduleRun->schedule;
-        if (!$schedule) {
+        if (! $schedule) {
             Log::warning('Schedule not found for run', ['run_id' => $this->scheduleRunId]);
+
             return;
         }
 
@@ -49,7 +51,7 @@ class RunScheduledCommandJob implements ShouldQueue
                     'now' => now()->toISOString(),
                     'user' => ['id' => 1, 'name' => 'System'], // System user for scheduled tasks
                     'workspace' => ['id' => 1],
-                    'session' => ['id' => 'scheduler-' . uniqid()],
+                    'session' => ['id' => 'scheduler-'.uniqid()],
                 ],
             ];
 
@@ -70,7 +72,7 @@ class RunScheduledCommandJob implements ShouldQueue
                     'summary' => 'Command executed successfully',
                 ]);
                 $scheduleRun->markAsCompleted($output, $durationMs);
-                
+
                 Log::info('Scheduled command completed successfully', [
                     'schedule_id' => $schedule->id,
                     'command_slug' => $schedule->command_slug,
@@ -78,7 +80,7 @@ class RunScheduledCommandJob implements ShouldQueue
                 ]);
             } else {
                 $scheduleRun->markAsFailed($execution['error'] ?? 'Unknown error', $durationMs);
-                
+
                 Log::error('Scheduled command failed', [
                     'schedule_id' => $schedule->id,
                     'command_slug' => $schedule->command_slug,
@@ -90,7 +92,7 @@ class RunScheduledCommandJob implements ShouldQueue
         } catch (\Exception $e) {
             $durationMs = round((microtime(true) - $startTime) * 1000);
             $scheduleRun->markAsFailed($e->getMessage(), $durationMs);
-            
+
             Log::error('Scheduled command job failed', [
                 'schedule_id' => $schedule->id,
                 'command_slug' => $schedule->command_slug,
@@ -107,7 +109,7 @@ class RunScheduledCommandJob implements ShouldQueue
     {
         $scheduleRun = ScheduleRun::find($this->scheduleRunId);
         if ($scheduleRun) {
-            $scheduleRun->markAsFailed('Job failed: ' . $exception->getMessage());
+            $scheduleRun->markAsFailed('Job failed: '.$exception->getMessage());
         }
 
         Log::error('RunScheduledCommandJob failed', [

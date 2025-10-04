@@ -18,13 +18,13 @@ class TypePackValidator
     public function validateFragmentState(array $state, string $typeSlug): array
     {
         $typePack = app(TypePackLoader::class)->loadTypePack($typeSlug);
-        
-        if (!$typePack) {
+
+        if (! $typePack) {
             throw new \InvalidArgumentException("Type pack not found: {$typeSlug}");
         }
 
         $schema = $typePack['schema'] ?? null;
-        if (!$schema) {
+        if (! $schema) {
             // No schema means no validation required
             return $state;
         }
@@ -37,13 +37,13 @@ class TypePackValidator
      */
     protected function validateAgainstJsonSchema(array $data, array $schema, string $typeSlug): array
     {
-        $validator = new \JsonSchema\Validator();
+        $validator = new \JsonSchema\Validator;
         $dataObj = json_decode(json_encode($data));
         $schemaObj = json_decode(json_encode($schema));
 
         $validator->validate($dataObj, $schemaObj);
 
-        if (!$validator->isValid()) {
+        if (! $validator->isValid()) {
             $errors = [];
             foreach ($validator->getErrors() as $error) {
                 $errors[] = [
@@ -60,8 +60,8 @@ class TypePackValidator
             ]);
 
             throw ValidationException::withMessages([
-                'state' => "Type validation failed for {$typeSlug}: " . 
-                          collect($errors)->pluck('message')->implode('; ')
+                'state' => "Type validation failed for {$typeSlug}: ".
+                          collect($errors)->pluck('message')->implode('; '),
             ]);
         }
 
@@ -75,6 +75,7 @@ class TypePackValidator
     {
         try {
             $this->validateFragmentState($state, $typeSlug);
+
             return [];
         } catch (ValidationException $e) {
             return $e->errors();
@@ -90,6 +91,7 @@ class TypePackValidator
     {
         try {
             $this->validateFragmentState($state, $typeSlug);
+
             return true;
         } catch (\Exception $e) {
             return false;

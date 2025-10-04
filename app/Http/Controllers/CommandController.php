@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\DTOs\CommandRequest;
-use App\Models\Fragment;
 use App\Models\CommandRegistry as CommandRegistryModel;
+use App\Models\Fragment;
 use App\Services\CommandRegistry;
 use App\Services\Commands\DSL\CommandRunner;
 use Illuminate\Http\Request;
@@ -42,7 +42,7 @@ class CommandController extends Controller
             // First try to find in hardcoded commands
             try {
                 $commandClass = CommandRegistry::find($commandName);
-                
+
                 // Create command request
                 $commandRequest = new CommandRequest(
                     command: $commandName,
@@ -72,19 +72,19 @@ class CommandController extends Controller
                     'shouldShowErrorToast' => $response->shouldShowErrorToast,
                     'data' => $response->data,
                 ]);
-                
+
             } catch (\InvalidArgumentException $e) {
                 // Not found in hardcoded commands, try file-based commands
                 $dbCommand = CommandRegistryModel::where('slug', $commandName)->first();
                 if ($dbCommand) {
                     $runner = app(CommandRunner::class);
                     $result = $runner->execute($commandName, $arguments);
-                    
+
                     $executionTime = round((microtime(true) - $startTime) * 1000, 2);
-                    
+
                     // Convert CommandRunner result to expected response format
                     $response = $this->convertDslResultToResponse($result);
-                    
+
                     // Log command execution
                     $this->logCommandExecution($commandName, $commandText, $arguments, $response, $executionTime, $result['success']);
 
@@ -168,7 +168,7 @@ class CommandController extends Controller
      */
     private function convertDslResultToResponse(array $result): object
     {
-        $response = new \stdClass();
+        $response = new \stdClass;
         $response->type = 'success';
         $response->message = 'Command executed successfully';
         $response->fragments = [];
@@ -180,10 +180,11 @@ class CommandController extends Controller
         $response->shouldShowErrorToast = false;
         $response->data = null;
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $response->type = 'error';
             $response->message = $result['error'] ?? 'Command execution failed';
             $response->shouldShowErrorToast = true;
+
             return $response;
         }
 

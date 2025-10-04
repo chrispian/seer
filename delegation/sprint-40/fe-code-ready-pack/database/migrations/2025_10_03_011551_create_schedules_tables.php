@@ -4,15 +4,17 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-    public function up(): void {
+return new class extends Migration
+{
+    public function up(): void
+    {
         Schema::create('schedules', function (Blueprint $t) {
             $t->uuid('id')->primary();
             $t->uuid('user_id');
             $t->uuid('workspace_id')->nullable();
             $t->string('slug');
             $t->string('command_slug');
-            $t->json('payload')->default(DB::raw("(JSON_OBJECT())"));
+            $t->json('payload')->default(DB::raw('(JSON_OBJECT())'));
 
             $t->string('schedule_kind'); // one_off|daily_at|cron|rrule
             $t->string('tz')->default('America/Chicago');
@@ -51,7 +53,9 @@ return new class extends Migration {
             $t->unique(['schedule_id', 'planned_run_at']);
         });
     }
-    public function down(): void {
+
+    public function down(): void
+    {
         Schema::dropIfExists('schedule_runs');
         Schema::dropIfExists('schedules');
     }

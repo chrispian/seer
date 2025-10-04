@@ -17,7 +17,7 @@ class AiGenerateStep extends Step
 
     public function execute(array $config, array $context, bool $dryRun = false): mixed
     {
-        if (!config('fragments.ai.enabled', true)) {
+        if (! config('fragments.ai.enabled', true)) {
             throw new \RuntimeException('AI generation is disabled');
         }
 
@@ -25,7 +25,7 @@ class AiGenerateStep extends Step
         $expect = $config['expect'] ?? 'text';
         $maxTokens = $config['max_tokens'] ?? 500;
 
-        if (!$prompt) {
+        if (! $prompt) {
             throw new \InvalidArgumentException('AI generate step requires a prompt');
         }
 
@@ -36,7 +36,7 @@ class AiGenerateStep extends Step
         try {
             // Use the AI provider to generate content
             $messages = [
-                ['role' => 'user', 'content' => $prompt]
+                ['role' => 'user', 'content' => $prompt],
             ];
 
             $response = $this->aiProvider->chat($messages, [

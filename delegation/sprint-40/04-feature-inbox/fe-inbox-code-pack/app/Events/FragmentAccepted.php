@@ -14,5 +14,5 @@ class FragmentAccepted
         public string $fragmentId,
         public array $updates,
         public ?string $userId
-    ){}
+    ) {}
 }

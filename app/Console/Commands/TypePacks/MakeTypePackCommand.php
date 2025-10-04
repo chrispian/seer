@@ -27,16 +27,18 @@ class MakeTypePackCommand extends Command
         $force = $this->option('force');
 
         // Validate slug format
-        if (!preg_match('/^[a-z][a-z0-9_-]*$/', $slug)) {
+        if (! preg_match('/^[a-z][a-z0-9_-]*$/', $slug)) {
             $this->error('Type pack slug must start with a letter and contain only lowercase letters, numbers, underscores, and hyphens.');
+
             return self::FAILURE;
         }
 
         $typePackPath = base_path("fragments/types/{$slug}");
 
         // Check if type pack already exists
-        if (File::isDirectory($typePackPath) && !$force) {
+        if (File::isDirectory($typePackPath) && ! $force) {
             $this->error("Type pack '{$slug}' already exists. Use --force to overwrite.");
+
             return self::FAILURE;
         }
 
@@ -53,7 +55,7 @@ class MakeTypePackCommand extends Command
 
         $this->info("✅ Type pack '{$slug}' created successfully!");
         $this->line("📁 Location: {$typePackPath}");
-        $this->line("📝 Edit the manifest, schema, and indexes files to customize your type pack.");
+        $this->line('📝 Edit the manifest, schema, and indexes files to customize your type pack.');
         $this->line("🔄 Run 'php artisan frag:type:cache' to register the type pack.");
 
         return self::SUCCESS;
@@ -65,7 +67,7 @@ class MakeTypePackCommand extends Command
     protected function createManifest(string $path, string $slug): void
     {
         $name = Str::title(str_replace(['_', '-'], ' ', $slug));
-        
+
         $manifest = <<<YAML
 name: "{$name}"
 description: "Custom type pack for {$slug} fragments"
@@ -110,7 +112,7 @@ YAML;
     protected function createSchema(string $path, string $slug): void
     {
         $name = Str::title(str_replace(['_', '-'], ' ', $slug));
-        
+
         $schema = [
             '$schema' => 'http://json-schema.org/draft-07/schema#',
             'title' => "{$name} State Schema",
@@ -120,20 +122,20 @@ YAML;
                 'status' => [
                     'type' => 'string',
                     'enum' => ['active', 'inactive', 'archived'],
-                    'description' => "Current status of the {$slug} item"
+                    'description' => "Current status of the {$slug} item",
                 ],
                 'created_at' => [
                     'type' => ['string', 'null'],
                     'format' => 'date-time',
-                    'description' => "When the {$slug} was created (ISO 8601 format)"
+                    'description' => "When the {$slug} was created (ISO 8601 format)",
                 ],
                 'notes' => [
                     'type' => ['string', 'null'],
-                    'description' => 'Additional notes or context'
-                ]
+                    'description' => 'Additional notes or context',
+                ],
             ],
             'required' => ['status'],
-            'additionalProperties' => false
+            'additionalProperties' => false,
         ];
 
         File::put("{$path}/state.schema.json", json_encode($schema, JSON_PRETTY_PRINT));
@@ -187,7 +189,7 @@ YAML;
     protected function createReadme(string $path, string $slug): void
     {
         $name = Str::title(str_replace(['_', '-'], ' ', $slug));
-        
+
         $readme = <<<MARKDOWN
 # {$name} Type Pack
 

@@ -2,60 +2,57 @@
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-
-use App\Events\Scheduler\ScheduleRunStarted;
-use App\Events\Scheduler\ScheduleRunFinished;
-use App\Events\Tools\ToolInvoked;
-use App\Events\Tools\ToolCompleted;
-use App\Events\Commands\CommandStarted;
 use App\Events\Commands\CommandCompleted;
+use App\Events\Commands\CommandStarted;
 use App\Events\Fragments\FragmentCreated;
-use App\Events\Fragments\FragmentUpdated;
 use App\Events\Fragments\FragmentDeleted;
-
-use App\Listeners\Projectors\SchedulerProjector;
-use App\Listeners\Projectors\ToolProjector;
+use App\Events\Fragments\FragmentUpdated;
+use App\Events\Scheduler\ScheduleRunFinished;
+use App\Events\Scheduler\ScheduleRunStarted;
+use App\Events\Tools\ToolCompleted;
+use App\Events\Tools\ToolInvoked;
+use App\Listeners\Metrics\PipelineMetricsListener;
 use App\Listeners\Projectors\CommandProjector;
 use App\Listeners\Projectors\FragmentLifecycleProjector;
-
-use App\Listeners\Metrics\PipelineMetricsListener;
+use App\Listeners\Projectors\SchedulerProjector;
+use App\Listeners\Projectors\ToolProjector;
+use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class FragmentsPipelineEventServiceProvider extends ServiceProvider
 {
     protected $listen = [
         ScheduleRunStarted::class => [
-            SchedulerProjector::class . '@onRunStarted',
-            PipelineMetricsListener::class . '@onScheduleRunStarted',
+            SchedulerProjector::class.'@onRunStarted',
+            PipelineMetricsListener::class.'@onScheduleRunStarted',
         ],
         ScheduleRunFinished::class => [
-            SchedulerProjector::class . '@onRunFinished',
-            PipelineMetricsListener::class . '@onScheduleRunFinished',
+            SchedulerProjector::class.'@onRunFinished',
+            PipelineMetricsListener::class.'@onScheduleRunFinished',
         ],
         ToolInvoked::class => [
-            ToolProjector::class . '@onToolInvoked',
-            PipelineMetricsListener::class . '@onToolInvoked',
+            ToolProjector::class.'@onToolInvoked',
+            PipelineMetricsListener::class.'@onToolInvoked',
         ],
         ToolCompleted::class => [
-            ToolProjector::class . '@onToolCompleted',
-            PipelineMetricsListener::class . '@onToolCompleted',
+            ToolProjector::class.'@onToolCompleted',
+            PipelineMetricsListener::class.'@onToolCompleted',
         ],
         CommandStarted::class => [
-            CommandProjector::class . '@onCommandStarted',
-            PipelineMetricsListener::class . '@onCommandStarted',
+            CommandProjector::class.'@onCommandStarted',
+            PipelineMetricsListener::class.'@onCommandStarted',
         ],
         CommandCompleted::class => [
-            CommandProjector::class . '@onCommandCompleted',
-            PipelineMetricsListener::class . '@onCommandCompleted',
+            CommandProjector::class.'@onCommandCompleted',
+            PipelineMetricsListener::class.'@onCommandCompleted',
         ],
         FragmentCreated::class => [
-            FragmentLifecycleProjector::class . '@onCreated',
+            FragmentLifecycleProjector::class.'@onCreated',
         ],
         FragmentUpdated::class => [
-            FragmentLifecycleProjector::class . '@onUpdated',
+            FragmentLifecycleProjector::class.'@onUpdated',
         ],
         FragmentDeleted::class => [
-            FragmentLifecycleProjector::class . '@onDeleted',
+            FragmentLifecycleProjector::class.'@onDeleted',
         ],
     ];
 }

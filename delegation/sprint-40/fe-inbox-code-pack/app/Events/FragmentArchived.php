@@ -13,5 +13,5 @@ class FragmentArchived
     public function __construct(
         public array $fragmentIds,
         public ?string $userId
-    ){}
+    ) {}
 }

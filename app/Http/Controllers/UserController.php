@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
@@ -10,8 +9,8 @@ class UserController extends Controller
     public function show()
     {
         $user = Auth::user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return response()->json(['error' => 'User not authenticated'], 401);
         }
 
@@ -26,7 +25,7 @@ class UserController extends Controller
                 'use_gravatar' => $user->use_gravatar,
                 'profile_settings' => $user->profile_settings,
                 'profile_completed_at' => $user->profile_completed_at,
-            ]
+            ],
         ]);
     }
 }

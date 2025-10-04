@@ -14,9 +14,9 @@ class ToolCallStep implements Step
     {
         $name = data_get($def, 'with.name');
         $args = data_get($def, 'with.args', []);
-        $context = ['user' => data_get($scope,'ctx.user'), 'workspace' => data_get($scope,'ctx.workspace')];
+        $context = ['user' => data_get($scope, 'ctx.user'), 'workspace' => data_get($scope, 'ctx.workspace')];
 
-        if (!$this->tools->allowed($name)) {
+        if (! $this->tools->allowed($name)) {
             throw new \RuntimeException("Tool not allowed: {$name}");
         }
         $tool = $this->tools->get($name);
@@ -25,6 +25,7 @@ class ToolCallStep implements Step
         try {
             $resp = $tool->call($args, $context);
             $status = 'ok';
+
             return $resp;
         } catch (\Throwable $e) {
             $resp = ['error' => $e->getMessage()];
@@ -33,15 +34,15 @@ class ToolCallStep implements Step
         } finally {
             DB::table('tool_invocations')->insert([
                 'id' => (string) Str::uuid(),
-                'user_id' => data_get($context,'user.id'),
-                'workspace_id' => data_get($context,'workspace.id'),
+                'user_id' => data_get($context, 'user.id'),
+                'workspace_id' => data_get($context, 'workspace.id'),
                 'tool_slug' => $name,
-                'command_slug' => data_get($scope,'ctx.schedule.command_slug'),
-                'fragment_id' => data_get($scope,'ctx.fragment_id'),
+                'command_slug' => data_get($scope, 'ctx.schedule.command_slug'),
+                'fragment_id' => data_get($scope, 'ctx.fragment_id'),
                 'request' => json_encode($args),
                 'response' => json_encode($resp ?? null),
                 'status' => $status,
-                'duration_ms' => round((microtime(true)-$start)*1000,2),
+                'duration_ms' => round((microtime(true) - $start) * 1000, 2),
                 'created_at' => now(),
             ]);
         }

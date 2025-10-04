@@ -4,8 +4,10 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-    public function up(): void {
+return new class extends Migration
+{
+    public function up(): void
+    {
         Schema::create('tool_invocations', function (Blueprint $t) {
             $t->uuid('id')->primary();
             $t->uuid('user_id')->nullable();
@@ -20,7 +22,9 @@ return new class extends Migration {
             $t->timestampTz('created_at')->useCurrent();
         });
     }
-    public function down(): void {
+
+    public function down(): void
+    {
         Schema::dropIfExists('tool_invocations');
     }
 };

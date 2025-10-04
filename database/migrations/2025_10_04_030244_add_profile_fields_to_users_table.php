@@ -16,13 +16,13 @@ return new class extends Migration
             $table->string('display_name')->nullable()->after('name');
             $table->string('avatar_path')->nullable()->after('display_name');
             $table->boolean('use_gravatar')->default(true)->after('avatar_path');
-            
+
             // Settings and preferences as JSON
             $table->json('profile_settings')->nullable()->after('use_gravatar');
-            
+
             // Setup completion tracking
             $table->timestamp('profile_completed_at')->nullable()->after('profile_settings');
-            
+
             // Add indexes for performance
             $table->index('profile_completed_at');
             $table->index('use_gravatar');
@@ -39,10 +39,10 @@ return new class extends Migration
             $table->dropIndex(['use_gravatar']);
             $table->dropColumn([
                 'display_name',
-                'avatar_path', 
+                'avatar_path',
                 'use_gravatar',
                 'profile_settings',
-                'profile_completed_at'
+                'profile_completed_at',
             ]);
         });
     }

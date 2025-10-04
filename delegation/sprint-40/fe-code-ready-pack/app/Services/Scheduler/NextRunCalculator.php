@@ -11,6 +11,7 @@ class NextRunCalculator
     {
         $this->hhmm = $hhmm;
         $this->tz = $tz;
+
         return $this;
     }
 
@@ -18,10 +19,11 @@ class NextRunCalculator
     {
         [$h,$m] = explode(':', $this->hhmm);
         $localNow = $utcNow->setTimezone(new DateTimeZone($this->tz));
-        $candidate = $localNow->setTime((int)$h,(int)$m,0);
+        $candidate = $localNow->setTime((int) $h, (int) $m, 0);
         if ($candidate->lessThanOrEqualTo($localNow)) {
             $candidate = $candidate->addDay();
         }
+
         return $candidate->setTimezone('UTC')->toIso8601String();
     }
 }

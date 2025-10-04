@@ -49,7 +49,7 @@ class ScheduleRun extends Model
     /**
      * Mark the run as completed successfully
      */
-    public function markAsCompleted(string $output = null, int $durationMs = null): void
+    public function markAsCompleted(?string $output = null, ?int $durationMs = null): void
     {
         $this->update([
             'status' => 'completed',
@@ -62,7 +62,7 @@ class ScheduleRun extends Model
     /**
      * Mark the run as failed
      */
-    public function markAsFailed(string $errorMessage, int $durationMs = null): void
+    public function markAsFailed(string $errorMessage, ?int $durationMs = null): void
     {
         $this->update([
             'status' => 'failed',
@@ -77,7 +77,7 @@ class ScheduleRun extends Model
      */
     public static function generateDedupeKey(int $scheduleId, \DateTime $plannedRunAt): string
     {
-        return hash('sha256', $scheduleId . '|' . $plannedRunAt->format('Y-m-d H:i:s'));
+        return hash('sha256', $scheduleId.'|'.$plannedRunAt->format('Y-m-d H:i:s'));
     }
 
     /**

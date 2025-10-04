@@ -27,13 +27,13 @@ class CleanupAvatars extends Command
     public function handle(AvatarService $avatarService)
     {
         $days = (int) $this->option('days');
-        
+
         $this->info("Cleaning up avatar files older than {$days} days...");
-        
+
         $cleaned = $avatarService->cleanupOldAvatars($days);
-        
+
         $this->info("Cleanup completed. {$cleaned} files removed.");
-        
+
         return 0;
     }
 }

@@ -15,6 +15,7 @@ class AiGenerateStep implements Step
         // TODO: inject your LLM client here and return its output.
         // For now, just echo the prompt back.
         $expect = $def['expect'] ?? 'text';
+
         return $expect === 'json' ? ['_demo' => 'replace with LLM JSON'] : $rendered;
     }
 }

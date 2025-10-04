@@ -2,9 +2,9 @@
 
 namespace App\Services\Commands\DSL\Steps;
 
-use App\Services\Tools\ToolRegistry;
-use App\Events\Tools\ToolInvoked;
 use App\Events\Tools\ToolCompleted;
+use App\Events\Tools\ToolInvoked;
+use App\Services\Tools\ToolRegistry;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -21,28 +21,28 @@ class ToolCallStep extends Step
     {
         $toolName = data_get($config, 'with.tool');
         $args = data_get($config, 'with.args', []);
-        
-        if (!$toolName) {
+
+        if (! $toolName) {
             throw new \InvalidArgumentException('Missing required parameter: tool');
         }
 
         // Check if tool is allowed
-        if (!$this->tools->allowed($toolName)) {
+        if (! $this->tools->allowed($toolName)) {
             throw new \RuntimeException("Tool not allowed: {$toolName}");
         }
 
         // Validate tool exists
-        if (!$this->tools->exists($toolName)) {
+        if (! $this->tools->exists($toolName)) {
             throw new \RuntimeException("Tool not found: {$toolName}");
         }
 
         // Validate arguments
-        if (!$this->tools->validateArgs($toolName, $args)) {
+        if (! $this->tools->validateArgs($toolName, $args)) {
             throw new \InvalidArgumentException("Invalid arguments for tool: {$toolName}");
         }
 
         $tool = $this->tools->get($toolName);
-        
+
         // Build tool context
         $toolContext = [
             'user' => data_get($context, 'ctx.user'),
@@ -71,13 +71,13 @@ class ToolCallStep extends Step
 
         try {
             $response = $tool->call($args, $toolContext);
+
             return $response;
 
         } catch (\Throwable $e) {
             $status = 'error';
             $response = ['error' => $e->getMessage()];
             throw $e;
-
         } finally {
             $durationMs = round((microtime(true) - $start) * 1000, 2);
 

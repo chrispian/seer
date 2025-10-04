@@ -3,8 +3,8 @@
 namespace App\Listeners\Projectors;
 
 use App\Events\Fragments\FragmentCreated;
-use App\Events\Fragments\FragmentUpdated;
 use App\Events\Fragments\FragmentDeleted;
+use App\Events\Fragments\FragmentUpdated;
 use Illuminate\Support\Facades\DB;
 
 class FragmentLifecycleProjector
@@ -13,7 +13,7 @@ class FragmentLifecycleProjector
     {
         $today = now()->format('Y-m-d');
         $type = $event->fragment->type ?? 'unknown';
-        
+
         // Check if record exists first
         $existing = DB::table('fragment_metrics_daily')
             ->where('day', $today)
@@ -40,7 +40,7 @@ class FragmentLifecycleProjector
     {
         $today = now()->format('Y-m-d');
         $type = $event->fragment->type ?? 'unknown';
-        
+
         $existing = DB::table('fragment_metrics_daily')
             ->where('day', $today)
             ->where('type', $type)
@@ -66,7 +66,7 @@ class FragmentLifecycleProjector
     {
         $today = now()->format('Y-m-d');
         $type = $event->fragment->type ?? 'unknown';
-        
+
         $existing = DB::table('fragment_metrics_daily')
             ->where('day', $today)
             ->where('type', $type)

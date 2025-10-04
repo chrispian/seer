@@ -23,20 +23,21 @@ class ProcessAvatarUpload implements ShouldQueue
         Log::debug('ProcessAvatarUpload::handle()', [
             'user_id' => $this->userId,
             'temp_file' => $this->tempFilePath,
-            'original_name' => $this->originalName
+            'original_name' => $this->originalName,
         ]);
 
         $user = User::find($this->userId);
         if (! $user) {
             Log::warning('ProcessAvatarUpload: user not found', ['user_id' => $this->userId]);
             $this->cleanupTempFile();
+
             return;
         }
 
         try {
             // Validate file exists and is readable
             if (! file_exists($this->tempFilePath) || ! is_readable($this->tempFilePath)) {
-                throw new \Exception('Temp file not accessible: ' . $this->tempFilePath);
+                throw new \Exception('Temp file not accessible: '.$this->tempFilePath);
             }
 
             // Get image info and validate
@@ -55,36 +56,36 @@ class ProcessAvatarUpload implements ShouldQueue
             }
 
             // Generate unique filename
-            $filename = 'avatars/' . $user->id . '_' . time() . '.jpg';
-            
+            $filename = 'avatars/'.$user->id.'_'.time().'.jpg';
+
             // Process the image
             $processedImage = $this->processImage($this->tempFilePath, $imageInfo);
-            
+
             // Save to storage
             Storage::disk('public')->put($filename, $processedImage);
-            
+
             // Remove old avatar if exists
             if ($user->avatar_path && Storage::disk('public')->exists($user->avatar_path)) {
                 Storage::disk('public')->delete($user->avatar_path);
             }
-            
+
             // Update user record
             $user->update([
                 'avatar_path' => $filename,
-                'use_gravatar' => false
+                'use_gravatar' => false,
             ]);
-            
+
             Log::info('Avatar processed and saved', [
                 'user_id' => $this->userId,
                 'avatar_path' => $filename,
-                'original_size' => $imageInfo[0] . 'x' . $imageInfo[1],
-                'processed_size' => '200x200'
+                'original_size' => $imageInfo[0].'x'.$imageInfo[1],
+                'processed_size' => '200x200',
             ]);
-            
+
         } catch (\Throwable $e) {
             Log::error('ProcessAvatarUpload: failed to process avatar', [
                 'user_id' => $this->userId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         } finally {
@@ -95,9 +96,9 @@ class ProcessAvatarUpload implements ShouldQueue
     private function processImage(string $sourcePath, array $imageInfo): string
     {
         $targetSize = 200;
-        
+
         // Create image resource based on type
-        $sourceImage = match($imageInfo[2]) {
+        $sourceImage = match ($imageInfo[2]) {
             IMAGETYPE_JPEG => imagecreatefromjpeg($sourcePath),
             IMAGETYPE_PNG => imagecreatefrompng($sourcePath),
             IMAGETYPE_GIF => imagecreatefromgif($sourcePath),
@@ -111,7 +112,7 @@ class ProcessAvatarUpload implements ShouldQueue
 
         // Create target image
         $targetImage = imagecreatetruecolor($targetSize, $targetSize);
-        
+
         // Handle transparency for PNG and GIF
         if ($imageInfo[2] === IMAGETYPE_PNG || $imageInfo[2] === IMAGETYPE_GIF) {
             imagealphablending($targetImage, false);

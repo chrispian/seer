@@ -27,16 +27,18 @@ class MakeCommandPackCommand extends Command
         $force = $this->option('force');
 
         // Validate slug format
-        if (!preg_match('/^[a-z][a-z0-9_-]*$/', $slug)) {
+        if (! preg_match('/^[a-z][a-z0-9_-]*$/', $slug)) {
             $this->error('Command pack slug must start with a letter and contain only lowercase letters, numbers, underscores, and hyphens.');
+
             return self::FAILURE;
         }
 
         $commandPackPath = base_path("fragments/commands/{$slug}");
 
         // Check if command pack already exists
-        if (File::isDirectory($commandPackPath) && !$force) {
+        if (File::isDirectory($commandPackPath) && ! $force) {
             $this->error("Command pack '{$slug}' already exists. Use --force to overwrite.");
+
             return self::FAILURE;
         }
 
@@ -55,7 +57,7 @@ class MakeCommandPackCommand extends Command
 
         $this->info("✅ Command pack '{$slug}' created successfully!");
         $this->line("📁 Location: {$commandPackPath}");
-        $this->line("📝 Edit the manifest, prompts, and samples to customize your command pack.");
+        $this->line('📝 Edit the manifest, prompts, and samples to customize your command pack.');
         $this->line("🔄 Run 'php artisan frag:command:cache' to register the command pack.");
         $this->line("🧪 Run 'php artisan frag:command:test {$slug} --dry' to test execution.");
 
@@ -68,7 +70,7 @@ class MakeCommandPackCommand extends Command
     protected function createManifest(string $path, string $slug): void
     {
         $name = Str::title(str_replace(['_', '-'], ' ', $slug));
-        
+
         $manifest = <<<YAML
 name: "{$name}"
 slug: {$slug}
@@ -144,7 +146,7 @@ MARKDOWN;
                 'user' => ['id' => 1, 'name' => 'Test User'],
                 'workspace' => ['id' => 1],
                 'session' => ['id' => 'test-session'],
-            ]
+            ],
         ];
 
         File::put("{$path}/samples/basic.json", json_encode($sample, JSON_PRETTY_PRINT));
@@ -156,7 +158,7 @@ MARKDOWN;
     protected function createReadme(string $path, string $slug): void
     {
         $name = Str::title(str_replace(['_', '-'], ' ', $slug));
-        
+
         $readme = <<<MARKDOWN
 # {$name} Command Pack
 

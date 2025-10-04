@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'setup.complete' => \App\Http\Middleware\EnsureUserSetupComplete::class,
             'default.user' => \App\Http\Middleware\EnsureDefaultUser::class,
         ]);
-        
+
         // Apply middlewares to web routes
         $middleware->web(append: [
             \App\Http\Middleware\EnsureDefaultUser::class,

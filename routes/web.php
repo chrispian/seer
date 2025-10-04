@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\AppShellController;
-use App\Http\Controllers\SetupController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SetupController;
 use Illuminate\Support\Facades\Route;
 
 // Setup wizard routes
@@ -21,7 +21,7 @@ Route::middleware([\App\Http\Middleware\EnsureDefaultUser::class])->prefix('setu
 // Main application routes
 Route::middleware([\App\Http\Middleware\EnsureDefaultUser::class])->group(function () {
     Route::get('/', [AppShellController::class, 'index'])->name('root');
-    
+
     // Settings routes
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');

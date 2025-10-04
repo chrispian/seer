@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\Inbox\InboxService;
 use App\Services\Inbox\InboxAiAssist;
-use Illuminate\Http\Request;
+use App\Services\Inbox\InboxService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
 
 class InboxController extends Controller
 {
@@ -52,6 +51,7 @@ class InboxController extends Controller
     public function stats(): JsonResponse
     {
         $stats = $this->inboxService->getInboxStats();
+
         return response()->json($stats);
     }
 
@@ -86,15 +86,15 @@ class InboxController extends Controller
 
         try {
             $success = $this->inboxService->acceptFragment($fragmentId, $userId, $edits);
-            
+
             return response()->json([
                 'success' => $success,
-                'message' => 'Fragment accepted successfully'
+                'message' => 'Fragment accepted successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }
@@ -120,7 +120,7 @@ class InboxController extends Controller
 
         $results = $this->inboxService->acceptFragments($fragmentIds, $userId, $bulkEdits);
 
-        $successCount = count(array_filter($results, fn($r) => $r['success']));
+        $successCount = count(array_filter($results, fn ($r) => $r['success']));
         $totalCount = count($results);
 
         return response()->json([
@@ -130,7 +130,7 @@ class InboxController extends Controller
                 'success' => $successCount,
                 'failed' => $totalCount - $successCount,
             ],
-            'message' => "Processed {$totalCount} fragments: {$successCount} accepted"
+            'message' => "Processed {$totalCount} fragments: {$successCount} accepted",
         ]);
     }
 
@@ -153,12 +153,12 @@ class InboxController extends Controller
         ]);
 
         $userId = auth()->id() ?? 1; // Default to user 1 for testing
-        $filterCriteria = array_filter($filters, fn($key) => $key !== 'edits', ARRAY_FILTER_USE_KEY);
+        $filterCriteria = array_filter($filters, fn ($key) => $key !== 'edits', ARRAY_FILTER_USE_KEY);
         $bulkEdits = $filters['edits'] ?? [];
 
         $results = $this->inboxService->acceptAll($userId, $filterCriteria, $bulkEdits);
 
-        $successCount = count(array_filter($results, fn($r) => $r['success']));
+        $successCount = count(array_filter($results, fn ($r) => $r['success']));
         $totalCount = count($results);
 
         return response()->json([
@@ -168,7 +168,7 @@ class InboxController extends Controller
                 'success' => $successCount,
                 'failed' => $totalCount - $successCount,
             ],
-            'message' => "Accepted all matching fragments: {$successCount} of {$totalCount}"
+            'message' => "Accepted all matching fragments: {$successCount} of {$totalCount}",
         ]);
     }
 
@@ -186,15 +186,15 @@ class InboxController extends Controller
 
         try {
             $success = $this->inboxService->archiveFragment($fragmentId, $userId, $reason);
-            
+
             return response()->json([
                 'success' => $success,
-                'message' => 'Fragment archived successfully'
+                'message' => 'Fragment archived successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }
@@ -213,15 +213,15 @@ class InboxController extends Controller
 
         try {
             $success = $this->inboxService->skipFragment($fragmentId, $userId, $reason);
-            
+
             return response()->json([
                 'success' => $success,
-                'message' => 'Fragment skipped successfully'
+                'message' => 'Fragment skipped successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }
@@ -233,15 +233,15 @@ class InboxController extends Controller
     {
         try {
             $success = $this->inboxService->reopenFragment($fragmentId);
-            
+
             return response()->json([
                 'success' => $success,
-                'message' => 'Fragment reopened successfully'
+                'message' => 'Fragment reopened successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }

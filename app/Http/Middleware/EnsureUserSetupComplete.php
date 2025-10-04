@@ -22,8 +22,8 @@ class EnsureUserSetupComplete
         // - Setup-related routes
         // - API routes (handled separately)
         // - Asset requests
-        if (! $user || 
-            $request->routeIs('setup.*') || 
+        if (! $user ||
+            $request->routeIs('setup.*') ||
             $request->is('api/*') ||
             $request->is('assets/*') ||
             $request->is('storage/*')) {
@@ -35,7 +35,7 @@ class EnsureUserSetupComplete
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Profile setup required',
-                    'setup_required' => true
+                    'setup_required' => true,
                 ], 422);
             }
 

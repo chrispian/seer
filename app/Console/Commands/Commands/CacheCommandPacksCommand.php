@@ -43,8 +43,9 @@ class CacheCommandPacksCommand extends Command
             $loader->refreshCache($slug);
             $commandPack = $loader->loadCommandPack($slug);
 
-            if (!$commandPack) {
+            if (! $commandPack) {
                 $this->error("Command pack '{$slug}' not found.");
+
                 return self::FAILURE;
             }
 
@@ -54,6 +55,7 @@ class CacheCommandPacksCommand extends Command
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error("Failed to cache command pack '{$slug}': {$e->getMessage()}");
+
             return self::FAILURE;
         }
     }
@@ -74,10 +76,11 @@ class CacheCommandPacksCommand extends Command
 
             if (empty($commandPacks)) {
                 $this->warn('No command packs found.');
+
                 return self::SUCCESS;
             }
 
-            $this->info("✅ Cached " . count($commandPacks) . " command pack(s):");
+            $this->info('✅ Cached '.count($commandPacks).' command pack(s):');
 
             foreach ($commandPacks as $slug => $commandPack) {
                 $version = $commandPack['manifest']['version'] ?? '1.0.0';
@@ -89,6 +92,7 @@ class CacheCommandPacksCommand extends Command
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error("Failed to cache command packs: {$e->getMessage()}");
+
             return self::FAILURE;
         }
     }
@@ -99,21 +103,21 @@ class CacheCommandPacksCommand extends Command
     protected function displayCommandPackInfo(array $commandPack): void
     {
         $manifest = $commandPack['manifest'] ?? [];
-        
+
         $this->newLine();
-        $this->line("<info>📦 Command Pack Details:</info>");
-        $this->line("  Name: " . ($manifest['name'] ?? 'Unknown'));
-        $this->line("  Version: " . ($manifest['version'] ?? '1.0.0'));
-        $this->line("  Slash Command: " . ($manifest['triggers']['slash'] ?? 'Unknown'));
-        $this->line("  Source: " . ($commandPack['source_path'] ?? 'Unknown'));
-        
+        $this->line('<info>📦 Command Pack Details:</info>');
+        $this->line('  Name: '.($manifest['name'] ?? 'Unknown'));
+        $this->line('  Version: '.($manifest['version'] ?? '1.0.0'));
+        $this->line('  Slash Command: '.($manifest['triggers']['slash'] ?? 'Unknown'));
+        $this->line('  Source: '.($commandPack['source_path'] ?? 'Unknown'));
+
         if (isset($manifest['requires']['capabilities'])) {
-            $this->line("  Capabilities: " . implode(', ', $manifest['requires']['capabilities']));
+            $this->line('  Capabilities: '.implode(', ', $manifest['requires']['capabilities']));
         }
 
         if (isset($manifest['steps'])) {
             $stepTypes = array_column($manifest['steps'], 'type');
-            $this->line("  Steps: " . implode(' → ', $stepTypes));
+            $this->line('  Steps: '.implode(' → ', $stepTypes));
         }
     }
 }

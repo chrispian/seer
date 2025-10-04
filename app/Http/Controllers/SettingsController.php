@@ -14,7 +14,7 @@ class SettingsController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         return view('settings.index', [
             'user' => $user,
             'profile_settings' => $user->profile_settings ?? [],
@@ -26,27 +26,27 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'display_name' => 'nullable|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . Auth::id(),
+            'email' => 'required|email|max:255|unique:users,email,'.Auth::id(),
         ]);
 
         $user = Auth::user();
-        
+
         // Update basic user fields
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
         ]);
-        
+
         // Update profile using action
         $createProfile($user, [
-            'display_name' => $validated['display_name']
+            'display_name' => $validated['display_name'],
         ]);
 
         Log::info('User profile updated', ['user_id' => $user->id]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Profile updated successfully'
+            'message' => 'Profile updated successfully',
         ]);
     }
 
@@ -54,7 +54,7 @@ class SettingsController extends Controller
     {
         $request->validate([
             'avatar' => ['nullable', File::image()->max(5000)],
-            'use_gravatar' => 'boolean'
+            'use_gravatar' => 'boolean',
         ]);
 
         $user = Auth::user();
@@ -65,7 +65,7 @@ class SettingsController extends Controller
             } else {
                 // Update gravatar preference
                 $user->update(['use_gravatar' => $request->boolean('use_gravatar', true)]);
-                
+
                 // Cache Gravatar if enabled
                 if ($user->use_gravatar && $user->email) {
                     $avatarService->cacheGravatar($user);
@@ -75,18 +75,18 @@ class SettingsController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Avatar updated successfully',
-                'avatar_url' => $avatarService->getAvatarUrl($user)
+                'avatar_url' => $avatarService->getAvatarUrl($user),
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Avatar update failed', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 422);
         }
     }
@@ -111,19 +111,19 @@ class SettingsController extends Controller
         $currentSettings = $user->profile_settings ?? [];
 
         // Merge new settings with existing ones
-        $newSettings = array_merge($currentSettings, array_filter($validated, fn($value) => !is_null($value)));
+        $newSettings = array_merge($currentSettings, array_filter($validated, fn ($value) => ! is_null($value)));
 
         $user->update(['profile_settings' => $newSettings]);
 
         Log::info('User preferences updated', [
             'user_id' => $user->id,
-            'updated_keys' => array_keys($validated)
+            'updated_keys' => array_keys($validated),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Preferences updated successfully',
-            'settings' => $newSettings
+            'settings' => $newSettings,
         ]);
     }
 
@@ -141,29 +141,29 @@ class SettingsController extends Controller
 
         $user = Auth::user();
         $currentSettings = $user->profile_settings ?? [];
-        
+
         // Update AI-specific settings
-        $aiSettings = array_merge($currentSettings['ai'] ?? [], array_filter($validated, fn($value) => !is_null($value)));
+        $aiSettings = array_merge($currentSettings['ai'] ?? [], array_filter($validated, fn ($value) => ! is_null($value)));
         $currentSettings['ai'] = $aiSettings;
 
         $user->update(['profile_settings' => $currentSettings]);
 
         Log::info('User AI settings updated', [
             'user_id' => $user->id,
-            'updated_keys' => array_keys($validated)
+            'updated_keys' => array_keys($validated),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'AI settings updated successfully',
-            'ai_settings' => $aiSettings
+            'ai_settings' => $aiSettings,
         ]);
     }
 
     public function exportSettings()
     {
         $user = Auth::user();
-        
+
         $export = [
             'profile' => [
                 'display_name' => $user->display_name,
@@ -171,10 +171,10 @@ class SettingsController extends Controller
             ],
             'settings' => $user->profile_settings ?? [],
             'exported_at' => now()->toISOString(),
-            'version' => '1.0'
+            'version' => '1.0',
         ];
 
         return response()->json($export)
-            ->header('Content-Disposition', 'attachment; filename="fragments-settings-' . now()->format('Y-m-d') . '.json"');
+            ->header('Content-Disposition', 'attachment; filename="fragments-settings-'.now()->format('Y-m-d').'.json"');
     }
 }

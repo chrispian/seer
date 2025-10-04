@@ -13,7 +13,7 @@ class CreateUserProfile
     {
         Log::debug('CreateUserProfile::invoke()', [
             'user_id' => $user->id,
-            'profile_data_keys' => array_keys($profileData)
+            'profile_data_keys' => array_keys($profileData),
         ]);
 
         // Validate profile data

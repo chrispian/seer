@@ -2,8 +2,8 @@
 
 namespace App\Listeners\Projectors;
 
-use App\Events\Commands\CommandStarted;
 use App\Events\Commands\CommandCompleted;
+use App\Events\Commands\CommandStarted;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -12,7 +12,7 @@ class CommandProjector
     public function onCommandStarted(CommandStarted $event): void
     {
         $runId = $event->runId && Str::isUuid($event->runId) ? $event->runId : (string) Str::uuid();
-        
+
         DB::table('command_runs')->insert([
             'id' => $runId,
             'slug' => $event->slug,

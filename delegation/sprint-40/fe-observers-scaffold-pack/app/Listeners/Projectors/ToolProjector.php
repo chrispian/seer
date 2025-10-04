@@ -2,10 +2,10 @@
 
 namespace App\Listeners\Projectors;
 
+use App\Events\Tools\ToolCompleted;
+use App\Events\Tools\ToolInvoked;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use App\Events\Tools\ToolInvoked;
-use App\Events\Tools\ToolCompleted;
 
 class ToolProjector
 {
@@ -28,15 +28,18 @@ class ToolProjector
     public function onToolCompleted(ToolCompleted $e): void
     {
         $day = date('Y-m-d');
-        $row = DB::table('tool_metrics_daily')->where(['day'=>$day,'tool'=>$e->tool])->first();
+        $row = DB::table('tool_metrics_daily')->where(['day' => $day, 'tool' => $e->tool])->first();
         $data = [
             'invocations' => ($row->invocations ?? 0) + 1,
             'errors' => ($row->errors ?? 0) + ($e->status === 'ok' ? 0 : 1),
             'duration_ms_sum' => ($row->duration_ms_sum ?? 0) + (int) $e->durationMs,
             'duration_ms_count' => ($row->duration_ms_count ?? 0) + 1,
         ];
-        if ($row) DB::table('tool_metrics_daily')->where(['day'=>$day,'tool'=>$e->tool])->update($data);
-        else DB::table('tool_metrics_daily')->insert(array_merge(['day'=>$day,'tool'=>$e->tool], $data));
+        if ($row) {
+            DB::table('tool_metrics_daily')->where(['day' => $day, 'tool' => $e->tool])->update($data);
+        } else {
+            DB::table('tool_metrics_daily')->insert(array_merge(['day' => $day, 'tool' => $e->tool], $data));
+        }
 
         DB::table('tool_activity')->insert([
             'id' => (string) Str::uuid(),

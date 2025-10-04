@@ -35,8 +35,8 @@ class TestCommandPackCommand extends Command
             return self::FAILURE;
         }
 
-        $this->info("Testing command pack '{$slug}'" . ($dryRun ? ' (dry run)' : ''));
-        $this->line("Context: " . json_encode($context, JSON_PRETTY_PRINT));
+        $this->info("Testing command pack '{$slug}'".($dryRun ? ' (dry run)' : ''));
+        $this->line('Context: '.json_encode($context, JSON_PRETTY_PRINT));
         $this->newLine();
 
         try {
@@ -47,6 +47,7 @@ class TestCommandPackCommand extends Command
 
         } catch (\Exception $e) {
             $this->error("Execution failed: {$e->getMessage()}");
+
             return self::FAILURE;
         }
     }
@@ -58,16 +59,19 @@ class TestCommandPackCommand extends Command
     {
         if ($samplePath) {
             // Load from specified file
-            if (!File::exists($samplePath)) {
+            if (! File::exists($samplePath)) {
                 $this->error("Sample file not found: {$samplePath}");
+
                 return null;
             }
 
             try {
                 $content = File::get($samplePath);
+
                 return json_decode($content, true, 512, JSON_THROW_ON_ERROR);
             } catch (\JsonException $e) {
                 $this->error("Invalid JSON in sample file: {$e->getMessage()}");
+
                 return null;
             }
         }
@@ -77,21 +81,22 @@ class TestCommandPackCommand extends Command
         if (File::exists($builtInSamplePath)) {
             try {
                 $content = File::get($builtInSamplePath);
+
                 return json_decode($content, true, 512, JSON_THROW_ON_ERROR);
             } catch (\JsonException $e) {
-                $this->warn("Invalid JSON in built-in sample, using default context");
+                $this->warn('Invalid JSON in built-in sample, using default context');
             }
         }
 
         // Use default context
         return [
             'ctx' => [
-                'body' => 'Test input for ' . $slug,
+                'body' => 'Test input for '.$slug,
                 'selection' => '',
                 'user' => ['id' => 1, 'name' => 'Test User'],
                 'workspace' => ['id' => 1],
                 'session' => ['id' => 'test-session'],
-            ]
+            ],
         ];
     }
 
@@ -100,30 +105,30 @@ class TestCommandPackCommand extends Command
      */
     protected function displayExecutionResult(array $execution): void
     {
-        $this->line("<info>🎯 Execution Result:</info>");
+        $this->line('<info>🎯 Execution Result:</info>');
         $this->line("  Command: {$execution['command']}");
-        $this->line("  Success: " . ($execution['success'] ? '✅ Yes' : '❌ No'));
-        
+        $this->line('  Success: '.($execution['success'] ? '✅ Yes' : '❌ No'));
+
         if ($execution['error']) {
             $this->line("  Error: {$execution['error']}");
         }
 
         $this->newLine();
-        $this->line("<info>📝 Steps:</info>");
+        $this->line('<info>📝 Steps:</info>');
 
         foreach ($execution['steps'] as $step) {
             $status = $step['success'] ? '✅' : '❌';
             $this->line("  {$status} {$step['id']} ({$step['type']}) - {$step['duration_ms']}ms");
-            
+
             if ($step['error']) {
                 $this->line("    Error: {$step['error']}");
             }
-            
+
             if ($step['output']) {
-                $output = is_array($step['output']) 
+                $output = is_array($step['output'])
                     ? json_encode($step['output'], JSON_PRETTY_PRINT)
                     : $step['output'];
-                $this->line("    Output: " . substr($output, 0, 200) . (strlen($output) > 200 ? '...' : ''));
+                $this->line('    Output: '.substr($output, 0, 200).(strlen($output) > 200 ? '...' : ''));
             }
         }
 

@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Schedule;
 use App\Models\ScheduleRun;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
 {
@@ -18,7 +18,7 @@ class ScheduleController extends Controller
             $status = $request->get('status');
             $limit = $request->get('limit', 50);
 
-            $query = Schedule::query()->with(['runs' => function($query) {
+            $query = Schedule::query()->with(['runs' => function ($query) {
                 $query->latest()->limit(5);
             }]);
 
@@ -64,12 +64,12 @@ class ScheduleController extends Controller
 
             return response()->json([
                 'data' => $schedules,
-                'total' => $schedules->count()
+                'total' => $schedules->count(),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to fetch schedules',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -112,17 +112,17 @@ class ScheduleController extends Controller
                             'name' => $schedule->name,
                             'command_slug' => $schedule->command_slug,
                             'next_run_at' => $schedule->next_run_at,
-                            'time_until' => $schedule->next_run_at ? 
+                            'time_until' => $schedule->next_run_at ?
                                 $schedule->next_run_at->diffForHumans() : null,
                         ];
-                    })
+                    }),
             ];
 
             return response()->json($stats);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to fetch schedule statistics',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -133,7 +133,7 @@ class ScheduleController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $schedule = Schedule::with(['runs' => function($query) {
+            $schedule = Schedule::with(['runs' => function ($query) {
                 $query->latest()->limit(20);
             }])->findOrFail($id);
 
@@ -174,7 +174,7 @@ class ScheduleController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to fetch schedule details',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 404);
         }
     }
@@ -215,12 +215,12 @@ class ScheduleController extends Controller
 
             return response()->json([
                 'data' => $runs,
-                'total' => $runs->count()
+                'total' => $runs->count(),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to fetch schedule runs',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

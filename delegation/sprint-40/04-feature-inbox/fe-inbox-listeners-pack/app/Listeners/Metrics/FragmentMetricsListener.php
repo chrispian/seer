@@ -13,8 +13,8 @@ class FragmentMetricsListener
 
     public function __construct()
     {
-        $driver = config('metrics.driver','null');
-        $this->m = match($driver) {
+        $driver = config('metrics.driver', 'null');
+        $this->m = match ($driver) {
             'log' => App::make(\App\Services\Metrics\LogMetrics::class),
             'prom' => App::make(\App\Services\Metrics\PromMetrics::class),
             default => App::make(\App\Services\Metrics\NullMetrics::class),

@@ -2,14 +2,14 @@
 
 namespace App\Services\Commands\DSL;
 
-use Symfony\Component\Yaml\Yaml;
 use App\Services\Commands\CommandRegistry;
+use Symfony\Component\Yaml\Yaml;
 
 class Runner
 {
     public function __construct(
         protected CommandRegistry $registry
-    ){}
+    ) {}
 
     public function run(string $slug, array $ctx): array
     {
@@ -31,7 +31,7 @@ class Runner
 
     protected function resolveStep(string $type): Step
     {
-        return match($type) {
+        return match ($type) {
             'transform' => app(TransformStep::class),
             'ai.generate' => app(AiGenerateStep::class),
             'fragment.create' => app(FragmentCreateStep::class),

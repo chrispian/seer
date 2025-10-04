@@ -4,8 +4,10 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-    public function up(): void {
+return new class extends Migration
+{
+    public function up(): void
+    {
         Schema::create('schedule_metrics_daily', function (Blueprint $t) {
             $t->date('day');
             $t->integer('runs')->default(0);
@@ -24,7 +26,7 @@ return new class extends Migration {
             $t->uuid('user_id')->nullable();
             $t->timestampTz('started_at')->useCurrent();
             $t->timestampTz('finished_at')->nullable();
-            $t->index(['slug','started_at']);
+            $t->index(['slug', 'started_at']);
         });
 
         Schema::create('command_activity', function (Blueprint $t) {
@@ -36,7 +38,7 @@ return new class extends Migration {
             $t->uuid('user_id')->nullable();
             $t->json('payload')->nullable();
             $t->timestampTz('ts')->useCurrent();
-            $t->index(['slug','ts']);
+            $t->index(['slug', 'ts']);
         });
 
         Schema::create('tool_metrics_daily', function (Blueprint $t) {
@@ -46,7 +48,7 @@ return new class extends Migration {
             $t->integer('errors')->default(0);
             $t->bigInteger('duration_ms_sum')->default(0);
             $t->integer('duration_ms_count')->default(0);
-            $t->primary(['day','tool']);
+            $t->primary(['day', 'tool']);
         });
 
         Schema::create('tool_activity', function (Blueprint $t) {
@@ -60,10 +62,12 @@ return new class extends Migration {
             $t->uuid('workspace_id')->nullable();
             $t->uuid('user_id')->nullable();
             $t->timestampTz('ts')->useCurrent();
-            $t->index(['tool','ts']);
+            $t->index(['tool', 'ts']);
         });
     }
-    public function down(): void {
+
+    public function down(): void
+    {
         Schema::dropIfExists('tool_activity');
         Schema::dropIfExists('tool_metrics_daily');
         Schema::dropIfExists('command_activity');

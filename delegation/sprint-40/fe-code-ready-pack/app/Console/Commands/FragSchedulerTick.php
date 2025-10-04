@@ -2,29 +2,30 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
+use App\Jobs\RunCommandJob;
 use App\Models\Schedule;
 use App\Models\ScheduleRun;
-use App\Jobs\RunCommandJob;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class FragSchedulerTick extends Command
 {
     protected $signature = 'frag:scheduler:tick {--limit=50}';
+
     protected $description = 'Claim due schedules and enqueue runs';
 
     public function handle(): int
     {
         $limit = (int) $this->option('limit');
-        $owner = gethostname() . ':' . getmypid();
+        $owner = gethostname().':'.getmypid();
 
         $due = Schedule::query()
             ->where('status', 'active')
             ->whereNotNull('next_run_at')
             ->where('next_run_at', '<=', now())
-            ->where(function($q){
+            ->where(function ($q) {
                 $q->whereNull('locked_at')
-                  ->orWhere('locked_at', '<', now()->subMinutes(5));
+                    ->orWhere('locked_at', '<', now()->subMinutes(5));
             })
             ->orderBy('next_run_at', 'asc')
             ->limit($limit)
@@ -33,8 +34,12 @@ class FragSchedulerTick extends Command
         foreach ($due as $sch) {
             DB::transaction(function () use ($sch, $owner) {
                 $fresh = Schedule::lockForUpdate()->find($sch->id);
-                if (!$fresh) return;
-                if ($fresh->locked_at && $fresh->locked_at->gt(now()->subMinutes(5))) return;
+                if (! $fresh) {
+                    return;
+                }
+                if ($fresh->locked_at && $fresh->locked_at->gt(now()->subMinutes(5))) {
+                    return;
+                }
 
                 $fresh->locked_at = now();
                 $fresh->lock_owner = $owner;
@@ -53,6 +58,7 @@ class FragSchedulerTick extends Command
         }
 
         $this->info("Tick complete: processed {$due->count()}");
+
         return self::SUCCESS;
     }
 }

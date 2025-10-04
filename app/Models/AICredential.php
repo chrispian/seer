@@ -82,7 +82,7 @@ class AICredential extends Model
     ): self {
         // Encrypt the credentials first
         $encryptedCredentials = Crypt::encrypt(json_encode($credentials));
-        
+
         $credential = static::updateOrCreate(
             [
                 'provider' => $provider,

@@ -28,7 +28,7 @@ return new class extends Migration
             $table->unsignedInteger('run_count')->default(0);
             $table->unsignedInteger('max_runs')->nullable(); // null = unlimited
             $table->timestamps();
-            
+
             // Indexes for scheduler performance
             $table->index(['status', 'next_run_at']);
             $table->index(['locked_at', 'status']);

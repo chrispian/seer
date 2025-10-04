@@ -15,7 +15,7 @@ class SetupController extends Controller
     public function welcome()
     {
         $user = Auth::user();
-        
+
         // If already completed, redirect to main app
         if ($user && $user->hasCompletedSetup()) {
             return redirect('/');
@@ -43,7 +43,7 @@ class SetupController extends Controller
 
         return response()->json([
             'success' => true,
-            'next_step' => route('setup.avatar')
+            'next_step' => route('setup.avatar'),
         ]);
     }
 
@@ -59,68 +59,68 @@ class SetupController extends Controller
             'files' => $request->allFiles(),
             'content_type' => $request->header('Content-Type'),
             'user_agent' => $request->header('User-Agent'),
-            'is_ajax' => $request->ajax()
+            'is_ajax' => $request->ajax(),
         ]);
 
         try {
             $request->validate([
                 'avatar' => ['nullable', File::image()->max(5000)],
-                'use_gravatar' => 'nullable|string'
+                'use_gravatar' => 'nullable|string',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Avatar validation failed', [
                 'errors' => $e->errors(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
-            
+
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'error' => 'Validation failed',
-                    'errors' => $e->errors()
+                    'errors' => $e->errors(),
                 ], 422);
             }
-            
+
             throw $e;
         }
 
         $user = Auth::user();
-        
+
         // Convert string boolean to actual boolean
         $useGravatar = $request->input('use_gravatar') === 'true' || $request->boolean('use_gravatar', true);
 
         try {
             if ($request->hasFile('avatar')) {
                 $avatarService->processUpload($user, $request->file('avatar'));
-                
+
                 Log::info('Avatar upload initiated', [
                     'user_id' => $user->id,
-                    'file_size' => $request->file('avatar')->getSize()
+                    'file_size' => $request->file('avatar')->getSize(),
                 ]);
             }
-            
+
             // Always update gravatar preference
             $user->update(['use_gravatar' => $useGravatar]);
-            
+
             // Cache Gravatar if enabled and no file upload
-            if ($useGravatar && $user->email && !$request->hasFile('avatar')) {
+            if ($useGravatar && $user->email && ! $request->hasFile('avatar')) {
                 $avatarService->cacheGravatar($user);
             }
 
             return response()->json([
                 'success' => true,
-                'next_step' => route('setup.preferences')
+                'next_step' => route('setup.preferences'),
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Avatar setup failed', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 422);
         }
     }
@@ -151,7 +151,7 @@ class SetupController extends Controller
 
         return response()->json([
             'success' => true,
-            'next_step' => route('setup.complete')
+            'next_step' => route('setup.complete'),
         ]);
     }
 
@@ -169,7 +169,7 @@ class SetupController extends Controller
     {
         return response()->json([
             'success' => true,
-            'redirect' => '/'
+            'redirect' => '/',
         ]);
     }
 }

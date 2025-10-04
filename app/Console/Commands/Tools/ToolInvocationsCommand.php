@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 class ToolInvocationsCommand extends Command
 {
     protected $signature = 'frag:tools:invocations {--tool= : Filter by tool slug} {--limit=10 : Number of records to show} {--status= : Filter by status (ok|error)}';
-    
+
     protected $description = 'Show recent tool invocations and their results';
 
     public function handle(): int
@@ -32,6 +32,7 @@ class ToolInvocationsCommand extends Command
 
         if ($invocations->isEmpty()) {
             $this->info('No tool invocations found');
+
             return self::SUCCESS;
         }
 
@@ -43,10 +44,10 @@ class ToolInvocationsCommand extends Command
 
         foreach ($invocations as $invocation) {
             $rows[] = [
-                substr($invocation->id, 0, 8) . '...',
+                substr($invocation->id, 0, 8).'...',
                 $invocation->tool_slug,
                 $invocation->status === 'ok' ? '✅ OK' : '❌ Error',
-                $invocation->duration_ms ? round($invocation->duration_ms, 1) . 'ms' : '-',
+                $invocation->duration_ms ? round($invocation->duration_ms, 1).'ms' : '-',
                 $invocation->user_id ?? '-',
                 $invocation->command_slug ?? '-',
                 $invocation->created_at,
@@ -62,7 +63,7 @@ class ToolInvocationsCommand extends Command
             ->groupBy('tool_slug', 'status')
             ->get();
 
-        if (!$stats->isEmpty()) {
+        if (! $stats->isEmpty()) {
             $this->info('Summary Statistics:');
             $statsHeaders = ['Tool', 'Status', 'Count', 'Avg Duration'];
             $statsRows = [];
@@ -72,7 +73,7 @@ class ToolInvocationsCommand extends Command
                     $stat->tool_slug,
                     $stat->status,
                     $stat->count,
-                    $stat->avg_duration ? round($stat->avg_duration, 1) . 'ms' : '-',
+                    $stat->avg_duration ? round($stat->avg_duration, 1).'ms' : '-',
                 ];
             }
 
