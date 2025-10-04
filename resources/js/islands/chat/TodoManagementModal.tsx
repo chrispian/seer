@@ -60,7 +60,7 @@ const TodoRow = React.memo(({
   onToggleStatus, 
   onDelete, 
   getPriorityBadgeVariant, 
-  getStatusIcon 
+  getStatusCheckbox 
 }: {
   todo: TodoItem
   isExpanded: boolean
@@ -68,17 +68,13 @@ const TodoRow = React.memo(({
   onToggleStatus: (todoId: string) => void
   onDelete: (todoId: string) => void
   getPriorityBadgeVariant: (priority: string) => any
-  getStatusIcon: (status: string) => React.ReactNode
+  getStatusCheckbox: (status: string, onToggle: () => void) => React.ReactNode
 }) => (
   <TableRow key={todo.id} className="hover:bg-muted/50">
     <TableCell className="w-8">
-      <button
-        onClick={() => onToggleStatus(todo.id)}
-        className="flex items-center justify-center p-1 rounded hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label={`Mark todo as ${todo.status === 'completed' ? 'open' : 'completed'}`}
-      >
-        {getStatusIcon(todo.status)}
-      </button>
+      <div className="flex items-center justify-center p-1">
+        {getStatusCheckbox(todo.status, () => onToggleStatus(todo.id))}
+      </div>
     </TableCell>
     <TableCell className="w-8">
       <button
@@ -314,20 +310,29 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
     }
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed': return <Check className="h-4 w-4 text-green-600" />
-      case 'in_progress': return <div className="h-3 w-3 bg-blue-500 rounded-full" />
-      case 'blocked': return <X className="h-4 w-4 text-red-500" />
-      default: return <div className="h-3 w-3 border-2 border-muted-foreground rounded-full" />
-    }
+  const getStatusCheckbox = (status: string, onToggle: () => void) => {
+    const isCompleted = status === 'completed'
+    const isInProgress = status === 'in_progress'
+    const isBlocked = status === 'blocked'
+    
+    return (
+      <Checkbox
+        checked={isCompleted}
+        onCheckedChange={onToggle}
+        className={`
+          ${isInProgress ? 'data-[state=unchecked]:border-blue-500 data-[state=unchecked]:bg-blue-50' : ''}
+          ${isBlocked ? 'data-[state=unchecked]:border-red-500 data-[state=unchecked]:bg-red-50' : ''}
+        `}
+        aria-label={`Mark todo as ${isCompleted ? 'open' : 'completed'}`}
+      />
+    )
   }
 
   if (!isOpen) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] w-[95vw] sm:w-full rounded-sm">
+      <DialogContent className="max-w-4xl w-[90vw] sm:w-[75vw] h-[75vh] min-h-[600px] rounded-sm flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             <span>Todo Management</span>
@@ -458,7 +463,7 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
         )}
 
         {/* Content */}
-        <ScrollArea className="flex-1 max-h-[50vh] sm:max-h-[60vh] pr-4">
+        <ScrollArea className="flex-1 pr-4">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <LoadingSpinner />
@@ -535,7 +540,7 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
                           onToggleStatus={handleToggleStatus}
                           onDelete={(todoId) => handleDeleteTodo(todoId, deleteTodo)}
                           getPriorityBadgeVariant={getPriorityBadgeVariant}
-                          getStatusIcon={getStatusIcon}
+                          getStatusCheckbox={getStatusCheckbox}
                         />
                       ))}
                     </TableBody>
@@ -573,7 +578,7 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
                           onToggleStatus={handleToggleStatus}
                           onDelete={(todoId) => handleDeleteTodo(todoId, deleteTodo)}
                           getPriorityBadgeVariant={getPriorityBadgeVariant}
-                          getStatusIcon={getStatusIcon}
+                          getStatusCheckbox={getStatusCheckbox}
                         />
                       ))}
                     </TableBody>
