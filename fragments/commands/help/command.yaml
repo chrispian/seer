@@ -1,0 +1,56 @@
+name: "Help System"
+slug: help
+version: 2.0.0
+triggers:
+  slash: "/help"
+  aliases: []
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: []
+
+steps:
+  - id: show-help
+    type: transform
+    template: |
+      # Commands Cheat Sheet
+
+      Here are the commands you can use in the chat:
+
+      ## Fragment Commands
+      - `/frag <content>` – Create a new fragment
+      - `/recall <query>` – Search and recall fragments
+      - `/bookmark` – Bookmark current conversation
+      - `/link <url>` – Save a link as fragment
+
+      ## Todo & Task Management
+      - `/todo <task>` – Create a todo item
+      - `/inbox` – View pending fragments
+
+      ## Search & Discovery
+      - `/search <query>` – Search fragments and content
+      - `/help <section>` – Get help for specific commands
+
+      ## Channel & Navigation
+      - `/join <channel>` – Join or create a channel
+      - `/channels` – List available channels
+      - `/name <title>` – Set channel name
+
+      ## Session Management  
+      - `/session` – Manage current session
+      - `/clear` – Clear chat history
+
+      ## System Tools
+      - `/settings` – Access system settings
+      - `/news` – Get latest AI/tech news
+
+      **Tip**: Most commands work with or without arguments. Try them out!
+
+  - id: show-panel
+    type: response.panel
+    with:
+      type: "help"  
+      panel_data:
+        message: "{{ steps.show-help.output }}"

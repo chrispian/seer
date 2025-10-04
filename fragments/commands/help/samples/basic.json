@@ -1,0 +1,17 @@
+{
+    "ctx": {
+        "body": "",
+        "selection": "",
+        "identifier": "",
+        "user": {
+            "id": 1,
+            "name": "Test User"
+        },
+        "workspace": {
+            "id": 1
+        },
+        "session": {
+            "id": "test-session"
+        }
+    }
+}

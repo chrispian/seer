@@ -66,13 +66,18 @@ class CacheCommandPacksCommand extends Command
     protected function cacheAllCommandPacks(CommandPackLoader $loader): int
     {
         $this->info('Rebuilding command pack registry cache...');
+        $startTime = microtime(true);
 
         try {
             // Clear all caches first
+            $clearStartTime = microtime(true);
             $loader->clearAllCaches();
-
+            $clearDuration = round((microtime(true) - $clearStartTime) * 1000, 2);
+            
             // Load all command packs (this will cache them)
+            $loadStartTime = microtime(true);
             $commandPacks = $loader->getAllCommandPacks();
+            $loadDuration = round((microtime(true) - $loadStartTime) * 1000, 2);
 
             if (empty($commandPacks)) {
                 $this->warn('No command packs found.');
@@ -80,6 +85,8 @@ class CacheCommandPacksCommand extends Command
                 return self::SUCCESS;
             }
 
+            $totalDuration = round((microtime(true) - $startTime) * 1000, 2);
+            
             $this->info('✅ Cached '.count($commandPacks).' command pack(s):');
 
             foreach ($commandPacks as $slug => $commandPack) {
@@ -87,6 +94,14 @@ class CacheCommandPacksCommand extends Command
                 $name = $commandPack['manifest']['name'] ?? $slug;
                 $slash = $commandPack['manifest']['triggers']['slash'] ?? "/{$slug}";
                 $this->line("  • {$name} (v{$version}) - {$slash}");
+            }
+            
+            $this->newLine();
+            $this->info("🚀 Performance: {$totalDuration}ms total (clear: {$clearDuration}ms, load: {$loadDuration}ms)");
+            
+            if (count($commandPacks) > 0) {
+                $avgPerCommand = round($totalDuration / count($commandPacks), 2);
+                $this->line("   Average per command: {$avgPerCommand}ms");
             }
 
             return self::SUCCESS;

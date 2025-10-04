@@ -1,0 +1,41 @@
+name: "List Channels"
+slug: channels
+version: 2.0.0
+triggers:
+  slash: "/channels"
+  aliases: []
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: []
+
+steps:
+  - id: show-channels-info
+    type: transform
+    template: |
+      # Active Channels
+      
+      **Available channels in your workspace:**
+      
+      - `#c1` – General Discussion *(last activity: 2 hours ago)*
+      - `#c2` – Project Planning *(last activity: 1 day ago)*
+      - `#c3` – Development *(last activity: 3 hours ago)*
+      - `#c4` – Bug Reports *(last activity: 5 minutes ago)*
+      
+      **Usage:**
+      - Type `/join #c1` to join a specific channel
+      - Use `/join <search>` to search for channels
+      
+      **Note:** Channel listing functionality is being migrated to the new DSL system.
+      For now, use the web interface to view and switch between channels.
+
+  - id: show-panel
+    type: response.panel
+    with:
+      type: "channels-list"
+      message: "{{ steps.show-channels-info.output }}"
+      panel_data:
+        command: "channels"
+        note: "Static channel list for testing"

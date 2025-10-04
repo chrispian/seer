@@ -1,0 +1,66 @@
+{
+  "name": "memory.write",
+  "version": "1.0.0",
+  "scope": "memory.write",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "topic": {
+        "type": "string"
+      },
+      "body": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "decision",
+          "observation",
+          "risk",
+          "todo",
+          "context"
+        ]
+      },
+      "scope": {
+        "type": "string",
+        "enum": [
+          "task",
+          "project",
+          "global"
+        ]
+      },
+      "ttl_at": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "links": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "topic",
+      "body",
+      "kind",
+      "scope"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      }
+    }
+  }
+}

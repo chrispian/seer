@@ -38,6 +38,7 @@ class CommandRunner
 
         // Build execution context
         $executionContext = $this->buildExecutionContext($context, $commandPack);
+        $totalStartTime = microtime(true);
 
         try {
             foreach ($steps as $stepConfig) {
@@ -59,6 +60,24 @@ class CommandRunner
                     $execution['error'] = $stepResult['error'];
                     break;
                 }
+            }
+            
+            // Add performance metrics
+            $totalDuration = round((microtime(true) - $totalStartTime) * 1000, 2);
+            $execution['performance'] = [
+                'total_duration_ms' => $totalDuration,
+                'step_count' => count($steps),
+                'avg_step_duration_ms' => count($steps) > 0 ? round($totalDuration / count($steps), 2) : 0,
+            ];
+            
+            // Log performance for analysis
+            if ($totalDuration > 1000) { // Log commands taking > 1 second
+                \Log::info('Slow Command Execution', [
+                    'command' => $slug,
+                    'duration_ms' => $totalDuration,
+                    'step_count' => count($steps),
+                    'dry_run' => $dryRun,
+                ]);
             }
         } catch (\Exception $e) {
             $execution['success'] = false;

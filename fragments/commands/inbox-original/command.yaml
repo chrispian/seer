@@ -1,0 +1,46 @@
+name: "List Inbox Fragments (API Info)"
+slug: inbox-api
+version: 1.0.0
+triggers:
+  slash: "/inbox-api"
+  aliases: ["/pending-api"]
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: ["fragment.read"]
+
+steps:
+  - id: parse-filters
+    type: transform
+    template: |
+      {
+        "type": {{ ctx.type | default: null | json }},
+        "tags": {{ ctx.tags | default: null | json }},
+        "category": {{ ctx.category | default: null | json }},
+        "vault": {{ ctx.vault | default: null | json }},
+        "per_page": {{ ctx.limit | default: 10 }}
+      }
+
+  - id: format-results
+    type: transform
+    template: |
+      📥 **Inbox Summary**
+      
+      Use `/api/inbox` endpoint to view pending fragments.
+      
+      Available filters:
+      - type: Filter by fragment type
+      - tags: Filter by tags
+      - category: Filter by category
+      - vault: Filter by vault
+      - limit: Number of results
+      
+      Example: GET /api/inbox?type=todo&per_page=10
+
+  - id: display-results
+    type: notify
+    with:
+      message: "{{ steps.format-results.output }}"
+      level: "info"

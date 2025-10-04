@@ -1,0 +1,31 @@
+name: "Bookmark Management"
+slug: bookmark
+version: 2.0.0
+triggers:
+  slash: "/bookmark"
+  aliases: ["/bm"]
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: ["fragment.query", "fragment.create"]
+
+steps:
+  - id: create-bookmark
+    type: fragment.create
+    with:
+      type: "bookmark"
+      title: "Bookmark {{ now | date: 'M j H:i' }}"
+      message: "Bookmark created: {{ ctx.body | default: 'current context' }}"
+      tags: ["bookmark"]
+      metadata:
+        command: "bookmark"
+        created_via: "slash_command"
+        user_input: "{{ ctx.body }}"
+        
+  - id: notify-created
+    type: notify
+    with:
+      message: "✅ Bookmark created successfully"
+      level: "success"

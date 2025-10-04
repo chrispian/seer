@@ -1,6 +1,6 @@
-name: "Create Todo"
+name: "Todo Management (Unified)"
 slug: todo
-version: 1.0.0
+version: 2.0.0
 triggers:
   slash: "/todo"
   aliases: ["/t"]
@@ -20,9 +20,30 @@ steps:
   - id: parse-todo
     type: ai.generate
     prompt: |
-      {{ prompts.parse }}
+      You are a helpful assistant that parses user input to create structured todo items.
       
-      User input: {{ steps.coerce-input.output }}
+      Parse the user input and extract:
+      - title: A concise title for the todo (required)
+      - status: Current status (default: "open")
+      - priority: Priority level (default: "medium") 
+      - due_at: Due date/time in ISO 8601 format if mentioned (optional)
+      
+      Valid Values:
+      - status: "open", "in_progress", "blocked", "complete", "cancelled"
+      - priority: "low", "medium", "high", "urgent"
+      
+      Return a JSON object with the extracted information:
+      
+      {
+        "title": "Concise todo title",
+        "status": "open", 
+        "priority": "medium",
+        "due_at": "2025-10-05T10:00:00Z"
+      }
+      
+      Keep titles concise but descriptive. Infer priority from keywords like "urgent", "asap", "critical", "high priority". If no due date mentioned, omit the due_at field. Always include title, status, and priority.
+      
+      User input: {{ ctx.body }}
     expect: json
     max_tokens: 300
 
@@ -31,7 +52,7 @@ steps:
     with:
       type: "todo"
       title: "{{ steps.parse-todo.output.title }}"
-      content: "{{ steps.coerce-input.output }}"
+      message: "{{ ctx.body }}"
       state:
         status: "{{ steps.parse-todo.output.status | default: 'open' }}"
         priority: "{{ steps.parse-todo.output.priority | default: 'medium' }}"

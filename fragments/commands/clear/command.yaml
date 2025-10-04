@@ -1,0 +1,22 @@
+name: "Clear Chat"
+slug: clear
+version: 2.0.0
+triggers:
+  slash: "/clear"
+  aliases: []
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: []
+
+steps:
+  - id: clear-chat
+    type: notify
+    with:
+      message: ""
+      level: "info"
+      response_data:
+        type: "clear"
+        shouldResetChat: false

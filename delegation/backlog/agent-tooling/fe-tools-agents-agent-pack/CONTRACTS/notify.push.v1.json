@@ -1,0 +1,43 @@
+{
+  "name": "notify.push",
+  "version": "1.0.0",
+  "scope": "notify.push",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "channel": {
+        "type": "string",
+        "enum": [
+          "inbox",
+          "email",
+          "desktop"
+        ]
+      },
+      "title": {
+        "type": "string"
+      },
+      "body": {
+        "type": "string"
+      },
+      "links": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "channel",
+      "title",
+      "body"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "delivered": {
+        "type": "boolean"
+      }
+    }
+  }
+}
