@@ -13,7 +13,9 @@ import {
   Folder, 
   User,
   Terminal,
-  Loader2 
+  Loader2,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -104,6 +106,7 @@ export function AppSidebar() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [vaultDialogOpen, setVaultDialogOpen] = useState(false)
   const [projectDialogOpen, setProjectDialogOpen] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   const handleNewChat = async () => {
     if (isCreating) return
@@ -295,15 +298,15 @@ export function AppSidebar() {
                Delete
              </DropdownMenuItem>
            </DropdownMenuContent>
-         </DropdownMenu>
-       </div>
-     </div>
-   )
+           </DropdownMenu>
+         </div>
+      </div>
+    )
 
   // Show skeleton loading when initial data is loading
   if (isLoadingVaults && vaults.length === 0) {
     return (
-      <div className="w-72 bg-white border-r flex flex-col">
+      <div className={`${isCollapsed ? 'w-16' : 'w-72'} bg-white border-r flex flex-col transition-all duration-200`}>
         <div className="p-4">
           <SidebarSkeleton />
         </div>
@@ -313,8 +316,21 @@ export function AppSidebar() {
 
   return (
     <ErrorBoundary context="sidebar">
-      <div className="w-72 bg-white border-r flex flex-col">
+      <div className={`${isCollapsed ? 'w-16' : 'w-72'} bg-white border-r flex flex-col transition-all duration-200`}>
+        {/* Collapse Toggle */}
+        <div className="p-2 border-b flex justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="h-6 w-6"
+          >
+            {isCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </Button>
+        </div>
+
         {/* Vault Selection Header */}
+        {!isCollapsed && (
         <div className="p-3 border-b">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -362,8 +378,10 @@ export function AppSidebar() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        )}
 
         {/* Main Content */}
+        {!isCollapsed && (
         <div className="flex-1 overflow-hidden px-2">
           {/* Pinned Chats */}
           {(pinnedSessionsQuery.isLoading || pinnedSessions.length > 0) && (
@@ -491,8 +509,10 @@ export function AppSidebar() {
             </ScrollArea>
           </div>
         </div>
+        )}
 
         {/* User Menu Footer */}
+        {!isCollapsed && (
         <div className="p-3 border-t">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -538,17 +558,19 @@ export function AppSidebar() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        )}
 
-        {/* Creation Dialogs */}
-        <VaultCreateDialog 
-          open={vaultDialogOpen} 
-          onOpenChange={setVaultDialogOpen} 
-        />
-        <ProjectCreateDialog 
-          open={projectDialogOpen} 
-          onOpenChange={setProjectDialogOpen} 
-        />
       </div>
+      
+      {/* Creation Dialogs */}
+      <VaultCreateDialog 
+        open={vaultDialogOpen} 
+        onOpenChange={setVaultDialogOpen} 
+      />
+      <ProjectCreateDialog 
+        open={projectDialogOpen} 
+        onOpenChange={setProjectDialogOpen} 
+      />
     </ErrorBoundary>
   )
 }
