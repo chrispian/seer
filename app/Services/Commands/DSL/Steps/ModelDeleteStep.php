@@ -141,9 +141,17 @@ class ModelDeleteStep extends Step
                     // Convert field.path notation to field->path for Laravel's JSON syntax
                     $jsonField = str_replace('.', '->', $field);
                     if (strtoupper($operator) === 'IN') {
-                        $query->whereJsonContains($jsonField, $value);
+                        // Use OR semantics to match ANY value (like SQL IN)
+                        $query->where(function ($subQuery) use ($jsonField, $value) {
+                            foreach ($value as $val) {
+                                $subQuery->orWhereJsonContains($jsonField, $val);
+                            }
+                        });
                     } else {
-                        $query->whereJsonDoesntContain($jsonField, $value);
+                        // Use AND semantics to exclude ALL values (like SQL NOT IN)
+                        foreach ($value as $val) {
+                            $query->whereJsonDoesntContain($jsonField, $val);
+                        }
                     }
                 } else {
                     // Standard column IN queries
