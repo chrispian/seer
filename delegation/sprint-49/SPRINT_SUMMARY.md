@@ -15,47 +15,61 @@ Establish the foundation for advanced agent capabilities by building a comprehen
 
 ## Sprint Tasks
 
-### **ENG-10-01: Condition YAML Parsing Fix** (2-4 hours)
+### **ENG-10-01: Condition YAML Parsing Fix** (2-4 hours) ✅ COMPLETED
 **Priority**: P2 (Medium)  
 **Objective**: Fix template parsing in condition steps to enable complex command argument parsing
 
 **Problem**: Commands like `/bookmark list` fail because condition templates like `{{ ctx.body == 'list' }}` become empty strings instead of being properly evaluated.
 
+**Root Cause Identified & Fixed**:
+- CommandRunner was pre-rendering condition templates before passing to ConditionStep
+- Context was double-nested (ctx.ctx.body instead of ctx.body) in buildExecutionContext
+- Fixed by skipping template rendering for condition fields and correcting context structure
+
 **Technical Requirements**:
-- [ ] Fix YAML parsing to preserve condition templates
-- [ ] Ensure proper template evaluation timing in ConditionStep
-- [ ] Maintain backwards compatibility with existing commands
-- [ ] Add comprehensive tests for condition template scenarios
+- [x] Fix YAML parsing to preserve condition templates ✅
+- [x] Ensure proper template evaluation timing in ConditionStep ✅
+- [x] Maintain backwards compatibility with existing commands ✅
+- [x] Add comprehensive tests for condition template scenarios ✅
 
 **Success Criteria**:
-- `/bookmark list` works correctly with proper conditional logic
-- All existing condition-based commands function properly
-- Template expressions in conditions evaluate correctly
-- No regression in working commands
+- [x] `/bookmark list` works correctly with proper conditional logic ✅
+- [x] All existing condition-based commands function properly ✅
+- [x] Template expressions in conditions evaluate correctly ✅
+- [x] No regression in working commands ✅
 
-### **ENG-10-02: Agent Tooling Foundation** (8-12 hours)
+### **ENG-10-02: Agent Tooling Foundation** (8-12 hours) ✅ COMPLETED
 **Priority**: High  
 **Objective**: Build comprehensive agent tooling system leveraging Sprint 48 database framework
 
 **System Components**:
-- [ ] **Tool Registry System**: Centralized tool management and discovery
-- [ ] **Agent Memory Foundation**: Persistent agent state and context management
-- [ ] **Tool SDK Framework**: Developer toolkit for creating custom agent tools
-- [ ] **Database Integration**: Leverage new model.* steps for tool data management
-- [ ] **Security Framework**: Tool permission and access control system
+- [x] **Tool Registry System**: Centralized tool management and discovery ✅
+- [x] **Agent Memory Foundation**: Persistent agent state and context management ✅
+- [x] **Tool SDK Framework**: Developer toolkit for creating custom agent tools ✅
+- [x] **Database Integration**: Leverage new model.* steps for tool data management ✅
+- [x] **Security Framework**: Tool permission and access control system ✅
 
-**Technical Architecture**:
-- Agent tool registry with database persistence
-- Tool execution environment with sandboxing
-- Memory management with context preservation
-- API layer for tool registration and discovery
+**Technical Architecture Implemented**:
+- ✅ Contract-based tool architecture with JSON schema validation
+- ✅ Tool registry with automatic discovery and registration (ToolServiceProvider)
+- ✅ Agent memory system with TTL, tagging, and provenance tracking
+- ✅ Database query tool supporting all major entities
+- ✅ Internal API endpoints (/api/internal/db/query, /memory/write, /memory/search)
+- ✅ Comprehensive data models (AgentNote, WorkItem, Sprint, Artifact, etc.)
+
+**Database Schema Created**:
+- ✅ agent_notes: Memory storage with UUID keys, JSON metadata
+- ✅ saved_queries: Query persistence for reuse  
+- ✅ work_items/sprints: Project management foundation
+- ✅ artifacts: File/export artifact management
+- ✅ agent_decisions/vectors: Advanced AI integration points
 
 **Success Criteria**:
-- Tool registry operational with CRUD operations
-- Agent memory system stores and retrieves context
-- SDK enables rapid tool development
-- Database operations secure and performant
-- Foundation ready for advanced agent capabilities
+- [x] Tool registry operational with CRUD operations ✅
+- [x] Agent memory system stores and retrieves context ✅  
+- [x] SDK enables rapid tool development ✅
+- [x] Database operations secure and performant ✅
+- [x] Foundation ready for advanced agent capabilities ✅
 
 ## Technical Foundation
 
