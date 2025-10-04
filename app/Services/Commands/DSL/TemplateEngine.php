@@ -2,6 +2,8 @@
 
 namespace App\Services\Commands\DSL;
 
+use Illuminate\Support\Facades\Log;
+
 class TemplateEngine
 {
     private static array $templateCache = [];
@@ -62,7 +64,13 @@ class TemplateEngine
     protected function processControlStructures(string $template, array $context): string
     {
         // Handle nested if blocks by processing from inside out
-        while (preg_match('/\{\%\s*if\s+(.+?)\s*\%\}/', $template)) {
+        // Guard against infinite loops by tracking replacements
+        $maxIterations = 100; // Reasonable limit for nested depth
+        $iteration = 0;
+        
+        while (preg_match('/\{\%\s*if\s+(.+?)\s*\%\}/', $template) && $iteration < $maxIterations) {
+            $previousTemplate = $template;
+            
             $template = preg_replace_callback(
                 '/\{\%\s*if\s+(.+?)\s*\%\}(.*?)\{\%\s*endif\s*\%\}/s',
                 function ($matches) use ($context) {
@@ -70,6 +78,27 @@ class TemplateEngine
                 },
                 $template
             );
+            
+            // Break if no replacements were made (unmatched {% if %} blocks)
+            if ($template === $previousTemplate) {
+                // Log warning about unmatched control structures (if Laravel is bootstrapped)
+                if (app()->bound('log')) {
+                    Log::warning('Template engine found unmatched {% if %} blocks', [
+                        'template_snippet' => substr($template, 0, 200)
+                    ]);
+                }
+                break;
+            }
+            
+            $iteration++;
+        }
+        
+        // Warn if we hit the iteration limit
+        if ($iteration >= $maxIterations && app()->bound('log')) {
+            Log::warning('Template engine hit maximum iteration limit for control structures', [
+                'iterations' => $iteration,
+                'template_snippet' => substr($template, 0, 200)
+            ]);
         }
         
         return $template;
