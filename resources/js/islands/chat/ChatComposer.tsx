@@ -2,9 +2,9 @@ import React, { useRef, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { Markdown } from 'tiptap-markdown'
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Mic, MicOff, Paperclip } from 'lucide-react'
+import { Menubar, MenubarMenu, MenubarTrigger, MenubarSeparator } from '@/components/ui/menubar'
 import {
   SlashCommand,
   createSlashCommandSuggestion
@@ -36,7 +36,7 @@ export function ChatComposer({
   onSend,
   onCommand,
   disabled = false,
-  placeholder = "Type a message... Use / for commands, [[ for links, # for tags",
+  placeholder = "Type a message... Use / for commands, [[ for links, # for tags. Press Enter to send, Shift+Enter for new line.",
   selectedModel = '',
   onModelChange
 }: ChatComposerProps) {
@@ -167,10 +167,12 @@ export function ChatComposer({
   }
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      // Enter without Shift submits the message
       event.preventDefault()
       handleSend()
     }
+    // Shift+Enter allows new line (default behavior)
   }
 
   const handleVoiceInput = () => {
@@ -246,7 +248,7 @@ export function ChatComposer({
 
   return (
     <div className="relative">
-      <Card className="p-2 border-0 bg-background">
+      <div className="p-2 bg-background">
         {/* Pending Attachments Preview */}
       {pendingAttachments.length > 0 && (
         <div className="mb-2 p-2 bg-muted rounded-sm">
@@ -270,64 +272,60 @@ export function ChatComposer({
         </div>
       )}
 
-      <div className="flex items-end gap-2">
-        <div className="flex-1 relative">
-          <div className="border border-input rounded-sm focus-within:border-ring">
-            <EditorContent
-              editor={editor}
-              onKeyDown={handleKeyDown}
-              className="min-h-[60px] p-2"
-            />
-            <ChatToolbar
-              selectedModel={selectedModel}
-              onModelChange={onModelChange}
-              disabled={disabled}
-            />
+      {/* Input Area */}
+      <div className="border border-input rounded-sm focus-within:border-ring">
+        <div className="relative">
+          <EditorContent
+            editor={editor}
+            onKeyDown={handleKeyDown}
+            className="min-h-[80px] p-3 pr-16"
+          />
+          
+          {/* Floating Action Menubar - Top Right of Input */}
+          <div className="absolute top-2 right-2">
+            <Menubar className="h-6 bg-black border-0 rounded-sm p-0.5 space-x-0">
+              <MenubarMenu>
+                <MenubarTrigger
+                  className="px-1.5 py-1 text-white hover:bg-gray-800 data-[state=open]:bg-gray-800 rounded-sm border-0"
+                  onClick={handleFileUpload}
+                  disabled={disabled}
+                  title="Upload file"
+                >
+                  <Paperclip className="w-3 h-3" />
+                </MenubarTrigger>
+              </MenubarMenu>
+              
+              {speechSupported && (
+                <>
+                  <MenubarSeparator className="bg-gray-600 w-px h-3 mx-0" />
+                  <MenubarMenu>
+                    <MenubarTrigger
+                      className={`px-1.5 py-1 text-white hover:bg-gray-800 data-[state=open]:bg-gray-800 rounded-sm border-0 ${
+                        isListening ? 'bg-red-700 hover:bg-red-600' : ''
+                      }`}
+                      onClick={handleVoiceInput}
+                      disabled={disabled}
+                      title={isListening ? "Stop recording" : "Start voice input"}
+                    >
+                      {isListening ? (
+                        <MicOff className="w-3 h-3" />
+                      ) : (
+                        <Mic className="w-3 h-3" />
+                      )}
+                    </MenubarTrigger>
+                  </MenubarMenu>
+                </>
+              )}
+            </Menubar>
           </div>
         </div>
-
-        <div className="flex items-center gap-1">
-          {/* File Upload Button */}
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={handleFileUpload}
-            disabled={disabled}
-            title="Upload file"
-            className="h-8 w-8 rounded-sm"
-          >
-            <Paperclip className="w-4 h-4" />
-          </Button>
-
-          {/* Voice Input Button */}
-          {speechSupported && (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={handleVoiceInput}
-              disabled={disabled}
-              title={isListening ? "Stop recording" : "Start voice input"}
-              className={`h-8 w-8 rounded-sm ${isListening ? "bg-red-50 border-red-300" : ""}`}
-            >
-              {isListening ? (
-                <MicOff className="w-4 h-4 text-red-600" />
-              ) : (
-                <Mic className="w-4 h-4" />
-              )}
-            </Button>
-          )}
-
-          {/* Send Button */}
-          <Button
-            onClick={handleSend}
-            disabled={disabled || (isEmpty && pendingAttachments.length === 0)}
-            className="min-w-[60px] h-8 rounded-sm"
-          >
-            {disabled ? 'Sending…' : 'Send'}
-          </Button>
-        </div>
+        
+        {/* Connected Toolbar */}
+        <ChatToolbar
+          selectedModel={selectedModel}
+          onModelChange={onModelChange}
+          disabled={disabled}
+        />
       </div>
 
       {/* Hidden file input */}
@@ -339,7 +337,7 @@ export function ChatComposer({
         multiple
         accept="image/*,.pdf,.txt,.md,.doc,.docx"
       />
-      </Card>
+      </div>
     </div>
   )
 }

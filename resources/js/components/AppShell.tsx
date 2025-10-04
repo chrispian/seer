@@ -11,6 +11,7 @@ import { useAppContext } from '@/hooks/useContext'
 import { useReactiveQueries } from '@/hooks/useReactiveQueries'
 import { useToast } from '@/hooks/useToast'
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useOfflineSupport } from '@/hooks/useOfflineSupport'
 import { ToastContainer } from '@/components/ui/toast'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
@@ -53,6 +54,9 @@ function AppContent() {
   // Keyboard navigation and accessibility
   useKeyboardNavigation();
   
+  // Global keyboard shortcuts for sidebar toggles
+  useKeyboardShortcuts();
+  
   // Offline support and optimistic updates
   const { isOnline, prefetchCriticalData } = useOfflineSupport();
   
@@ -66,25 +70,39 @@ function AppContent() {
   return (
     <ErrorBoundary>
       <ChatSessionProvider>
-        <div className="h-screen flex bg-background">
-          {/* Far Left Ribbon */}
+      <div className="h-screen flex bg-background">
+        {/* Far Left Ribbon - Hidden on mobile/tablet */}
+        <div className="hidden lg:block h-full">
           <Ribbon />
-          
-          {/* Compact Sidebar */}
+        </div>
+        
+        {/* Compact Sidebar - Responsive behavior */}
+        <div className="hidden md:block h-full">
           <AppSidebar />
+        </div>
           
-          {/* Main Content */}
-          <div className="flex-1 flex flex-col min-w-0">
-            <div className="flex-shrink-0">
+          {/* Main Content - Dashboard Layout */}
+          <main className="flex-1 flex flex-col min-w-0 bg-muted/20">
+            {/* Dashboard Header Section */}
+            <header className="flex-shrink-0 bg-background border-b">
               <ChatHeader />
+            </header>
+            
+            {/* Main Content Area - Full Space */}
+            <div className="flex-1 min-h-0 p-2">
+              <div className="h-full w-full">
+                {/* Main Content Container - No borders, full space */}
+                <div className="h-full">
+                  <ChatIsland />
+                </div>
+              </div>
             </div>
-            <div className="flex-1 min-h-0">
-              <ChatIsland />
-            </div>
-          </div>
+          </main>
           
-          {/* Right Sidebar */}
+        {/* Right Sidebar - Hidden on mobile/tablet, visible on large screens */}
+        <div className="hidden xl:block h-full">
           <RightRail />
+        </div>
         </div>
         
         {/* Toast Notifications */}

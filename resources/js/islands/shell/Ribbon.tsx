@@ -75,7 +75,7 @@ export function Ribbon() {
 
   return (
     <>
-      <div className="w-16 bg-gray-900 border-r border-gray-700 flex flex-col items-center py-4">
+      <div className="w-16 h-full bg-gray-900 border-r border-gray-700 flex flex-col items-center py-4">
         {/* App Logo/Icon - Centered */}
         <div className="flex justify-center mb-8">
           <Card className="w-10 h-10 bg-pink-500 border-blue-400 border-2 rounded-xs shadow-none flex items-center justify-center">

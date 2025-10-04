@@ -13,7 +13,9 @@ import {
   Folder, 
   User,
   Terminal,
-  Loader2 
+  Loader2,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -32,6 +34,8 @@ import { useChatSessions, usePinnedChatSessions, useCreateChatSession, useDelete
 import { useSwitchToVault } from '@/hooks/useVaults'
 import { useSwitchToProject } from '@/hooks/useProjects'
 import { useAppStore, type ChatSession } from '@/stores/useAppStore'
+import { useLayoutStore } from '@/stores/useLayoutStore'
+import { BlackButton } from '@/components/ui/black-button'
 import { VaultCreateDialog } from '@/components/VaultCreateDialog'
 import { ProjectCreateDialog } from '@/components/ProjectCreateDialog'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -104,6 +108,9 @@ export function AppSidebar() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [vaultDialogOpen, setVaultDialogOpen] = useState(false)
   const [projectDialogOpen, setProjectDialogOpen] = useState(false)
+  // Use layout store for sidebar collapse state for keyboard shortcuts integration
+  const { preferences, setSidebarCollapsed } = useLayoutStore()
+  const isCollapsed = preferences.layout.sidebarCollapsed
 
   const handleNewChat = async () => {
     if (isCreating) return
@@ -295,15 +302,15 @@ export function AppSidebar() {
                Delete
              </DropdownMenuItem>
            </DropdownMenuContent>
-         </DropdownMenu>
-       </div>
-     </div>
-   )
+           </DropdownMenu>
+         </div>
+      </div>
+    )
 
   // Show skeleton loading when initial data is loading
   if (isLoadingVaults && vaults.length === 0) {
     return (
-      <div className="w-72 bg-white border-r flex flex-col">
+      <div className={`${isCollapsed ? 'w-16' : 'w-72'} h-full bg-white border-r flex flex-col transition-all duration-200`}>
         <div className="p-4">
           <SidebarSkeleton />
         </div>
@@ -313,9 +320,21 @@ export function AppSidebar() {
 
   return (
     <ErrorBoundary context="sidebar">
-      <div className="w-72 bg-white border-r flex flex-col">
+      <div className={`${isCollapsed ? 'w-12 md:w-16' : 'w-64 md:w-72'} h-full bg-white border-r flex flex-col transition-all duration-200`}>
+        {/* Collapse Toggle */}
+        <div className="p-1 md:p-2 border-b flex justify-end">
+          <BlackButton
+            size="icon-sm"
+            onClick={() => setSidebarCollapsed(!isCollapsed)}
+            className="h-5 w-5 md:h-6 md:w-6"
+          >
+            {isCollapsed ? <PanelLeftOpen className="h-3 w-3 md:h-4 md:w-4" /> : <PanelLeftClose className="h-3 w-3 md:h-4 md:w-4" />}
+          </BlackButton>
+        </div>
+
         {/* Vault Selection Header */}
-        <div className="p-3 border-b">
+        {!isCollapsed && (
+        <div className="p-2 md:p-3 border-b">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -362,9 +381,11 @@ export function AppSidebar() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        )}
 
         {/* Main Content */}
-        <div className="flex-1 overflow-hidden px-2">
+        {!isCollapsed && (
+        <div className="flex-1 overflow-hidden px-1 md:px-2">
           {/* Pinned Chats */}
           {(pinnedSessionsQuery.isLoading || pinnedSessions.length > 0) && (
             <>
@@ -398,9 +419,8 @@ export function AppSidebar() {
                 <MessageSquare className="w-3 h-3 mr-1" />
                 Recent Chats
               </h3>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <BlackButton 
+                size="icon-sm"
                 className="h-6 w-6"
                 onClick={(e) => {
                   e.stopPropagation()
@@ -414,7 +434,7 @@ export function AppSidebar() {
                 ) : (
                   <Plus className="w-3 h-3" />
                 )}
-              </Button>
+              </BlackButton>
             </div>
             <ScrollArea className="h-[300px]">
               <div className="space-y-1">
@@ -442,9 +462,8 @@ export function AppSidebar() {
                 <Folder className="w-3 h-3 mr-1" />
                 Projects
               </h3>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <BlackButton 
+                size="icon-sm"
                 className="h-6 w-6"
                 onClick={(e) => {
                   e.stopPropagation()
@@ -454,7 +473,7 @@ export function AppSidebar() {
                 title="Create New Project"
               >
                 <Plus className="w-3 h-3" />
-              </Button>
+              </BlackButton>
             </div>
             <ScrollArea className="h-[200px]">
               <div className="space-y-1">
@@ -491,9 +510,11 @@ export function AppSidebar() {
             </ScrollArea>
           </div>
         </div>
+        )}
 
         {/* User Menu Footer */}
-        <div className="p-3 border-t">
+        {!isCollapsed && (
+        <div className="p-2 md:p-3 border-t">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -538,17 +559,19 @@ export function AppSidebar() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        )}
 
-        {/* Creation Dialogs */}
-        <VaultCreateDialog 
-          open={vaultDialogOpen} 
-          onOpenChange={setVaultDialogOpen} 
-        />
-        <ProjectCreateDialog 
-          open={projectDialogOpen} 
-          onOpenChange={setProjectDialogOpen} 
-        />
       </div>
+      
+      {/* Creation Dialogs */}
+      <VaultCreateDialog 
+        open={vaultDialogOpen} 
+        onOpenChange={setVaultDialogOpen} 
+      />
+      <ProjectCreateDialog 
+        open={projectDialogOpen} 
+        onOpenChange={setProjectDialogOpen} 
+      />
     </ErrorBoundary>
   )
 }

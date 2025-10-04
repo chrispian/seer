@@ -21,6 +21,7 @@ class HelpCommand implements HandlesCommand
             'search' => $this->getSearchSection(),
             'join' => $this->getJoinSection(),
             'session' => $this->getSessionSection(),
+            'system' => $this->getSystemSection(),
             'tools' => $this->getToolsSection(),
         ];
 
@@ -60,6 +61,7 @@ class HelpCommand implements HandlesCommand
             'search' => 'Search Commands',
             'join' => 'Channel Navigation',
             'session' => 'Sessions',
+            'system' => 'System Management',
             'tools' => 'Chat Tools',
             default => 'Commands',
         };
@@ -151,6 +153,20 @@ Example:
 - Tags: `shorts`
 - Identifier: `Ideas for Short Stories`
 - Session grouping key for easy recall later.
+MARKDOWN;
+    }
+
+    private function getSystemSection(): string
+    {
+        return <<<'MARKDOWN'
+- `/inbox` – Open Inbox Management Interface for fragment review
+- `/types` – Open Type System Management to view type packs and validation
+- `/scheduler` – Open Scheduler Management for automation and scheduled commands
+
+**System Aliases:**
+- `/pending`, `/review` – Same as `/inbox`
+- `/type-system`, `/typepacks` – Same as `/types`
+- `/schedules`, `/cron`, `/automation` – Same as `/scheduler`
 MARKDOWN;
     }
 

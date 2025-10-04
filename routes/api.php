@@ -11,6 +11,8 @@ use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\FragmentController;
 use App\Http\Controllers\FragmentDetailController;
 use App\Http\Controllers\InboxController;
+use App\Http\Controllers\TypeController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ModelController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SeerLogController;
@@ -107,4 +109,20 @@ Route::prefix('inbox')->group(function () {
     Route::post('/{fragmentId}/reopen', [InboxController::class, 'reopen']);
     Route::post('/accept-multiple', [InboxController::class, 'acceptMultiple']);
     Route::post('/accept-all', [InboxController::class, 'acceptAll']);
+});
+
+// Type System API routes
+Route::prefix('types')->group(function () {
+    Route::get('/', [TypeController::class, 'index']);
+    Route::get('/stats', [TypeController::class, 'stats']);
+    Route::get('/{slug}', [TypeController::class, 'show']);
+    Route::post('/{slug}/validate', [TypeController::class, 'validate']);
+});
+
+// Scheduler API routes
+Route::prefix('schedules')->group(function () {
+    Route::get('/', [ScheduleController::class, 'index']);
+    Route::get('/stats', [ScheduleController::class, 'stats']);
+    Route::get('/runs', [ScheduleController::class, 'runs']);
+    Route::get('/{id}', [ScheduleController::class, 'show']);
 });

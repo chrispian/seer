@@ -1,0 +1,42 @@
+name: "Shell Test Command"
+slug: shell-test
+version: 1.0.0
+triggers:
+  slash: "/shell-test"
+  aliases: ["/shell"]
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: ["tool.call"]
+
+steps:
+  - id: test-shell-command
+    type: tool.call
+    with:
+      tool: "shell"
+      args:
+        cmd: "echo Hello from shell tool"
+        timeout: 5
+
+  - id: create-result-fragment
+    type: fragment.create
+    with:
+      type: "log"
+      title: "Shell Test Result"
+      content: "Shell command output: {{ steps.test-shell-command.output.stdout }}"
+      state:
+        type: "shell_test"
+        exit_code: "{{ steps.test-shell-command.output.exit_code }}"
+        success: "{{ steps.test-shell-command.output.success }}"
+      tags: ["shell", "test", "tool"]
+      metadata:
+        command: "shell-test"
+        created_via: "tool_call"
+
+  - id: notify-result
+    type: notify
+    with:
+      message: "🔧 Shell test completed: {{ steps.test-shell-command.output.success | ternary: 'Success', 'Failed' }}"
+      level: "{{ steps.test-shell-command.output.success | ternary: 'success', 'error' }}"

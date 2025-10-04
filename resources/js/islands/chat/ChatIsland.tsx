@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react'
 import { ChatComposer } from './ChatComposer'
 import { ChatTranscript, ChatMessage } from './ChatTranscript'
 import { CommandResultModal } from './CommandResultModal'
+import { InboxModal } from '../system/InboxModal'
+import { TypeSystemModal } from '../system/TypeSystemModal'
+import { SchedulerModal } from '../system/SchedulerModal'
 import { useAppStore } from '@/stores/useAppStore'
 import { useChatSessionDetails, useUpdateChatSession } from '@/hooks/useChatSessions'
 import { useQueryClient } from '@tanstack/react-query'
@@ -23,6 +26,11 @@ export default function ChatIsland() {
   const [commandResult, setCommandResult] = useState<any>(null)
   const [isCommandModalOpen, setIsCommandModalOpen] = useState(false)
   const [lastCommand, setLastCommand] = useState('')
+  
+  // System management modals
+  const [isInboxModalOpen, setIsInboxModalOpen] = useState(false)
+  const [isTypeSystemModalOpen, setIsTypeSystemModalOpen] = useState(false)
+  const [isSchedulerModalOpen, setIsSchedulerModalOpen] = useState(false)
   const csrf = useCsrf()
   const activeStreamRef = useRef<{ eventSource: EventSource; sessionId: number } | null>(null)
   const queryClient = useQueryClient()
@@ -239,6 +247,22 @@ export default function ChatIsland() {
     console.log('Executing command:', command)
     setLastCommand(command)
 
+    // Handle system management commands locally
+    if (command === 'inbox-ui' || command === 'inbox' || command === 'pending' || command === 'review') {
+      setIsInboxModalOpen(true)
+      return
+    }
+    
+    if (command === 'types-ui' || command === 'types' || command === 'type-system' || command === 'typepacks') {
+      setIsTypeSystemModalOpen(true)
+      return
+    }
+    
+    if (command === 'scheduler-ui' || command === 'scheduler' || command === 'schedules' || command === 'cron' || command === 'automation') {
+      setIsSchedulerModalOpen(true)
+      return
+    }
+
     try {
       const response = await fetch('/api/commands/execute', {
         method: 'POST',
@@ -322,7 +346,8 @@ export default function ChatIsland() {
       </div>
 
       {/* Enhanced Composer with TipTap - Fixed Bottom Row */}
-      <div className="flex-shrink-0 px-3 pb-3">
+      <div className="flex-shrink-0 border-t border-border">
+        <div className="px-3 pb-3">
         <ChatComposer
           onSend={onSend}
           onCommand={handleCommand}
@@ -344,7 +369,24 @@ export default function ChatIsland() {
         result={commandResult}
         command={lastCommand}
       />
-    </div>
+
+      {/* System Management Modals */}
+      <InboxModal
+        isOpen={isInboxModalOpen}
+        onClose={() => setIsInboxModalOpen(false)}
+      />
+      
+      <TypeSystemModal
+        isOpen={isTypeSystemModalOpen}
+        onClose={() => setIsTypeSystemModalOpen(false)}
+      />
+      
+      <SchedulerModal
+        isOpen={isSchedulerModalOpen}
+        onClose={() => setIsSchedulerModalOpen(false)}
+        />
+        </div>
+      </div>
   )
 }
 
