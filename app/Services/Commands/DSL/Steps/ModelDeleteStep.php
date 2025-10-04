@@ -130,11 +130,34 @@ class ModelDeleteStep extends Step
                 throw new InvalidArgumentException("Invalid operator: {$operator}");
             }
 
-            // Handle special JSON path queries
-            if (str_contains($field, '.')) {
-                $query->whereJsonPath($field, $operator, $value);
+            // Handle special operators that need specific Eloquent methods
+            if (in_array(strtoupper($operator), ['IN', 'NOT IN'])) {
+                if (!is_array($value)) {
+                    throw new InvalidArgumentException("Value for {$operator} operator must be an array");
+                }
+                
+                if (str_contains($field, '.')) {
+                    // JSON path IN queries need special handling
+                    if (strtoupper($operator) === 'IN') {
+                        $query->whereJsonContains($field, $value);
+                    } else {
+                        $query->whereJsonDoesntContain($field, $value);
+                    }
+                } else {
+                    // Standard column IN queries
+                    if (strtoupper($operator) === 'IN') {
+                        $query->whereIn($field, $value);
+                    } else {
+                        $query->whereNotIn($field, $value);
+                    }
+                }
             } else {
-                $query->where($field, $operator, $value);
+                // Handle other operators with standard where clauses
+                if (str_contains($field, '.')) {
+                    $query->whereJsonPath($field, $operator, $value);
+                } else {
+                    $query->where($field, $operator, $value);
+                }
             }
         }
     }
