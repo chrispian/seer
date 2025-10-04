@@ -76,15 +76,6 @@ const TodoRow = React.memo(({
         {getStatusCheckbox(todo.status, () => onToggleStatus(todo.id))}
       </div>
     </TableCell>
-    <TableCell className="w-8">
-      <button
-        onClick={() => onToggleExpanded(todo.id)}
-        className="flex items-center justify-center p-1 rounded hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-label={`${isExpanded ? 'Collapse' : 'Expand'} todo details`}
-      >
-        {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-      </button>
-    </TableCell>
     <TableCell className="min-w-0 flex-1">
       <div className="flex flex-col space-y-1">
         <div className="flex items-center gap-2">
@@ -92,12 +83,21 @@ const TodoRow = React.memo(({
           <span className={`font-medium text-sm ${todo.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
             {todo.title}
           </span>
-          <Badge variant={getPriorityBadgeVariant(todo.priority)} className="text-xs hidden sm:inline-flex">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 ml-1 hover:bg-gray-100 text-gray-600 hover:text-black"
+            onClick={() => onToggleExpanded(todo.id)}
+            aria-label={`${isExpanded ? 'Collapse' : 'Expand'} todo details`}
+          >
+            {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          </Button>
+          <Badge variant={getPriorityBadgeVariant(todo.priority)} className="text-xs hidden sm:inline-flex ml-auto">
             {todo.priority}
           </Badge>
         </div>
         
-        {/* Tags row - always visible */}
+        {/* Tags row - always visible on second line */}
         {todo.tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {todo.tags.slice(0, 3).map(tag => (
@@ -525,7 +525,6 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-8" aria-label="Status"></TableHead>
-                        <TableHead className="w-8" aria-label="Expand"></TableHead>
                         <TableHead>Todo</TableHead>
                         <TableHead className="w-12" aria-label="Actions"></TableHead>
                       </TableRow>
@@ -563,7 +562,6 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-8" aria-label="Status"></TableHead>
-                        <TableHead className="w-8" aria-label="Expand"></TableHead>
                         <TableHead>Todo</TableHead>
                         <TableHead className="w-12" aria-label="Actions"></TableHead>
                       </TableRow>
