@@ -151,6 +151,23 @@ class ModelDeleteStep extends Step
                         $query->whereNotIn($field, $value);
                     }
                 }
+            } elseif (in_array(strtoupper($operator), ['IS NULL', 'IS NOT NULL'])) {
+                // Handle NULL checks with proper Eloquent methods
+                if (str_contains($field, '.')) {
+                    // JSON path NULL checks
+                    if (strtoupper($operator) === 'IS NULL') {
+                        $query->whereJsonMissing($field);
+                    } else {
+                        $query->whereJsonNotMissing($field);
+                    }
+                } else {
+                    // Standard column NULL checks
+                    if (strtoupper($operator) === 'IS NULL') {
+                        $query->whereNull($field);
+                    } else {
+                        $query->whereNotNull($field);
+                    }
+                }
             } else {
                 // Handle other operators with standard where clauses
                 if (str_contains($field, '.')) {
