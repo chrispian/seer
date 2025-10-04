@@ -77,14 +77,81 @@
 | **UX-07-01** | Tool Management Interface | `todo` | 8-12h |
 | **ENG-09-05** | Prompt Orchestrator | `todo` | 10-14h |
 
-### **Sprint 48: Command System Continuation**
-**Priority**: MEDIUM | **Estimated**: 6-9 hours (1-2 days) | **Tasks**: 3
+---
+
+## 🆕 DSL Evolution & Fragment Pipeline Sprints (New)
+
+### **Sprint 50: DSL Deterministic Foundation**
+**Priority**: HIGH | **Estimated**: 48-78 hours (6-10 days) | **Tasks**: 8
 
 | Task ID | Description | Status | Estimated |
 |---------|-------------|--------|-----------|
-| **ENG-09-06** | Remaining Conflict Resolution | `todo` | 2-3h |
-| **ENG-09-07** | Medium-Complexity Command Migration | `todo` | 3-4h |
-| **ENG-09-08** | Performance Analysis & Optimization | `todo` | 1-2h |
+| **MIGRATE-TODO-001** | Replace AI parsing with regex/rule-based todo parser | `todo` | 13-20h |
+| **MIGRATE-TODO-002** | Add utility steps (context.merge, list.map, string.format) | `todo` | 8-12h |
+| **AUDIT-AI-001** | Catalog all AI-dependent commands for migration planning | `todo` | 4-6h |
+| **AUDIT-AI-002** | Create deterministic alternatives for AI-dependent operations | `todo` | 8-12h |
+| **AUDIT-AI-003** | Add capability flags to differentiate AI vs deterministic commands | `todo` | 4-6h |
+| **AUDIT-AI-004** | Enhance UI filtering based on AI dependency flags | `todo` | 6-10h |
+| **MIGRATE-TODO-003** | Update existing todo commands to use new parser | `todo` | 3-6h |
+| **MIGRATE-TODO-004** | Enhance validation and error handling for deterministic execution | `todo` | 2-6h |
+
+### **Sprint 51: Enhanced Error Handling**
+**Priority**: MEDIUM | **Estimated**: 18-30 hours (2-4 days) | **Tasks**: 3
+
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **ERROR-001** | `on_error` configuration for graceful failure handling | `todo` | 8-12h |
+| **ERROR-002** | Fallback execution strategies for failed steps | `todo` | 6-10h |
+| **UX-001** | Enhanced response targeting (`toast`, `modal`, `silent`) | `todo` | 4-8h |
+
+### **Sprint 52: Flow Builder MVP**
+**Priority**: MEDIUM | **Estimated**: 24-36 hours (3-5 days) | **Tasks**: 2
+
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **BUILDER-001** | Visual drag-drop command builder interface | `todo` | 16-24h |
+| **SCHEMA-001** | Machine-readable step metadata export for UI forms | `todo` | 8-12h |
+
+### **Sprint 53: Pipeline Unification Foundation**
+**Priority**: HIGH | **Estimated**: 32-48 hours (4-6 days) | **Tasks**: 3
+
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **PIPELINE-001** | `FragmentProcessingOrchestrator` for unified processing | `todo` | 16-24h |
+| **PIPELINE-002** | Enable full pipeline for chat fragments (embeddings, classification) | `todo` | 10-16h |
+| **PIPELINE-003** | Cost control with deterministic-first processing | `todo` | 6-8h |
+
+### **Sprint 54: Context & Tool Brokers**
+**Priority**: HIGH | **Estimated**: 36-52 hours (5-7 days) | **Tasks**: 3
+
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **CONTEXT-001** | `ContextBroker` for dynamic prompt assembly | `todo` | 16-24h |
+| **TOOL-001** | Natural language intent classification for tool routing | `todo` | 12-18h |
+| **CONTEXT-002** | Attachment handling with metadata extraction | `todo` | 8-10h |
+
+### **Sprint 55: Agent & Embeddings Integration**
+**Priority**: MEDIUM | **Estimated**: 28-40 hours (4-5 days) | **Tasks**: 3
+
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **AGENT-001** | Context-aware agent/model selection | `todo` | 12-18h |
+| **EMBED-001** | Embeddings revival with vector + fulltext search | `todo` | 10-14h |
+| **PROMPT-001** | Prompt optimization for 30% cost reduction | `todo` | 6-8h |
+
+### **Sprint 56: Structured Telemetry Foundation** 🆕
+**Priority**: HIGH | **Estimated**: 46 hours (5-6 days) | **Tasks**: 6
+
+Transform logging from ad-hoc strings to structured, privacy-respecting telemetry with correlation IDs.
+
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **TELEMETRY-001** | Request Correlation Middleware | `todo` | 6h |
+| **TELEMETRY-002** | Structured Chat Pipeline Logging | `todo` | 8h |
+| **TELEMETRY-003** | Fragment Processing Telemetry Decorator | `todo` | 10h |
+| **TELEMETRY-004** | Command & DSL Execution Metrics | `todo` | 8h |
+| **TELEMETRY-005** | Enhanced Tool Invocation Correlation | `todo` | 6h |
+| **TELEMETRY-006** | Local Telemetry Sink & Query Interface | `todo` | 8h |
 
 ---
 
@@ -111,15 +178,11 @@
 
 ## ⚠️ Risk Indicators & Dependencies
 
-### **Sprint 46 Risks**
-- 🟢 **Low Risk**: Independent architecture improvement
-- 🟢 **No Blockers**: Ready for immediate execution
-- 🟢 **Clear Dependencies**: Sequential task execution required
-
-### **Cross-Sprint Dependencies**
-- **Sprint 44** depends on **Sprint 46** command system completion
-- **Sprint 43** can run parallel with **Sprint 46** (different focus areas)
-- **Sprint 45** is independent - provider management improvements
+### **Sprint Dependencies**
+- **Sprint 44** depends on command system foundation from Sprint 46 ✅ COMPLETED
+- **Sprint 50-52** (DSL Evolution) can run independently
+- **Sprint 53-55** (Pipeline) form sequential dependency chain
+- **Sprint 56** (Telemetry) can run independently, enhances debugging for all sprints
 
 ### **Resource Conflicts**
 - 🟡 **Backend Resources**: Multiple sprints require Laravel expertise
@@ -131,17 +194,24 @@
 ## 📈 Progress Metrics
 
 ### **Overall Project Status**
-- **Total Tasks**: 37 across 6 sprints
-- **Estimated Total**: 191-267 hours  
-- **Completed**: Sprint 40-48 ✅
+- **Total Tasks**: 65 across 11 active sprints
+- **Estimated Total**: 378-587 hours  
+- **Completed**: Sprint 40-42 ✅, Sprint 46 ✅, Sprint 48 ✅
 - **Active Planning**: Sprint 49+ 🚀
 - **Backlog**: Future enhancements
 
+### **Completed Sprints** ✅
+- **Sprint 40**: Fragments Engine Core Systems (7 tasks)
+- **Sprint 41**: UX Modernization & shadcn Blocks Integration (5 tasks)
+- **Sprint 42**: User Setup & Profile Management System (6 tasks)
+- **Sprint 46**: Command System Unification (4 tasks)
+- **Sprint 48**: Command System Continuation & Migration (7 tasks)
+
 ### **Sprint Completion Targets**
-- **Sprint 46**: Critical foundation - immediate priority
+- **Sprint 49**: System polish - immediate priority
+- **Sprint 56**: Telemetry foundation - critical for debugging
 - **Sprint 43**: Enhanced UX - high value user improvements
-- **Sprint 44**: Advanced features - medium priority after foundation
-- **Sprint 45**: Management UI - lower priority polish items
+- **Sprint 50-55**: DSL evolution and pipeline unification
 
 ---
 
@@ -149,20 +219,23 @@
 
 ### **Ready-to-Execute Commands**
 ```bash
-# Start Sprint 46 - Command System Unification
-/sprint-start 46
+# Start Sprint 49 - System Polish & Agent Tooling
+/sprint-start 49
+
+# Start Sprint 56 - Telemetry Foundation (can run parallel)
+/sprint-start 56
 
 # Analyze individual tasks  
-/task-analyze ENG-08-01-command-architecture-analysis
-/task-analyze UX-04-01-todo-management-modal
+/task-analyze ENG-10-01-condition-yaml-parsing-fix
+/task-analyze TELEMETRY-001-correlation-middleware
 
 # Create specialized agents
 /agent-create backend-engineer alice
 /agent-create frontend-engineer bob
 
 # Assign agents to tasks
-/agent-assign alice ENG-08-01
-/agent-assign bob UX-04-01
+/agent-assign alice ENG-10-01
+/agent-assign bob TELEMETRY-001
 ```
 
 ### **Status Legend**

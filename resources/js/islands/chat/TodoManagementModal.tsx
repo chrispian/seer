@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useTodoData, type TodoItem, type TodoFilters } from '@/hooks/useTodoData'
 import {
   Dialog,
@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { Search, Filter, MoreHorizontal, Plus, Check, X } from 'lucide-react'
+import { Search, Filter, MoreHorizontal, Plus, Check, X, ChevronDown, ChevronRight, Pin } from 'lucide-react'
 
 interface TodoFiltersState {
   search: string
@@ -52,6 +52,118 @@ const handleDeleteTodo = async (todoId: string, deleteFn: (id: string) => Promis
   }
 }
 
+// TodoRow component for rendering individual todos
+const TodoRow = React.memo(({ 
+  todo, 
+  isExpanded, 
+  onToggleExpanded, 
+  onToggleStatus, 
+  onDelete, 
+  getPriorityBadgeVariant, 
+  getStatusIcon 
+}: {
+  todo: TodoItem
+  isExpanded: boolean
+  onToggleExpanded: (todoId: string) => void
+  onToggleStatus: (todoId: string) => void
+  onDelete: (todoId: string) => void
+  getPriorityBadgeVariant: (priority: string) => any
+  getStatusIcon: (status: string) => React.ReactNode
+}) => (
+  <TableRow key={todo.id} className="hover:bg-muted/50">
+    <TableCell className="w-8">
+      <button
+        onClick={() => onToggleStatus(todo.id)}
+        className="flex items-center justify-center p-1 rounded hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label={`Mark todo as ${todo.status === 'completed' ? 'open' : 'completed'}`}
+      >
+        {getStatusIcon(todo.status)}
+      </button>
+    </TableCell>
+    <TableCell className="w-8">
+      <button
+        onClick={() => onToggleExpanded(todo.id)}
+        className="flex items-center justify-center p-1 rounded hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label={`${isExpanded ? 'Collapse' : 'Expand'} todo details`}
+      >
+        {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+      </button>
+    </TableCell>
+    <TableCell className="min-w-0 flex-1">
+      <div className="flex flex-col space-y-1">
+        <div className="flex items-center gap-2">
+          {todo.is_pinned && <Pin className="h-3 w-3 text-blue-600" />}
+          <span className={`font-medium text-sm ${todo.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
+            {todo.title}
+          </span>
+          <Badge variant={getPriorityBadgeVariant(todo.priority)} className="text-xs hidden sm:inline-flex">
+            {todo.priority}
+          </Badge>
+        </div>
+        
+        {/* Tags row - always visible */}
+        {todo.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {todo.tags.slice(0, 3).map(tag => (
+              <Badge key={tag} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+            {todo.tags.length > 3 && (
+              <Badge variant="outline" className="text-xs">
+                +{todo.tags.length - 3}
+              </Badge>
+            )}
+          </div>
+        )}
+        
+        {/* Expanded content */}
+        {isExpanded && (
+          <div className="pt-2 space-y-2 border-t border-muted">
+            <p className="text-sm text-muted-foreground">
+              {todo.message}
+            </p>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span>Created: {new Date(todo.created_at).toLocaleDateString()}</span>
+              {todo.completed_at && (
+                <span>Completed: {new Date(todo.completed_at).toLocaleDateString()}</span>
+              )}
+              {todo.due_at && (
+                <span>Due: {new Date(todo.due_at).toLocaleDateString()}</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </TableCell>
+    <TableCell className="w-12">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 w-8 p-0 focus:ring-2 focus:ring-ring"
+            aria-label="Todo options"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem>Edit</DropdownMenuItem>
+          <DropdownMenuItem>Pin</DropdownMenuItem>
+          <DropdownMenuItem>Duplicate</DropdownMenuItem>
+          <DropdownMenuItem 
+            className="text-destructive"
+            onClick={() => onDelete(todo.id)}
+          >
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </TableCell>
+  </TableRow>
+))
+
 export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProps) {
   const { todos, loading, error, loadTodos, toggleTodoStatus, createTodo, deleteTodo } = useTodoData()
   const [filters, setFilters] = useState<TodoFiltersState>({
@@ -62,8 +174,10 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
   })
   const [showNewTodo, setShowNewTodo] = useState(false)
   const [newTodoText, setNewTodoText] = useState('')
+  const [expandedTodos, setExpandedTodos] = useState<Set<string>>(new Set())
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Load todos when modal opens
+  // Load todos when modal opens and focus search
   useEffect(() => {
     if (isOpen) {
       const todoFilters: TodoFilters = {
@@ -73,6 +187,11 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
         limit: 100,
       }
       loadTodos(todoFilters)
+      
+      // Focus search input after modal opens
+      setTimeout(() => {
+        searchInputRef.current?.focus()
+      }, 100)
     }
   }, [isOpen, loadTodos])
 
@@ -144,6 +263,15 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
     })
   }, [todos, filters])
 
+  // Separate pinned and regular todos
+  const pinnedTodos = useMemo(() => {
+    return filteredTodos.filter(todo => todo.is_pinned)
+  }, [filteredTodos])
+
+  const regularTodos = useMemo(() => {
+    return filteredTodos.filter(todo => !todo.is_pinned)
+  }, [filteredTodos])
+
   const handleToggleStatus = async (todoId: string) => {
     try {
       await toggleTodoStatus(todoId)
@@ -162,6 +290,18 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
     } catch (err) {
       console.error('Error creating todo:', err)
     }
+  }
+
+  const toggleExpanded = (todoId: string) => {
+    setExpandedTodos(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(todoId)) {
+        newSet.delete(todoId)
+      } else {
+        newSet.add(todoId)
+      }
+      return newSet
+    })
   }
 
   const getPriorityBadgeVariant = (priority: string) => {
@@ -191,9 +331,17 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             <span>Todo Management</span>
-            <Badge variant="secondary" className="text-xs">
-              {filteredTodos.length} of {todos.length}
-            </Badge>
+            <div className="flex gap-1">
+              {pinnedTodos.length > 0 && (
+                <Badge variant="default" className="text-xs bg-blue-600">
+                  <Pin className="h-3 w-3 mr-1" />
+                  {pinnedTodos.length}
+                </Badge>
+              )}
+              <Badge variant="secondary" className="text-xs">
+                {filteredTodos.length} of {todos.length}
+              </Badge>
+            </div>
           </DialogTitle>
           <div className="text-xs text-muted-foreground">
             Shortcuts: Ctrl+N (New), Esc (Close)
@@ -201,59 +349,71 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
         </DialogHeader>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 p-3 sm:p-4 bg-muted/20 rounded-sm">
-          <div className="flex items-center gap-2 flex-1">
+        <div className="flex flex-col gap-3 p-3 sm:p-4 bg-muted/20 rounded-sm">
+          <div className="flex items-center gap-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
+              ref={searchInputRef}
               placeholder="Search todos..."
               value={filters.search}
               onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-              className="rounded-sm"
+              className="rounded-sm flex-1"
             />
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="flex gap-2">
-              <Select
-                value={filters.status}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, status: value as any }))}
-              >
-                <SelectTrigger className="w-32 sm:w-36 rounded-sm text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="open">Open</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={filters.priority}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, priority: value as any }))}
-              >
-                <SelectTrigger className="w-32 sm:w-36 rounded-sm text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Priority</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             <Button 
               variant="outline" 
               size="sm" 
-              className="rounded-sm w-full sm:w-auto"
+              className="rounded-sm"
               onClick={() => setShowNewTodo(!showNewTodo)}
             >
               <Plus className="h-4 w-4 mr-1" />
               New Todo
             </Button>
+          </div>
+
+          {/* Filter Chips */}
+          <div className="flex flex-wrap gap-2">
+            {/* Status Filter Chips */}
+            <div className="flex gap-1">
+              {['all', 'open', 'completed'].map(status => (
+                <Button
+                  key={status}
+                  variant={filters.status === status ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 px-3 text-xs rounded-full"
+                  onClick={() => setFilters(prev => ({ ...prev, status: status as any }))}
+                >
+                  {status === 'all' ? 'All Status' : status.charAt(0).toUpperCase() + status.slice(1)}
+                </Button>
+              ))}
+            </div>
+
+            {/* Priority Filter Chips */}
+            <div className="flex gap-1">
+              {['all', 'urgent', 'high', 'medium', 'low'].map(priority => (
+                <Button
+                  key={priority}
+                  variant={filters.priority === priority ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 px-3 text-xs rounded-full"
+                  onClick={() => setFilters(prev => ({ ...prev, priority: priority as any }))}
+                >
+                  {priority === 'all' ? 'All Priority' : priority.charAt(0).toUpperCase() + priority.slice(1)}
+                </Button>
+              ))}
+            </div>
+
+            {/* Clear Filters */}
+            {(filters.status !== 'all' || filters.priority !== 'all' || filters.search) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-3 text-xs rounded-full"
+                onClick={() => setFilters({ search: '', status: 'all', priority: 'all', tags: [] })}
+              >
+                <X className="h-3 w-3 mr-1" />
+                Clear
+              </Button>
+            )}
           </div>
         </div>
 
@@ -298,7 +458,7 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
         )}
 
         {/* Content */}
-        <ScrollArea className="flex-1 max-h-[50vh] sm:max-h-[60vh]">
+        <ScrollArea className="flex-1 max-h-[50vh] sm:max-h-[60vh] pr-4">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <LoadingSpinner />
@@ -345,106 +505,82 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
               </div>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12" aria-label="Status"></TableHead>
-                  <TableHead>Todo</TableHead>
-                  <TableHead className="w-20 sm:w-24 hidden sm:table-cell">Priority</TableHead>
-                  <TableHead className="w-24 sm:w-32 hidden md:table-cell">Tags</TableHead>
-                  <TableHead className="w-24 sm:w-32 hidden lg:table-cell">Created</TableHead>
-                  <TableHead className="w-12" aria-label="Actions"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTodos.map((todo) => (
-                  <TableRow key={todo.id} className="hover:bg-muted/50">
-                    <TableCell>
-                      <button
-                        onClick={() => handleToggleStatus(todo.id)}
-                        className="flex items-center justify-center p-1 rounded hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
-                        aria-label={`Mark todo as ${todo.status === 'completed' ? 'open' : 'completed'}`}
-                      >
-                        {getStatusIcon(todo.status)}
-                      </button>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className={`font-medium text-sm sm:text-base ${todo.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
-                          {todo.title}
-                        </span>
-                        <span className="text-xs sm:text-sm text-muted-foreground truncate max-w-[200px] sm:max-w-md">
-                          {todo.message}
-                        </span>
-                        {/* Show priority and tags on mobile */}
-                        <div className="flex gap-1 mt-1 sm:hidden">
-                          <Badge variant={getPriorityBadgeVariant(todo.priority)} className="text-xs">
-                            {todo.priority}
-                          </Badge>
-                          {todo.tags.slice(0, 1).map(tag => (
-                            <Badge key={tag} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                          {todo.tags.length > 1 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{todo.tags.length - 1}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Badge variant={getPriorityBadgeVariant(todo.priority)} className="text-xs">
-                        {todo.priority}
+            <div className="space-y-6">
+              {/* Pinned Todos Section */}
+              {pinnedTodos.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3 px-2">
+                    <Pin className="h-4 w-4 text-blue-600" />
+                    <h3 className="text-sm font-medium text-foreground">Pinned Todos</h3>
+                    <Badge variant="default" className="text-xs bg-blue-600">
+                      {pinnedTodos.length}
+                    </Badge>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-8" aria-label="Status"></TableHead>
+                        <TableHead className="w-8" aria-label="Expand"></TableHead>
+                        <TableHead>Todo</TableHead>
+                        <TableHead className="w-12" aria-label="Actions"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pinnedTodos.map((todo) => (
+                        <TodoRow
+                          key={todo.id}
+                          todo={todo}
+                          isExpanded={expandedTodos.has(todo.id)}
+                          onToggleExpanded={toggleExpanded}
+                          onToggleStatus={handleToggleStatus}
+                          onDelete={(todoId) => handleDeleteTodo(todoId, deleteTodo)}
+                          getPriorityBadgeVariant={getPriorityBadgeVariant}
+                          getStatusIcon={getStatusIcon}
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+
+              {/* Regular Todos Section */}
+              {regularTodos.length > 0 && (
+                <div>
+                  {pinnedTodos.length > 0 && (
+                    <div className="flex items-center gap-2 mb-3 px-2">
+                      <h3 className="text-sm font-medium text-foreground">All Todos</h3>
+                      <Badge variant="secondary" className="text-xs">
+                        {regularTodos.length}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <div className="flex flex-wrap gap-1">
-                        {todo.tags.slice(0, 2).map(tag => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                        {todo.tags.length > 2 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{todo.tags.length - 2}
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs sm:text-sm text-muted-foreground hidden lg:table-cell">
-                      {new Date(todo.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 w-8 p-0 focus:ring-2 focus:ring-ring"
-                            aria-label="Todo options"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem>Pin</DropdownMenuItem>
-                          <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => handleDeleteTodo(todo.id, deleteTodo)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  )}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-8" aria-label="Status"></TableHead>
+                        <TableHead className="w-8" aria-label="Expand"></TableHead>
+                        <TableHead>Todo</TableHead>
+                        <TableHead className="w-12" aria-label="Actions"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {regularTodos.map((todo) => (
+                        <TodoRow
+                          key={todo.id}
+                          todo={todo}
+                          isExpanded={expandedTodos.has(todo.id)}
+                          onToggleExpanded={toggleExpanded}
+                          onToggleStatus={handleToggleStatus}
+                          onDelete={(todoId) => handleDeleteTodo(todoId, deleteTodo)}
+                          getPriorityBadgeVariant={getPriorityBadgeVariant}
+                          getStatusIcon={getStatusIcon}
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
           )}
         </ScrollArea>
 
@@ -452,6 +588,7 @@ export function TodoManagementModal({ isOpen, onClose }: TodoManagementModalProp
         <div className="flex justify-between items-center">
           <span className="text-sm text-muted-foreground">
             Showing {filteredTodos.length} of {todos.length} todos
+            {pinnedTodos.length > 0 && ` (${pinnedTodos.length} pinned)`}
           </span>
           <Button variant="outline" onClick={onClose} className="rounded-sm">
             Close
