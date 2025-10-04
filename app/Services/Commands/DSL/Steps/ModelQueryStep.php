@@ -127,10 +127,12 @@ class ModelQueryStep extends Step
                 
                 if (str_contains($field, '.')) {
                     // JSON path IN queries need special handling
+                    // Convert field.path notation to field->path for Laravel's JSON syntax
+                    $jsonField = str_replace('.', '->', $field);
                     if (strtoupper($operator) === 'IN') {
-                        $query->whereJsonContains($field, $value);
+                        $query->whereJsonContains($jsonField, $value);
                     } else {
-                        $query->whereJsonDoesntContain($field, $value);
+                        $query->whereJsonDoesntContain($jsonField, $value);
                     }
                 } else {
                     // Standard column IN queries
