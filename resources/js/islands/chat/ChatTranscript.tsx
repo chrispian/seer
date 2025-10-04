@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
 import { MessageActions } from './MessageActions'
+import { UserAvatar } from '@/components/UserAvatar'
 
 export interface ChatMessage {
   id: string // Client-side UUID for React keys
@@ -59,12 +60,29 @@ export function ChatTranscript({
         {messages.map((message) => (
           <div key={message.id} className="group flex gap-2 relative hover:bg-accent/5 p-2 transition-colors">
             {/* Avatar */}
-            <div className="w-6 h-6 rounded-sm shrink-0 bg-primary text-primary-foreground grid place-items-center text-xs font-medium">
-              {message.role === 'user' ? 'U' : 'A'}
-            </div>
+            {message.role === 'user' ? (
+              <UserAvatar className="rounded-sm shrink-0" size="sm" />
+            ) : (
+              <div className="w-6 h-6 rounded-sm shrink-0 bg-primary text-primary-foreground grid place-items-center text-xs font-medium">
+                A
+              </div>
+            )}
 
-            {/* Message Content */}
-            <div className="flex-1 min-w-0">
+            {/* Message Content with floating actions */}
+            <div className="flex-1 min-w-0 relative">
+              {/* Message Actions - Floating */}
+              <MessageActions
+                messageId={message.id}
+                serverMessageId={message.messageId}
+                serverFragmentId={message.fragmentId}
+                content={message.md}
+                isBookmarked={message.isBookmarked}
+                onDelete={onMessageDelete}
+                onBookmarkToggle={onMessageBookmarkToggle}
+                className="float-right ml-2 mb-2 clear-right"
+              />
+              
+              {/* Message Content */}
               <div className="prose prose-sm max-w-none text-foreground">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
@@ -118,18 +136,6 @@ export function ChatTranscript({
                 </ReactMarkdown>
               </div>
             </div>
-
-            {/* Message Actions */}
-            <MessageActions
-              messageId={message.id}
-              serverMessageId={message.messageId}
-              serverFragmentId={message.fragmentId}
-              content={message.md}
-              isBookmarked={message.isBookmarked}
-              onDelete={onMessageDelete}
-              onBookmarkToggle={onMessageBookmarkToggle}
-              className="absolute top-1 right-1"
-            />
           </div>
         ))}
       </div>

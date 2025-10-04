@@ -1,0 +1,22 @@
+name: "Open Setup Wizard"
+slug: setup
+version: 1.0.0
+triggers:
+  slash: "/setup"
+  aliases: ["/onboard", "/configure"]
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: []
+
+steps:
+  - id: open-setup
+    type: notify
+    with:
+      message: "Opening Setup Wizard..."
+      level: "info"
+      panel_data:
+        action: "navigate"
+        url: "/setup/welcome"

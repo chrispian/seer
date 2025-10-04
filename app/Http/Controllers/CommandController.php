@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\DTOs\CommandRequest;
 use App\Models\Fragment;
+use App\Models\CommandRegistry as CommandRegistryModel;
 use App\Services\CommandRegistry;
+use App\Services\Commands\DSL\CommandRunner;
 use Illuminate\Http\Request;
 
 class CommandController extends Controller
@@ -37,38 +39,73 @@ class CommandController extends Controller
         try {
             $startTime = microtime(true);
 
-            // Find the command class
-            $commandClass = CommandRegistry::find($commandName);
+            // First try to find in hardcoded commands
+            try {
+                $commandClass = CommandRegistry::find($commandName);
+                
+                // Create command request
+                $commandRequest = new CommandRequest(
+                    command: $commandName,
+                    arguments: $arguments,
+                    raw: $commandText
+                );
 
-            // Create command request
-            $commandRequest = new CommandRequest(
-                command: $commandName,
-                arguments: $arguments,
-                raw: $commandText
-            );
+                // Execute the command
+                $commandInstance = app($commandClass);
+                $response = $commandInstance->handle($commandRequest);
 
-            // Execute the command
-            $commandInstance = app($commandClass);
-            $response = $commandInstance->handle($commandRequest);
+                $executionTime = round((microtime(true) - $startTime) * 1000, 2); // milliseconds
 
-            $executionTime = round((microtime(true) - $startTime) * 1000, 2); // milliseconds
+                // Log command execution as a fragment for activity tracking
+                $this->logCommandExecution($commandName, $commandText, $arguments, $response, $executionTime, true);
 
-            // Log command execution as a fragment for activity tracking
-            $this->logCommandExecution($commandName, $commandText, $arguments, $response, $executionTime, true);
+                return response()->json([
+                    'success' => true,
+                    'type' => $response->type,
+                    'message' => $response->message,
+                    'fragments' => $response->fragments,
+                    'shouldResetChat' => $response->shouldResetChat,
+                    'shouldOpenPanel' => $response->shouldOpenPanel,
+                    'panelData' => $response->panelData,
+                    'shouldShowSuccessToast' => $response->shouldShowSuccessToast,
+                    'toastData' => $response->toastData,
+                    'shouldShowErrorToast' => $response->shouldShowErrorToast,
+                    'data' => $response->data,
+                ]);
+                
+            } catch (\InvalidArgumentException $e) {
+                // Not found in hardcoded commands, try file-based commands
+                $dbCommand = CommandRegistryModel::where('slug', $commandName)->first();
+                if ($dbCommand) {
+                    $runner = app(CommandRunner::class);
+                    $result = $runner->execute($commandName, $arguments);
+                    
+                    $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+                    
+                    // Convert CommandRunner result to expected response format
+                    $response = $this->convertDslResultToResponse($result);
+                    
+                    // Log command execution
+                    $this->logCommandExecution($commandName, $commandText, $arguments, $response, $executionTime, $result['success']);
 
-            return response()->json([
-                'success' => true,
-                'type' => $response->type,
-                'message' => $response->message,
-                'fragments' => $response->fragments,
-                'shouldResetChat' => $response->shouldResetChat,
-                'shouldOpenPanel' => $response->shouldOpenPanel,
-                'panelData' => $response->panelData,
-                'shouldShowSuccessToast' => $response->shouldShowSuccessToast,
-                'toastData' => $response->toastData,
-                'shouldShowErrorToast' => $response->shouldShowErrorToast,
-                'data' => $response->data,
-            ]);
+                    return response()->json([
+                        'success' => $result['success'],
+                        'type' => $response->type,
+                        'message' => $response->message,
+                        'fragments' => $response->fragments ?? [],
+                        'shouldResetChat' => $response->shouldResetChat ?? false,
+                        'shouldOpenPanel' => $response->shouldOpenPanel ?? false,
+                        'panelData' => $response->panelData ?? null,
+                        'shouldShowSuccessToast' => $response->shouldShowSuccessToast ?? false,
+                        'toastData' => $response->toastData ?? null,
+                        'shouldShowErrorToast' => $response->shouldShowErrorToast ?? false,
+                        'data' => $response->data ?? null,
+                    ]);
+                } else {
+                    // Command not found in either system
+                    throw $e;
+                }
+            }
 
         } catch (\InvalidArgumentException $e) {
             // Log failed command execution
@@ -124,6 +161,45 @@ class CommandController extends Controller
         }
 
         return $arguments;
+    }
+
+    /**
+     * Convert CommandRunner DSL result to expected response format
+     */
+    private function convertDslResultToResponse(array $result): object
+    {
+        $response = new \stdClass();
+        $response->type = 'success';
+        $response->message = 'Command executed successfully';
+        $response->fragments = [];
+        $response->shouldResetChat = false;
+        $response->shouldOpenPanel = false;
+        $response->panelData = null;
+        $response->shouldShowSuccessToast = false;
+        $response->toastData = null;
+        $response->shouldShowErrorToast = false;
+        $response->data = null;
+
+        if (!$result['success']) {
+            $response->type = 'error';
+            $response->message = $result['error'] ?? 'Command execution failed';
+            $response->shouldShowErrorToast = true;
+            return $response;
+        }
+
+        // Look for notify steps with panel_data for navigation
+        foreach ($result['steps'] as $step) {
+            if ($step['type'] === 'notify' && isset($step['output']['panel_data'])) {
+                $panelData = $step['output']['panel_data'];
+                if (isset($panelData['action']) && $panelData['action'] === 'navigate') {
+                    $response->shouldOpenPanel = true;
+                    $response->panelData = $panelData;
+                    $response->message = $step['output']['message'] ?? 'Navigating...';
+                }
+            }
+        }
+
+        return $response;
     }
 
     /**

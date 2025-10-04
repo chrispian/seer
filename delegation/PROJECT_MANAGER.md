@@ -19,7 +19,7 @@ This project uses a **structured delegation system** where:
 2. **Agent Specialization**: Each agent pack is customized for its specific domain:
    - **FE-** prefix: Frontend/Engine features (Type System, Commands, Scheduler)
    - **UX-** prefix: User experience and interface improvements
-   - **ENG-** prefix: Engineering infrastructure (archived - completed)
+   - **ENG-** prefix: Engineering infrastructure and backend systems
 
 3. **Sub-Agent Usage**: Complex tasks should use specialized sub-agents for:
    - Domain-specific expertise (UI components, database design, API integration)
@@ -76,7 +76,7 @@ This project uses a **structured delegation system** where:
 
 ---
 
-## Sprint 40: Fragments Engine Core Systems
+## Active Sprint: Sprint 46 - Command System Unification
 
 ### Status Legend
 - `backlog` - Not yet started
@@ -87,408 +87,216 @@ This project uses a **structured delegation system** where:
 
 ---
 
-## Critical Priority Tasks
-
-### CHAT-MODEL-PICKER-RESTORE | `done`
-**Description**: Restore lost user model selection feature that allows users to select AI models (OpenAI, Anthropic, Ollama) for each chat session with persistence.
+### ENG-08-01-COMMAND-ARCHITECTURE-ANALYSIS | `todo`
+**Description**: Analyze hardcoded commands and establish migration foundation for command system unification.
 
 **Key Features**:
-- Model selection dropdown in chat composer
-- Session-specific model persistence
-- Integration with existing ModelSelectionService
-- Backend API for model updates
-- ChatToolbar component and useModelSelection hook
+- Complete audit of 18 hardcoded commands and their capabilities
+- DSL step requirements analysis for complex command features
+- Enhanced DSL step implementations for missing functionality
+- Migration compatibility matrix and risk assessment
 
-**Status**: ✅ Restored successfully - UI components attached to chat input, backend integration working
-**Last Updated**: 2025-01-03 | **Assignee**: Primary Agent | **Completed**: 4 hours
-**Notes**: ✅ Includes comprehensive Sprint 40 planning docs and PROJECT_MANAGER agent system
+**Status**: Ready for implementation
+**Last Updated**: 2025-10-04 | **Assignee**: Backend Architecture Analysis Specialist | **Estimated**: 6-8 hours
 
 ---
 
-## High Priority Tasks
-
-### FE-01-TYPE-SYSTEM | `done`
-**Description**: Implement file-based Type Packs with DB registry cache, JSON schema validation, and generated columns for performance optimization.
+### ENG-08-02-CORE-COMMAND-MIGRATION | `todo`
+**Description**: Migrate foundational commands (session, help, clear, search, bookmark) to YAML DSL.
 
 **Key Features**:
-- Type Pack file structure with YAML manifest and JSON schemas
-- Database registry cache for fast lookups
-- Schema validation on Fragment create/update
-- Generated columns for hot fields (status, due_at)
-- Management commands for scaffolding and caching
+- Migrate 5 core commands to YAML DSL format
+- Implement complex response handling in DSL steps
+- Create comprehensive test samples for migrated commands
+- Validate functional equivalence with original commands
 
-**Status**: ✅ Completed with full UI integration - TypeSystemWidget with API endpoints, TypeBadge components
-**Last Updated**: 2025-01-03 | **Assignee**: Primary Agent | **Completed**: 2-3 days
+**Dependencies**: ENG-08-01 completion required
+**Status**: Ready for implementation
+**Last Updated**: 2025-10-04 | **Assignee**: Laravel Command Migration Specialist | **Estimated**: 8-12 hours
 
 ---
 
-### FE-02-SLASH-COMMANDS | `done`
-**Description**: Build Command Packs with YAML DSL runner and built-in commands for common Fragment operations.
+### ENG-08-03-ADVANCED-COMMAND-MIGRATION | `todo`
+**Description**: Migrate complex commands (frag, vault, project, context, compose) and resolve system conflicts.
 
 **Key Features**:
-- Command registry and YAML DSL parser
-- Step execution engine (transform, ai.generate, fragment.create, etc.)
-- Built-in commands: /todo, /note, /link, /recall, /search
-- Integration with existing AI providers
-- Management commands for scaffolding and testing
+- Migrate 8 advanced commands including conflict resolution
+- Implement advanced DSL patterns for complex workflows
+- Handle command aliases and shortcuts in YAML system
+- Create integration tests for cross-command interactions
 
-**Status**: ✅ Completed - 10 command packs implemented with DSL execution engine
-**Last Updated**: 2025-01-03 | **Assignee**: Primary Agent | **Completed**: 3-4 days
+**Dependencies**: ENG-08-02 completion required
+**Status**: Ready for implementation
+**Last Updated**: 2025-10-04 | **Assignee**: Advanced Laravel Command Migration Specialist | **Estimated**: 8-12 hours
 
 ---
 
-## Medium Priority Tasks
-
-### FE-03-SCHEDULER | `done`
-**Description**: Lightweight scheduler with timezone support for automated Command Pack execution.
+### ENG-08-04-SYSTEM-CLEANUP | `todo`
+**Description**: Remove dual command system and optimize unified architecture.
 
 **Key Features**:
-- Schedules and schedule_runs tables
-- Timezone-aware next run calculator
-- Cron-based tick command and queue integration
-- Demo scheduling commands: /news-digest-ai, /remind
+- Remove hardcoded CommandRegistry and update CommandController
+- Implement unified command lookup and execution
+- Update autocomplete and help systems for file-based commands
+- Performance optimization and command caching enhancements
 
-**Status**: ✅ Completed with full UI integration - SchedulerWidget with real-time status monitoring
-**Last Updated**: 2025-01-03 | **Assignee**: Primary Agent | **Completed**: 2-3 days
+**Dependencies**: ENG-08-03 completion required
+**Status**: Ready for implementation
+**Last Updated**: 2025-10-04 | **Assignee**: System Integration & Cleanup Specialist | **Estimated**: 6-8 hours
 
 ---
 
-### FE-04-TOOL-REGISTRY | `done`
-**Description**: Tool providers with capability gating and secure invocation logging.
-
-**Key Features**:
-- Tool registry with capability-based security
-- Core providers: Shell, FileSystem, MCP, Gmail, Todoist
-- Invocation logging and audit trail
-- Integration with DSL tool.call step type
-
-**Status**: ✅ Completed - Tool registry with capability-based security and audit logging
-**Last Updated**: 2025-01-03 | **Assignee**: Primary Agent | **Completed**: 2-3 days
-
----
-
-## Lower Priority Tasks
-
-### FE-05-OBSERVERS | `done`
-**Description**: Event projectors for metrics collection and read model optimization.
-
-**Key Features**:
-- Pipeline metrics and performance tracking
-- Command and scheduler event projectors
-- Read model tables for query optimization
-- Backfill commands for historical data
-
-**Status**: ✅ Completed - Event-driven metrics system with projectors and backfill commands
-**Last Updated**: 2025-01-03 | **Assignee**: Primary Agent | **Completed**: 1-2 days
-
----
-
-### FE-06-INBOX | `done`
-**Description**: AI-assisted inbox service with intelligent Fragment classification and routing.
-
-**Key Features**:
-- Inbox service with AI classification
-- Prompt factory for intelligent processing
-- Fragment routing and categorization
-- Integration with existing AI providers
-
-**Status**: ✅ Completed with comprehensive UI - InboxWidget with bulk operations, filtering, and review interface
-**Last Updated**: 2025-01-03 | **Assignee**: Primary Agent | **Completed**: 2-3 days
-
----
-
-## Sprint Progress
-
-**Total Tasks**: 7
+### Sprint 46 Progress Summary
+**Total Tasks**: 4
 **Status Distribution**:
-- `todo`: 0
-- `backlog`: 0
-- `in-progress`: 0
-- `review`: 0
-- `done`: 7
-
-**Estimated Total**: 13-19 days
-**Sprint Start**: 2025-01-03
-**Target Completion**: 2025-01-21
-**Actual Completion**: 2025-01-03 (Sprint 40 COMPLETED! 🎉)
-
-### Sprint 40 Achievements Summary
-✅ **Complete Backend + Frontend Integration Delivered**:
-- **Type System**: File-based type packs with UI indicators and validation
-- **Command System**: 10 command packs with DSL execution engine
-- **Scheduler**: Time-based automation with real-time monitoring UI
-- **Tool Registry**: Capability-based tool system with audit logging
-- **Observer System**: Event-driven metrics with projectors
-- **Inbox System**: AI-assisted fragment review with comprehensive UI
-
-### New UI Components Added
-- **InboxWidget**: Complete fragment review interface with bulk operations
-- **TypeSystemWidget**: Type pack browser with validation indicators  
-- **SchedulerWidget**: Real-time schedule monitoring and run history
-- **Enhanced FragmentReviewCard**: Inline editing with type system integration
-- **API Endpoints**: Complete REST APIs for all Sprint 40 features
-
-**Result**: Fragments Engine now has a fully functional core system with modern UI!
-
----
-
-## Sprint 41: UX Modernization & shadcn Blocks Integration
-
-### UX-02-01-SIDEBAR-ENHANCEMENT | `done`
-**Description**: Enhance AppSidebar with collapsible functionality while preserving existing navigation structure and three-column layout.
-
-**Key Features**:
-- ✅ Simple toggle-based collapse functionality (64px icon mode)
-- ✅ Smooth CSS transitions for width changes
-- ✅ Maintain existing navigation functionality and three-column layout
-- ✅ Preserve Ribbon + Sidebar + Main + RightRail design
-- ✅ Compatible solution without breaking existing patterns
-
-**Status**: ✅ Completed successfully with simple collapse solution that preserves layout
-**Last Updated**: 2025-01-03 | **Assignee**: Primary Agent | **Completed**: 3 hours
-
----
-
-### UX-02-02-DASHBOARD-LAYOUT | `done`
-**Description**: Implement professional dashboard layout patterns for main content area while preserving existing chat functionality.
-
-**Key Features**:
-- ✅ Enhanced semantic HTML structure (main, header elements)
-- ✅ Responsive grid-based organization ready for future widgets
-- ✅ Professional card styling with shadows and borders
-- ✅ Responsive padding scaling (p-4 md:p-6 lg:p-8)
-- ✅ Maximum width container for large screen optimization
-- ✅ Visual hierarchy with background layers and proper spacing
-- ✅ All chat functionality and routing preserved perfectly
-
-**Status**: ✅ Completed successfully with professional dashboard patterns
-**Last Updated**: 2025-01-03 | **Assignee**: Primary Agent | **Completed**: 2 hours
-
----
-
-### UX-02-03-WIDGET-CONTAINERS | `done`
-**Description**: Implement responsive widget container system with enhanced grid patterns for better organization and user experience.
-
-**Key Features**:
-- ✅ Semantic HTML structure with proper aside/footer elements
-- ✅ Responsive grid-based layout with consistent spacing
-- ✅ Professional widget container patterns with hover effects
-- ✅ Responsive width scaling (w-80 lg:w-96) across breakpoints
-- ✅ Smooth animations for widget interactions and fade-in effects
-- ✅ Enhanced visual hierarchy with background layers
-- ✅ All existing widget functionality preserved perfectly
-
-**Status**: ✅ Completed successfully with responsive container system
-**Last Updated**: 2025-01-03 | **Assignee**: Primary Agent | **Completed**: 2 hours
-
----
-
-### UX-02-04-RESPONSIVE-ADAPTATION | `done`
-**Description**: Enhance responsive design using mobile-first responsive patterns for optimal mobile and tablet experiences.
-
-**Key Features**:
-- ✅ Mobile-first responsive design implementation with progressive disclosure
-- ✅ Comprehensive breakpoint system (mobile < 640px, tablet 640-1024px, desktop 1024px+, large 1280px+)
-- ✅ Component visibility responsive patterns (Ribbon lg+, Sidebar md+, RightRail xl+)
-- ✅ Mobile-optimized spacing and sizing across all components
-- ✅ Touch interaction improvements with enhanced tap targets
-- ✅ Container queries and responsive container system
-- ✅ Full column height fixes for consistent layout across breakpoints
-
-**Status**: ✅ Completed successfully with comprehensive responsive system
-**Last Updated**: 2025-01-03 | **Assignee**: Primary Agent | **Completed**: 2 hours
-
----
-
-### UX-02-05-CUSTOMIZATION-FOUNDATION | `done`
-**Description**: Establish user customization foundation using block patterns for layout personalization.
-
-**Key Features**:
-- ✅ User layout preferences system with Zustand store and localStorage persistence
-- ✅ Customizable widget arrangements with drag-and-drop support (visual framework ready)
-- ✅ Comprehensive customization interface with settings panel and live preview
-- ✅ Widget registry system for dynamic component loading and metadata management
-- ✅ Preference persistence with import/export capabilities
-- ✅ Responsive customization controls with toggle-able customization mode
-- ✅ Dynamic widget spacing, rail width, and theme selection
-- ✅ Widget enable/disable, minimize/maximize, and section management
-
-**Implementation Details**:
-- **useLayoutStore**: Complete preferences management with 12+ actions and persistence
-- **widgetRegistry**: Dynamic widget loading system with metadata and categories
-- **CustomizableWidget**: Wrapper component with drag-and-drop, controls, and states
-- **CustomizationPanel**: Full-featured settings UI with all configuration options
-- **RightRail**: Updated to use dynamic widget system with customization mode
-
-**Status**: ✅ Completed successfully - Full customization foundation established
-**Last Updated**: 2025-01-03 | **Assignee**: Primary Agent | **Completed**: 10 hours
-
----
-
-### UX-02-SHADCN-BLOCKS-INTEGRATION | `backlog`
-**Description**: Modernize the overall layout system using shadcn blocks for enhanced modularity and responsive design.
-
-**Key Features**:
-- Comprehensive block system integration
-- Modular layout architecture
-- Enhanced responsive design patterns
-- Widget system migration strategy
-- User experience improvements
-
-**Last Updated**: 2025-01-03 | **Assignee**: TBD | **Estimated**: 12-15 hours
-
----
-
-## Sprint 42: User Setup & Profile Management System
-
-### UX-03-01-DATABASE-SCHEMA | `todo`
-**Description**: Enhance the users table schema to support comprehensive user profiles, avatar management, and settings persistence for the setup system.
-
-**Key Features**:
-- Database migration for user profile fields (display_name, avatar_path, use_gravatar, profile_settings, profile_completed_at)
-- Updated User model with profile-related methods and relationships
-- Profile settings JSON structure with proper validation
-- Migration rollback safety and data integrity constraints
-
-**Last Updated**: 2025-01-03 | **Assignee**: TBD | **Estimated**: 3-4 hours
-
----
-
-### UX-03-02-BACKEND-SERVICES | `todo`
-**Description**: Create backend services for user profile management, avatar handling, and settings persistence with comprehensive API endpoints.
-
-**Key Features**:
-- AvatarService for Gravatar integration and file upload management
-- UserProfileService for profile operations and validation
-- API controllers for profile and settings endpoints
-- Local caching system for offline Gravatar functionality
-- Security validation for file uploads and data integrity
-
-**Last Updated**: 2025-01-03 | **Assignee**: TBD | **Estimated**: 4-6 hours
-
----
-
-### UX-03-03-SETUP-WIZARD | `todo`
-**Description**: Create an intuitive multi-step setup wizard using shadcn components to replace traditional authentication with user-friendly onboarding.
-
-**Key Features**:
-- Multi-step wizard with Welcome, Profile, Avatar, Preferences, and Completion steps
-- Form validation and error handling with shadcn form components
-- Step progress indication and smooth navigation
-- Integration with backend APIs for data submission
-- Responsive design and accessibility support
-
-**Last Updated**: 2025-01-03 | **Assignee**: TBD | **Estimated**: 6-8 hours
-
----
-
-### UX-03-04-AVATAR-SYSTEM | `todo`
-**Description**: Implement comprehensive avatar management system with Gravatar integration, custom file uploads, and local caching optimized for NativePHP desktop environment.
-
-**Key Features**:
-- Real-time Gravatar preview based on email input
-- Drag-and-drop file upload with image validation
-- Image processing capabilities (cropping, resizing, optimization)
-- Local caching system for offline Gravatar access
-- Fallback handling and professional avatar management interface
-
-**Last Updated**: 2025-01-03 | **Assignee**: TBD | **Estimated**: 6-8 hours
-
----
-
-### UX-03-05-SETTINGS-PAGE | `todo`
-**Description**: Create comprehensive settings management interface with tabbed navigation, real-time updates, and persistent user preference storage.
-
-**Key Features**:
-- Tabbed settings interface (Profile, Preferences, AI Settings, Appearance)
-- Real-time validation and settings persistence
-- Settings import/export capabilities
-- Integration with user context and preference systems
-- Professional interface matching application design system
-
-**Last Updated**: 2025-01-03 | **Assignee**: TBD | **Estimated**: 8-10 hours
-
----
-
-### UX-03-USER-SETUP-SYSTEM | `todo`
-**Description**: Overall coordination task for integrating all user setup system components into a cohesive experience that replaces traditional authentication.
-
-**Key Features**:
-- Integration of all setup system components
-- Replacement of AuthModal with SetupWizard
-- Testing and validation of complete user flow
-- Documentation and user experience optimization
-- NativePHP desktop app optimization
-
-**Last Updated**: 2025-01-03 | **Assignee**: TBD | **Estimated**: 2-3 hours
-
----
-
-## Sprint Progress Summary
-
-### Sprint 40 Progress ✅ COMPLETED
-**Total Tasks**: 7
-**Status Distribution**:
-- `todo`: 0
-- `backlog`: 0
-- `in-progress`: 0
-- `review`: 0
-- `done`: 7
-
-**Estimated Total**: 13-19 days
-**Actual Total**: 1 day (Accelerated completion with full UI integration!)
-
-### Sprint 41 Progress
-**Total Tasks**: 6
-**Status Distribution**:
-- `todo`: 0
-- `backlog`: 1 (UX-02-SHADCN-BLOCKS-INTEGRATION - future enhancement)
-- `in-progress`: 0
-- `review`: 0
-- `done`: 5 ✅
-
-**Completed Tasks**:
-1. ✅ UX-02-01-SIDEBAR-ENHANCEMENT (3 hours)
-2. ✅ UX-02-02-DASHBOARD-LAYOUT (2 hours)
-3. ✅ UX-02-04-RESPONSIVE-ADAPTATION (2 hours)
-4. ✅ UX-02-05-CUSTOMIZATION-FOUNDATION (10 hours)
-5. ✅ Layout Height Fixes (1 hour)
-
-**Status**: 🎉 **SPRINT 41 COMPLETE** - Modern UX foundation established!
-**Total Effort**: 18 hours (2.25 days) | **Original Estimate**: 50-63 hours
-
-### Sprint 42 Progress
-**Total Tasks**: 6
-**Status Distribution**:
-- `todo`: 6
+- `todo`: 4
 - `backlog`: 0
 - `in-progress`: 0
 - `review`: 0
 - `done`: 0
 
-**Estimated Total**: 29-39 hours (4-5 days)
+**Estimated Total**: 28-38 hours (3.5-5 days)
+**Sprint Start**: TBD
+**Target Completion**: TBD
 
-### Overall Project Status
-**Total Active Tasks**: 19
-**Combined Estimated Effort**: 25-35 days
-**Completed Tasks**: 7 (Full Sprint 40 + Model Selection)
-**Success Rate**: 42% (8/19) - Sprint 40 complete with comprehensive UI integration!
+**Business Goals**:
+- **Unified Architecture**: Single command execution path via DSL
+- **Simplified Maintenance**: Eliminate dual system complexity
+- **Enhanced Development**: Declarative YAML configuration for all commands
+- **Performance Optimization**: Improved command discovery and execution
+
+---
+
+## Upcoming Sprints
+
+### Sprint 43: Enhanced User Experience & System Management
+
+**Total Tasks**: 7 (6 active + 1 future)
+**Estimated Total**: 73-103 hours (9-13 days)
+
+#### UX-04-01-TODO-MANAGEMENT-MODAL | `todo`
+**Description**: Advanced todo management interface combining command palette patterns with datatable functionality.
+**Estimated**: 14-20 hours
+
+#### UX-04-02-AGENT-MANAGER-SYSTEM | `todo`
+**Description**: Comprehensive agent profile management system with avatar support and mode-based execution boundaries.
+**Estimated**: 25-35 hours
+
+#### UX-04-03-CHAT-INFINITE-SCROLL | `todo`
+**Description**: Performance optimization for chat interface implementing infinite scroll with progressive message loading.
+**Estimated**: 12-18 hours
+
+#### ENG-05-01-CRON-SCHEDULING-SETUP | `todo`
+**Description**: Production-ready Laravel task scheduling setup with comprehensive monitoring.
+**Estimated**: 4-6 hours
+
+#### UX-04-04-CUSTOM-SLASH-COMMANDS-UI | `todo`
+**Description**: CRUD interface for custom slash commands with visual flow editor.
+**Estimated**: 15-20 hours
+
+#### DOC-01-HELP-SYSTEM-UPDATE | `todo`
+**Description**: Comprehensive help documentation update with custom command registration support.
+**Estimated**: 3-4 hours
+
+#### UX-04-05-AGENT-AVATAR-AI-ENHANCEMENTS | `backlog`
+**Description**: Future AI-powered avatar generation and dynamic reaction system.
+**Estimated**: 20-25 hours
+
+---
+
+### Sprint 44: Transclusion System Implementation
+
+**Total Tasks**: 6
+**Estimated Total**: 59-82 hours (7-10 days)
+
+#### ENG-06-01-TRANSCLUSION-BACKEND-FOUNDATION | `todo`
+**Description**: Core transclusion infrastructure including models, services, and command foundation.
+**Estimated**: 8-12 hours
+
+#### UX-05-01-INCLUDE-COMMAND-INTERFACE | `todo`
+**Description**: TipTap /include slash command interface with target selection and mode configuration.
+**Estimated**: 12-16 hours
+
+#### UX-05-02-TRANSCLUSION-RENDERER-SYSTEM | `todo`
+**Description**: TipTap transclusion node and rendering system supporting live references and multiple layouts.
+**Estimated**: 15-20 hours
+
+#### ENG-06-02-FRAGMENT-QUERY-ENGINE | `todo`
+**Description**: Mini-query parser and execution engine for list transclusions with filtering and sorting.
+**Estimated**: 10-14 hours
+
+#### UX-05-03-TRANSCLUSION-MANAGEMENT-INTERFACE | `todo`
+**Description**: Management interface for viewing, editing, and maintaining transclusions.
+**Estimated**: 8-12 hours
+
+#### ENG-06-03-OBSIDIAN-MARKDOWN-COMPATIBILITY | `todo`
+**Description**: Markdown import/export system with Obsidian-style embed syntax support.
+**Estimated**: 6-8 hours
+
+---
+
+### Sprint 45: Provider & Model Management UI
+
+**Total Tasks**: 6
+**Estimated Total**: 34-47 hours (4-6 days)
+
+#### ENG-07-01-PROVIDER-SCHEMA-ENHANCEMENT | `todo`
+**Description**: Enhance provider configuration schema for UI-based management with enable/disable controls.
+**Estimated**: 4-6 hours
+
+#### ENG-07-02-PROVIDER-API-SERVICE | `todo`
+**Description**: Comprehensive API service layer for provider management with CRUD operations.
+**Estimated**: 6-8 hours
+
+#### UX-06-01-REACT-PROVIDER-MANAGEMENT | `todo`
+**Description**: React components for provider management including list views and CRUD operations.
+**Estimated**: 8-12 hours
+
+#### UX-06-02-REACT-PROVIDER-CONFIG-COMPONENTS | `todo`
+**Description**: Specialized React components for provider configuration and model selection interfaces.
+**Estimated**: 8-12 hours
+
+#### ENG-07-03-KEYCHAIN-INTEGRATION-FOUNDATION | `todo`
+**Description**: Foundation for secure credential storage with browser keychain integration research.
+**Estimated**: 4-6 hours
+
+#### UX-06-03-PROVIDER-DASHBOARD-UI | `todo`
+**Description**: Provider dashboard and settings interface with analytics and usage tracking.
+**Estimated**: 4-7 hours
+
+---
+
+## Backlog: Future Enhancement Tasks
+
+### UX-02-SHADCN-BLOCKS-INTEGRATION | `backlog`
+**Description**: Modernize the overall layout system using shadcn blocks for enhanced modularity and responsive design.
+
+**Key Features**:
+- Comprehensive block system integration  
+- Modular layout architecture
+- Enhanced responsive design patterns using blocks
+- Widget system migration to block patterns
+- User experience improvements
+
+**Notes**: Moved from Sprint 41 after completing foundational UX improvements. Current implementation successfully uses shadcn components but doesn't leverage the official shadcn blocks system. Future enhancement for layout modularity.
+
+**Last Updated**: 2025-01-03 | **Assignee**: TBD | **Estimated**: 12-15 hours
 
 ---
 
 ## Project Management Guidelines
 
 ### Task Prioritization
-1. **Critical/High Priority**: Core engine features (Sprint 40)
-2. **Medium Priority**: UX improvements that enhance existing functionality
-3. **Low Priority**: Nice-to-have features and optimizations
+1. **Critical**: Sprint 46 - Command system unification (architectural foundation)
+2. **High Priority**: Sprint 43 - Enhanced UX and system management
+3. **Medium Priority**: Sprint 44 - Advanced transclusion features
+4. **Lower Priority**: Sprint 45 - Provider management UI improvements
 
 ### Dependency Management
-- **Sprint 40 → Sprint 41**: Type System should complete before major UX changes
-- **Within Sprint 41**: Sidebar → Dashboard → Widgets → Responsive → Customization
-- **Sprint 41 → Sprint 42**: Enhanced layout blocks enable better settings page integration
-- **Within Sprint 42**: Database Schema → Backend Services → Setup Wizard → Avatar System → Settings Page → Integration
-- **Cross-Sprint**: Model selection feature enables better UX for provider switching
+- **Sprint 46**: Independent - can proceed immediately as architectural improvement
+- **Sprint 43**: Can run parallel with Sprint 46 (different focus areas)
+- **Sprint 44**: Depends on enhanced command system from Sprint 46
+- **Sprint 45**: Independent - provider management improvements
 
 ### Risk Mitigation
 - **Breaking Changes**: All tasks emphasize preserving existing functionality
@@ -502,41 +310,63 @@ This project uses a **structured delegation system** where:
 
 ### Ready-to-Delegate Task Packs
 
-**Sprint 40 (Core Engine)**:
-- `delegation/FE-01-TYPE-SYSTEM/` - Type Packs with registry cache
+**Sprint 46 (Command System Unification) - IMMEDIATE PRIORITY**:
+- `delegation/sprint-46/ENG-08-01-command-architecture-analysis/` - Command analysis and foundation
+- `delegation/sprint-46/ENG-08-02-core-command-migration/` - Core command migration (Batch 1)
+- `delegation/sprint-46/ENG-08-03-advanced-command-migration/` - Advanced command migration (Batch 2)  
+- `delegation/sprint-46/ENG-08-04-system-cleanup/` - System cleanup and optimization
 
-**Sprint 41 (Layout Modernization)**:
-- `delegation/sprint-41/UX-02-01-sidebar-enhancement/` - Collapsible sidebar
-- `delegation/sprint-41/UX-02-02-dashboard-layout/` - Dashboard patterns
-- `delegation/sprint-41/UX-02-03-widget-containers/` - Widget organization
-- `delegation/sprint-41/UX-02-04-responsive-adaptation/` - Mobile optimization
-- `delegation/sprint-41/UX-02-05-customization-foundation/` - User customization
-- `delegation/sprint-41/UX-02-shadcn-blocks-integration/` - Overall modernization
+**Sprint 43 (Enhanced UX & System Management)**:
+- `delegation/sprint-43/UX-04-01-todo-management-modal/` - Advanced todo management
+- `delegation/sprint-43/UX-04-02-agent-manager-system/` - Agent profiles with avatar support
+- `delegation/sprint-43/UX-04-03-chat-infinite-scroll/` - Chat performance optimization
+- `delegation/sprint-43/ENG-05-01-cron-scheduling-setup/` - Production scheduling setup
+- `delegation/sprint-43/UX-04-04-custom-slash-commands-ui/` - Custom command interface
+- `delegation/sprint-43/DOC-01-help-system-update/` - Help documentation update
 
-**Sprint 42 (User Setup & Profile Management)**:
-- `delegation/sprint-42/UX-03-01-database-schema/` - User profile database schema
-- `delegation/sprint-42/UX-03-02-backend-services/` - Profile and avatar backend services
-- `delegation/sprint-42/UX-03-03-setup-wizard/` - Multi-step onboarding wizard
-- `delegation/sprint-42/UX-03-04-avatar-system/` - Gravatar integration and upload system
-- `delegation/sprint-42/UX-03-05-settings-page/` - Comprehensive settings management
-- `delegation/sprint-42/UX-03-user-setup-system/` - Overall integration and coordination
+**Sprint 44 (Transclusion System)**:
+- `delegation/sprint-44/ENG-06-01-transclusion-backend-foundation/` - Core transclusion infrastructure
+- `delegation/sprint-44/UX-05-01-include-command-interface/` - /include command interface
+- `delegation/sprint-44/UX-05-02-transclusion-renderer-system/` - Rendering system
+- `delegation/sprint-44/ENG-06-02-fragment-query-engine/` - Query engine
+- `delegation/sprint-44/UX-05-03-transclusion-management-interface/` - Management interface
+- `delegation/sprint-44/ENG-06-03-obsidian-markdown-compatibility/` - Obsidian compatibility
+
+**Sprint 45 (Provider Management)**:
+- `delegation/sprint-45/ENG-07-01-provider-schema-enhancement/` - Provider schema enhancement
+- `delegation/sprint-45/ENG-07-02-provider-api-service/` - Provider API service
+- `delegation/sprint-45/UX-06-01-react-provider-management/` - React provider management
+- `delegation/sprint-45/UX-06-02-react-provider-config-components/` - Provider config components
+- `delegation/sprint-45/ENG-07-03-keychain-integration-foundation/` - Keychain integration foundation
+- `delegation/sprint-45/UX-06-03-provider-dashboard-ui/` - Provider dashboard UI
 
 ### Example Delegation Commands
+
+**Priority: Sprint 46 (Command System Unification)**
 ```
-"Please execute the task defined in delegation/FE-01-TYPE-SYSTEM/AGENT.md. 
-Follow the complete pack structure including CONTEXT.md, PLAN.md, and TODO.md."
+"Begin command system unification with architecture analysis. Start with delegation/sprint-46/ENG-08-01-command-architecture-analysis/AGENT.md and analyze all 18 hardcoded commands for migration planning."
 
-"Take on the UX sidebar enhancement task. Start with delegation/sprint-41/UX-02-01-sidebar-enhancement/AGENT.md 
-and follow the workflow defined in the task pack."
+"Migrate core commands to YAML DSL. Start with delegation/sprint-46/ENG-08-02-core-command-migration/AGENT.md and convert session, help, clear, search, and bookmark commands."
 
-"Begin the user setup system database schema task. Start with delegation/sprint-42/UX-03-01-database-schema/AGENT.md 
-and follow the complete task pack structure."
+"Handle advanced command migration and conflict resolution. Start with delegation/sprint-46/ENG-08-03-advanced-command-migration/AGENT.md and migrate complex commands while resolving dual system conflicts."
+
+"Complete system cleanup and optimization. Start with delegation/sprint-46/ENG-08-04-system-cleanup/AGENT.md and remove the dual command system for unified architecture."
+```
+
+**Sprint 43 (Enhanced UX)**
+```
+"Implement advanced todo management. Start with delegation/sprint-43/UX-04-01-todo-management-modal/AGENT.md and build the command palette style interface with search and filtering."
+
+"Build the agent manager system with avatar support. Start with delegation/sprint-43/UX-04-02-agent-manager-system/AGENT.md and implement comprehensive agent profiles with visual avatars."
+
+"Optimize chat performance with infinite scroll. Start with delegation/sprint-43/UX-04-03-chat-infinite-scroll/AGENT.md and implement progressive message loading."
 ```
 
 ---
 
 ## Notes
 
+- **Completed Sprints**: Archived in `delegation/archived/COMPLETED_SPRINTS.md`
 - All tasks follow established patterns from existing codebase
 - Each task has dedicated agent pack in delegation/ folder
 - Sub-agents will be used for complex domain-specific work
@@ -559,7 +389,7 @@ and follow the complete task pack structure."
 - **AI Provider Abstraction**: Unified interface for multiple AI services
 - **Modular Widgets**: React islands in Blade for interactive components
 - **Type System**: JSON schema validation with generated columns
-- **Command System**: Slash commands with YAML DSL runners
+- **Command System**: Slash commands with YAML DSL runners (being unified)
 
 ### Development Workflow
 1. **Analysis**: Understand existing patterns before implementing
@@ -606,7 +436,7 @@ and follow the complete task pack structure."
 
 **To get started:**
 - Review the current sprint status above
-- Identify the highest priority `todo` tasks
+- Identify the highest priority `todo` tasks (Sprint 46 recommended)
 - Begin delegation by directing agents to appropriate task packs
 - Update status and progress as work proceeds
 

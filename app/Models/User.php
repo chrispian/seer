@@ -39,6 +39,59 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'profile_settings' => 'array',
+            'profile_completed_at' => 'datetime',
+            'use_gravatar' => 'boolean',
         ];
+    }
+
+    /**
+     * Check if user has completed profile setup
+     */
+    public function hasCompletedSetup(): bool
+    {
+        return ! is_null($this->profile_completed_at);
+    }
+
+    /**
+     * Mark profile setup as complete
+     */
+    public function markSetupComplete(): void
+    {
+        $this->update(['profile_completed_at' => now()]);
+    }
+
+    /**
+     * Get user's display name with fallback
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->attributes['display_name'] ?? $this->name ?? 'User';
+    }
+
+    /**
+     * Get avatar URL (Gravatar or custom)
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        return app(\App\Services\AvatarService::class)->getAvatarUrl($this);
+    }
+
+    /**
+     * Get profile setting by key with default
+     */
+    public function getProfileSetting(string $key, mixed $default = null): mixed
+    {
+        return data_get($this->profile_settings, $key, $default);
+    }
+
+    /**
+     * Set profile setting by key
+     */
+    public function setProfileSetting(string $key, mixed $value): void
+    {
+        $settings = $this->profile_settings ?? [];
+        data_set($settings, $key, $value);
+        $this->update(['profile_settings' => $settings]);
     }
 }

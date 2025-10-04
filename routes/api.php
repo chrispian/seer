@@ -16,6 +16,7 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ModelController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SeerLogController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\VaultController;
 use App\Http\Controllers\WidgetApiController;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,8 @@ Route::get('/search', [FragmentController::class, 'search']);
 Route::get('/recall', [FragmentController::class, 'recall']);
 Route::post('/analyze-fragment', AnalyzeFragmentController::class);
 Route::post('/log', [SeerLogController::class, 'store']);
+
+
 
 // Autocomplete endpoints
 Route::get('/autocomplete/commands', [AutocompleteController::class, 'commands']);
@@ -89,6 +92,7 @@ Route::get('/search/hybrid', [\App\Http\Controllers\FragmentController::class, '
 Route::middleware('web')->group(function () {
     Route::post('/messages', [ChatApiController::class, 'send']);
     Route::get('/chat/stream/{messageId}', [ChatApiController::class, 'stream']);
+    Route::get('/user', [UserController::class, 'show']);
 });
 
 // Widget API routes
