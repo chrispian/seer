@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "delegation-system": {
+            "command": "php",
+            "args": [
+                "./artisan",
+                "delegation:mcp"
+            ]
+        }
+    }
+}

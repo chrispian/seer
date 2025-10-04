@@ -13,6 +13,27 @@
                 "./artisan",
                 "delegation:mcp"
             ]
+        },
+        "fragments-tools": {
+            "command": "php",
+            "args": [
+                "./artisan",
+                "fragments-tools:mcp"
+            ]
+        },
+        "ai-providers": {
+            "command": "php",
+            "args": [
+                "./artisan",
+                "ai-providers:mcp"
+            ]
+        },
+        "system-tools": {
+            "command": "php",
+            "args": [
+                "./artisan",
+                "system-tools:mcp"
+            ]
         }
     }
 }

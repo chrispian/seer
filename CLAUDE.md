@@ -33,6 +33,13 @@ This application is a Laravel application and its main Laravel ecosystems packag
 ## Documentation Files
 - You must only create documentation files if explicitly requested by the user.
 
+## MCP Development
+- Use `php artisan make:mcp-server server-name` to create new MCP servers for Claude Code integration
+- MCP servers provide programmatic access to system functionality through slash commands
+- See `docs/MCP_DEVELOPMENT_GUIDE.md` for comprehensive development documentation
+- Available servers: delegation-system, fragments-tools, ai-providers, system-tools
+- Test servers locally: `echo '{"method":"method/name","params":{}}' | php artisan server:mcp`
+
 
 === boost rules ===
 
