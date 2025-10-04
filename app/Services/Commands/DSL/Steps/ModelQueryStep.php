@@ -143,11 +143,13 @@ class ModelQueryStep extends Step
             } elseif (in_array(strtoupper($operator), ['IS NULL', 'IS NOT NULL'])) {
                 // Handle NULL checks with proper Eloquent methods
                 if (str_contains($field, '.')) {
-                    // JSON path NULL checks
+                    // JSON path NULL checks: Laravel doesn't have dedicated methods for this
+                    // Convert field.path notation to field->path for Laravel's JSON syntax
+                    $jsonField = str_replace('.', '->', $field);
                     if (strtoupper($operator) === 'IS NULL') {
-                        $query->whereJsonMissing($field);
+                        $query->whereNull($jsonField);
                     } else {
-                        $query->whereJsonNotMissing($field);
+                        $query->whereNotNull($jsonField);
                     }
                 } else {
                     // Standard column NULL checks
@@ -160,7 +162,9 @@ class ModelQueryStep extends Step
             } else {
                 // Handle other operators with standard where clauses
                 if (str_contains($field, '.')) {
-                    $query->whereJsonPath($field, $operator, $value);
+                    // Convert field.path notation to field->path for Laravel's JSON syntax
+                    $jsonField = str_replace('.', '->', $field);
+                    $query->where($jsonField, $operator, $value);
                 } else {
                     $query->where($field, $operator, $value);
                 }
