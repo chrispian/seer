@@ -11,6 +11,7 @@ import { useAppContext } from '@/hooks/useContext'
 import { useReactiveQueries } from '@/hooks/useReactiveQueries'
 import { useToast } from '@/hooks/useToast'
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useOfflineSupport } from '@/hooks/useOfflineSupport'
 import { ToastContainer } from '@/components/ui/toast'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
@@ -53,6 +54,9 @@ function AppContent() {
   // Keyboard navigation and accessibility
   useKeyboardNavigation();
   
+  // Global keyboard shortcuts for sidebar toggles
+  useKeyboardShortcuts();
+  
   // Offline support and optimistic updates
   const { isOnline, prefetchCriticalData } = useOfflineSupport();
   
@@ -84,23 +88,12 @@ function AppContent() {
               <ChatHeader />
             </header>
             
-            {/* Dashboard Content Grid */}
-            <div className="flex-1 min-h-0 p-2 sm:p-4 md:p-6 lg:p-8">
-              <div className="h-full max-w-full sm:max-w-[1200px] lg:max-w-[1400px] mx-auto">
-                {/* Dashboard Grid Container */}
-                <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 h-full">
-                  {/* Main Content Area */}
-                  <div className="min-h-0">
-                    <div className="h-full rounded-md sm:rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
-                      <ChatIsland />
-                    </div>
-                  </div>
-                  
-                  {/* Future: Could add dashboard widgets here if needed
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <!-- Dashboard widgets would go here -->
-                      </div>
-                  */}
+            {/* Main Content Area - Full Space */}
+            <div className="flex-1 min-h-0 p-2">
+              <div className="h-full w-full">
+                {/* Main Content Container - No borders, full space */}
+                <div className="h-full">
+                  <ChatIsland />
                 </div>
               </div>
             </div>

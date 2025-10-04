@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Card } from '@/components/ui/card'
+
 import { MessageActions } from './MessageActions'
 
 export interface ChatMessage {
@@ -40,7 +40,7 @@ export function ChatTranscript({
 
   if (messages.length === 0) {
     return (
-      <Card ref={scrollerRef} className={`p-3 h-full overflow-y-auto border-0 bg-background ${className}`}>
+      <div ref={scrollerRef} className={`p-3 h-full overflow-y-auto bg-background ${className}`}>
         <div className="flex items-center justify-center h-full">
           <div className="text-center text-foreground">
             <div className="text-base font-medium mb-2">Start a conversation</div>
@@ -49,12 +49,12 @@ export function ChatTranscript({
             </div>
           </div>
         </div>
-      </Card>
+      </div>
     )
   }
 
   return (
-    <Card ref={scrollerRef} className={`p-3 h-full overflow-y-auto border-0 bg-background ${className}`}>
+    <div ref={scrollerRef} className={`p-3 h-full overflow-y-auto bg-background ${className}`}>
       <div className="space-y-2">
         {messages.map((message) => (
           <div key={message.id} className="group flex gap-2 relative hover:bg-accent/5 p-2 transition-colors">
@@ -133,6 +133,6 @@ export function ChatTranscript({
           </div>
         ))}
       </div>
-    </Card>
+    </div>
   )
 }

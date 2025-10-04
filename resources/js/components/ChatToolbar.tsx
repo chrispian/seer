@@ -1,5 +1,7 @@
 import React from 'react'
 import { CompactModelPicker } from './CompactModelPicker'
+import { Menubar, MenubarMenu, MenubarTrigger, MenubarSeparator } from '@/components/ui/menubar'
+import { Bot, Settings } from 'lucide-react'
 
 interface ChatToolbarProps {
   selectedModel?: string
@@ -22,7 +24,36 @@ export function ChatToolbar({
           disabled={disabled}
         />
         
-        {/* Future: Add more compact controls here like custom actions, settings, etc. */}
+        {/* Agent and Mode Selectors */}
+        <div className="flex items-center gap-2">
+          {/* Agent Selector */}
+          <Menubar className="h-6 bg-black border-0 rounded-sm p-0.5">
+            <MenubarMenu>
+              <MenubarTrigger
+                className="px-2 py-1 text-white hover:bg-gray-800 data-[state=open]:bg-gray-800 rounded-sm border-0 text-xs"
+                disabled={disabled}
+                title="Agent Selector"
+              >
+                <Bot className="w-3 h-3 mr-1" />
+                Agent
+              </MenubarTrigger>
+            </MenubarMenu>
+          </Menubar>
+          
+          {/* Mode Selector */}
+          <Menubar className="h-6 bg-black border-0 rounded-sm p-0.5">
+            <MenubarMenu>
+              <MenubarTrigger
+                className="px-2 py-1 text-white hover:bg-gray-800 data-[state=open]:bg-gray-800 rounded-sm border-0 text-xs"
+                disabled={disabled}
+                title="Mode Selector"
+              >
+                <Settings className="w-3 h-3 mr-1" />
+                Chat
+              </MenubarTrigger>
+            </MenubarMenu>
+          </Menubar>
+        </div>
       </div>
       
       {/* Future: Add right-aligned controls here */}

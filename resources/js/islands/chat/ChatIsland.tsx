@@ -346,7 +346,8 @@ export default function ChatIsland() {
       </div>
 
       {/* Enhanced Composer with TipTap - Fixed Bottom Row */}
-      <div className="flex-shrink-0 px-3 pb-3">
+      <div className="flex-shrink-0 border-t border-border">
+        <div className="px-3 pb-3">
         <ChatComposer
           onSend={onSend}
           onCommand={handleCommand}
@@ -383,8 +384,9 @@ export default function ChatIsland() {
       <SchedulerModal
         isOpen={isSchedulerModalOpen}
         onClose={() => setIsSchedulerModalOpen(false)}
-      />
-    </div>
+        />
+        </div>
+      </div>
   )
 }
 

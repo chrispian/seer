@@ -878,11 +878,34 @@
 .widget-container {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   animation: widget-fade-in 0.3s ease-out;
+  container-type: inline-size;
 }
 
 .widget-container:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Container Query Responsive Behavior */
+@container (max-width: 280px) {
+  .widget-container .card {
+    padding: 0.75rem;
+  }
+  
+  .widget-container h4 {
+    font-size: 0.75rem;
+  }
+  
+  .widget-container .text-xs {
+    font-size: 0.625rem;
+  }
+}
+
+@container (min-width: 320px) {
+  .widget-container:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
 }
 
 @keyframes widget-fade-in {
@@ -893,5 +916,43 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Mobile-first responsive improvements */
+@media (max-width: 640px) {
+  .mobile-optimized {
+    padding: 0.5rem !important;
+  }
+  
+  .mobile-text-scale h1 {
+    font-size: 1.5rem !important;
+  }
+  
+  .mobile-text-scale h2 {
+    font-size: 1.25rem !important;
+  }
+  
+  .mobile-text-scale h3 {
+    font-size: 1.125rem !important;
+  }
+}
+
+/* Touch interaction improvements */
+@media (hover: none) and (pointer: coarse) {
+  .interactive-hover:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .widget-container:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Increase tap targets for mobile */
+  .mobile-tap-target {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
