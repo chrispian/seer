@@ -5,6 +5,8 @@ interface KeyboardShortcuts {
   'ctrl+[': () => void // Toggle left sidebar
   'ctrl+]': () => void // Toggle right sidebar  
   'ctrl+\\': () => void // Toggle both sidebars
+  'ctrl+,': () => void // Open settings
+  'ctrl+shift+,': () => void // Open setup wizard
 }
 
 export function useKeyboardShortcuts() {
@@ -29,6 +31,14 @@ export function useKeyboardShortcuts() {
         toggleRightRail()
       }
     },
+    'ctrl+,': () => {
+      // Open settings page
+      window.location.href = '/settings'
+    },
+    'ctrl+shift+,': () => {
+      // Open setup wizard
+      window.location.href = '/setup/welcome'
+    },
   }
 
   useEffect(() => {
@@ -45,6 +55,7 @@ export function useKeyboardShortcuts() {
 
       const key = event.key.toLowerCase()
       const ctrl = event.ctrlKey || event.metaKey // Support both Ctrl and Cmd
+      const shift = event.shiftKey
       
       if (!ctrl) return
 
@@ -59,6 +70,9 @@ export function useKeyboardShortcuts() {
           break
         case '\\':
           shortcutKey = 'ctrl+\\'
+          break
+        case ',':
+          shortcutKey = shift ? 'ctrl+shift+,' : 'ctrl+,'
           break
       }
 

@@ -2,10 +2,10 @@
 
 namespace App\Listeners\Projectors;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use App\Events\FragmentAccepted;
 use App\Events\FragmentArchived;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class FragmentProjector
 {
@@ -32,7 +32,7 @@ class FragmentProjector
             // upsert
             $row = DB::table('inbox_metrics_daily')->where('day', $day)->first();
             if ($row) {
-                DB::table('inbox_metrics_daily')->where('day',$day)->update([
+                DB::table('inbox_metrics_daily')->where('day', $day)->update([
                     'accepted_count' => $row->accepted_count + 1,
                     'review_time_ms_sum' => $row->review_time_ms_sum + $ms,
                     'review_time_ms_count' => $row->review_time_ms_count + 1,
@@ -54,7 +54,7 @@ class FragmentProjector
         $day = date('Y-m-d');
         $row = DB::table('inbox_metrics_daily')->where('day', $day)->first();
         if ($row) {
-            DB::table('inbox_metrics_daily')->where('day',$day)->update([
+            DB::table('inbox_metrics_daily')->where('day', $day)->update([
                 'archived_count' => $row->archived_count + count($e->fragmentIds),
             ]);
         } else {

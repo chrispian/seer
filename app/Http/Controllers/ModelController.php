@@ -20,7 +20,7 @@ class ModelController extends Controller
             // Check if provider is available (handles both database credentials and config/env)
             try {
                 $providerInstance = $providerManager->getProvider($providerKey);
-                if (!$providerInstance || !$providerInstance->isAvailable()) {
+                if (! $providerInstance || ! $providerInstance->isAvailable()) {
                     continue;
                 }
             } catch (\Exception $e) {

@@ -17,7 +17,7 @@ return [
             'workdir' => storage_path('app/agent'),
             'timeout_seconds' => 15,
             'memory_limit_mb' => 256,
-            'allowlist' => ['ls','cat','php','node','composer','git'], // keep tight
+            'allowlist' => ['ls', 'cat', 'php', 'node', 'composer', 'git'], // keep tight
         ],
         'fs' => [
             'root' => storage_path('app/agent'),
@@ -25,7 +25,7 @@ return [
         'mcp' => [
             'endpoints' => [
                 // 'gmail' => ['url' => 'http://localhost:9000', 'token' => env('MCP_GMAIL_TOKEN')],
-            ]
-        ]
+            ],
+        ],
     ],
 ];

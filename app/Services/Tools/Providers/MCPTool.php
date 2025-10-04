@@ -8,14 +8,14 @@ use Illuminate\Support\Facades\Http;
 
 class MCPTool implements Tool
 {
-    public function slug(): string 
-    { 
-        return 'mcp'; 
+    public function slug(): string
+    {
+        return 'mcp';
     }
 
-    public function capabilities(): array 
-    { 
-        return ['external_api', 'mcp_protocol', 'resource_access']; 
+    public function capabilities(): array
+    {
+        return ['external_api', 'mcp_protocol', 'resource_access'];
     }
 
     public function isEnabled(): bool
@@ -32,13 +32,13 @@ class MCPTool implements Tool
                 'method' => ['type' => 'string', 'description' => 'MCP method to call'],
                 'params' => ['type' => 'object', 'description' => 'Parameters for the MCP call'],
                 'timeout' => ['type' => 'integer', 'default' => 30, 'description' => 'Request timeout in seconds'],
-            ]
+            ],
         ];
     }
 
     public function call(array $args, array $context = []): array
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             throw new \RuntimeException('MCP tool is disabled');
         }
 
@@ -47,47 +47,47 @@ class MCPTool implements Tool
         $params = $args['params'] ?? [];
         $timeout = (int) ($args['timeout'] ?? 30);
 
-        if (!$server || !$method) {
+        if (! $server || ! $method) {
             throw new \InvalidArgumentException('Missing required parameters: server and method');
         }
 
         // Check if server is allowlisted
         $allowedServers = Config::get('fragments.tools.mcp.allowed_servers', []);
-        if (!empty($allowedServers) && !in_array($server, $allowedServers, true)) {
+        if (! empty($allowedServers) && ! in_array($server, $allowedServers, true)) {
             throw new \RuntimeException("MCP server not allowed: {$server}");
         }
 
         // Get server configuration
         $servers = Config::get('fragments.tools.mcp.servers', []);
-        if (!isset($servers[$server])) {
+        if (! isset($servers[$server])) {
             throw new \RuntimeException("MCP server not configured: {$server}");
         }
 
         $serverConfig = $servers[$server];
         $baseUrl = $serverConfig['url'] ?? null;
-        
-        if (!$baseUrl) {
+
+        if (! $baseUrl) {
             throw new \RuntimeException("MCP server URL not configured: {$server}");
         }
 
         try {
             $response = Http::timeout($timeout)
                 ->withHeaders($serverConfig['headers'] ?? [])
-                ->post($baseUrl . '/mcp', [
+                ->post($baseUrl.'/mcp', [
                     'jsonrpc' => '2.0',
                     'id' => uniqid(),
                     'method' => $method,
                     'params' => $params,
                 ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 throw new \RuntimeException("MCP request failed with status: {$response->status()}");
             }
 
             $data = $response->json();
-            
+
             if (isset($data['error'])) {
-                throw new \RuntimeException("MCP error: " . ($data['error']['message'] ?? 'Unknown error'));
+                throw new \RuntimeException('MCP error: '.($data['error']['message'] ?? 'Unknown error'));
             }
 
             return [

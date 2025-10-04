@@ -9,14 +9,14 @@ use Illuminate\Support\Str;
 
 class FileSystemTool implements Tool
 {
-    public function slug(): string 
-    { 
-        return 'fs'; 
+    public function slug(): string
+    {
+        return 'fs';
     }
 
-    public function capabilities(): array 
-    { 
-        return ['read', 'write', 'list', 'file_operations']; 
+    public function capabilities(): array
+    {
+        return ['read', 'write', 'list', 'file_operations'];
     }
 
     public function isEnabled(): bool
@@ -32,18 +32,18 @@ class FileSystemTool implements Tool
                 'op' => ['type' => 'string', 'enum' => ['list', 'read', 'write', 'exists'], 'description' => 'File operation'],
                 'path' => ['type' => 'string', 'description' => 'File path relative to root'],
                 'content' => ['type' => 'string', 'description' => 'Content to write (for write operation)'],
-            ]
+            ],
         ];
     }
 
-    protected function getRoot(): string 
-    { 
-        return Config::get('fragments.tools.fs.root', storage_path('app/tools')); 
+    protected function getRoot(): string
+    {
+        return Config::get('fragments.tools.fs.root', storage_path('app/tools'));
     }
 
     public function call(array $args, array $context = []): array
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             throw new \RuntimeException('FileSystem tool is disabled');
         }
 
@@ -53,17 +53,18 @@ class FileSystemTool implements Tool
         switch ($op) {
             case 'list':
                 return $this->listFiles($path);
-                
+
             case 'read':
                 return $this->readFile($path);
-                
+
             case 'write':
                 $content = $args['content'] ?? '';
+
                 return $this->writeFile($path, $content);
-                
+
             case 'exists':
                 return $this->fileExists($path);
-                
+
             default:
                 throw new \InvalidArgumentException("Unknown operation: {$op}");
         }
@@ -71,9 +72,9 @@ class FileSystemTool implements Tool
 
     protected function listFiles(string $path): array
     {
-        $fullPath = $this->getRoot() . '/' . $path;
-        
-        if (!File::isDirectory($fullPath)) {
+        $fullPath = $this->getRoot().'/'.$path;
+
+        if (! File::isDirectory($fullPath)) {
             return ['files' => [], 'directories' => []];
         }
 
@@ -97,9 +98,9 @@ class FileSystemTool implements Tool
 
     protected function readFile(string $path): array
     {
-        $fullPath = $this->getRoot() . '/' . $path;
-        
-        if (!File::exists($fullPath)) {
+        $fullPath = $this->getRoot().'/'.$path;
+
+        if (! File::exists($fullPath)) {
             return ['content' => null, 'exists' => false];
         }
 
@@ -119,8 +120,8 @@ class FileSystemTool implements Tool
 
     protected function writeFile(string $path, string $content): array
     {
-        $fullPath = $this->getRoot() . '/' . $path;
-        
+        $fullPath = $this->getRoot().'/'.$path;
+
         // Security: limit content size
         $maxSize = Config::get('fragments.tools.fs.max_write_size', 1024 * 1024); // 1MB default
         if (strlen($content) > $maxSize) {
@@ -139,8 +140,8 @@ class FileSystemTool implements Tool
 
     protected function fileExists(string $path): array
     {
-        $fullPath = $this->getRoot() . '/' . $path;
-        
+        $fullPath = $this->getRoot().'/'.$path;
+
         return [
             'exists' => File::exists($fullPath),
             'is_file' => File::isFile($fullPath),

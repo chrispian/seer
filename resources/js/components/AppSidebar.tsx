@@ -20,7 +20,6 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -43,8 +42,7 @@ import { SidebarSkeleton, ChatSessionSkeleton, VaultProjectSelectorSkeleton } fr
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { useScreenReaderAnnouncements } from '@/hooks/useKeyboardNavigation'
 import { trackUserFlow } from '@/lib/performance'
-
-const GRAVATAR_HASH = '2fe0965808f1f8b6d61ea0eb50d487be'
+import { UserAvatar, useUserDisplayName } from '@/components/UserAvatar'
 
 export function AppSidebar() {
   // Use direct hooks instead of context
@@ -111,6 +109,9 @@ export function AppSidebar() {
   // Use layout store for sidebar collapse state for keyboard shortcuts integration
   const { preferences, setSidebarCollapsed } = useLayoutStore()
   const isCollapsed = preferences.layout.sidebarCollapsed
+  
+  // Get user display name
+  const userDisplayName = useUserDisplayName()
 
   const handleNewChat = async () => {
     if (isCreating) return
@@ -521,16 +522,10 @@ export function AppSidebar() {
                 variant="ghost"
                 className="w-full justify-start h-12 px-3 data-[state=open]:bg-gray-100"
               >
-                <Avatar className="h-8 w-8 rounded-lg mr-3">
-                  <AvatarImage 
-                    src={`https://www.gravatar.com/avatar/${GRAVATAR_HASH}?d=mp&s=32`} 
-                    alt="chrispian@gmail.com" 
-                  />
-                  <AvatarFallback className="rounded-lg">CP</AvatarFallback>
-                </Avatar>
+                <UserAvatar className="rounded-lg mr-3" size="md" />
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">chrispian</span>
-                  <span className="truncate text-xs text-gray-500">chrispian@gmail.com</span>
+                  <span className="truncate font-semibold">{userDisplayName}</span>
+                  <span className="truncate text-xs text-gray-500">Local User</span>
                 </div>
                 <ChevronUp className="ml-auto size-4" />
               </Button>
@@ -541,9 +536,9 @@ export function AppSidebar() {
               align="start"
               sideOffset={4}
             >
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.location.href = '/settings'}>
                 <User className="w-4 h-4 mr-2" />
-                Account
+                Settings
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => {
                 // Future: Open command palette (Ctrl+K)
@@ -552,10 +547,7 @@ export function AppSidebar() {
                 <Terminal className="w-4 h-4 mr-2" />
                 Commands
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                Sign out
-              </DropdownMenuItem>
+
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

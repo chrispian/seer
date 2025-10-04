@@ -6,8 +6,15 @@ use App\Services\Tools\Contracts\Tool;
 
 class GmailTool implements Tool
 {
-    public function slug(): string { return 'gmail'; }
-    public function capabilities(): array { return ['list','send','threads']; }
+    public function slug(): string
+    {
+        return 'gmail';
+    }
+
+    public function capabilities(): array
+    {
+        return ['list', 'send', 'threads'];
+    }
 
     public function call(array $args, array $context = []): array
     {

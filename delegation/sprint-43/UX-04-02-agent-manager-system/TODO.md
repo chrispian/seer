@@ -1,0 +1,350 @@
+# Agent Manager System - Implementation Checklist
+
+## 🗄️ Phase 1: Database Schema and Foundation
+- [ ] Create agent_profiles migration
+  - [ ] Add id, name, description, role, mode columns
+  - [ ] Add default_model, allowed_tools, prompt_customizations columns
+  - [ ] Add personality, tone, style, is_system columns
+  - [ ] Add is_default_chat_agent, parent_id, version columns
+  - [ ] Add scope_overrides, meta, timestamps columns
+  - [ ] Add avatar_path, avatar_type, avatar_config columns
+  - [ ] Create proper indexes for performance including avatar_type
+- [ ] Create agent_profile_histories migration
+  - [ ] Add id, agent_profile_id, version, snapshot columns
+  - [ ] Add change_summary, changed_by, created_at columns
+  - [ ] Create indexes for profile and version queries
+- [ ] Enhance logging table
+  - [ ] Add session_id, primary_agent_id, active_agent_id columns
+  - [ ] Add agent_mode, tool_calls, context_chain columns
+- [ ] Create Eloquent models
+  - [ ] AgentProfile model with relationships and casting
+  - [ ] AgentProfileHistory model with proper associations
+  - [ ] Set up model relationships and JSON casting
+- [ ] Create database seeders
+  - [ ] System agent profiles (Chat, Researcher, Code Reviewer, Planner)
+  - [ ] Default user agent configurations
+
+## ⚙️ Phase 2: Core Backend Services
+- [ ] AgentResolver service
+  - [ ] Implement scope hierarchy resolution (command → project → workspace → global → system)
+  - [ ] Add caching layer for performance
+  - [ ] Create context-aware agent selection
+  - [ ] Add fallback mechanisms for missing agents
+- [ ] AgentVersioner service
+  - [ ] Implement version tracking and history creation
+  - [ ] Add semantic versioning support
+  - [ ] Create version comparison utilities
+  - [ ] Implement rollback functionality
+- [ ] PromptAssembler service
+  - [ ] Dynamic prompt construction from agent profiles
+  - [ ] Mode-specific prompt modifications
+  - [ ] Personality and tone integration
+  - [ ] Few-shot example inclusion
+- [ ] ToolValidator service
+  - [ ] Mode-based tool permission validation
+  - [ ] Agent-specific tool access checking
+  - [ ] Risk level assessment and approval requirements
+  - [ ] Capability-based security enforcement
+- [ ] AgentModeManager service
+  - [ ] Mode constraint definition and enforcement
+  - [ ] Capability validation for each mode
+  - [ ] Execution boundary implementation
+
+## 🎨 Phase 2B: Agent Avatar System
+- [ ] AgentAvatarService backend service
+  - [ ] Avatar upload validation (file type, size, content)
+  - [ ] Image processing (resize, optimize, strip metadata)
+  - [ ] Avatar storage management with organized file structure
+  - [ ] Initials avatar generation with SVG/Canvas
+  - [ ] Color generation algorithm for consistent agent colors
+  - [ ] Avatar deletion and cleanup utilities
+- [ ] Avatar API endpoints
+  - [ ] POST /api/agents/{id}/avatar/upload - Avatar file upload
+  - [ ] POST /api/agents/{id}/avatar/generate - Generate initials avatar
+  - [ ] DELETE /api/agents/{id}/avatar - Delete current avatar
+  - [ ] GET /api/agents/{id}/avatar - Get avatar URL with fallback
+- [ ] Avatar security and validation
+  - [ ] File upload security scanning
+  - [ ] Image content validation
+  - [ ] Rate limiting for avatar operations
+  - [ ] Proper file permissions and access control
+- [ ] Avatar utilities and helpers
+  - [ ] Initials extraction from agent names
+  - [ ] Color palette management
+  - [ ] SVG generation utilities
+  - [ ] Image optimization and processing
+  - [ ] Fallback avatar generation
+
+## 🔌 Phase 3: API Endpoints and Controllers
+- [ ] AgentProfileController
+  - [ ] index() - List user's agents with filtering
+  - [ ] store() - Create new agent profile
+  - [ ] show() - Get agent details with history
+  - [ ] update() - Update agent profile with versioning
+  - [ ] destroy() - Delete agent (user agents only)
+  - [ ] clone() - Clone agent with lineage tracking
+- [ ] Agent resolution endpoints
+  - [ ] GET /api/agents/resolve - Context-based agent resolution
+  - [ ] POST /api/agents/defaults - Set scope defaults
+  - [ ] GET /api/agents/system - List system agents
+- [ ] Agent history endpoints
+  - [ ] GET /api/agents/{id}/history - Version history
+  - [ ] POST /api/agents/{id}/restore/{version} - Restore version
+  - [ ] GET /api/agents/{id}/compare/{v1}/{v2} - Version comparison
+- [ ] Validation and tools endpoints
+  - [ ] GET /api/agents/modes - Available modes
+  - [ ] GET /api/agents/tools - Available tools
+  - [ ] POST /api/agents/{id}/validate - Validate configuration
+- [ ] Create API resource classes
+  - [ ] AgentProfileResource for data transformation
+  - [ ] AgentHistoryResource for version data
+  - [ ] Proper error handling and validation
+
+## 🎣 Phase 4: Frontend Data Layer and Hooks
+- [ ] useAgentProfiles hook
+  - [ ] CRUD operations with React Query
+  - [ ] Optimistic updates for better UX
+  - [ ] Error handling and retry logic
+  - [ ] Real-time updates for shared agents
+- [ ] useAgentResolver hook
+  - [ ] Context-based agent resolution
+  - [ ] Caching and performance optimization
+  - [ ] Fallback handling for resolution failures
+- [ ] useAgentHistory hook
+  - [ ] Version history fetching and management
+  - [ ] Version comparison utilities
+  - [ ] Rollback functionality
+- [ ] useAgentModes hook
+  - [ ] Mode definitions and constraints
+  - [ ] Mode switching validation
+  - [ ] Capability checking utilities
+- [ ] TypeScript interfaces
+  - [ ] AgentProfile, AgentMode, AgentHistory types
+  - [ ] API response types and validation schemas
+  - [ ] Hook return types and state interfaces
+
+## 🎨 Phase 5: Core UI Components
+- [ ] AgentSelector component
+  - [ ] Dropdown with agent list and search
+  - [ ] Agent avatars and visual indicators
+  - [ ] Mode badges and capability hints
+  - [ ] Quick agent switching with keyboard shortcuts
+- [ ] AgentModeSelector component
+  - [ ] Mode selection with constraint validation
+  - [ ] Capability indicators and warnings
+  - [ ] Mode override functionality
+  - [ ] Visual feedback for mode limitations
+- [ ] AgentProfileForm component
+  - [ ] Multi-step form for agent creation/editing
+  - [ ] Validation with real-time feedback
+  - [ ] Tool permission management
+  - [ ] Personality and style configuration
+- [ ] AgentPermissions component
+  - [ ] Tool selection with category grouping
+  - [ ] Permission matrix display
+  - [ ] Risk level indicators
+  - [ ] Bulk permission operations
+- [ ] AgentPersonality component
+  - [ ] Personality trait sliders and inputs
+  - [ ] Tone and style configuration
+  - [ ] Preview functionality for personality changes
+  - [ ] Template-based personality presets
+- [ ] AgentCloneDialog component
+  - [ ] Clone source selection
+  - [ ] Lineage display and tracking
+  - [ ] Customization options for cloned agents
+  - [ ] Version and naming management
+- [ ] Avatar system components
+  - [ ] AgentAvatar component with multiple sizes and fallbacks
+  - [ ] AvatarUpload component with drag-drop and validation
+  - [ ] AvatarTypeSelector for choosing avatar type (initials/upload/emoji)
+  - [ ] AvatarPreview with real-time updates
+  - [ ] AvatarEditor for cropping and adjustments
+  - [ ] InitialsAvatarCustomizer for color and style selection
+  - [ ] Avatar fallback handling with error boundaries
+
+## 🏗️ Phase 6: Agent Management Interface
+- [ ] AgentProfileManager main component
+  - [ ] List view with search, filter, and sort
+  - [ ] Grid/card layout options
+  - [ ] Bulk operations (delete, export, etc.)
+  - [ ] Quick actions and context menus
+- [ ] Agent creation wizard
+  - [ ] Step-by-step agent creation process
+  - [ ] Template selection and customization
+  - [ ] Validation and testing integration
+  - [ ] Preview and confirmation steps
+- [ ] Agent details view
+  - [ ] Comprehensive agent information display
+  - [ ] Inline editing capabilities
+  - [ ] History and lineage visualization
+  - [ ] Performance metrics and usage stats
+- [ ] Bulk operations interface
+  - [ ] Multi-select with action bar
+  - [ ] Batch editing capabilities
+  - [ ] Export/import functionality
+  - [ ] Conflict resolution for bulk changes
+- [ ] Import/export functionality
+  - [ ] JSON export with full agent configuration
+  - [ ] Import validation and conflict handling
+  - [ ] Backup and restore capabilities
+  - [ ] Sharing between users/workspaces
+
+## 💬 Phase 7: Chat Integration and Agent Resolution
+- [ ] ChatComposer integration
+  - [ ] AgentSelector integration in composer
+  - [ ] Mode indicator and override options
+  - [ ] Real-time agent resolution display
+  - [ ] Agent switching with session persistence
+- [ ] ChatIsland enhancement
+  - [ ] Agent context in message handling
+  - [ ] Agent resolution on session change
+  - [ ] Agent switching without losing context
+  - [ ] Agent indicators in chat interface
+- [ ] Message context enhancement
+  - [ ] Agent attribution for each message
+  - [ ] Mode and capability context
+  - [ ] Agent delegation tracking
+  - [ ] Sub-agent interaction logging
+- [ ] Session persistence
+  - [ ] Agent selection persistence across sessions
+  - [ ] Mode override persistence
+  - [ ] Agent history for session context
+  - [ ] Fallback handling for missing agents
+
+## ⚡ Phase 8: Command System Integration
+- [ ] Command execution enhancement
+  - [ ] Agent context injection in command processing
+  - [ ] Agent permission validation for commands
+  - [ ] Agent-specific command behavior
+  - [ ] Sub-agent delegation for complex commands
+- [ ] Permission validation
+  - [ ] Command-agent permission matrix
+  - [ ] Mode-based command restrictions
+  - [ ] Tool access validation during command execution
+  - [ ] Security logging for permission violations
+- [ ] Logging enhancement
+  - [ ] Agent context in all command logs
+  - [ ] Tool usage tracking by agent
+  - [ ] Performance metrics by agent
+  - [ ] Error attribution and debugging
+- [ ] Agent override options
+  - [ ] Per-command agent selection
+  - [ ] Temporary mode overrides
+  - [ ] Delegation chain tracking
+  - [ ] Override permission validation
+
+## 📚 Phase 9: Versioning and History System
+- [ ] AgentHistoryView component
+  - [ ] Timeline view of agent changes
+  - [ ] Version comparison interface
+  - [ ] Change highlighting and summaries
+  - [ ] Author and timestamp tracking
+- [ ] Version comparison
+  - [ ] Side-by-side diff display
+  - [ ] Semantic change analysis
+  - [ ] Impact assessment for changes
+  - [ ] Rollback risk evaluation
+- [ ] Profile restoration
+  - [ ] Version selection and confirmation
+  - [ ] Backup creation before restoration
+  - [ ] Conflict resolution for restoration
+  - [ ] Validation of restored configurations
+- [ ] Change tracking
+  - [ ] Automated change detection
+  - [ ] User-friendly change summaries
+  - [ ] Change impact analysis
+  - [ ] Approval workflows for significant changes
+- [ ] Audit trail
+  - [ ] Complete history of all agent modifications
+  - [ ] User attribution and timestamps
+  - [ ] Change reasons and justifications
+  - [ ] Compliance reporting capabilities
+
+## ✨ Phase 10: Advanced Features and Polish
+- [ ] Agent lineage visualization
+  - [ ] Family tree display for cloned agents
+  - [ ] Lineage-based organization and grouping
+  - [ ] Cross-references between related agents
+  - [ ] Impact analysis for parent agent changes
+- [ ] Performance metrics
+  - [ ] Agent usage statistics and analytics
+  - [ ] Performance benchmarking by agent
+  - [ ] Success rate tracking
+  - [ ] User satisfaction metrics
+- [ ] Agent recommendations
+  - [ ] Smart agent suggestions based on context
+  - [ ] Usage pattern analysis
+  - [ ] Performance-based recommendations
+  - [ ] Community-driven agent sharing
+- [ ] Advanced filtering and search
+  - [ ] Multi-criteria search across all agent fields
+  - [ ] Saved search queries and filters
+  - [ ] Tag-based organization
+  - [ ] Smart categorization and grouping
+- [ ] Templates and quickstart
+  - [ ] Pre-built agent templates for common use cases
+  - [ ] Quickstart wizard for new users
+  - [ ] Best practices guidance
+  - [ ] Industry-specific agent configurations
+
+## 🧪 Phase 11: Testing and Validation
+- [ ] Agent resolution testing
+  - [ ] Scope hierarchy validation
+  - [ ] Fallback mechanism testing
+  - [ ] Performance testing with multiple agents
+  - [ ] Concurrent resolution testing
+- [ ] Mode constraint testing
+  - [ ] Tool permission enforcement
+  - [ ] Capability boundary validation
+  - [ ] Security constraint testing
+  - [ ] Mode switching validation
+- [ ] CRUD operation testing
+  - [ ] Agent profile creation, editing, deletion
+  - [ ] History and versioning functionality
+  - [ ] Clone and lineage tracking
+  - [ ] Import/export operations
+- [ ] Integration testing
+  - [ ] Chat system integration
+  - [ ] Command system integration
+  - [ ] UI component integration
+  - [ ] API endpoint integration
+- [ ] Performance testing
+  - [ ] Agent resolution performance
+  - [ ] UI responsiveness with many agents
+  - [ ] Database query optimization
+  - [ ] Memory usage optimization
+
+## 📖 Phase 12: Documentation and Deployment
+- [ ] User documentation
+  - [ ] Agent management guide
+  - [ ] Mode and capability explanations
+  - [ ] Best practices for agent creation
+  - [ ] Troubleshooting guide
+- [ ] Developer documentation
+  - [ ] API endpoint documentation
+  - [ ] Integration guide for new features
+  - [ ] Extension points for custom functionality
+  - [ ] Database schema documentation
+- [ ] Migration guide
+  - [ ] Existing user migration strategy
+  - [ ] Data preservation during upgrades
+  - [ ] Rollback procedures
+  - [ ] Compatibility considerations
+- [ ] Deployment checklist
+  - [ ] Database migration verification
+  - [ ] Performance monitoring setup
+  - [ ] Security configuration validation
+  - [ ] Backup and recovery procedures
+
+## ✅ Definition of Done
+- [ ] All CRUD operations work correctly for agent profiles
+- [ ] Agent resolution follows proper scope hierarchy
+- [ ] Mode constraints properly enforce capability boundaries
+- [ ] Chat integration preserves existing functionality while adding agent features
+- [ ] Command system integration maintains security and performance
+- [ ] UI follows established Fragments Engine patterns
+- [ ] Performance meets acceptance criteria (agent resolution <100ms)
+- [ ] Security validates all permissions and constraints
+- [ ] Documentation is complete and accurate
+- [ ] All tests pass including unit, integration, and performance tests

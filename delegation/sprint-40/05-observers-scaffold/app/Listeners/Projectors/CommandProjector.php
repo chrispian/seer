@@ -2,10 +2,10 @@
 
 namespace App\Listeners\Projectors;
 
+use App\Events\Commands\CommandCompleted;
+use App\Events\Commands\CommandStarted;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use App\Events\Commands\CommandStarted;
-use App\Events\Commands\CommandCompleted;
 
 class CommandProjector
 {
@@ -37,7 +37,7 @@ class CommandProjector
     {
         $id = $e->runId ?? null;
         if ($id) {
-            DB::table('command_runs')->where('id',$id)->update([
+            DB::table('command_runs')->where('id', $id)->update([
                 'status' => $e->status,
                 'duration_ms' => (int) $e->durationMs,
                 'finished_at' => now(),
@@ -50,7 +50,7 @@ class CommandProjector
             'run_id' => $id,
             'workspace_id' => $e->workspaceId,
             'user_id' => $e->userId,
-            'payload' => json_encode(['status'=>$e->status,'error'=>$e->error]),
+            'payload' => json_encode(['status' => $e->status, 'error' => $e->error]),
             'ts' => now(),
         ]);
     }

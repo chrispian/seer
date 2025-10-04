@@ -56,10 +56,10 @@ class Schedule extends Model
     public function createRun(\DateTime $plannedRunAt): ScheduleRun
     {
         $run = ScheduleRun::createForSchedule($this, $plannedRunAt);
-        
+
         // Dispatch the job to execute the command
         \App\Jobs\RunScheduledCommandJob::dispatch($run->id);
-        
+
         return $run;
     }
 
@@ -68,10 +68,10 @@ class Schedule extends Model
      */
     public function isDue(): bool
     {
-        return $this->status === 'active' 
-            && $this->next_run_at 
+        return $this->status === 'active'
+            && $this->next_run_at
             && $this->next_run_at->isPast()
-            && (!$this->max_runs || $this->run_count < $this->max_runs);
+            && (! $this->max_runs || $this->run_count < $this->max_runs);
     }
 
     /**
@@ -89,7 +89,7 @@ class Schedule extends Model
     {
         return $this->update([
             'locked_at' => now(),
-            'lock_owner' => gethostname() . ':' . getmypid(),
+            'lock_owner' => gethostname().':'.getmypid(),
             'last_tick_at' => now(),
         ]);
     }
@@ -108,7 +108,7 @@ class Schedule extends Model
     /**
      * Record a completed run and update next run time
      */
-    public function recordRun(\DateTime $nextRunAt = null): void
+    public function recordRun(?\DateTime $nextRunAt = null): void
     {
         $this->increment('run_count');
         $this->update([
@@ -142,11 +142,11 @@ class Schedule extends Model
             ->where('next_run_at', '<=', now())
             ->where(function ($q) {
                 $q->whereNull('locked_at')
-                  ->orWhere('locked_at', '<', now()->subMinutes(5));
+                    ->orWhere('locked_at', '<', now()->subMinutes(5));
             })
             ->where(function ($q) {
                 $q->whereNull('max_runs')
-                  ->orWhereRaw('run_count < max_runs');
+                    ->orWhereRaw('run_count < max_runs');
             });
     }
 }

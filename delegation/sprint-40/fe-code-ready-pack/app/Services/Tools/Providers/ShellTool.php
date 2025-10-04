@@ -3,25 +3,34 @@
 namespace App\Services\Tools\Providers;
 
 use App\Services\Tools\Contracts\Tool;
-use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Config;
+use Symfony\Component\Process\Process;
 
 class ShellTool implements Tool
 {
-    public function slug(): string { return 'shell'; }
-    public function capabilities(): array { return ['exec']; }
+    public function slug(): string
+    {
+        return 'shell';
+    }
+
+    public function capabilities(): array
+    {
+        return ['exec'];
+    }
 
     public function call(array $args, array $context = []): array
     {
-        if (!Config::get('fragments.tools.shell.enabled')) {
+        if (! Config::get('fragments.tools.shell.enabled')) {
             throw new \RuntimeException('Shell tool disabled');
         }
         $cmd = $args['cmd'] ?? null;
-        if (!$cmd) throw new \InvalidArgumentException('Missing cmd');
+        if (! $cmd) {
+            throw new \InvalidArgumentException('Missing cmd');
+        }
 
         $allow = Config::get('fragments.tools.shell.allowlist', []);
         $bin = explode(' ', trim($cmd))[0];
-        if (!in_array($bin, $allow, true)) {
+        if (! in_array($bin, $allow, true)) {
             throw new \RuntimeException("Command not allowed: {$bin}");
         }
 

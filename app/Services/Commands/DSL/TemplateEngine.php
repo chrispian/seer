@@ -75,38 +75,42 @@ class TemplateEngine
         switch ($filterName) {
             case 'trim':
                 return trim((string) $value);
-                
+
             case 'lower':
                 return strtolower((string) $value);
-                
+
             case 'upper':
                 return strtoupper((string) $value);
-                
+
             case 'slug':
                 return \Str::slug((string) $value);
-                
+
             case 'default':
                 return $value ?: $filterArg; // Use ?: instead of ?? for better fallback
-                
+
             case 'take':
                 if (is_array($value)) {
                     return array_slice($value, 0, (int) $filterArg);
                 }
+
                 return substr((string) $value, 0, (int) $filterArg);
-                
+
             case 'date':
                 if ($value) {
                     $date = $value instanceof \DateTime ? $value : new \DateTime($value);
+
                     return $date->format($filterArg ?: 'Y-m-d\TH:i:s\Z');
                 }
+
                 return null;
-                
+
             case 'jsonpath':
                 if (is_array($value) || is_object($value)) {
                     return $this->applyJsonPath($value, $filterArg);
                 }
+
                 return null;
-                
+
             default:
                 return $value;
         }
@@ -118,7 +122,7 @@ class TemplateEngine
     protected function applyJsonPath(mixed $data, string $path): mixed
     {
         // Simple JSONPath implementation for $.foo.bar syntax
-        if (!str_starts_with($path, '$.')) {
+        if (! str_starts_with($path, '$.')) {
             return null;
         }
 

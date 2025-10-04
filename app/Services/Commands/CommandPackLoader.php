@@ -32,8 +32,8 @@ class CommandPackLoader
     {
         foreach ($this->getSearchPaths() as $basePath) {
             $commandPackPath = base_path("{$basePath}/{$slug}");
-            
-            if (!File::isDirectory($commandPackPath)) {
+
+            if (! File::isDirectory($commandPackPath)) {
                 continue;
             }
 
@@ -41,6 +41,7 @@ class CommandPackLoader
             if ($commandPack) {
                 // Update registry cache
                 $this->updateRegistryCache($slug, $commandPack, $commandPackPath);
+
                 return $commandPack;
             }
         }
@@ -54,7 +55,7 @@ class CommandPackLoader
     protected function loadCommandPackFromDirectory(string $path, string $slug): ?array
     {
         $manifestPath = "{$path}/command.yaml";
-        if (!File::exists($manifestPath)) {
+        if (! File::exists($manifestPath)) {
             return null;
         }
 
@@ -84,6 +85,7 @@ class CommandPackLoader
                 'path' => $path,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -95,7 +97,7 @@ class CommandPackLoader
     {
         $prompts = [];
         $files = File::files($promptsPath);
-        
+
         foreach ($files as $file) {
             $name = $file->getFilenameWithoutExtension();
             $prompts[$name] = File::get($file->getPathname());
@@ -111,11 +113,11 @@ class CommandPackLoader
     {
         $samples = [];
         $files = File::files($samplesPath);
-        
+
         foreach ($files as $file) {
             $name = $file->getFilenameWithoutExtension();
             $content = File::get($file->getPathname());
-            
+
             // Try to parse as JSON, fallback to text
             try {
                 $samples[$name] = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
@@ -153,6 +155,7 @@ class CommandPackLoader
     protected function calculateStepsHash(array $commandPack): string
     {
         $steps = $commandPack['manifest']['steps'] ?? [];
+
         return hash('sha256', json_encode($steps));
     }
 
@@ -186,7 +189,7 @@ class CommandPackLoader
     protected function getSearchPaths(): array
     {
         $paths = [];
-        
+
         foreach ($this->searchPaths as $path) {
             if (str_contains($path, '*')) {
                 // Handle wildcard paths (like modules/*/fragments/commands)
@@ -226,16 +229,16 @@ class CommandPackLoader
     public function getAllCommandPacks(): array
     {
         $commandPacks = [];
-        
+
         foreach ($this->getSearchPaths() as $basePath) {
-            if (!File::isDirectory(base_path($basePath))) {
+            if (! File::isDirectory(base_path($basePath))) {
                 continue;
             }
 
             $directories = File::directories(base_path($basePath));
             foreach ($directories as $dir) {
                 $slug = basename($dir);
-                if (!isset($commandPacks[$slug])) {
+                if (! isset($commandPacks[$slug])) {
                     $commandPack = $this->loadCommandPack($slug);
                     if ($commandPack) {
                         $commandPacks[$slug] = $commandPack;

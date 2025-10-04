@@ -3,7 +3,6 @@
 namespace App\Services\Commands;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class CommandRegistry
@@ -18,10 +17,14 @@ class CommandRegistry
         $registered = [];
 
         foreach ($paths as $root) {
-            if (!$root || !is_dir($root)) continue;
+            if (! $root || ! is_dir($root)) {
+                continue;
+            }
             foreach (glob($root.'/*', GLOB_ONLYDIR) as $dir) {
                 $manifest = $dir.'/command.yaml';
-                if (!file_exists($manifest)) continue;
+                if (! file_exists($manifest)) {
+                    continue;
+                }
                 $slug = basename($dir);
                 $stepsHash = substr(hash('sha256', file_get_contents($manifest)), 0, 16);
                 DB::table('command_registry')->updateOrInsert(
@@ -41,15 +44,19 @@ class CommandRegistry
                 $registered[] = $slug;
             }
         }
+
         return $registered;
     }
 
     public function get(string $slug): array
     {
-        $row = DB::table('command_registry')->where('slug',$slug)->first();
-        if (!$row) throw new \RuntimeException("Command pack not found: $slug");
+        $row = DB::table('command_registry')->where('slug', $slug)->first();
+        if (! $row) {
+            throw new \RuntimeException("Command pack not found: $slug");
+        }
         $path = $row->source_path;
         $yaml = file_get_contents($path.'/command.yaml');
-        return ['path'=>$path,'yaml'=>$yaml];
+
+        return ['path' => $path, 'yaml' => $yaml];
     }
 }

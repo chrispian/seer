@@ -2,8 +2,8 @@
 
 namespace App\Listeners\Projectors;
 
-use App\Events\Tools\ToolInvoked;
 use App\Events\Tools\ToolCompleted;
+use App\Events\Tools\ToolInvoked;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -12,7 +12,7 @@ class ToolProjector
     public function onToolInvoked(ToolInvoked $event): void
     {
         $today = now()->format('Y-m-d');
-        
+
         $existing = DB::table('tool_metrics_daily')
             ->where('day', $today)
             ->where('tool', $event->tool)
@@ -49,7 +49,7 @@ class ToolProjector
     public function onToolCompleted(ToolCompleted $event): void
     {
         $today = now()->format('Y-m-d');
-        
+
         $existing = DB::table('tool_metrics_daily')
             ->where('day', $today)
             ->where('tool', $event->tool)

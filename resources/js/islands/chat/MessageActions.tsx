@@ -7,6 +7,13 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
 import { 
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarTrigger,
+} from '@/components/ui/menubar'
+import { 
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -223,53 +230,48 @@ export function MessageActions({
 
   return (
     <>
-      <div className={`flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition-opacity ${className}`} data-message-id={messageId}>
-        {/* Copy Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleCopy}
-          title="Copy message"
-          className="h-6 w-6 rounded-sm"
-          data-action="copy"
-        >
-          <Copy className="w-3 h-3" />
-        </Button>
-
-        {/* Bookmark Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleBookmarkToggle}
-          disabled={isTogglingBookmark}
-          title={bookmarked ? "Remove bookmark" : "Bookmark message"}
-          className={`h-6 w-6 rounded-sm ${bookmarked ? 'text-yellow-600' : ''}`}
-        >
-          <Bookmark className={`w-3 h-3 ${bookmarked ? 'fill-current' : ''}`} />
-        </Button>
-
-        {/* More Actions Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              title="More actions"
-              className="h-6 w-6 rounded-sm"
+      <div className={`${className}`} data-message-id={messageId}>
+        <Menubar className="h-8 bg-gray-50 border-gray-300 rounded-md shadow-sm">
+          {/* Copy Button */}
+          <MenubarMenu>
+            <MenubarTrigger 
+              onClick={handleCopy}
+              className="h-6 px-2 text-xs data-[state=open]:bg-primary data-[state=open]:text-primary-foreground hover:bg-gray-100"
+              data-action="copy"
+              title="Copy message"
             >
+              <Copy className="w-3 h-3" />
+            </MenubarTrigger>
+          </MenubarMenu>
+
+          {/* Bookmark Button */}
+          <MenubarMenu>
+            <MenubarTrigger
+              onClick={handleBookmarkToggle}
+              disabled={isTogglingBookmark}
+              className={`h-6 px-2 text-xs data-[state=open]:bg-primary data-[state=open]:text-primary-foreground hover:bg-gray-100 ${bookmarked ? 'text-yellow-600' : ''}`}
+              title={bookmarked ? "Remove bookmark" : "Bookmark message"}
+            >
+              <Bookmark className={`w-3 h-3 ${bookmarked ? 'fill-current' : ''}`} />
+            </MenubarTrigger>
+          </MenubarMenu>
+
+          {/* More Actions Dropdown */}
+          <MenubarMenu>
+            <MenubarTrigger className="h-6 px-2 text-xs data-[state=open]:bg-primary data-[state=open]:text-primary-foreground hover:bg-gray-100" title="More actions">
               <MoreVertical className="w-3 h-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="rounded-sm">
-            <DropdownMenuItem 
-              onClick={() => setShowDeleteDialog(true)}
-              className="text-destructive focus:text-destructive rounded-sm"
-            >
-              <Trash2 className="w-3 h-3 mr-2" />
-              Delete message
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </MenubarTrigger>
+            <MenubarContent align="end" className="rounded-sm">
+              <MenubarItem 
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-destructive focus:text-destructive rounded-sm"
+              >
+                <Trash2 className="w-3 h-3 mr-2" />
+                Delete message
+              </MenubarItem>
+            </MenubarContent>
+          </MenubarMenu>
+        </Menubar>
       </div>
 
       {/* Delete Confirmation Dialog */}

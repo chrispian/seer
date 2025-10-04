@@ -289,6 +289,15 @@ export default function ChatIsland() {
         setMessages([])
       }
 
+      // Handle navigation actions
+      if (result.success && result.shouldOpenPanel && result.panelData?.action === 'navigate') {
+        const url = result.panelData.url
+        if (url) {
+          window.location.href = url
+          return // Don't show modal for navigation commands
+        }
+      }
+
     } catch (error) {
       console.error('Command execution failed:', error)
       // Show error in modal

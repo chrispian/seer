@@ -4,8 +4,10 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-    public function up(): void {
+return new class extends Migration
+{
+    public function up(): void
+    {
         Schema::create('inbox_metrics_daily', function (Blueprint $t) {
             $t->date('day');
             $t->integer('accepted_count')->default(0);
@@ -22,11 +24,13 @@ return new class extends Migration {
             $t->uuid('by_user')->nullable();
             $t->json('payload')->nullable();
             $t->timestampTz('ts')->useCurrent();
-            $t->index(['fragment_id','ts']);
-            $t->index(['action','ts']);
+            $t->index(['fragment_id', 'ts']);
+            $t->index(['action', 'ts']);
         });
     }
-    public function down(): void {
+
+    public function down(): void
+    {
         Schema::dropIfExists('fragment_activity');
         Schema::dropIfExists('inbox_metrics_daily');
     }

@@ -17,15 +17,17 @@ class ToolRegistry
 
     public function get(string $slug): Tool
     {
-        if (!isset($this->map[$slug])) {
+        if (! isset($this->map[$slug])) {
             throw new \RuntimeException("Tool not registered: $slug");
         }
+
         return $this->map[$slug];
     }
 
     public function allowed(string $slug): bool
     {
         $allowed = Config::get('fragments.tools.allowed', []);
+
         return in_array($slug, $allowed, true);
     }
 }

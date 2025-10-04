@@ -2,14 +2,14 @@
 
 namespace App\Listeners\Metrics;
 
+use App\Events\Commands\CommandCompleted;
+use App\Events\Commands\CommandStarted;
+use App\Events\Scheduler\ScheduleRunFinished;
+use App\Events\Scheduler\ScheduleRunStarted;
+use App\Events\Tools\ToolCompleted;
+use App\Events\Tools\ToolInvoked;
 use App\Services\Metrics\Metrics;
 use Illuminate\Support\Facades\App;
-use App\Events\Scheduler\ScheduleRunStarted;
-use App\Events\Scheduler\ScheduleRunFinished;
-use App\Events\Tools\ToolInvoked;
-use App\Events\Tools\ToolCompleted;
-use App\Events\Commands\CommandStarted;
-use App\Events\Commands\CommandCompleted;
 
 class PipelineMetricsListener
 {
@@ -18,7 +18,7 @@ class PipelineMetricsListener
     public function __construct()
     {
         $driver = config('metrics.driver', 'null');
-        $this->metrics = match($driver) {
+        $this->metrics = match ($driver) {
             'log' => App::make(\App\Services\Metrics\LogMetrics::class),
             default => App::make(\App\Services\Metrics\NullMetrics::class),
         };

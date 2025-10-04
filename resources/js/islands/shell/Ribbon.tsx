@@ -91,15 +91,15 @@ export function Ribbon() {
               <Button 
                 variant="outline" 
                 size="icon" 
-                className="w-8 h-8 rounded-xs shadow-none border-pink-400/30 bg-gray-800 hover:bg-pink-500/10 text-pink-400 hover:text-pink-300"
+                className="w-8 h-8 rounded-xs shadow-none border-pink-400/30 !bg-gray-800 hover:!bg-pink-500/10 !text-pink-400 hover:!text-pink-300 data-[state=open]:!bg-pink-500/20 data-[state=open]:!text-pink-300 active:!bg-pink-500/20 active:!text-pink-300 focus:!bg-pink-500/20 focus:!text-pink-300 [&[data-state=open]]:!bg-pink-500/20 [&[data-state=open]]:!text-pink-300"
               >
                 <Plus className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" className="rounded-xs bg-gray-800 border-pink-400/30">
+            <DropdownMenuContent side="right" className="rounded-xs bg-gray-800 border-pink-400/30 text-gray-300">
               <DropdownMenuItem 
                 onClick={handleNewVault}
-                className="text-gray-300 hover:bg-pink-500/20 hover:text-pink-400 rounded-xs"
+                className="text-gray-300 hover:bg-pink-500/20 hover:text-pink-300 focus:bg-pink-500/20 focus:text-pink-300 rounded-xs"
               >
                 <div className="flex items-center space-x-2">
                   <Archive className="w-4 h-4 text-pink-400" />
@@ -108,7 +108,7 @@ export function Ribbon() {
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={handleNewProject}
-                className="text-gray-300 hover:bg-blue-400/20 hover:text-blue-400 rounded-xs"
+                className="text-gray-300 hover:bg-blue-400/20 hover:text-blue-300 focus:bg-blue-400/20 focus:text-blue-300 rounded-xs"
               >
                 <div className="flex items-center space-x-2">
                   <Folder className="w-4 h-4 text-blue-400" />
@@ -117,7 +117,7 @@ export function Ribbon() {
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={handleNewChat}
-                className="text-gray-300 hover:bg-cyan-400/20 hover:text-cyan-400 rounded-xs"
+                className="text-gray-300 hover:bg-cyan-400/20 hover:text-cyan-300 focus:bg-cyan-400/20 focus:text-cyan-300 rounded-xs"
                 disabled={isCreatingChat}
               >
                 <div className="flex items-center space-x-2">
@@ -137,7 +137,7 @@ export function Ribbon() {
             variant="outline" 
             size="icon" 
             onClick={handleSearch}
-            className="w-8 h-8 rounded-xs shadow-none border-blue-400/30 bg-gray-800 hover:bg-blue-400/10 text-blue-400 hover:text-blue-300"
+            className="w-8 h-8 rounded-xs shadow-none border-blue-400/30 !bg-gray-800 hover:!bg-blue-400/10 !text-blue-400 hover:!text-blue-300 active:!bg-blue-400/20 active:!text-blue-300 focus:!bg-blue-400/20 focus:!text-blue-300"
           >
             <Search className="w-4 h-4" />
           </Button>
@@ -146,8 +146,8 @@ export function Ribbon() {
           <Button 
             variant="outline" 
             size="icon" 
-            onClick={() => setSettingsOpen(true)}
-            className="w-8 h-8 rounded-xs shadow-none border-amber-500/30 bg-gray-800 hover:bg-amber-500/10 text-amber-400 hover:text-amber-300"
+            onClick={() => window.location.href = '/settings'}
+            className="w-8 h-8 rounded-xs shadow-none border-amber-500/30 !bg-gray-800 hover:!bg-amber-500/10 !text-amber-400 hover:!text-amber-300 active:!bg-amber-500/20 active:!text-amber-300 focus:!bg-amber-500/20 focus:!text-amber-300"
           >
             <Settings className="w-4 h-4" />
           </Button>

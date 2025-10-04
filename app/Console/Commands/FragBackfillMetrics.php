@@ -2,14 +2,14 @@
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class FragBackfillMetrics extends Command
 {
     protected $signature = 'frag:backfill:metrics {--days=30 : Number of days to backfill}';
-    
+
     protected $description = 'Backfill metrics data from existing fragments and schedule runs';
 
     public function handle(): int
@@ -21,6 +21,7 @@ class FragBackfillMetrics extends Command
         $this->backfillScheduleMetrics($days);
 
         $this->info('Metrics backfill completed successfully');
+
         return self::SUCCESS;
     }
 
@@ -61,8 +62,9 @@ class FragBackfillMetrics extends Command
         $endDate = Carbon::now()->endOfDay();
 
         // Check if schedule_runs table exists
-        if (!DB::getSchemaBuilder()->hasTable('schedule_runs')) {
+        if (! DB::getSchemaBuilder()->hasTable('schedule_runs')) {
             $this->warn('schedule_runs table not found, skipping schedule metrics backfill');
+
             return;
         }
 

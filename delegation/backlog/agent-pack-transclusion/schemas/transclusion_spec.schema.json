@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TransclusionSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "single",
+        "list"
+      ]
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "ref",
+        "copy",
+        "live",
+        "snapshot"
+      ]
+    },
+    "uid": {
+      "type": "string",
+      "pattern": "^fe:[a-z0-9_-]+/[A-Za-z0-9]+$"
+    },
+    "query": {
+      "type": "string"
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ws": {
+          "type": "string"
+        },
+        "proj": {
+          "type": "string"
+        }
+      }
+    },
+    "layout": {
+      "type": "string",
+      "enum": [
+        "block",
+        "inline",
+        "checklist",
+        "table",
+        "cards"
+      ]
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "mirrorTodos": {
+      "type": "boolean"
+    },
+    "readonly": {
+      "type": "boolean"
+    },
+    "createdAt": {
+      "type": "number"
+    },
+    "updatedAt": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "kind",
+    "mode"
+  ]
+}

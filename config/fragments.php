@@ -177,15 +177,15 @@ return [
 
     'tools' => [
         // Tool system configuration
-        'allowed' => env('FRAGMENT_TOOLS_ALLOWED') ? 
-            explode(',', env('FRAGMENT_TOOLS_ALLOWED')) : 
+        'allowed' => env('FRAGMENT_TOOLS_ALLOWED') ?
+            explode(',', env('FRAGMENT_TOOLS_ALLOWED')) :
             [], // Empty by default for security
 
         // Shell tool configuration
         'shell' => [
             'enabled' => env('FRAGMENT_TOOLS_SHELL_ENABLED', false),
-            'allowlist' => env('FRAGMENT_TOOLS_SHELL_ALLOWLIST') ? 
-                explode(',', env('FRAGMENT_TOOLS_SHELL_ALLOWLIST')) : 
+            'allowlist' => env('FRAGMENT_TOOLS_SHELL_ALLOWLIST') ?
+                explode(',', env('FRAGMENT_TOOLS_SHELL_ALLOWLIST')) :
                 ['ls', 'pwd', 'echo', 'cat', 'grep', 'find'], // Safe commands only
             'timeout_seconds' => env('FRAGMENT_TOOLS_SHELL_TIMEOUT', 15),
             'workdir' => env('FRAGMENT_TOOLS_SHELL_WORKDIR', base_path()),
@@ -202,8 +202,8 @@ return [
         // MCP (Model Context Protocol) tool configuration
         'mcp' => [
             'enabled' => env('FRAGMENT_TOOLS_MCP_ENABLED', false),
-            'allowed_servers' => env('FRAGMENT_TOOLS_MCP_ALLOWED_SERVERS') ? 
-                explode(',', env('FRAGMENT_TOOLS_MCP_ALLOWED_SERVERS')) : 
+            'allowed_servers' => env('FRAGMENT_TOOLS_MCP_ALLOWED_SERVERS') ?
+                explode(',', env('FRAGMENT_TOOLS_MCP_ALLOWED_SERVERS')) :
                 [],
             'servers' => [
                 // Example MCP server configurations

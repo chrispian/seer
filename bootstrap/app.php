@@ -13,7 +13,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->alias([
+            'setup.complete' => \App\Http\Middleware\EnsureUserSetupComplete::class,
+            'default.user' => \App\Http\Middleware\EnsureDefaultUser::class,
+        ]);
+
+        // Apply middlewares to web routes
+        $middleware->web(append: [
+            \App\Http\Middleware\EnsureDefaultUser::class,
+            \App\Http\Middleware\EnsureUserSetupComplete::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -18,11 +18,12 @@ class StepFactory
      */
     public function create(string $type): Step
     {
-        if (!isset($this->stepClasses[$type])) {
+        if (! isset($this->stepClasses[$type])) {
             throw new \InvalidArgumentException("Unknown step type: {$type}");
         }
 
         $stepClass = $this->stepClasses[$type];
+
         return app($stepClass);
     }
 

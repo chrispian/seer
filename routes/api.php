@@ -11,11 +11,12 @@ use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\FragmentController;
 use App\Http\Controllers\FragmentDetailController;
 use App\Http\Controllers\InboxController;
-use App\Http\Controllers\TypeController;
-use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ModelController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\SeerLogController;
+use App\Http\Controllers\TypeController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\VaultController;
 use App\Http\Controllers\WidgetApiController;
 use Illuminate\Support\Facades\Route;
@@ -89,6 +90,7 @@ Route::get('/search/hybrid', [\App\Http\Controllers\FragmentController::class, '
 Route::middleware('web')->group(function () {
     Route::post('/messages', [ChatApiController::class, 'send']);
     Route::get('/chat/stream/{messageId}', [ChatApiController::class, 'stream']);
+    Route::get('/user', [UserController::class, 'show']);
 });
 
 // Widget API routes

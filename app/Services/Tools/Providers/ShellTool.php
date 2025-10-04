@@ -3,19 +3,19 @@
 namespace App\Services\Tools\Providers;
 
 use App\Services\Tools\Contracts\Tool;
-use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Config;
+use Symfony\Component\Process\Process;
 
 class ShellTool implements Tool
 {
-    public function slug(): string 
-    { 
-        return 'shell'; 
+    public function slug(): string
+    {
+        return 'shell';
     }
 
-    public function capabilities(): array 
-    { 
-        return ['exec', 'command']; 
+    public function capabilities(): array
+    {
+        return ['exec', 'command'];
     }
 
     public function isEnabled(): bool
@@ -31,34 +31,34 @@ class ShellTool implements Tool
                 'cmd' => ['type' => 'string', 'description' => 'Shell command to execute'],
                 'timeout' => ['type' => 'integer', 'default' => 15, 'description' => 'Timeout in seconds'],
                 'workdir' => ['type' => 'string', 'description' => 'Working directory'],
-            ]
+            ],
         ];
     }
 
     public function call(array $args, array $context = []): array
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             throw new \RuntimeException('Shell tool is disabled');
         }
 
         $cmd = $args['cmd'] ?? null;
-        if (!$cmd) {
+        if (! $cmd) {
             throw new \InvalidArgumentException('Missing required parameter: cmd');
         }
 
         // Check against allowlist and prevent command injection
         $allowlist = Config::get('fragments.tools.shell.allowlist', []);
-        if (!empty($allowlist)) {
+        if (! empty($allowlist)) {
             $binary = explode(' ', trim($cmd))[0];
-            if (!in_array($binary, $allowlist, true)) {
+            if (! in_array($binary, $allowlist, true)) {
                 throw new \RuntimeException("Command not allowed: {$binary}");
             }
-            
+
             // Security: Prevent command injection by rejecting shell control characters
             $dangerousChars = ['&', '|', ';', '`', '$', '(', ')', '<', '>', '"', "'", '\\', "\n", "\r"];
             foreach ($dangerousChars as $char) {
                 if (strpos($cmd, $char) !== false) {
-                    throw new \RuntimeException("Command contains dangerous characters and is not allowed");
+                    throw new \RuntimeException('Command contains dangerous characters and is not allowed');
                 }
             }
         }

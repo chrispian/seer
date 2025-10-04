@@ -2,9 +2,9 @@
 
 namespace App\Listeners\Projectors;
 
-use Illuminate\Support\Facades\DB;
-use App\Events\Scheduler\ScheduleRunStarted;
 use App\Events\Scheduler\ScheduleRunFinished;
+use App\Events\Scheduler\ScheduleRunStarted;
+use Illuminate\Support\Facades\DB;
 
 class SchedulerProjector
 {
@@ -16,9 +16,9 @@ class SchedulerProjector
     public function onRunFinished(ScheduleRunFinished $e): void
     {
         $day = date('Y-m-d');
-        $row = DB::table('schedule_metrics_daily')->where('day',$day)->first();
+        $row = DB::table('schedule_metrics_daily')->where('day', $day)->first();
         if ($row) {
-            DB::table('schedule_metrics_daily')->where('day',$day)->update([
+            DB::table('schedule_metrics_daily')->where('day', $day)->update([
                 'runs' => $row->runs + 1,
                 'failures' => $row->failures + ($e->status === 'ok' ? 0 : 1),
                 'duration_ms_sum' => $row->duration_ms_sum + (int) $e->durationMs,

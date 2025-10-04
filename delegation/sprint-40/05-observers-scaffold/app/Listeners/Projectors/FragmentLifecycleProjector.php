@@ -2,11 +2,11 @@
 
 namespace App\Listeners\Projectors;
 
+use App\Events\Fragments\FragmentCreated;
+use App\Events\Fragments\FragmentDeleted;
+use App\Events\Fragments\FragmentUpdated;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use App\Events\Fragments\FragmentCreated;
-use App\Events\Fragments\FragmentUpdated;
-use App\Events\Fragments\FragmentDeleted;
 
 class FragmentLifecycleProjector
 {
@@ -17,7 +17,7 @@ class FragmentLifecycleProjector
             'fragment_id' => $e->fragmentId,
             'action' => 'created',
             'by_user' => $e->userId,
-            'payload' => json_encode(['type'=>$e->type]),
+            'payload' => json_encode(['type' => $e->type]),
             'ts' => now(),
         ]);
     }

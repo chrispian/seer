@@ -42,7 +42,7 @@ class FragmentCreateStep extends Step
 
         try {
             $fragment = Fragment::create($fragmentData);
-            
+
             return [
                 'fragment_id' => $fragment->id,
                 'type' => $fragment->type,

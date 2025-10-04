@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 class ListToolsCommand extends Command
 {
     protected $signature = 'frag:tools:list';
-    
+
     protected $description = 'List all available and configured tools';
 
     public function __construct(protected ToolRegistry $registry)
@@ -30,11 +30,11 @@ class ListToolsCommand extends Command
         foreach ($tools as $slug => $tool) {
             $isAllowed = isset($allowed[$slug]);
             $isEnabled = $tool->isEnabled();
-            
-            $status = match(true) {
+
+            $status = match (true) {
                 $isAllowed && $isEnabled => '✅ Available',
-                $isAllowed && !$isEnabled => '⚠️  Configured but disabled',
-                !$isAllowed && $isEnabled => '🔒 Enabled but not allowed',
+                $isAllowed && ! $isEnabled => '⚠️  Configured but disabled',
+                ! $isAllowed && $isEnabled => '🔒 Enabled but not allowed',
                 default => '❌ Disabled'
             };
 
@@ -49,9 +49,9 @@ class ListToolsCommand extends Command
         $this->table($headers, $rows);
 
         $this->newLine();
-        $this->info("Total tools: " . count($tools));
-        $this->info("Allowed tools: " . count($allowed));
-        
+        $this->info('Total tools: '.count($tools));
+        $this->info('Allowed tools: '.count($allowed));
+
         if (count($allowed) === 0) {
             $this->warn('No tools are currently allowed. Configure fragments.tools.allowed in config.');
         }

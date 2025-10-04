@@ -43,8 +43,9 @@ class CacheTypePacksCommand extends Command
             $loader->refreshCache($slug);
             $typePack = $loader->loadTypePack($slug);
 
-            if (!$typePack) {
+            if (! $typePack) {
                 $this->error("Type pack '{$slug}' not found.");
+
                 return self::FAILURE;
             }
 
@@ -54,6 +55,7 @@ class CacheTypePacksCommand extends Command
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error("Failed to cache type pack '{$slug}': {$e->getMessage()}");
+
             return self::FAILURE;
         }
     }
@@ -74,10 +76,11 @@ class CacheTypePacksCommand extends Command
 
             if (empty($typePacks)) {
                 $this->warn('No type packs found.');
+
                 return self::SUCCESS;
             }
 
-            $this->info("✅ Cached " . count($typePacks) . " type pack(s):");
+            $this->info('✅ Cached '.count($typePacks).' type pack(s):');
 
             foreach ($typePacks as $slug => $typePack) {
                 $version = $typePack['manifest']['version'] ?? '1.0.0';
@@ -88,6 +91,7 @@ class CacheTypePacksCommand extends Command
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error("Failed to cache type packs: {$e->getMessage()}");
+
             return self::FAILURE;
         }
     }
@@ -98,21 +102,21 @@ class CacheTypePacksCommand extends Command
     protected function displayTypePackInfo(array $typePack): void
     {
         $manifest = $typePack['manifest'] ?? [];
-        
+
         $this->newLine();
-        $this->line("<info>📦 Type Pack Details:</info>");
-        $this->line("  Name: " . ($manifest['name'] ?? 'Unknown'));
-        $this->line("  Version: " . ($manifest['version'] ?? '1.0.0'));
-        $this->line("  Description: " . ($manifest['description'] ?? 'No description'));
-        $this->line("  Source: " . ($typePack['source_path'] ?? 'Unknown'));
-        
+        $this->line('<info>📦 Type Pack Details:</info>');
+        $this->line('  Name: '.($manifest['name'] ?? 'Unknown'));
+        $this->line('  Version: '.($manifest['version'] ?? '1.0.0'));
+        $this->line('  Description: '.($manifest['description'] ?? 'No description'));
+        $this->line('  Source: '.($typePack['source_path'] ?? 'Unknown'));
+
         if (isset($manifest['capabilities'])) {
-            $this->line("  Capabilities: " . implode(', ', $manifest['capabilities']));
+            $this->line('  Capabilities: '.implode(', ', $manifest['capabilities']));
         }
 
         if (isset($typePack['schema'])) {
             $properties = array_keys($typePack['schema']['properties'] ?? []);
-            $this->line("  Schema fields: " . implode(', ', $properties));
+            $this->line('  Schema fields: '.implode(', ', $properties));
         }
     }
 }

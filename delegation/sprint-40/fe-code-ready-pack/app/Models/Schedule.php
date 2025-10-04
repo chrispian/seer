@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Carbon\CarbonImmutable;
 
 class Schedule extends Model
 {
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     protected $table = 'schedules';
+
     protected $guarded = [];
+
     protected $casts = [
         'payload' => 'array',
         'next_run_at' => 'datetime',
@@ -22,7 +26,9 @@ class Schedule extends Model
     protected static function booted(): void
     {
         static::creating(function ($m) {
-            if (!$m->id) $m->id = (string) Str::uuid();
+            if (! $m->id) {
+                $m->id = (string) Str::uuid();
+            }
         });
     }
 

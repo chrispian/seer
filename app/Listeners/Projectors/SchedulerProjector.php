@@ -2,8 +2,8 @@
 
 namespace App\Listeners\Projectors;
 
-use App\Events\Scheduler\ScheduleRunStarted;
 use App\Events\Scheduler\ScheduleRunFinished;
+use App\Events\Scheduler\ScheduleRunStarted;
 use Illuminate\Support\Facades\DB;
 
 class SchedulerProjector
@@ -11,7 +11,7 @@ class SchedulerProjector
     public function onRunStarted(ScheduleRunStarted $event): void
     {
         $today = now()->format('Y-m-d');
-        
+
         $existing = DB::table('schedule_metrics_daily')
             ->where('day', $today)
             ->first();
@@ -34,7 +34,7 @@ class SchedulerProjector
     public function onRunFinished(ScheduleRunFinished $event): void
     {
         $today = now()->format('Y-m-d');
-        
+
         $existing = DB::table('schedule_metrics_daily')
             ->where('day', $today)
             ->first();

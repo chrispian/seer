@@ -42,7 +42,7 @@ class NextRunCalculator
     protected function calculateDailyAt(string $timeValue, string $timezone, Carbon $localNow): \DateTime
     {
         [$hour, $minute] = $this->parseTime($timeValue);
-        
+
         $nextRun = $localNow->copy()
             ->setTime($hour, $minute, 0);
 
@@ -73,10 +73,10 @@ class NextRunCalculator
 
         $dayMap = [
             'MON' => 1, 'TUE' => 2, 'WED' => 3, 'THU' => 4,
-            'FRI' => 5, 'SAT' => 6, 'SUN' => 0
+            'FRI' => 5, 'SAT' => 6, 'SUN' => 0,
         ];
 
-        $targetDays = array_map(fn($day) => $dayMap[trim($day)] ?? 1, $days);
+        $targetDays = array_map(fn ($day) => $dayMap[trim($day)] ?? 1, $days);
         sort($targetDays);
 
         $currentDayOfWeek = (int) $localNow->format('w'); // 0 = Sunday, 6 = Saturday
@@ -86,12 +86,13 @@ class NextRunCalculator
         // Find the next occurrence
         foreach ($targetDays as $targetDay) {
             $nextRun = $localNow->copy()->setTime($hour, $minute, 0);
-            
-            if ($targetDay > $currentDayOfWeek || 
+
+            if ($targetDay > $currentDayOfWeek ||
                 ($targetDay == $currentDayOfWeek && $targetTime > $currentTime)) {
                 // Same week
                 $daysToAdd = $targetDay - $currentDayOfWeek;
                 $nextRun->addDays($daysToAdd);
+
                 return $nextRun->utc()->toDateTime();
             }
         }
@@ -113,16 +114,16 @@ class NextRunCalculator
         // Basic cron implementation for common patterns
         // Format: minute hour day month day_of_week
         $parts = explode(' ', trim($cronExpr));
-        
+
         if (count($parts) !== 5) {
             throw new \InvalidArgumentException("Invalid cron expression: {$cronExpr}. Expected 5 parts.");
         }
-        
+
         [$minute, $hour, $day, $month, $dayOfWeek] = $parts;
-        
+
         // Start from next minute to avoid immediate re-execution
         $nextRun = $localNow->copy()->addMinute()->second(0);
-        
+
         // Find next matching time (simple brute force approach for MVP)
         for ($i = 0; $i < 366 * 24 * 60; $i++) { // Search up to 1 year ahead
             if ($this->cronMatches($nextRun, $minute, $hour, $day, $month, $dayOfWeek)) {
@@ -130,39 +131,39 @@ class NextRunCalculator
             }
             $nextRun->addMinute();
         }
-        
+
         throw new \RuntimeException("Could not find next run time for cron expression: {$cronExpr}");
     }
-    
+
     /**
      * Check if current time matches cron expression
      */
     protected function cronMatches(Carbon $time, string $minute, string $hour, string $day, string $month, string $dayOfWeek): bool
     {
         // Check minute
-        if (!$this->cronFieldMatches($time->minute, $minute, 0, 59)) {
+        if (! $this->cronFieldMatches($time->minute, $minute, 0, 59)) {
             return false;
         }
-        
+
         // Check hour
-        if (!$this->cronFieldMatches($time->hour, $hour, 0, 23)) {
+        if (! $this->cronFieldMatches($time->hour, $hour, 0, 23)) {
             return false;
         }
-        
+
         // Check month
-        if (!$this->cronFieldMatches($time->month, $month, 1, 12)) {
+        if (! $this->cronFieldMatches($time->month, $month, 1, 12)) {
             return false;
         }
-        
+
         // Day and day_of_week are special - if both are specified, either can match
         $dayMatches = $this->cronFieldMatches($time->day, $day, 1, 31);
         $dayOfWeekMatches = $this->cronFieldMatches($time->dayOfWeek, $dayOfWeek, 0, 6); // 0 = Sunday
-        
+
         // If both day and dayOfWeek are wildcards, both match
         if ($day === '*' && $dayOfWeek === '*') {
             return true;
         }
-        
+
         // If only one is wildcard, use the other
         if ($day === '*') {
             return $dayOfWeekMatches;
@@ -170,11 +171,11 @@ class NextRunCalculator
         if ($dayOfWeek === '*') {
             return $dayMatches;
         }
-        
+
         // If both are specified, either can match
         return $dayMatches || $dayOfWeekMatches;
     }
-    
+
     /**
      * Check if a field value matches cron field pattern
      */
@@ -184,41 +185,44 @@ class NextRunCalculator
         if ($pattern === '*') {
             return true;
         }
-        
+
         // Single value
         if (is_numeric($pattern)) {
             return $value == (int) $pattern;
         }
-        
+
         // Range (e.g., "1-5")
         if (str_contains($pattern, '-')) {
             [$start, $end] = explode('-', $pattern, 2);
+
             return $value >= (int) $start && $value <= (int) $end;
         }
-        
+
         // List (e.g., "1,3,5")
         if (str_contains($pattern, ',')) {
             $values = array_map('intval', explode(',', $pattern));
+
             return in_array($value, $values);
         }
-        
+
         // Step values (e.g., "*/5" or "2-10/2")
         if (str_contains($pattern, '/')) {
             [$range, $step] = explode('/', $pattern, 2);
             $stepValue = (int) $step;
-            
+
             if ($range === '*') {
                 return ($value - $min) % $stepValue === 0;
             }
-            
+
             if (str_contains($range, '-')) {
                 [$start, $end] = explode('-', $range, 2);
                 $startValue = (int) $start;
                 $endValue = (int) $end;
+
                 return $value >= $startValue && $value <= $endValue && ($value - $startValue) % $stepValue === 0;
             }
         }
-        
+
         return false;
     }
 
@@ -227,7 +231,7 @@ class NextRunCalculator
      */
     protected function parseTime(string $timeStr): array
     {
-        if (!preg_match('/^(\d{1,2}):(\d{2})$/', $timeStr, $matches)) {
+        if (! preg_match('/^(\d{1,2}):(\d{2})$/', $timeStr, $matches)) {
             throw new \InvalidArgumentException("Invalid time format: {$timeStr}. Expected HH:MM");
         }
 
@@ -247,6 +251,7 @@ class NextRunCalculator
     public function createOneOffSchedule(string $runAtLocal, string $timezone): \DateTime
     {
         $localTime = Carbon::parse($runAtLocal, $timezone);
+
         return $localTime->utc()->toDateTime();
     }
 }

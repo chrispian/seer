@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\TypeSystem\TypePackLoader;
 use App\Models\FragmentTypeRegistry;
-use Illuminate\Http\Request;
+use App\Services\TypeSystem\TypePackLoader;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class TypeController extends Controller
 {
@@ -24,7 +24,7 @@ class TypeController extends Controller
 
             foreach ($registryEntries as $entry) {
                 $typePack = $this->typePackLoader->loadTypePack($entry->slug);
-                
+
                 if ($typePack) {
                     $types[] = [
                         'slug' => $entry->slug,
@@ -36,23 +36,23 @@ class TypeController extends Controller
                             'icon' => 'file-text',
                             'color' => '#6B7280',
                             'display_name' => ucfirst($entry->slug),
-                            'plural_name' => ucfirst($entry->slug) . 's'
+                            'plural_name' => ucfirst($entry->slug).'s',
                         ],
                         'hot_fields' => $entry->getHotFields(),
                         'schema_hash' => $entry->schema_hash,
-                        'updated_at' => $entry->updated_at
+                        'updated_at' => $entry->updated_at,
                     ];
                 }
             }
 
             return response()->json([
                 'data' => $types,
-                'total' => count($types)
+                'total' => count($types),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to load types',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -64,18 +64,18 @@ class TypeController extends Controller
     {
         try {
             $registryEntry = FragmentTypeRegistry::findBySlug($slug);
-            if (!$registryEntry) {
+            if (! $registryEntry) {
                 return response()->json([
                     'error' => 'Type not found',
-                    'message' => "Type '{$slug}' does not exist"
+                    'message' => "Type '{$slug}' does not exist",
                 ], 404);
             }
 
             $typePack = $this->typePackLoader->loadTypePack($slug);
-            if (!$typePack) {
+            if (! $typePack) {
                 return response()->json([
                     'error' => 'Type pack not loaded',
-                    'message' => "Failed to load type pack for '{$slug}'"
+                    'message' => "Failed to load type pack for '{$slug}'",
                 ], 500);
             }
 
@@ -90,13 +90,13 @@ class TypeController extends Controller
                     'schema_hash' => $registryEntry->schema_hash,
                     'hot_fields' => $registryEntry->getHotFields(),
                     'capabilities' => $registryEntry->getCapabilities(),
-                    'updated_at' => $registryEntry->updated_at
-                ]
+                    'updated_at' => $registryEntry->updated_at,
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to load type details',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -107,15 +107,15 @@ class TypeController extends Controller
     public function validate(Request $request, string $slug): JsonResponse
     {
         $validated = $request->validate([
-            'state' => 'required|array'
+            'state' => 'required|array',
         ]);
 
         try {
             $typePack = $this->typePackLoader->loadTypePack($slug);
-            if (!$typePack || !isset($typePack['schema'])) {
+            if (! $typePack || ! isset($typePack['schema'])) {
                 return response()->json([
                     'error' => 'Schema not found',
-                    'message' => "No schema available for type '{$slug}'"
+                    'message' => "No schema available for type '{$slug}'",
                 ], 404);
             }
 
@@ -127,7 +127,7 @@ class TypeController extends Controller
             // Check required fields
             if (isset($schema['required'])) {
                 foreach ($schema['required'] as $requiredField) {
-                    if (!isset($state[$requiredField])) {
+                    if (! isset($state[$requiredField])) {
                         $errors[] = "Missing required field: {$requiredField}";
                     }
                 }
@@ -137,8 +137,8 @@ class TypeController extends Controller
             if (isset($schema['properties'])) {
                 foreach ($schema['properties'] as $field => $fieldSchema) {
                     if (isset($state[$field]) && isset($fieldSchema['enum'])) {
-                        if (!in_array($state[$field], $fieldSchema['enum'])) {
-                            $errors[] = "Invalid value for {$field}: must be one of " . implode(', ', $fieldSchema['enum']);
+                        if (! in_array($state[$field], $fieldSchema['enum'])) {
+                            $errors[] = "Invalid value for {$field}: must be one of ".implode(', ', $fieldSchema['enum']);
                         }
                     }
                 }
@@ -147,12 +147,12 @@ class TypeController extends Controller
             return response()->json([
                 'valid' => empty($errors),
                 'errors' => $errors,
-                'state' => $state
+                'state' => $state,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Validation failed',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -169,14 +169,14 @@ class TypeController extends Controller
             foreach ($registryEntries as $entry) {
                 $fragmentCount = \App\Models\Fragment::where('type', $entry->slug)->count();
                 $pendingCount = \App\Models\Fragment::where('type', $entry->slug)->inInbox()->count();
-                
+
                 $typeStats[] = [
                     'slug' => $entry->slug,
                     'fragments_count' => $fragmentCount,
                     'pending_count' => $pendingCount,
                     'capabilities' => $entry->getCapabilities(),
                     'version' => $entry->version,
-                    'updated_at' => $entry->updated_at
+                    'updated_at' => $entry->updated_at,
                 ];
             }
 
@@ -184,12 +184,12 @@ class TypeController extends Controller
                 'data' => $typeStats,
                 'total_types' => count($typeStats),
                 'total_fragments' => array_sum(array_column($typeStats, 'fragments_count')),
-                'total_pending' => array_sum(array_column($typeStats, 'pending_count'))
+                'total_pending' => array_sum(array_column($typeStats, 'pending_count')),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to load type statistics',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

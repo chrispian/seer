@@ -13,18 +13,24 @@ class NotifyStep extends Step
     {
         $message = $config['with']['message'] ?? '';
         $level = $config['with']['level'] ?? 'info';
+        $panelData = $config['with']['panel_data'] ?? null;
 
-        if (!$message) {
+        if (! $message) {
             throw new \InvalidArgumentException('Notify step requires a message');
         }
 
         if ($dryRun) {
-            return [
+            $result = [
                 'dry_run' => true,
                 'message' => $message,
                 'level' => $level,
                 'would_notify' => true,
             ];
+            if ($panelData) {
+                $result['panel_data'] = $panelData;
+            }
+
+            return $result;
         }
 
         // Log the notification
@@ -34,11 +40,17 @@ class NotifyStep extends Step
             'context' => 'slash_command',
         ]);
 
-        return [
+        $result = [
             'message' => $message,
             'level' => $level,
             'notified' => true,
         ];
+
+        if ($panelData) {
+            $result['panel_data'] = $panelData;
+        }
+
+        return $result;
     }
 
     public function validate(array $config): bool

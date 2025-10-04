@@ -59,7 +59,7 @@ export function RightRail() {
             <Menubar className="h-7 bg-black border-0 rounded-sm p-0.5 space-x-0">
               <MenubarMenu>
                 <MenubarTrigger
-                  className="px-2 py-1 text-white hover:bg-gray-800 data-[state=open]:bg-gray-800 rounded-sm border-0"
+                  className="px-2 py-1 !text-white hover:!bg-gray-800 data-[state=open]:!bg-gray-800 active:!bg-gray-700 focus:!bg-gray-700 rounded-sm border-0"
                   onClick={toggleRightRail}
                   title="Collapse widgets panel"
                 >
@@ -71,8 +71,8 @@ export function RightRail() {
               
               <MenubarMenu>
                 <MenubarTrigger
-                  className={`px-2 py-1 text-white hover:bg-gray-800 data-[state=open]:bg-gray-800 rounded-sm border-0 ${
-                    isCustomizing ? 'bg-gray-700' : ''
+                  className={`px-2 py-1 !text-white hover:!bg-gray-800 data-[state=open]:!bg-gray-800 active:!bg-gray-700 focus:!bg-gray-700 rounded-sm border-0 ${
+                    isCustomizing ? '!bg-gray-700' : ''
                   }`}
                   onClick={() => setCustomizing(!isCustomizing)}
                   title="Customize layout"
@@ -85,7 +85,7 @@ export function RightRail() {
               
               <MenubarMenu>
                 <MenubarTrigger
-                  className="px-2 py-1 text-white hover:bg-gray-800 data-[state=open]:bg-gray-800 rounded-sm border-0"
+                  className="px-2 py-1 !text-white hover:!bg-gray-800 data-[state=open]:!bg-gray-800 active:!bg-gray-700 focus:!bg-gray-700 rounded-sm border-0"
                   onClick={() => setShowCustomization(true)}
                   title="Widget settings"
                 >

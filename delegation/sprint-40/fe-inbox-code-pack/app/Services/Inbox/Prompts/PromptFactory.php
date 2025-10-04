@@ -10,7 +10,7 @@ class PromptFactory
         $content = $updates['content'] ?? $frag['content'] ?? '';
         $title = $updates['title'] ?? $frag['title'] ?? '';
 
-        return match($kind) {
+        return match ($kind) {
             'title' => self::titlePrompt($type, $content),
             'summary' => self::summaryPrompt($type, $content),
             'suggest_edit' => self::rewritePrompt($type, $title, $content),

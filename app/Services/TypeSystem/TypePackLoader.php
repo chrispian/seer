@@ -32,8 +32,8 @@ class TypePackLoader
     {
         foreach ($this->getSearchPaths() as $basePath) {
             $typePackPath = base_path("{$basePath}/{$slug}");
-            
-            if (!File::isDirectory($typePackPath)) {
+
+            if (! File::isDirectory($typePackPath)) {
                 continue;
             }
 
@@ -41,6 +41,7 @@ class TypePackLoader
             if ($typePack) {
                 // Update registry cache
                 $this->updateRegistryCache($slug, $typePack, $typePackPath);
+
                 return $typePack;
             }
         }
@@ -54,7 +55,7 @@ class TypePackLoader
     protected function loadTypePackFromDirectory(string $path, string $slug): ?array
     {
         $manifestPath = "{$path}/type.yaml";
-        if (!File::exists($manifestPath)) {
+        if (! File::exists($manifestPath)) {
             return null;
         }
 
@@ -84,6 +85,7 @@ class TypePackLoader
                 'path' => $path,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -112,6 +114,7 @@ class TypePackLoader
     protected function calculateSchemaHash(array $typePack): string
     {
         $schemaContent = json_encode($typePack['schema'] ?? []);
+
         return hash('sha256', $schemaContent);
     }
 
@@ -121,7 +124,7 @@ class TypePackLoader
     protected function extractHotFields(array $typePack): array
     {
         $hotFields = [];
-        
+
         if (isset($typePack['indexes']['hot_fields'])) {
             foreach ($typePack['indexes']['hot_fields'] as $field => $config) {
                 $hotFields[$field] = [
@@ -149,7 +152,7 @@ class TypePackLoader
     protected function getSearchPaths(): array
     {
         $paths = [];
-        
+
         foreach ($this->searchPaths as $path) {
             if (str_contains($path, '*')) {
                 // Handle wildcard paths (like modules/*/fragments/types)
@@ -189,16 +192,16 @@ class TypePackLoader
     public function getAllTypePacks(): array
     {
         $typePacks = [];
-        
+
         foreach ($this->getSearchPaths() as $basePath) {
-            if (!File::isDirectory(base_path($basePath))) {
+            if (! File::isDirectory(base_path($basePath))) {
                 continue;
             }
 
             $directories = File::directories(base_path($basePath));
             foreach ($directories as $dir) {
                 $slug = basename($dir);
-                if (!isset($typePacks[$slug])) {
+                if (! isset($typePacks[$slug])) {
                     $typePack = $this->loadTypePack($slug);
                     if ($typePack) {
                         $typePacks[$slug] = $typePack;

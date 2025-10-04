@@ -2,12 +2,12 @@
 
 namespace App\Jobs;
 
+use App\Models\ScheduleRun;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Models\ScheduleRun;
 
 class RunCommandJob implements ShouldQueue
 {
@@ -18,7 +18,7 @@ class RunCommandJob implements ShouldQueue
         public string $commandSlug,
         public array $payload,
         public $plannedAt
-    ){}
+    ) {}
 
     public function handle(): void
     {
@@ -30,13 +30,19 @@ class RunCommandJob implements ShouldQueue
 
         $run = ScheduleRun::where('schedule_id', $this->scheduleId)
             ->where('planned_run_at', $this->plannedAt)->first();
-        if ($run) $run->update(['status' => 'running', 'started_at' => now()]);
+        if ($run) {
+            $run->update(['status' => 'running', 'started_at' => now()]);
+        }
 
         try {
             $result = app(\App\Services\Commands\DSL\Runner::class)->run($this->commandSlug, $ctx);
-            if ($run) $run->update(['status' => 'ok', 'finished_at' => now(), 'output_ref' => $result['ref'] ?? null]);
+            if ($run) {
+                $run->update(['status' => 'ok', 'finished_at' => now(), 'output_ref' => $result['ref'] ?? null]);
+            }
         } catch (\Throwable $e) {
-            if ($run) $run->update(['status' => 'failed', 'finished_at' => now(), 'error' => $e->getMessage()]);
+            if ($run) {
+                $run->update(['status' => 'failed', 'finished_at' => now(), 'error' => $e->getMessage()]);
+            }
             throw $e;
         }
     }

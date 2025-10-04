@@ -5,5 +5,6 @@ namespace App\Services\Metrics;
 interface Metrics
 {
     public function inc(string $name, array $labels = [], float $value = 1.0): void;
+
     public function observe(string $name, float $value, array $labels = []): void;
 }

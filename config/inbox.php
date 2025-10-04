@@ -55,7 +55,7 @@ return [
 
     'fragment_types' => [
         'todo',
-        'note', 
+        'note',
         'link',
         'document',
         'event',

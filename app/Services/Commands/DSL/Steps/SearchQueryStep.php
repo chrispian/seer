@@ -18,7 +18,7 @@ class SearchQueryStep extends Step
         $type = $config['type'] ?? null;
         $tags = $config['tags'] ?? [];
 
-        if (!$query) {
+        if (! $query) {
             throw new \InvalidArgumentException('Search query step requires a query');
         }
 
@@ -43,7 +43,7 @@ class SearchQueryStep extends Step
             }
 
             // Filter by tags if specified
-            if (!empty($tags)) {
+            if (! empty($tags)) {
                 $fragmentsQuery->withAllTags($tags);
             }
 

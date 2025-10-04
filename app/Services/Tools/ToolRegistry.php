@@ -3,9 +3,9 @@
 namespace App\Services\Tools;
 
 use App\Services\Tools\Contracts\Tool;
-use App\Services\Tools\Providers\ShellTool;
 use App\Services\Tools\Providers\FileSystemTool;
 use App\Services\Tools\Providers\MCPTool;
+use App\Services\Tools\Providers\ShellTool;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 
@@ -30,11 +30,11 @@ class ToolRegistry
     public function get(string $slug): Tool
     {
         $this->ensureInitialized();
-        
-        if (!isset($this->map[$slug])) {
+
+        if (! isset($this->map[$slug])) {
             throw new \RuntimeException("Tool not registered: {$slug}");
         }
-        
+
         return $this->map[$slug];
     }
 
@@ -44,6 +44,7 @@ class ToolRegistry
     public function allowed(string $slug): bool
     {
         $allowed = Config::get('fragments.tools.allowed', []);
+
         return in_array($slug, $allowed, true);
     }
 
@@ -53,6 +54,7 @@ class ToolRegistry
     public function exists(string $slug): bool
     {
         $this->ensureInitialized();
+
         return isset($this->map[$slug]);
     }
 
@@ -62,6 +64,7 @@ class ToolRegistry
     public function all(): array
     {
         $this->ensureInitialized();
+
         return $this->map;
     }
 
@@ -72,8 +75,8 @@ class ToolRegistry
     {
         $this->ensureInitialized();
         $allowed = Config::get('fragments.tools.allowed', []);
-        
-        return array_filter($this->map, function($slug) use ($allowed) {
+
+        return array_filter($this->map, function ($slug) use ($allowed) {
             return in_array($slug, $allowed, true);
         }, ARRAY_FILTER_USE_KEY);
     }
@@ -83,7 +86,7 @@ class ToolRegistry
      */
     public function getCapabilities(string $slug): array
     {
-        if (!$this->exists($slug)) {
+        if (! $this->exists($slug)) {
             return [];
         }
 
@@ -91,6 +94,7 @@ class ToolRegistry
             return $this->get($slug)->capabilities();
         } catch (\Exception $e) {
             Log::warning("Failed to get capabilities for tool {$slug}", ['error' => $e->getMessage()]);
+
             return [];
         }
     }
@@ -105,9 +109,9 @@ class ToolRegistry
         }
 
         // Register core tools
-        $this->register(new ShellTool());
-        $this->register(new FileSystemTool());
-        $this->register(new MCPTool());
+        $this->register(new ShellTool);
+        $this->register(new FileSystemTool);
+        $this->register(new MCPTool);
 
         $this->initialized = true;
     }
@@ -127,17 +131,17 @@ class ToolRegistry
      */
     public function validateArgs(string $slug, array $args): bool
     {
-        if (!$this->exists($slug)) {
+        if (! $this->exists($slug)) {
             return false;
         }
 
         try {
             $tool = $this->get($slug);
             $schema = $tool->getConfigSchema();
-            
+
             // Simple validation - in production, use a proper JSON schema validator
             foreach ($schema['required'] ?? [] as $field) {
-                if (!isset($args[$field])) {
+                if (! isset($args[$field])) {
                     return false;
                 }
             }
@@ -145,6 +149,7 @@ class ToolRegistry
             return true;
         } catch (\Exception $e) {
             Log::warning("Tool argument validation failed for {$slug}", ['error' => $e->getMessage()]);
+
             return false;
         }
     }

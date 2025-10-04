@@ -20,7 +20,7 @@ return new class extends Migration
             $table->json('hot_fields')->nullable();
             $table->json('capabilities')->nullable();
             $table->timestamps();
-            
+
             // Indexes for performance
             $table->index(['slug', 'version']);
             $table->index('schema_hash');

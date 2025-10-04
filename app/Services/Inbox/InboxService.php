@@ -2,9 +2,9 @@
 
 namespace App\Services\Inbox;
 
-use App\Models\Fragment;
 use App\Events\FragmentAccepted;
 use App\Events\FragmentArchived;
+use App\Models\Fragment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -47,13 +47,13 @@ class InboxService
     public function acceptFragment(int $fragmentId, int $userId, array $edits = []): bool
     {
         $fragment = Fragment::findOrFail($fragmentId);
-        
+
         if ($fragment->inbox_status !== 'pending') {
             throw new \InvalidArgumentException("Fragment {$fragmentId} is not in pending status");
         }
 
         $success = $fragment->acceptInInbox($userId, $edits);
-        
+
         if ($success) {
             event(new FragmentAccepted($fragment, $userId, $edits));
         }
@@ -72,7 +72,7 @@ class InboxService
         foreach ($fragments as $fragment) {
             try {
                 $success = $fragment->acceptInInbox($userId, $bulkEdits);
-                
+
                 if ($success) {
                     event(new FragmentAccepted($fragment, $userId, $bulkEdits));
                 }
@@ -93,25 +93,25 @@ class InboxService
     {
         $query = Fragment::query()->inInbox();
         $query = $this->applyFilters($query, $filters);
-        
+
         $fragmentIds = $query->pluck('id')->toArray();
-        
+
         return $this->acceptFragments($fragmentIds, $userId, $bulkEdits);
     }
 
     /**
      * Archive a fragment
      */
-    public function archiveFragment(int $fragmentId, int $userId, string $reason = null): bool
+    public function archiveFragment(int $fragmentId, int $userId, ?string $reason = null): bool
     {
         $fragment = Fragment::findOrFail($fragmentId);
-        
+
         if ($fragment->inbox_status !== 'pending') {
             throw new \InvalidArgumentException("Fragment {$fragmentId} is not in pending status");
         }
 
         $success = $fragment->archiveInInbox($userId, $reason);
-        
+
         if ($success) {
             event(new FragmentArchived($fragment, $userId, $reason));
         }
@@ -122,10 +122,10 @@ class InboxService
     /**
      * Skip a fragment
      */
-    public function skipFragment(int $fragmentId, int $userId, string $reason = null): bool
+    public function skipFragment(int $fragmentId, int $userId, ?string $reason = null): bool
     {
         $fragment = Fragment::findOrFail($fragmentId);
-        
+
         if ($fragment->inbox_status !== 'pending') {
             throw new \InvalidArgumentException("Fragment {$fragmentId} is not in pending status");
         }
@@ -139,7 +139,7 @@ class InboxService
     public function reopenFragment(int $fragmentId): bool
     {
         $fragment = Fragment::findOrFail($fragmentId);
-        
+
         if ($fragment->inbox_status === 'pending') {
             throw new \InvalidArgumentException("Fragment {$fragmentId} is already pending");
         }
@@ -171,7 +171,7 @@ class InboxService
     protected function applyFilters(Builder $query, array $filters): Builder
     {
         // Filter by type
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             if (is_array($filters['type'])) {
                 $query->whereIn('type', $filters['type']);
             } else {
@@ -180,33 +180,33 @@ class InboxService
         }
 
         // Filter by tags
-        if (!empty($filters['tags'])) {
+        if (! empty($filters['tags'])) {
             $tags = is_array($filters['tags']) ? $filters['tags'] : [$filters['tags']];
             $query->withAnyTag($tags);
         }
 
         // Filter by category
-        if (!empty($filters['category'])) {
+        if (! empty($filters['category'])) {
             $query->where('category', $filters['category']);
         }
 
         // Filter by vault
-        if (!empty($filters['vault'])) {
+        if (! empty($filters['vault'])) {
             $query->where('vault', $filters['vault']);
         }
 
         // Filter by date range
-        if (!empty($filters['from_date'])) {
+        if (! empty($filters['from_date'])) {
             $query->where('inbox_at', '>=', $filters['from_date']);
         }
 
-        if (!empty($filters['to_date'])) {
+        if (! empty($filters['to_date'])) {
             $query->where('inbox_at', '<=', $filters['to_date']);
         }
 
         // Filter by inbox reason
-        if (!empty($filters['inbox_reason'])) {
-            $query->where('inbox_reason', 'like', '%' . $filters['inbox_reason'] . '%');
+        if (! empty($filters['inbox_reason'])) {
+            $query->where('inbox_reason', 'like', '%'.$filters['inbox_reason'].'%');
         }
 
         return $query;

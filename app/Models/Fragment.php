@@ -47,15 +47,15 @@ class Fragment extends Model
 
             $fragment->tags = self::ensureArray($fragment->tags);
             $fragment->relationships = self::ensureArray($fragment->relationships);
-            
+
             // Set default inbox fields if not specified
-            if (!isset($fragment->inbox_status)) {
+            if (! isset($fragment->inbox_status)) {
                 $fragment->inbox_status = 'pending';
             }
-            if (!isset($fragment->inbox_at)) {
+            if (! isset($fragment->inbox_at)) {
                 $fragment->inbox_at = now();
             }
-            
+
             // Validate state against type schema if validation is enabled
             $fragment->validateTypeSchema();
         });
@@ -382,7 +382,7 @@ class Fragment extends Model
     public function acceptInInbox($userId, array $edits = []): bool
     {
         // Apply any edits to the fragment
-        if (!empty($edits)) {
+        if (! empty($edits)) {
             $this->fill($edits);
         }
 
@@ -399,12 +399,12 @@ class Fragment extends Model
         return $this->save();
     }
 
-    public function archiveInInbox($userId, string $reason = null): bool
+    public function archiveInInbox($userId, ?string $reason = null): bool
     {
         $this->inbox_status = 'archived';
         $this->reviewed_at = now();
         $this->reviewed_by = $userId;
-        
+
         if ($reason) {
             $this->inbox_reason = $reason;
         }
@@ -412,12 +412,12 @@ class Fragment extends Model
         return $this->save();
     }
 
-    public function skipInInbox($userId, string $reason = null): bool
+    public function skipInInbox($userId, ?string $reason = null): bool
     {
         $this->inbox_status = 'skipped';
         $this->reviewed_at = now();
         $this->reviewed_by = $userId;
-        
+
         if ($reason) {
             $this->inbox_reason = $reason;
         }
@@ -539,7 +539,7 @@ class Fragment extends Model
     protected function validateTypeSchema(): void
     {
         // Skip validation if disabled or no type/state
-        if (!config('fragments.types.validation.enabled') || !$this->type || !$this->state) {
+        if (! config('fragments.types.validation.enabled') || ! $this->type || ! $this->state) {
             return;
         }
 
@@ -551,7 +551,7 @@ class Fragment extends Model
             if (config('fragments.types.validation.strict_mode')) {
                 throw $e;
             }
-            
+
             // Otherwise, log the error and continue
             \Log::warning('Fragment type validation failed', [
                 'fragment_id' => $this->id,
@@ -567,12 +567,13 @@ class Fragment extends Model
      */
     public function hasValidState(): bool
     {
-        if (!$this->type || !$this->state) {
+        if (! $this->type || ! $this->state) {
             return true; // No validation needed
         }
 
         try {
             $validator = app(\App\Services\TypeSystem\TypePackValidator::class);
+
             return $validator->isValidState($this->state, $this->type);
         } catch (\Exception $e) {
             return false;
@@ -584,12 +585,13 @@ class Fragment extends Model
      */
     public function getStateValidationErrors(): array
     {
-        if (!$this->type || !$this->state) {
+        if (! $this->type || ! $this->state) {
             return [];
         }
 
         try {
             $validator = app(\App\Services\TypeSystem\TypePackValidator::class);
+
             return $validator->getValidationErrors($this->state, $this->type);
         } catch (\Exception $e) {
             return ['general' => [$e->getMessage()]];
