@@ -1,0 +1,16 @@
+{
+    "ctx": {
+        "body": "",
+        "selection": "This is the selection text",
+        "user": {
+            "id": 1,
+            "name": "Test User"
+        },
+        "workspace": {
+            "id": 1
+        },
+        "session": {
+            "id": "test-session"
+        }
+    }
+}

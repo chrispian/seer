@@ -12,39 +12,30 @@ requires:
   capabilities: ["fragment.query"]
 
 steps:
-  - id: coerce-input
-    type: transform
-    template: |
-      {{ ctx.body }}
-
-  - id: check-api-mode
-    type: condition
-    condition: "{{ steps.coerce-input.output == 'api' }}"
-    then:
-      - id: display-api-help
-        type: notify
-        with:
-          message: |
-            📥 **Inbox API Reference**
-            
-            Use `/api/inbox` endpoint to view pending fragments.
-            
-            **Available filters:**
-            - type: Filter by fragment type
-            - tags: Filter by tags  
-            - category: Filter by category
-            - vault: Filter by vault
-            - limit: Number of results (default: 10)
-            
-            **Example:**
-            GET /api/inbox?type=todo&limit=20
-            
-            **Inbox Views:**
-            - /inbox - Recent items and open todos
-            - /inbox bookmarked - Bookmarked fragments  
-            - /inbox todos - Todo-specific view
-            - /inbox all - All actionable items
-          level: "info"
+  - id: display-inbox-summary
+    type: notify
+    with:
+      message: |
+        📥 **Inbox Management**
+        
+        **API Documentation**: Use `/inbox api` to see API documentation.
+        
+        **Current Status**: Inbox contains pending fragments
+        **View Options**:
+        - Use `/api/inbox` endpoint to view pending fragments
+        - Access fragments through the web interface
+        - Filter by status, type, or other criteria
+        
+        **Quick Actions**:
+        - View pending: `GET /api/inbox?status=pending`
+        - Accept fragment: `POST /api/inbox/{id}/accept`
+        - Reject fragment: `POST /api/inbox/{id}/reject`
+        
+        **API Reference**:
+        - **Endpoint**: `GET /api/inbox`
+        - **Parameters**: status, type, limit
+        - **Response**: JSON array of fragment objects
+      level: "info"
     else:
       - id: query-pending
         type: fragment.query

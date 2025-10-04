@@ -67,6 +67,27 @@
 | **ENG-07-03** | Keychain Integration Foundation | `todo` | 4-6h |
 | **UX-06-03** | Provider Dashboard UI | `todo` | 4-7h |
 
+### **Sprint 47: Agent Tooling Foundation System**
+**Priority**: HIGH | **Estimated**: 61-84 hours (8-11 days) | **Tasks**: 6
+
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **ENG-09-01** | Tool SDK & Registry Foundation | `todo` | 13-16h |
+| **ENG-09-02** | Database Query Tool | `todo` | 8-12h |
+| **ENG-09-03** | Export & Artifact System | `todo` | 10-14h |
+| **ENG-09-04** | Agent Memory Foundation | `todo` | 12-16h |
+| **UX-07-01** | Tool Management Interface | `todo` | 8-12h |
+| **ENG-09-05** | Prompt Orchestrator | `todo` | 10-14h |
+
+### **Sprint 48: Command System Continuation**
+**Priority**: MEDIUM | **Estimated**: 6-9 hours (1-2 days) | **Tasks**: 3
+
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **ENG-09-06** | Remaining Conflict Resolution | `todo` | 2-3h |
+| **ENG-09-07** | Medium-Complexity Command Migration | `todo` | 3-4h |
+| **ENG-09-08** | Performance Analysis & Optimization | `todo` | 1-2h |
+
 ---
 
 ## 👥 Agent Assignment Matrix

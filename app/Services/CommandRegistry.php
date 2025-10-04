@@ -24,9 +24,9 @@ class CommandRegistry
 {
     protected static array $commands = [
         // Core commands
-        'session' => SessionCommand::class,
+        // 'session' => SessionCommand::class, // Migrated to YAML
         'recall' => RecallCommand::class,
-        'bookmark' => BookmarkCommand::class,
+        // 'bookmark' => BookmarkCommand::class, // Migrated to YAML
         // 'help' => HelpCommand::class, // Migrated to YAML
         // 'clear' => ClearCommand::class, // Migrated to YAML
         // 'frag' => FragCommand::class, // Migrated to YAML (simplified)
@@ -34,11 +34,11 @@ class CommandRegistry
         // 's' => SearchCommand::class, // alias for search
         // 'todo' => TodoCommand::class, // Migrated to YAML (unified)
         // 't' => TodoCommand::class, // alias for todo
-        'join' => JoinCommand::class,
-        'j' => JoinCommand::class, // alias for join
-        'channels' => ChannelsCommand::class,
+        // 'join' => JoinCommand::class, // Migrated to YAML
+        // 'j' => JoinCommand::class, // alias for join - Migrated to YAML
+        // 'channels' => ChannelsCommand::class, // Migrated to YAML
         // 'name' => NameCommand::class, // Migrated to YAML (simplified)
-        'routing' => RoutingCommand::class,
+        // 'routing' => RoutingCommand::class, // Migrated to YAML
 
         // New CMD-01 commands
         'vault' => VaultCommand::class,

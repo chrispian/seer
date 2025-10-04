@@ -1,0 +1,42 @@
+name: "Routing Management"
+slug: routing
+version: 2.0.0
+triggers:
+  slash: "/routing"
+  aliases: []
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: []
+
+steps:
+  - id: show-routing-info
+    type: transform
+    template: |
+      # Routing Management
+      
+      **Routing Rules Configuration**
+      
+      This command manages routing rules for your workspace. Routing rules determine how content is automatically organized and routed between different vaults and projects.
+      
+      **Common routing operations:**
+      - View active routing rules
+      - Configure threshold settings
+      - Set destination mappings
+      - Enable/disable automatic routing
+      
+      **Note:** Full routing management functionality is being migrated to the new DSL system.
+      For now, use the web interface to configure routing rules.
+      
+      **Input provided:** {{ ctx.body | default: '(none)' }}
+
+  - id: show-panel
+    type: response.panel
+    with:
+      type: "routing"
+      message: "{{ steps.show-routing-info.output }}"
+      panel_data:
+        command: "routing"
+        note: "Routing management interface placeholder"

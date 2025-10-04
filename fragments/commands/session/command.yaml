@@ -1,0 +1,47 @@
+name: "Session Management"
+slug: session
+version: 2.0.0
+triggers:
+  slash: "/session"
+  aliases: []
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: []
+
+steps:
+  - id: show-session-info
+    type: transform
+    template: |
+      # Session Management
+      
+      **Current Session Status**
+      
+      - Vault: `Default Workspace`
+      - Type: `chat`
+      - Tags: `development, testing`
+      - Identifier: `{{ ctx.session.id | default: 'session-123' }}`
+      - Context: `Sprint 47 Command Migration`
+      - Started: `{{ now | date: 'M j, Y H:i' }}`
+      
+      **Available Commands:**
+      - `/session show` – Show current session details
+      - `/session list` – List recent sessions
+      - `/session start` – Start a new session
+      - `/session end` – End current session
+      
+      **Input provided:** {{ ctx.body | default: '(none)' }}
+      
+      **Note:** Full session management functionality is being migrated to the new DSL system.
+      For now, use the web interface to manage sessions.
+
+  - id: show-panel
+    type: response.panel
+    with:
+      type: "session"
+      message: "{{ steps.show-session-info.output }}"
+      panel_data:
+        command: "session"
+        current_session: "{{ ctx.session.id }}"

@@ -4,22 +4,56 @@ namespace App\Services\Commands\DSL;
 
 class TemplateEngine
 {
+    private static array $templateCache = [];
+    private static int $cacheHits = 0;
+    private static int $cacheMisses = 0;
+    
     /**
      * Render template with context and filters
      */
     public function render(string $template, array $context): string
     {
-        // First, process control structures like {% if %}
-        $template = $this->processControlStructures($template, $context);
+        // Cache key for complex templates (>100 chars or containing control structures)
+        $shouldCache = strlen($template) > 100 || str_contains($template, '{%');
+        $cacheKey = $shouldCache ? md5($template) : null;
         
-        // Then process variables with {{ variable | filter }} syntax
+        if ($cacheKey && isset(self::$templateCache[$cacheKey])) {
+            self::$cacheHits++;
+            $processedTemplate = self::$templateCache[$cacheKey];
+        } else {
+            self::$cacheMisses++;
+            
+            // First, process control structures like {% if %}
+            $processedTemplate = $this->processControlStructures($template, []);
+            
+            // Cache the processed template structure (without context)
+            if ($cacheKey && count(self::$templateCache) < 100) { // Limit cache size
+                self::$templateCache[$cacheKey] = $processedTemplate;
+            }
+        }
+        
+        // Then process variables with context
         return preg_replace_callback(
             '/\{\{\s*([^}]+)\s*\}\}/',
             function ($matches) use ($context) {
                 return $this->processVariable($matches[1], $context);
             },
-            $template
+            $processedTemplate
         );
+    }
+    
+    /**
+     * Get template cache statistics
+     */
+    public static function getCacheStats(): array
+    {
+        return [
+            'hits' => self::$cacheHits,
+            'misses' => self::$cacheMisses,
+            'cached_templates' => count(self::$templateCache),
+            'hit_ratio' => self::$cacheHits + self::$cacheMisses > 0 ? 
+                round(self::$cacheHits / (self::$cacheHits + self::$cacheMisses) * 100, 2) : 0,
+        ];
     }
 
     /**
@@ -94,7 +128,7 @@ class TemplateEngine
 
         // Apply filters
         foreach ($filters as $filter) {
-            $value = $this->applyFilter(trim($filter), $value);
+            $value = $this->applyFilter(trim($filter), $value, $context);
         }
 
         return (string) ($value ?? '');
@@ -271,12 +305,20 @@ class TemplateEngine
     /**
      * Apply filter to value
      */
-    protected function applyFilter(string $filter, mixed $value): mixed
+    protected function applyFilter(string $filter, mixed $value, array $context = []): mixed
     {
         if (str_contains($filter, ':')) {
             [$filterName, $filterArg] = explode(':', $filter, 2);
             $filterName = trim($filterName);
             $filterArg = trim($filterArg);
+            
+            // Evaluate variable references in filter arguments
+            if (!empty($context) && str_contains($filterArg, '.')) {
+                $evaluatedArg = $this->getValue($filterArg, $context);
+                if ($evaluatedArg !== null) {
+                    $filterArg = $evaluatedArg;
+                }
+            }
         } else {
             $filterName = $filter;
             $filterArg = null;

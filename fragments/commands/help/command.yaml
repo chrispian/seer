@@ -12,111 +12,45 @@ requires:
   capabilities: []
 
 steps:
-  - id: determine-section
-    type: condition
-    condition: "{{ ctx.identifier | length > 0 }}"
-    then:
-      # Show specific section help
-      - id: build-section-help
-        type: transform
-        template: |
-          # {{ ctx.identifier | capitalize }} Help
+  - id: show-help
+    type: transform
+    template: |
+      # Commands Cheat Sheet
 
-          Available help sections:
-          - `/help recall` – Recall Commands
-          - `/help bookmark` – Bookmark Commands  
-          - `/help fragment` – Fragment Commands
-          - `/help todo` – Todo Management
-          - `/help search` – Search Commands
-          - `/help join` – Channel Navigation
-          - `/help session` – Sessions
-          - `/help system` – System Management
-          - `/help tools` – Chat Tools
+      Here are the commands you can use in the chat:
 
-          Use `/help` without arguments to see all commands.
-          
-          **Note**: Specific section help content is being migrated. For now, use `/help` to see all commands.
-      - id: show-section-panel
-        type: response.panel
-        with:
-          type: "help"
-          panel_data:
-            message: "{{ steps.build-section-help.output }}"
-    else:
-      # Show all sections
-      - id: build-full-help
-        type: transform
-        template: |
-          # Commands Cheat Sheet
+      ## Fragment Commands
+      - `/frag <content>` – Create a new fragment
+      - `/recall <query>` – Search and recall fragments
+      - `/bookmark` – Bookmark current conversation
+      - `/link <url>` – Save a link as fragment
 
-          Here are the commands you can use in the chat:
+      ## Todo & Task Management
+      - `/todo <task>` – Create a todo item
+      - `/inbox` – View pending fragments
 
-          ## Recall Commands
-          - `/recall type:todo limit:5` – Recall recent fragments by type
-          - `/recall session {hint}` – Recall all fragments from a saved session (coming soon 🚀)
+      ## Search & Discovery
+      - `/search <query>` – Search fragments and content
+      - `/help <section>` – Get help for specific commands
 
-          ## Bookmark Commands
-          - `/bookmark` – Bookmark the most recent fragment
-          - `/bookmark list` – List saved bookmarks
-          - `/bookmark show {hint}` – Replay a bookmark in the chat
-          - `/bookmark forget {hint}` – Delete a saved bookmark
+      ## Channel & Navigation
+      - `/join <channel>` – Join or create a channel
+      - `/channels` – List available channels
+      - `/name <title>` – Set channel name
 
-          ## Fragment Commands
-          - `/frag This is something worth remembering` – Log a fragment
-          - `/todo Fix the login bug #urgent` – Create a new todo fragment with tags
+      ## Session Management  
+      - `/session` – Manage current session
+      - `/clear` – Clear chat history
 
-          ## Todo Management
-          - `/todo` – List 25 open todos (newest first)
-          - `/todo list` – List 25 open todos (explicit)
-          - `/todo list status:completed` – List completed todos
-          - `/todo list #urgent limit:5` – List 5 urgent todos
-          - `/todo list search:client` – Search todos for "client"
-          - `/todo complete:1` – Mark first todo complete
-          - `/todo complete:"login bug"` – Mark matching todo complete
+      ## System Tools
+      - `/settings` – Access system settings
+      - `/news` – Get latest AI/tech news
 
-          ## Search Commands
-          - `/search your query here` – Search all fragments with hybrid search
-          - `/s your query here` – Shorthand for search
+      **Tip**: Most commands work with or without arguments. Try them out!
 
-          ## Channel Navigation
-          - `/join #c5` – Join channel #c5 by short code
-          - `/join #custom` – Join channel by custom name  
-          - `/join #` – Show all available channels
-          - `/join bug` – Search for channels containing "bug"
-          - `/j #c1` – Shorthand for join (alias)
-
-          **Examples:**
-          - `/join #c1` – Switch to channel #c1 (by short code)
-          - `/join #ProjectAlpha` – Switch to channel named "ProjectAlpha"
-          - `/join project` – Find channels about "project"
-          - `/join #` – Browse all active channels
-
-          **Related Commands:**
-          - `/channels` – List all available channels
-          - `/name Custom Name` – Rename current channel
-
-          ## Sessions
-          - `/session vault:work type:meeting Project Sync #weekly` – Start a scoped session for all new fragments
-          - `/session show` – Display current active session details
-          - `/session end` – End the current session and return to normal logging
-
-          Sessions automatically attach vault, type, tags, and a session key to all fragments you create while active.
-
-          ## System Management
-          - `/inbox` – Open Inbox Management Interface for fragment review
-          - `/types` – Open Type System Management to view type packs and validation
-          - `/scheduler` – Open Scheduler Management for automation and scheduled commands
-
-          ## Chat Tools
-          - `/clear` – Clear the current chat view
-          - `/help` – Show this help message
-
-          ---
-          All fragments are stored and processed. Bookmarks and sessions give you quick access to curated memories and grouped ideas.
-
-      - id: show-full-panel
-        type: response.panel
-        with:
-          type: "help"
-          panel_data:
-            message: "{{ steps.build-full-help.output }}"
+  - id: show-panel
+    type: response.panel
+    with:
+      type: "help"  
+      panel_data:
+        message: "{{ steps.show-help.output }}"

@@ -1,0 +1,41 @@
+name: "Join Channel"
+slug: join
+version: 2.0.0
+triggers:
+  slash: "/join"
+  aliases: ["/j"]
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: []
+
+steps:
+  - id: show-help
+    type: transform
+    template: |
+      # Join Channel
+      
+      **Usage:**
+      - `/join #c5` – Join channel #c5 directly  
+      - `/join #` – Show all available channels
+      - `/join project` – Search for channels containing "project"
+      
+      **Examples:**
+      - `/join #c1` – Switch to channel #c1
+      - `/join bug` – Find channels about "bug"
+      
+      **Input provided:** {{ ctx.body | default: '(none)' }}
+      
+      **Note:** Channel switching functionality is being migrated to the new DSL system.
+      For now, use the web interface to switch between channels.
+
+  - id: show-panel
+    type: response.panel
+    with:
+      type: "help"
+      message: "{{ steps.show-help.output }}"
+      panel_data:
+        command: "join"
+        input: "{{ ctx.body }}"
