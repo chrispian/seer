@@ -132,9 +132,14 @@ class CommandRunner
     protected function renderStepConfig(array $stepConfig, array $context): array
     {
         $rendered = [];
+        $stepType = $stepConfig['type'] ?? '';
 
         foreach ($stepConfig as $key => $value) {
-            if (is_string($value)) {
+            // Special handling for condition steps - don't pre-render condition templates
+            if ($stepType === 'condition' && $key === 'condition' && is_string($value)) {
+                // Pass condition template as-is to let ConditionStep handle evaluation
+                $rendered[$key] = $value;
+            } elseif (is_string($value)) {
                 $rendered[$key] = $this->templateEngine->render($value, $context);
             } elseif (is_array($value)) {
                 $rendered[$key] = $this->renderStepConfig($value, $context);
@@ -151,14 +156,15 @@ class CommandRunner
      */
     protected function buildExecutionContext(array $inputContext, array $commandPack): array
     {
-        return [
-            'ctx' => $inputContext,
+        // Merge input context directly instead of nesting under 'ctx'
+        // This ensures ctx.body works instead of ctx.ctx.body
+        return array_merge($inputContext, [
             'env' => [], // Environment variables (gated)
             'steps' => [], // Step outputs
             'now' => now()->toISOString(),
             'uuid' => \Str::uuid()->toString(),
             'ulid' => \Str::ulid()->toString(),
             'prompts' => $commandPack['prompts'] ?? [],
-        ];
+        ]);
     }
 }
