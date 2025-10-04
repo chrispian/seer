@@ -35,17 +35,17 @@ Condition steps should receive the raw template string `"{{ ctx.body == 'list' }
 
 ## Technical Requirements
 
-- [ ] Fix YAML parsing to preserve condition templates
-- [ ] Ensure proper template evaluation timing in ConditionStep
-- [ ] Maintain backwards compatibility with existing commands
-- [ ] Add comprehensive tests for condition template scenarios
+- [x] Fix YAML parsing to preserve condition templates ✅
+- [x] Ensure proper template evaluation timing in ConditionStep ✅
+- [x] Maintain backwards compatibility with existing commands ✅
+- [x] Add comprehensive tests for condition template scenarios ✅
 
 ## Testing Criteria
 
-- [ ] `/bookmark list` works correctly with proper conditional logic
-- [ ] All existing condition-based commands function properly
-- [ ] Template expressions in conditions evaluate correctly
-- [ ] No regression in working commands (help, clear, etc.)
+- [x] `/bookmark list` works correctly with proper conditional logic ✅
+- [x] All existing condition-based commands function properly ✅
+- [x] Template expressions in conditions evaluate correctly ✅
+- [x] No regression in working commands (help, clear, etc.) ✅
 
 ## Files Likely Involved
 
