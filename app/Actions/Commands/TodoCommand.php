@@ -26,6 +26,18 @@ class TodoCommand implements HandlesCommand
             return $this->handleCompletion($complete);
         }
 
+        // Handle reopen actions
+        $reopen = $command->arguments['reopen'] ?? null;
+        if ($reopen !== null) {
+            return $this->handleReopen($reopen);
+        }
+
+        // Handle delete actions
+        $delete = $command->arguments['delete'] ?? null;
+        if ($delete !== null) {
+            return $this->handleDelete($delete);
+        }
+
         // If no subcommand and no structured arguments, treat as todo creation
         if (empty($command->arguments['status']) &&
             empty($command->arguments['search']) &&
@@ -95,8 +107,11 @@ class TodoCommand implements HandlesCommand
         $limit = (int) ($command->arguments['limit'] ?? 25);
 
         // Build query for todos using scopes
-        $query = Fragment::todosByStatus($status)
-            ->with('type');
+        if ($status === 'all') {
+            $query = Fragment::where('type', 'todo')->with('type');
+        } else {
+            $query = Fragment::todosByStatus($status)->with('type');
+        }
 
         // Apply tag filters
         if (! empty($tags)) {
@@ -148,6 +163,9 @@ class TodoCommand implements HandlesCommand
             if (is_numeric($complete)) {
                 // Position-based completion
                 return $this->completeByPosition((int) $complete);
+            } elseif (ctype_digit($complete)) {
+                // ID-based completion (all digits, could be large ID)
+                return $this->completeById($complete);
             } else {
                 // Keyword-based completion
                 return $this->completeByKeyword($complete);
@@ -191,6 +209,30 @@ class TodoCommand implements HandlesCommand
         );
     }
 
+    private function completeById(string $id): CommandResponse
+    {
+        $todo = Fragment::where('type', 'todo')
+            ->where('id', $id)
+            ->whereRaw("(state::jsonb->>'status') IN ('open', 'in_progress', 'blocked') OR (state::jsonb->>'status') IS NULL")
+            ->first();
+
+        if (!$todo) {
+            return new CommandResponse(
+                type: 'system',
+                shouldShowErrorToast: true,
+                message: "No open todo found with ID: {$id}",
+            );
+        }
+
+        $this->markComplete($todo);
+
+        return new CommandResponse(
+            type: 'system',
+            shouldShowSuccessToast: true,
+            message: "✅ Completed todo: ".$this->truncate($todo->message, 50),
+        );
+    }
+
     private function completeByKeyword(string $keyword): CommandResponse
     {
         // Search for matching open todo
@@ -218,11 +260,233 @@ class TodoCommand implements HandlesCommand
         );
     }
 
+    private function handleReopen($reopen): CommandResponse
+    {
+        try {
+            if (is_numeric($reopen)) {
+                // Position-based reopen
+                return $this->reopenByPosition((int) $reopen);
+            } elseif (ctype_digit($reopen)) {
+                // ID-based reopen (all digits, could be large ID)
+                return $this->reopenById($reopen);
+            } else {
+                // Keyword-based reopen
+                return $this->reopenByKeyword($reopen);
+            }
+        } catch (\Exception $e) {
+            Log::error('Todo reopen failed', [
+                'reopen' => $reopen,
+                'error' => $e->getMessage(),
+            ]);
+
+            return new CommandResponse(
+                type: 'system',
+                shouldShowErrorToast: true,
+                message: "Failed to reopen todo: {$e->getMessage()}",
+            );
+        }
+    }
+
+    private function reopenByPosition(int $position): CommandResponse
+    {
+        // Get completed todos in the same order as displayed
+        $todos = Fragment::completedTodos()
+            ->orderByRaw("(state::jsonb->>'completed_at') DESC")
+            ->get();
+
+        if ($position < 1 || $position > $todos->count()) {
+            return new CommandResponse(
+                type: 'system',
+                shouldShowErrorToast: true,
+                message: "Invalid position {$position}. Available completed todos: 1-{$todos->count()}",
+            );
+        }
+
+        $todo = $todos->skip($position - 1)->first();
+        $this->markOpen($todo);
+
+        return new CommandResponse(
+            type: 'system',
+            shouldShowSuccessToast: true,
+            message: "🔄 Reopened todo #{$position}: ".$this->truncate($todo->message, 50),
+        );
+    }
+
+    private function reopenById(string $id): CommandResponse
+    {
+        $todo = Fragment::where('type', 'todo')
+            ->where('id', $id)
+            ->whereRaw("(state::jsonb->>'status') = 'complete'")
+            ->first();
+
+        if (!$todo) {
+            return new CommandResponse(
+                type: 'system',
+                shouldShowErrorToast: true,
+                message: "No completed todo found with ID: {$id}",
+            );
+        }
+
+        $this->markOpen($todo);
+
+        return new CommandResponse(
+            type: 'system',
+            shouldShowSuccessToast: true,
+            message: "🔄 Reopened todo: ".$this->truncate($todo->message, 50),
+        );
+    }
+
+    private function reopenByKeyword(string $keyword): CommandResponse
+    {
+        // Search for matching completed todo
+        $todo = Fragment::completedTodos()
+            ->where(function ($q) use ($keyword) {
+                $q->where('message', 'LIKE', "%{$keyword}%")
+                    ->orWhere('title', 'LIKE', "%{$keyword}%");
+            })
+            ->first();
+
+        if (! $todo) {
+            return new CommandResponse(
+                type: 'system',
+                shouldShowErrorToast: true,
+                message: "No completed todo found matching: {$keyword}",
+            );
+        }
+
+        $this->markOpen($todo);
+
+        return new CommandResponse(
+            type: 'system',
+            shouldShowSuccessToast: true,
+            message: '🔄 Reopened todo: '.$this->truncate($todo->message, 50),
+        );
+    }
+
+    private function handleDelete($delete): CommandResponse
+    {
+        try {
+            if (is_numeric($delete)) {
+                // Position-based delete
+                return $this->deleteByPosition((int) $delete);
+            } elseif (ctype_digit($delete)) {
+                // ID-based delete (all digits, could be large ID)
+                return $this->deleteById($delete);
+            } else {
+                // Keyword-based delete
+                return $this->deleteByKeyword($delete);
+            }
+        } catch (\Exception $e) {
+            Log::error('Todo delete failed', [
+                'delete' => $delete,
+                'error' => $e->getMessage(),
+            ]);
+
+            return new CommandResponse(
+                type: 'system',
+                shouldShowErrorToast: true,
+                message: "Failed to delete todo: {$e->getMessage()}",
+            );
+        }
+    }
+
+    private function deleteByPosition(int $position): CommandResponse
+    {
+        // Get all todos (open and completed) in display order
+        $openTodos = Fragment::openTodos()->latest()->get();
+        $completedTodos = Fragment::completedTodos()
+            ->orderByRaw("(state::jsonb->>'completed_at') DESC")
+            ->get();
+        
+        $allTodos = $openTodos->concat($completedTodos);
+
+        if ($position < 1 || $position > $allTodos->count()) {
+            return new CommandResponse(
+                type: 'system',
+                shouldShowErrorToast: true,
+                message: "Invalid position {$position}. Available todos: 1-{$allTodos->count()}",
+            );
+        }
+
+        $todo = $allTodos->skip($position - 1)->first();
+        $todoMessage = $this->truncate($todo->message, 50);
+        
+        $todo->delete();
+
+        return new CommandResponse(
+            type: 'system',
+            shouldShowSuccessToast: true,
+            message: "🗑️ Deleted todo #{$position}: {$todoMessage}",
+        );
+    }
+
+    private function deleteById(string $id): CommandResponse
+    {
+        $todo = Fragment::where('type', 'todo')
+            ->where('id', $id)
+            ->first();
+
+        if (!$todo) {
+            return new CommandResponse(
+                type: 'system',
+                shouldShowErrorToast: true,
+                message: "No todo found with ID: {$id}",
+            );
+        }
+
+        $todoMessage = $this->truncate($todo->message, 50);
+        $todo->delete();
+
+        return new CommandResponse(
+            type: 'system',
+            shouldShowSuccessToast: true,
+            message: "🗑️ Deleted todo: {$todoMessage}",
+        );
+    }
+
+    private function deleteByKeyword(string $keyword): CommandResponse
+    {
+        // Search for matching todo (open or completed)
+        $todo = Fragment::where('type', 'todo')
+            ->where(function ($q) use ($keyword) {
+                $q->where('message', 'LIKE', "%{$keyword}%")
+                    ->orWhere('title', 'LIKE', "%{$keyword}%");
+            })
+            ->first();
+
+        if (! $todo) {
+            return new CommandResponse(
+                type: 'system',
+                shouldShowErrorToast: true,
+                message: "No todo found matching: {$keyword}",
+            );
+        }
+
+        $todoMessage = $this->truncate($todo->message, 50);
+        $todo->delete();
+
+        return new CommandResponse(
+            type: 'system',
+            shouldShowSuccessToast: true,
+            message: "🗑️ Deleted todo: {$todoMessage}",
+        );
+    }
+
     private function markComplete(Fragment $todo): void
     {
         $state = $todo->state ?? [];
         $state['status'] = 'complete';
         $state['completed_at'] = now()->toISOString();
+
+        $todo->state = $state;
+        $todo->save();
+    }
+
+    private function markOpen(Fragment $todo): void
+    {
+        $state = $todo->state ?? [];
+        $state['status'] = 'open';
+        unset($state['completed_at']); // Remove completion timestamp
 
         $todo->state = $state;
         $todo->save();

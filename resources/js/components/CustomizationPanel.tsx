@@ -44,7 +44,7 @@ import {
   Plus,
 } from 'lucide-react'
 import { useLayoutStore } from '@/stores/useLayoutStore'
-import { getWidgetsByCategory, widgetMetadata } from '@/lib/widgetRegistry'
+import { getWidgetsByCategory, widgetMetadata, getAllWidgetIds } from '@/lib/widgetRegistry'
 
 interface CustomizationPanelProps {
   isOpen: boolean
@@ -190,37 +190,46 @@ export function CustomizationPanel({ isOpen, onClose }: CustomizationPanelProps)
                     <h4 className="text-sm font-medium text-muted-foreground mb-2 capitalize">
                       {category} Widgets
                     </h4>
-                    <div className="space-y-2">
-                      {categoryWidgets.map((widget) => {
-                        const config = preferences.widgets.find(w => w.id === widget.id)
-                        if (!config) return null
-                        
-                        return (
-                          <div
-                            key={widget.id}
-                            className="flex items-center justify-between p-3 border rounded-lg"
-                          >
-                            <div className="flex items-center gap-3">
-                              <GripVertical className="w-4 h-4 text-muted-foreground" />
-                              <div>
-                                <div className="font-medium">{widget.name}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {widget.description}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge variant={config.section === 'main' ? 'default' : 'secondary'}>
-                                {config.section}
-                              </Badge>
-                              <Switch
-                                checked={config.enabled}
-                                onCheckedChange={() => toggleWidget(widget.id)}
-                              />
-                            </div>
-                          </div>
-                        )
-                      })}
+                     <div className="space-y-2">
+                       {categoryWidgets.map((widget) => {
+                         const config = preferences.widgets.find(w => w.id === widget.id)
+                         // If no config exists, create a default one based on widget metadata
+                         const effectiveConfig = config || {
+                           id: widget.id,
+                           name: widget.name,
+                           component: widget.component,
+                           enabled: widget.defaultEnabled,
+                           position: 999, // Will be properly positioned when enabled
+                           section: 'main' as const,
+                           minimized: false,
+                         }
+                         
+                         return (
+                           <div
+                             key={widget.id}
+                             className="flex items-center justify-between p-3 border rounded-lg"
+                           >
+                             <div className="flex items-center gap-3">
+                               <GripVertical className="w-4 h-4 text-muted-foreground" />
+                               <div>
+                                 <div className="font-medium">{widget.name}</div>
+                                 <div className="text-sm text-muted-foreground">
+                                   {widget.description}
+                                 </div>
+                               </div>
+                             </div>
+                             <div className="flex items-center gap-2">
+                               <Badge variant={effectiveConfig.section === 'main' ? 'default' : 'secondary'}>
+                                 {effectiveConfig.section}
+                               </Badge>
+                               <Switch
+                                 checked={effectiveConfig.enabled}
+                                 onCheckedChange={() => toggleWidget(widget.id)}
+                               />
+                             </div>
+                           </div>
+                         )
+                       })}
                     </div>
                   </div>
                 ))}

@@ -32,8 +32,8 @@ class CommandRegistry
         // 'frag' => FragCommand::class, // Migrated to YAML (simplified)
         // 'search' => SearchCommand::class, // Migrated to YAML (unified)
         // 's' => SearchCommand::class, // alias for search
-        // 'todo' => TodoCommand::class, // Migrated to YAML (unified)
-        // 't' => TodoCommand::class, // alias for todo
+        'todo' => TodoCommand::class, // Re-enabled for list functionality  
+        't' => TodoCommand::class, // alias for todo
         // 'join' => JoinCommand::class, // Migrated to YAML
         // 'j' => JoinCommand::class, // alias for join - Migrated to YAML
         // 'channels' => ChannelsCommand::class, // Migrated to YAML

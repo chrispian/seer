@@ -81,11 +81,20 @@ const defaultWidgets: WidgetConfig[] = [
     minimized: false,
   },
   {
+    id: 'todos',
+    name: 'Recent Todos',
+    component: 'TodoWidget',
+    enabled: true,
+    position: 2,
+    section: 'main',
+    minimized: false,
+  },
+  {
     id: 'tool-calls',
     name: 'Tool Calls & Reasoning',
     component: 'ToolCallsWidget',
     enabled: true,
-    position: 2,
+    position: 3,
     section: 'main',
     minimized: false,
   },
@@ -94,7 +103,7 @@ const defaultWidgets: WidgetConfig[] = [
     name: 'Inbox',
     component: 'InboxWidget',
     enabled: false,
-    position: 3,
+    position: 4,
     section: 'main',
     minimized: false,
   },
@@ -103,7 +112,7 @@ const defaultWidgets: WidgetConfig[] = [
     name: 'Type System',
     component: 'TypeSystemWidget',
     enabled: false,
-    position: 4,
+    position: 5,
     section: 'main',
     minimized: false,
   },
@@ -112,7 +121,7 @@ const defaultWidgets: WidgetConfig[] = [
     name: 'Scheduler',
     component: 'SchedulerWidget',
     enabled: false,
-    position: 5,
+    position: 6,
     section: 'main',
     minimized: false,
   },
@@ -151,15 +160,35 @@ export const useLayoutStore = create<LayoutStore>()(
       
       // Widget management actions
       toggleWidget: (widgetId: string) => {
-        set((state) => ({
-          preferences: {
-            ...state.preferences,
-            widgets: state.preferences.widgets.map((widget) =>
-              widget.id === widgetId ? { ...widget, enabled: !widget.enabled } : widget
-            ),
-            lastModified: new Date().toISOString(),
-          },
-        }))
+        set((state) => {
+          const existingWidget = state.preferences.widgets.find(w => w.id === widgetId)
+          
+          if (existingWidget) {
+            // Widget exists, toggle its enabled state
+            return {
+              preferences: {
+                ...state.preferences,
+                widgets: state.preferences.widgets.map((widget) =>
+                  widget.id === widgetId ? { ...widget, enabled: !widget.enabled } : widget
+                ),
+                lastModified: new Date().toISOString(),
+              },
+            }
+          } else {
+            // Widget doesn't exist, add it from defaults
+            const defaultWidget = defaultWidgets.find(w => w.id === widgetId)
+            if (defaultWidget) {
+              return {
+                preferences: {
+                  ...state.preferences,
+                  widgets: [...state.preferences.widgets, { ...defaultWidget, enabled: true }],
+                  lastModified: new Date().toISOString(),
+                },
+              }
+            }
+            return state
+          }
+        })
       },
       
       reorderWidgets: (widgetIds: string[]) => {

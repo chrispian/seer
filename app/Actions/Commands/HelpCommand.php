@@ -103,6 +103,7 @@ MARKDOWN;
 - `/todo list search:client` – Search todos for "client"
 - `/todo complete:1` – Mark first todo complete
 - `/todo complete:"login bug"` – Mark matching todo complete
+- `/todos-ui` or `/todos` – Open todo management interface
 MARKDOWN;
     }
 
@@ -162,11 +163,13 @@ MARKDOWN;
 - `/inbox` – Open Inbox Management Interface for fragment review
 - `/types` – Open Type System Management to view type packs and validation
 - `/scheduler` – Open Scheduler Management for automation and scheduled commands
+- `/todos` – Open Todo Management Interface for task organization
 
 **System Aliases:**
 - `/pending`, `/review` – Same as `/inbox`
 - `/type-system`, `/typepacks` – Same as `/types`
 - `/schedules`, `/cron`, `/automation` – Same as `/scheduler`
+- `/todo-manager`, `/todo-list`, `/todos-ui` – Same as `/todos`
 MARKDOWN;
     }
 
