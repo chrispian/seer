@@ -241,10 +241,10 @@ Transform file-based delegation system into database-backed orchestration with m
 
 | Task ID | Description | Status | Estimated |
 |---------|-------------|--------|-----------|
-| **ORCH-01-01** | Database Schema Enhancement | `ready` | 2-3h |
-| **ORCH-01-02** | AgentProfile Model & Service | `ready` | 2-3h |
-| **ORCH-01-03** | Delegation Migration Script | `ready` | 3-4h |
-| **ORCH-01-04** | Basic CLI Commands | `ready` | 2-3h |
+| **ORCH-01-01** | Database Schema Enhancement | `done` | 2-3h |
+| **ORCH-01-02** | AgentProfile Model & Service | `done` | 2-3h |
+| **ORCH-01-03** | Delegation Migration Script | `done` | 3-4h |
+| **ORCH-01-04** | Basic CLI Commands | `done` | 2-3h |
 
 **📁 Location**: `delegation/sprint-62/` (complete documentation)
 
@@ -416,6 +416,11 @@ Complete visual dashboard with CRUD interfaces, Kanban board, backlog management
 /task-analyze ORCH-01-01-database-schema-enhancement
 /task-analyze ORCH-02-01-extend-tool-crate-orchestration
 /task-analyze UX-04-01-todo-management-modal
+
+# Orchestration CLI snapshots
+php artisan orchestration:agents --json --limit=5
+php artisan orchestration:sprints --limit=3
+php artisan orchestration:tasks --sprint=62 --limit=10
 
 # Create specialized agents
 /agent-create backend-engineer alice

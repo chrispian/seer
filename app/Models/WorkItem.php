@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class WorkItem extends Model
 {
@@ -21,5 +24,92 @@ class WorkItem extends Model
         'tags' => 'array',
         'state' => 'array',
         'metadata' => 'array',
+        'delegation_context' => 'array',
+        'delegation_history' => 'array',
+        'estimated_hours' => 'decimal:2',
+        'actual_hours' => 'decimal:2',
     ];
+
+    /**
+     * Get the parent work item
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(WorkItem::class, 'parent_id');
+    }
+
+    /**
+     * Get child work items
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(WorkItem::class, 'parent_id');
+    }
+
+    /**
+     * Get all task assignments for this work item
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(TaskAssignment::class);
+    }
+
+    /**
+     * Get the current active assignment
+     */
+    public function currentAssignment(): HasOne
+    {
+        return $this->hasOne(TaskAssignment::class)
+            ->whereIn('status', ['assigned', 'started'])
+            ->latest('assigned_at');
+    }
+
+    /**
+     * Get the assigned agent (when assignee_type is 'agent')
+     */
+    public function assignedAgent(): BelongsTo
+    {
+        return $this->belongsTo(AgentProfile::class, 'assignee_id');
+    }
+
+    /**
+     * Get the assigned user (when assignee_type is 'user')
+     */
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assignee_id')
+            ->where('assignee_type', 'user');
+    }
+
+    /**
+     * Scope for items assigned to agents
+     */
+    public function scopeAssignedToAgents($query)
+    {
+        return $query->where('assignee_type', 'agent');
+    }
+
+    /**
+     * Scope for items assigned to users
+     */
+    public function scopeAssignedToUsers($query)
+    {
+        return $query->where('assignee_type', 'user');
+    }
+
+    /**
+     * Scope by delegation status
+     */
+    public function scopeByDelegationStatus($query, string $status)
+    {
+        return $query->where('delegation_status', $status);
+    }
+
+    /**
+     * Scope for unassigned items
+     */
+    public function scopeUnassigned($query)
+    {
+        return $query->where('delegation_status', 'unassigned');
+    }
 }

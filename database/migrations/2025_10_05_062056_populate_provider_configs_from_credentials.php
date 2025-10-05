@@ -3,6 +3,7 @@
 use App\Models\Provider;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -11,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (! Schema::hasTable('providers')) {
+            return;
+        }
+
         // Get all unique providers from existing credentials
         $providers = DB::table('a_i_credentials')
             ->select('provider')
@@ -62,6 +67,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (! Schema::hasTable('provider_configs')) {
+            return;
+        }
+
         // Remove provider_config_id from credentials
         DB::table('a_i_credentials')->update(['provider_config_id' => null]);
 
