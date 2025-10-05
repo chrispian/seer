@@ -38,7 +38,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // Register internal tool routes
-        Route::middleware('api')
+        Route::middleware(['api', 'tool.telemetry'])
             ->prefix('api/internal')
             ->group(base_path('routes/internal.php'));
     }

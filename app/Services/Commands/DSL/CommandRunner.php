@@ -4,6 +4,9 @@ namespace App\Services\Commands\DSL;
 
 use App\Services\Commands\CommandPackLoader;
 use App\Services\Commands\DSL\Steps\StepFactory;
+use App\Services\Telemetry\CommandTelemetry;
+use App\Decorators\StepTelemetryDecorator;
+use App\Decorators\TemplateEngineTelemetryDecorator;
 
 class CommandRunner
 {
@@ -11,7 +14,12 @@ class CommandRunner
         protected CommandPackLoader $loader,
         protected TemplateEngine $templateEngine,
         protected StepFactory $stepFactory
-    ) {}
+    ) {
+        // Wrap template engine with telemetry if enabled
+        if (config('command-telemetry.enabled', true)) {
+            $this->templateEngine = TemplateEngineTelemetryDecorator::wrap($this->templateEngine);
+        }
+    }
 
     /**
      * Execute a command by slug with given context
@@ -109,6 +117,11 @@ class CommandRunner
         try {
             // Create step handler
             $step = $this->stepFactory->create($stepType);
+            
+            // Wrap step with telemetry if enabled
+            if (config('command-telemetry.enabled', true)) {
+                $step = StepTelemetryDecorator::wrap($step);
+            }
 
             // Render step configuration with context
             $renderedConfig = $this->renderStepConfig($stepConfig, $context);

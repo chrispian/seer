@@ -7,4 +7,6 @@ return [
     App\Providers\HorizonServiceProvider::class,
     App\Providers\FragmentsPipelineEventServiceProvider::class,
     App\Providers\ToolServiceProvider::class,
+    App\Providers\ToolTelemetryServiceProvider::class,
+    App\Providers\TelemetryServiceProvider::class,
 ];

@@ -135,6 +135,38 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'fragment-processing-telemetry' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/fragment-processing-telemetry.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        'command-telemetry' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/command-telemetry.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        'tool-telemetry' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/tool-telemetry.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        'telemetry-unified' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/telemetry-unified.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

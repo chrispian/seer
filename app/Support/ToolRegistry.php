@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Contracts\ToolContract;
+use App\Decorators\ToolTelemetryDecorator;
 use Illuminate\Support\Facades\Log;
 
 class ToolRegistry
@@ -12,6 +13,11 @@ class ToolRegistry
 
     public function register(ToolContract $tool): void
     {
+        // Automatically wrap tools with telemetry if enabled
+        if (config('tool-telemetry.enabled', true)) {
+            $tool = ToolTelemetryDecorator::wrap($tool);
+        }
+        
         $this->tools[$tool->name()] = $tool;
     }
 

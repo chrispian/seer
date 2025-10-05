@@ -3,6 +3,7 @@
 namespace App\Services\Commands\DSL\Steps;
 
 use App\Services\Commands\DSL\TemplateEngine;
+use App\Services\Telemetry\CommandTelemetry;
 
 class ConditionStep extends Step
 {
@@ -37,6 +38,8 @@ class ConditionStep extends Step
 
         // Evaluate condition - if it's a template, use TemplateEngine's evaluateCondition
         // If it's already a rendered value, evaluate it directly
+        $conditionStartTime = microtime(true);
+        
         if (str_contains($condition, '{{') && str_contains($condition, '}}')) {
             // This is a template condition, extract the expression and evaluate it
             if (preg_match('/\{\{\s*(.+?)\s*\}\}/', $condition, $matches)) {
@@ -49,6 +52,8 @@ class ConditionStep extends Step
             // This is a direct condition string
             $conditionResult = $this->evaluateCondition($condition, $context);
         }
+        
+        $conditionDuration = (microtime(true) - $conditionStartTime) * 1000;
 
         $result = [
             'condition' => $condition,
@@ -56,6 +61,16 @@ class ConditionStep extends Step
             'executed_branch' => $conditionResult ? 'then' : 'else',
             'steps_executed' => [],
         ];
+        
+        // Log condition evaluation telemetry
+        if (config('command-telemetry.enabled', true)) {
+            CommandTelemetry::logConditionEvaluation(
+                $condition,
+                $conditionResult,
+                $conditionDuration,
+                $conditionResult ? 'then' : 'else'
+            );
+        }
 
         // Execute appropriate branch
         $stepsToExecute = $conditionResult ? $thenSteps : $elseSteps;

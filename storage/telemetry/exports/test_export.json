@@ -1,0 +1,586 @@
+{
+    "events": [
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d294301",
+            "event_type": "fragment",
+            "event_name": "processing_complete",
+            "component": "enrich_ai",
+            "operation": "processing_complete",
+            "level": "info",
+            "message": "processing_complete in enrich_ai",
+            "metadata": {
+                "fragment_id": "frag_14",
+                "pipeline_name": "full_processing",
+                "step_name": "enrich_ai",
+                "step_type": "enrich_ai",
+                "fragment_type": "note",
+                "pipeline_stage": 1,
+                "result": {
+                    "status": "processed",
+                    "entities_extracted": 2,
+                    "ai_score": 0.78
+                }
+            },
+            "context": {
+                "environment": "local",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "pipeline_run_id": "run_0d294301",
+                "batch_id": "batch_5"
+            },
+            "performance": {
+                "duration_ms": 743,
+                "memory_usage": 33554432,
+                "cpu_usage": 84
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d293c9c",
+            "event_type": "tool",
+            "event_name": "invocation_complete",
+            "component": "db.query",
+            "operation": "execute",
+            "level": "info",
+            "message": "Completed db.query",
+            "metadata": {
+                "tool_name": "db.query",
+                "tool_type": "db",
+                "parameters": {
+                    "query": "test query 13",
+                    "limit": 35
+                },
+                "result": {
+                    "status": "success",
+                    "count": 28
+                },
+                "invocation_id": null
+            },
+            "context": {
+                "environment": "test",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "user_id": "test_user_3",
+                "request_id": "req_68e1d0d293cc1"
+            },
+            "performance": {
+                "duration_ms": 1175,
+                "memory_usage": 132120576,
+                "cpu_usage": 71
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d292e70",
+            "event_type": "chat",
+            "event_name": "response_complete",
+            "component": "chat_system",
+            "operation": "response_complete",
+            "level": "info",
+            "message": "response_complete in unknown",
+            "metadata": {
+                "session_id": "session_2",
+                "message_id": "msg_12",
+                "user_id": "user_3",
+                "ai_provider": "anthropic",
+                "model_name": "claude-3",
+                "tokens_used": 1789,
+                "response_quality": 0.75
+            },
+            "context": {
+                "environment": "local",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "conversation_length": 17,
+                "message_type": "command"
+            },
+            "performance": {
+                "response_time_ms": 1039,
+                "memory_usage": 62914560,
+                "api_latency_ms": 674
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d291d0b",
+            "event_type": "tool",
+            "event_name": "invocation_complete",
+            "component": "memory.search",
+            "operation": "execute",
+            "level": "info",
+            "message": "Completed memory.search",
+            "metadata": {
+                "tool_name": "memory.search",
+                "tool_type": "memory",
+                "parameters": {
+                    "query": "test query 11",
+                    "limit": 73
+                },
+                "result": {
+                    "status": "success",
+                    "count": 37
+                },
+                "invocation_id": null
+            },
+            "context": {
+                "environment": "test",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "user_id": "test_user_1",
+                "request_id": "req_68e1d0d291d43"
+            },
+            "performance": {
+                "duration_ms": 1265,
+                "memory_usage": 128974848,
+                "cpu_usage": 31
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d2910e2",
+            "event_type": "chat",
+            "event_name": "response_complete",
+            "component": "chat_system",
+            "operation": "response_complete",
+            "level": "info",
+            "message": "response_complete in unknown",
+            "metadata": {
+                "session_id": "session_5",
+                "message_id": "msg_10",
+                "user_id": "user_1",
+                "ai_provider": "azure",
+                "model_name": "claude-3",
+                "tokens_used": 963,
+                "response_quality": 0.84
+            },
+            "context": {
+                "environment": "local",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "conversation_length": 14,
+                "message_type": "clarification"
+            },
+            "performance": {
+                "response_time_ms": 3651,
+                "memory_usage": 83886080,
+                "api_latency_ms": 552
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d290042",
+            "event_type": "tool",
+            "event_name": "invocation_error",
+            "component": "file.read",
+            "operation": "execute_with_error",
+            "level": "error",
+            "message": "Error in file.read: Simulated tool execution error",
+            "metadata": {
+                "tool_name": "file.read",
+                "tool_type": "file",
+                "parameters": {
+                    "query": "test query 9",
+                    "limit": 97
+                },
+                "result": null,
+                "invocation_id": null
+            },
+            "context": {
+                "environment": "test",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "user_id": "test_user_1",
+                "request_id": "req_68e1d0d290080"
+            },
+            "performance": {
+                "duration_ms": 7207,
+                "memory_usage": 146800640,
+                "cpu_usage": 31
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d28f78c",
+            "event_type": "tool",
+            "event_name": "invocation_complete",
+            "component": "db.query",
+            "operation": "execute",
+            "level": "info",
+            "message": "Completed db.query",
+            "metadata": {
+                "tool_name": "db.query",
+                "tool_type": "db",
+                "parameters": {
+                    "query": "test query 8",
+                    "limit": 69
+                },
+                "result": {
+                    "status": "success",
+                    "count": 17
+                },
+                "invocation_id": null
+            },
+            "context": {
+                "environment": "test",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "user_id": "test_user_4",
+                "request_id": "req_68e1d0d28f7e1"
+            },
+            "performance": {
+                "duration_ms": 1715,
+                "memory_usage": 99614720,
+                "cpu_usage": 62
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d28de53",
+            "event_type": "tool",
+            "event_name": "invocation_complete",
+            "component": "file.read",
+            "operation": "execute",
+            "level": "info",
+            "message": "Completed file.read",
+            "metadata": {
+                "tool_name": "file.read",
+                "tool_type": "file",
+                "parameters": {
+                    "query": "test query 7",
+                    "limit": 22
+                },
+                "result": {
+                    "status": "success",
+                    "count": 25
+                },
+                "invocation_id": null
+            },
+            "context": {
+                "environment": "test",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "user_id": "test_user_2",
+                "request_id": "req_68e1d0d28de98"
+            },
+            "performance": {
+                "duration_ms": 1268,
+                "memory_usage": 29360128,
+                "cpu_usage": 95
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d28d388",
+            "event_type": "fragment",
+            "event_name": "processing_complete",
+            "component": "parse",
+            "operation": "processing_complete",
+            "level": "info",
+            "message": "processing_complete in parse",
+            "metadata": {
+                "fragment_id": "frag_6",
+                "pipeline_name": "full_processing",
+                "step_name": "parse",
+                "step_type": "parse",
+                "fragment_type": "document",
+                "pipeline_stage": 3,
+                "result": {
+                    "status": "processed",
+                    "entities_extracted": 10,
+                    "ai_score": 0.8
+                }
+            },
+            "context": {
+                "environment": "local",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "pipeline_run_id": "run_0d28d388",
+                "batch_id": "batch_9"
+            },
+            "performance": {
+                "duration_ms": 930,
+                "memory_usage": 162529280,
+                "cpu_usage": 71
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d28cd9e",
+            "event_type": "tool",
+            "event_name": "invocation_complete",
+            "component": "db.query",
+            "operation": "execute",
+            "level": "info",
+            "message": "Completed db.query",
+            "metadata": {
+                "tool_name": "db.query",
+                "tool_type": "db",
+                "parameters": {
+                    "query": "test query 5",
+                    "limit": 24
+                },
+                "result": {
+                    "status": "success",
+                    "count": 38
+                },
+                "invocation_id": null
+            },
+            "context": {
+                "environment": "test",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "user_id": "test_user_1",
+                "request_id": "req_68e1d0d28cdd0"
+            },
+            "performance": {
+                "duration_ms": 95,
+                "memory_usage": 70254592,
+                "cpu_usage": 40
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d28c5e2",
+            "event_type": "command",
+            "event_name": "execution_complete",
+            "component": "sync.data",
+            "operation": "transform",
+            "level": "info",
+            "message": "Completed sync.data",
+            "metadata": {
+                "command_name": "sync.data",
+                "command_type": "dsl",
+                "step_name": "transform",
+                "step_type": "transform",
+                "template_data": {
+                    "variables": {
+                        "count": 4,
+                        "timestamp": "2025-10-05T01:18:42.574958Z"
+                    }
+                },
+                "arguments": {
+                    "input_file": "test_data_4.json",
+                    "options": {
+                        "verbose": true
+                    }
+                },
+                "result": {
+                    "processed": 41,
+                    "skipped": 0
+                }
+            },
+            "context": {
+                "environment": "local",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "command_chain_id": "chain_0d28c5e2",
+                "user_id": "test_user_1"
+            },
+            "performance": {
+                "duration_ms": 760,
+                "memory_usage": 99614720,
+                "cpu_usage": 21
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d28b683",
+            "event_type": "chat",
+            "event_name": "response_complete",
+            "component": "chat_system",
+            "operation": "response_complete",
+            "level": "info",
+            "message": "response_complete in unknown",
+            "metadata": {
+                "session_id": "session_2",
+                "message_id": "msg_3",
+                "user_id": "user_1",
+                "ai_provider": "azure",
+                "model_name": "claude-3",
+                "tokens_used": 1822,
+                "response_quality": 0.92
+            },
+            "context": {
+                "environment": "local",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "conversation_length": 12,
+                "message_type": "clarification"
+            },
+            "performance": {
+                "response_time_ms": 1868,
+                "memory_usage": 91226112,
+                "api_latency_ms": 1505
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d289587",
+            "event_type": "chat",
+            "event_name": "response_complete",
+            "component": "chat_system",
+            "operation": "response_complete",
+            "level": "info",
+            "message": "response_complete in unknown",
+            "metadata": {
+                "session_id": "session_17",
+                "message_id": "msg_2",
+                "user_id": "user_5",
+                "ai_provider": "openai",
+                "model_name": "gpt-4",
+                "tokens_used": 656,
+                "response_quality": 0.72
+            },
+            "context": {
+                "environment": "local",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "conversation_length": 8,
+                "message_type": "clarification"
+            },
+            "performance": {
+                "response_time_ms": 4073,
+                "memory_usage": 68157440,
+                "api_latency_ms": 572
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d288ce1",
+            "event_type": "command",
+            "event_name": "execution_complete",
+            "component": "sync.data",
+            "operation": "transform",
+            "level": "info",
+            "message": "Completed sync.data",
+            "metadata": {
+                "command_name": "sync.data",
+                "command_type": "dsl",
+                "step_name": "transform",
+                "step_type": "transform",
+                "template_data": {
+                    "variables": {
+                        "count": 1,
+                        "timestamp": "2025-10-05T01:50:42.560374Z"
+                    }
+                },
+                "arguments": {
+                    "input_file": "test_data_1.json",
+                    "options": {
+                        "verbose": true
+                    }
+                },
+                "result": {
+                    "processed": 68,
+                    "skipped": 3
+                }
+            },
+            "context": {
+                "environment": "local",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "command_chain_id": "chain_0d288ce1",
+                "user_id": "test_user_3"
+            },
+            "performance": {
+                "duration_ms": 832,
+                "memory_usage": 268435456,
+                "cpu_usage": 45
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:42.000000Z",
+            "correlation_id": "test_68e1d0d281121",
+            "event_type": "tool",
+            "event_name": "invocation_complete",
+            "component": "export.generate",
+            "operation": "execute",
+            "level": "info",
+            "message": "Completed export.generate",
+            "metadata": {
+                "tool_name": "export.generate",
+                "tool_type": "export",
+                "parameters": {
+                    "query": "test query 0",
+                    "limit": 89
+                },
+                "result": {
+                    "status": "success",
+                    "count": 34
+                },
+                "invocation_id": null
+            },
+            "context": {
+                "environment": "test",
+                "app_version": "1.0.0",
+                "server_name": "Chrispians-MacBook-Pro.local",
+                "php_version": "8.3.25",
+                "memory_limit": "512M",
+                "timestamp": "2025-10-05T01:58:42.517539Z",
+                "user_id": "test_user_5",
+                "request_id": "req_68e1d0d28114b"
+            },
+            "performance": {
+                "duration_ms": 556,
+                "memory_usage": 83886080,
+                "cpu_usage": 94
+            }
+        },
+        {
+            "timestamp": "2025-10-05T01:58:39.000000Z",
+            "correlation_id": "test_debug_2",
+            "event_type": "test",
+            "event_name": "debug_test_2",
+            "component": "debug",
+            "operation": null,
+            "level": "info",
+            "message": "Debug test event 2",
+            "metadata": [],
+            "context": [],
+            "performance": []
+        }
+    ]
+}

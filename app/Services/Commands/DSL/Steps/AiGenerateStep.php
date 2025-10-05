@@ -3,6 +3,7 @@
 namespace App\Services\Commands\DSL\Steps;
 
 use App\Services\AI\AIProviderManager;
+use App\Services\Telemetry\CommandTelemetry;
 
 class AiGenerateStep extends Step
 {
@@ -53,6 +54,17 @@ class AiGenerateStep extends Step
                 ]);
 
                 $duration = round((microtime(true) - $startTime) * 1000, 2);
+                
+                // Log AI generation telemetry
+                if (config('command-telemetry.enabled', true)) {
+                    CommandTelemetry::logAiGeneration(strlen($prompt), $duration, true, [
+                        'max_tokens' => $maxTokens,
+                        'cache_enabled' => $cacheEnabled,
+                        'response_length' => strlen($result),
+                        'expect_type' => $expect,
+                    ]);
+                }
+                
                 \Log::info('AI Generate Step Performance', [
                     'duration_ms' => $duration,
                     'tokens' => $maxTokens,
@@ -68,6 +80,17 @@ class AiGenerateStep extends Step
 
             } catch (\Exception $e) {
                 $duration = round((microtime(true) - $startTime) * 1000, 2);
+                
+                // Log AI generation failure telemetry
+                if (config('command-telemetry.enabled', true)) {
+                    CommandTelemetry::logAiGeneration(strlen($prompt), $duration, false, [
+                        'max_tokens' => $maxTokens,
+                        'cache_enabled' => $cacheEnabled,
+                        'error' => $e->getMessage(),
+                        'expect_type' => $expect,
+                    ]);
+                }
+                
                 \Log::error('AI Generate Step Failed', [
                     'duration_ms' => $duration,
                     'error' => $e->getMessage(),
