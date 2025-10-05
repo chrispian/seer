@@ -160,15 +160,35 @@ export const useLayoutStore = create<LayoutStore>()(
       
       // Widget management actions
       toggleWidget: (widgetId: string) => {
-        set((state) => ({
-          preferences: {
-            ...state.preferences,
-            widgets: state.preferences.widgets.map((widget) =>
-              widget.id === widgetId ? { ...widget, enabled: !widget.enabled } : widget
-            ),
-            lastModified: new Date().toISOString(),
-          },
-        }))
+        set((state) => {
+          const existingWidget = state.preferences.widgets.find(w => w.id === widgetId)
+          
+          if (existingWidget) {
+            // Widget exists, toggle its enabled state
+            return {
+              preferences: {
+                ...state.preferences,
+                widgets: state.preferences.widgets.map((widget) =>
+                  widget.id === widgetId ? { ...widget, enabled: !widget.enabled } : widget
+                ),
+                lastModified: new Date().toISOString(),
+              },
+            }
+          } else {
+            // Widget doesn't exist, add it from defaults
+            const defaultWidget = defaultWidgets.find(w => w.id === widgetId)
+            if (defaultWidget) {
+              return {
+                preferences: {
+                  ...state.preferences,
+                  widgets: [...state.preferences.widgets, { ...defaultWidget, enabled: true }],
+                  lastModified: new Date().toISOString(),
+                },
+              }
+            }
+            return state
+          }
+        })
       },
       
       reorderWidgets: (widgetIds: string[]) => {
