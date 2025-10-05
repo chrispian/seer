@@ -2,6 +2,7 @@
 
 use App\Jobs\EmbedFragment;
 use App\Models\Fragment;
+use App\Contracts\EmbeddingStoreInterface;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 
@@ -17,6 +18,9 @@ test('job skips when embeddings disabled', function () {
     $mockEmbeddings = Mockery::mock(\App\Services\AI\Embeddings::class);
     $mockEmbeddings->shouldNotReceive('embed');
 
+    $mockStore = Mockery::mock(EmbeddingStoreInterface::class);
+    $mockStore->shouldNotReceive('store');
+
     $job = new EmbedFragment(
         fragmentId: 1,
         provider: 'openai',
@@ -25,7 +29,7 @@ test('job skips when embeddings disabled', function () {
     );
 
     // Act
-    $job->handle($mockEmbeddings);
+    $job->handle($mockEmbeddings, $mockStore);
 })->uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 test('job skips when fragment not found', function () {
@@ -40,6 +44,9 @@ test('job skips when fragment not found', function () {
     $mockEmbeddings = Mockery::mock(\App\Services\AI\Embeddings::class);
     $mockEmbeddings->shouldNotReceive('embed');
 
+    $mockStore = Mockery::mock(EmbeddingStoreInterface::class);
+    $mockStore->shouldNotReceive('store');
+
     $job = new EmbedFragment(
         fragmentId: 999,
         provider: 'openai',
@@ -48,7 +55,7 @@ test('job skips when fragment not found', function () {
     );
 
     // Act
-    $job->handle($mockEmbeddings);
+    $job->handle($mockEmbeddings, $mockStore);
 })->uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 test('job skips when fragment has empty message', function () {
@@ -68,6 +75,9 @@ test('job skips when fragment has empty message', function () {
     $mockEmbeddings = Mockery::mock(\App\Services\AI\Embeddings::class);
     $mockEmbeddings->shouldNotReceive('embed');
 
+    $mockStore = Mockery::mock(EmbeddingStoreInterface::class);
+    $mockStore->shouldNotReceive('store');
+
     $job = new EmbedFragment(
         fragmentId: $fragment->id,
         provider: 'openai',
@@ -76,7 +86,7 @@ test('job skips when fragment has empty message', function () {
     );
 
     // Act
-    $job->handle($mockEmbeddings);
+    $job->handle($mockEmbeddings, $mockStore);
 })->uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 test('job skips when using SQLite database', function () {
@@ -92,13 +102,24 @@ test('job skips when using SQLite database', function () {
     Log::partialMock()
         ->shouldReceive('warning')
         ->once()
-        ->with('EmbedFragment: pgvector extension not available, skipping', [
+        ->with('EmbedFragment: vector extension not available, skipping', [
             'fragment_id' => $fragment->id,
-            'database' => 'sqlite',
+            'driver' => 'sqlite',
+            'extension' => 'sqlite-vec',
+            'available' => false,
         ]);
 
     $mockEmbeddings = Mockery::mock(\App\Services\AI\Embeddings::class);
     $mockEmbeddings->shouldNotReceive('embed');
+
+    $mockStore = Mockery::mock(EmbeddingStoreInterface::class);
+    $mockStore->shouldReceive('isVectorSupportAvailable')->andReturn(false);
+    $mockStore->shouldReceive('getDriverInfo')->andReturn([
+        'driver' => 'sqlite',
+        'extension' => 'sqlite-vec',
+        'available' => false,
+    ]);
+    $mockStore->shouldNotReceive('store');
 
     $job = new EmbedFragment(
         fragmentId: $fragment->id,
@@ -108,5 +129,5 @@ test('job skips when using SQLite database', function () {
     );
 
     // Act
-    $job->handle($mockEmbeddings);
+    $job->handle($mockEmbeddings, $mockStore);
 })->uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);

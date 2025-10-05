@@ -47,6 +47,6 @@ class ToolTelemetryServiceProvider extends ServiceProvider
         $schedule->call(function () {
             $monitor = app(ToolHealthMonitor::class);
             $monitor->checkAllTools();
-        })->everyMinutes($interval)->name('tool-health-check');
+        })->everyMinute()->name('tool-health-check');
     }
 }

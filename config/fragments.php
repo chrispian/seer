@@ -4,9 +4,21 @@
 return [
     'embeddings' => [
         'enabled' => env('EMBEDDINGS_ENABLED', false),
+        'driver' => env('EMBEDDINGS_DRIVER', 'auto'), // auto, sqlite, postgresql
         'provider' => env('EMBEDDINGS_PROVIDER', 'openai'),
         'model' => env('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small'),
         'version' => env('EMBEDDINGS_VERSION', '1'),
+        
+        // Driver-specific configuration
+        'drivers' => [
+            'sqlite' => [
+                'extension' => env('SQLITE_VECTOR_EXTENSION', 'sqlite-vec'),
+                'extension_path' => env('SQLITE_VECTOR_EXTENSION_PATH', null),
+            ],
+            'postgresql' => [
+                'extension_check' => env('PGVECTOR_EXTENSION_CHECK', true),
+            ],
+        ],
     ],
 
     'models' => [

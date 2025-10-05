@@ -9,4 +9,5 @@ return [
     App\Providers\ToolServiceProvider::class,
     App\Providers\ToolTelemetryServiceProvider::class,
     App\Providers\TelemetryServiceProvider::class,
+    App\Providers\EmbeddingStoreServiceProvider::class,
 ];
