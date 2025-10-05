@@ -1,29 +1,32 @@
 # Demo Seeder Pack Checklist
 
 ## Setup
-- [ ] Confirm prerequisite seeders (DefaultVaultProjectSeeder, TypeSeeder, etc.)
+- [ ] Confirm prerequisite seeders (DefaultVaultProjectSeeder, TypeSeeder, DemoRoutingDataSeeder)
 - [ ] Document sample data requirements and volume targets
-- [ ] Draft ER diagram notes for seeded relationships
+- [ ] Map entity relationships (users, vaults/projects, fragments, todos, contacts, chats/messages)
+- [ ] Identify factories/helpers to extend for chronological data
 
 ## Seeder Design
-- [ ] Define master `DemoDataSeeder` orchestration flow
-- [ ] Plan per-entity generators (users, vaults, projects, contacts, chats/messages, todos)
-- [ ] Decide on factories vs custom builders for state-heavy records
-- [ ] Outline chronological batching logic for 3-month spread
+- [ ] Define master `DemoDataSeeder` orchestration flow with sub-seeders
+- [ ] Plan per-entity generators (users, vaults/projects, fragments, contacts, chats/messages, todos)
+- [ ] Design chronological batching utilities (daily spread over ~90 days)
+- [ ] Decide cleanup/idempotency approach (scoped truncation or unique keys)
+- [ ] Determine configuration/command integration strategy
 
 ## Implementation
-- [ ] Implement user creation with default passwords/roles
-- [ ] Seed vaults/projects (2 each) with consistent ownership
-- [ ] Generate contacts (25) with diverse metadata
-- [ ] Create chats (10) with ~5 messages each, distributed timestamps
-- [ ] Seed todos (~100) linked to fragments/projects/tags
-- [ ] Ensure messages and todos honor model casts and JSON schema
-- [ ] Add safeguards for repeat execution (delete/truncate or uniqueness checks)
+- [ ] Implement user seeding with deterministic login credentials
+- [ ] Seed vaults/projects (>=2 each) with appropriate metadata/default flags
+- [ ] Generate fragments to back todos and contacts, ensuring schema compliance
+- [ ] Create contacts (25) with diverse organizations/emails/phones
+- [ ] Create chats (~10) each with ~5 messages, timestamps, provider metadata
+- [ ] Seed todos (~100) across vaults/projects with varied statuses, priorities, due dates
+- [ ] Ensure fragments/todos include tags and state arrays
+- [ ] Add rerun safeguards (transaction, purge of existing demo dataset)
 
-## Integration & Testing
-- [ ] Register seeder within seeder pack/Artisan command
-- [ ] Execute seeder and verify counts per entity
-- [ ] Spot-check chronological distribution with queries
-- [ ] Validate relationships (foreign keys, fragment links, metadata)
-- [ ] Document run instructions and SQL export process
-- [ ] Prepare follow-up task for SQL snapshot creation
+## Validation & Documentation
+- [ ] Execute seeder and confirm counts per entity
+- [ ] Spot-check chronological distribution and relationships via queries
+- [ ] Record validation notes and sample queries
+- [ ] Document run instructions (`php artisan db:seed --class=DemoDataSeeder`)
+- [ ] Outline SQL export procedure for snapshot creation
+- [ ] Capture follow-up tasks for additional data types if needed

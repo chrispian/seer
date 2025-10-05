@@ -111,7 +111,10 @@ class TelemetryServiceProvider extends ServiceProvider
         $adapter = $this->app->make(TelemetryAdapter::class);
 
         // Listen for log events and capture telemetry data
-        $this->app['log']->listen(function ($level, $message, $context) use ($adapter) {
+        $this->app['log']->listen(function ($event) use ($adapter) {
+            $level = $event->level ?? 'info';
+            $message = $event->message ?? '';
+            $context = $event->context ?? [];
             // Only capture telemetry from our telemetry channels
             if (isset($context['channel']) && $this->isTelemetryChannel($context['channel'])) {
                 $this->captureTelemetryFromLog($adapter, $level, $message, $context);

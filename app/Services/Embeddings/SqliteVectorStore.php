@@ -3,36 +3,300 @@
 namespace App\Services\Embeddings;
 
 use App\Contracts\EmbeddingStoreInterface;
-use RuntimeException;
+use App\DTOs\VectorSearchResult;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use PDO;
+use PDOException;
 
 class SqliteVectorStore implements EmbeddingStoreInterface
 {
-    public function store(int $fragmentId, string $provider, string $model, int $dimensions, array $vector, string $contentHash): void
+    protected ?PDO $pdo = null;
+    protected bool $extensionLoaded = false;
+    protected array $driverInfo = [];
+
+    public function __construct()
     {
-        throw new RuntimeException('SQLite vector store implementation pending - VECTOR-002');
+        $this->initializeExtension();
     }
 
-    public function exists(int $fragmentId, string $provider, string $model, string $contentHash): bool
+    protected function initializeExtension(): void
     {
-        throw new RuntimeException('SQLite vector store implementation pending - VECTOR-002');
+        $extensionName = config('fragments.embeddings.drivers.sqlite.extension', 'sqlite-vec');
+        
+        try {
+            $this->pdo = DB::connection()->getPdo();
+            
+            // Check if we're actually on SQLite
+            if (DB::connection()->getDriverName() !== 'sqlite') {
+                throw new PDOException('Not using SQLite connection');
+            }
+            
+            // Try to load extension if PDO supports it and extension loading is enabled
+            if (method_exists($this->pdo, 'loadExtension')) {
+                $this->loadExtensionIfAvailable($extensionName);
+            } else {
+                // Try to test if extension is already available (pre-loaded)
+                $this->testExistingExtension();
+            }
+            
+        } catch (PDOException $e) {
+            Log::debug('SQLite vector extension initialization failed', [
+                'error' => $e->getMessage(),
+                'extension' => $extensionName,
+            ]);
+            $this->extensionLoaded = false;
+        }
+        
+        $this->driverInfo = [
+            'driver' => 'sqlite',
+            'extension' => $extensionName,
+            'available' => $this->extensionLoaded,
+            'version' => $this->extensionLoaded ? $this->getExtensionVersion() : null,
+        ];
     }
 
-    public function search(array $queryVector, string $provider, int $limit = 20, float $threshold = 0.0): array
+    protected function loadExtensionIfAvailable(string $extensionName): void
     {
-        throw new RuntimeException('SQLite vector store implementation pending - VECTOR-002');
+        $extensionPath = config('fragments.embeddings.drivers.sqlite.extension_path');
+        
+        if ($extensionPath) {
+            $this->pdo->loadExtension($extensionPath);
+        } else {
+            // Try common extension names/paths
+            $this->tryLoadExtension($extensionName);
+        }
+        
+        // Verify extension loaded by testing a function
+        $version = $this->pdo->query("SELECT vec_version()")->fetchColumn();
+        $this->extensionLoaded = true;
+        
+        Log::info('SQLite vector extension loaded successfully', [
+            'extension' => $extensionName,
+            'version' => $version,
+        ]);
+    }
+
+    protected function testExistingExtension(): void
+    {
+        try {
+            // Test if extension functions are available (pre-loaded or built-in)
+            $version = $this->pdo->query("SELECT vec_version()")->fetchColumn();
+            $this->extensionLoaded = true;
+            
+            Log::info('SQLite vector extension already available', [
+                'version' => $version,
+            ]);
+        } catch (PDOException $e) {
+            // Extension not available
+            $this->extensionLoaded = false;
+            Log::debug('SQLite vector extension not available', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    protected function tryLoadExtension(string $extensionName): void
+    {
+        $attempts = [
+            $extensionName,
+            "lib{$extensionName}",
+            "{$extensionName}.so",
+            "lib{$extensionName}.so",
+            "{$extensionName}.dll",
+            "{$extensionName}.dylib",
+        ];
+        
+        foreach ($attempts as $attempt) {
+            try {
+                $this->pdo->loadExtension($attempt);
+                return; // Success
+            } catch (PDOException $e) {
+                // Try next variant
+                continue;
+            }
+        }
+        
+        throw new PDOException("Could not load extension with any attempted name");
+    }
+
+    protected function getExtensionVersion(): ?string
+    {
+        try {
+            return $this->pdo->query("SELECT vec_version()")->fetchColumn();
+        } catch (PDOException $e) {
+            return null;
+        }
     }
 
     public function isVectorSupportAvailable(): bool
     {
-        return false; // Will be implemented in VECTOR-002
+        return $this->extensionLoaded;
     }
 
     public function getDriverInfo(): array
     {
-        return [
-            'driver' => 'sqlite',
-            'extension' => 'sqlite-vec',
-            'available' => $this->isVectorSupportAvailable(),
+        return $this->driverInfo;
+    }
+
+    // Vector data conversion methods
+    protected function vectorToBlob(array $vector): string
+    {
+        // Convert PHP array to binary format expected by sqlite-vec
+        // Using float32 little-endian format
+        return pack('f*', ...$vector);
+    }
+
+    protected function blobToVector(string $blob): array
+    {
+        $unpacked = unpack('f*', $blob);
+        return array_values($unpacked);
+    }
+
+    public function store(int $fragmentId, string $provider, string $model, int $dimensions, array $vector, string $contentHash): void
+    {
+        if (!$this->isVectorSupportAvailable()) {
+            Log::warning('SQLite vector store: extension not available, skipping storage', [
+                'fragment_id' => $fragmentId,
+                'provider' => $provider,
+            ]);
+            return;
+        }
+
+        try {
+            $vectorBlob = $this->vectorToBlob($vector);
+            
+            // SQLite upsert using INSERT OR REPLACE
+            $sql = "
+                INSERT OR REPLACE INTO fragment_embeddings 
+                (fragment_id, provider, model, dims, embedding, content_hash, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+            ";
+            
+            DB::statement($sql, [
+                $fragmentId,
+                $provider, 
+                $model,
+                $dimensions,
+                $vectorBlob,
+                $contentHash
+            ]);
+            
+            Log::debug('SQLite vector store: embedding saved', [
+                'fragment_id' => $fragmentId,
+                'provider' => $provider,
+                'model' => $model,
+                'dimensions' => $dimensions,
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('SQLite vector store: failed to store embedding', [
+                'fragment_id' => $fragmentId,
+                'provider' => $provider,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    public function exists(int $fragmentId, string $provider, string $model, string $contentHash): bool
+    {
+        return DB::table('fragment_embeddings')
+            ->where('fragment_id', $fragmentId)
+            ->where('provider', $provider)
+            ->where('model', $model)
+            ->where('content_hash', $contentHash)
+            ->exists();
+    }
+
+    public function search(array $queryVector, string $provider, int $limit = 20, float $threshold = 0.0): array
+    {
+        if (!$this->isVectorSupportAvailable()) {
+            Log::warning('SQLite vector store: extension not available, returning empty results');
+            return [];
+        }
+
+        try {
+            $queryBlob = $this->vectorToBlob($queryVector);
+            
+            // Basic vector similarity search using sqlite-vec
+            $sql = "
+                SELECT 
+                    fe.fragment_id,
+                    (1 - vec_distance_cosine(fe.embedding, ?)) AS similarity,
+                    0 AS text_rank,
+                    (1 - vec_distance_cosine(fe.embedding, ?)) AS combined_score,
+                    SUBSTR(COALESCE(f.message, ''), 1, 200) AS snippet
+                FROM fragment_embeddings fe
+                JOIN fragments f ON fe.fragment_id = f.id
+                WHERE fe.provider = ?
+                  AND (1 - vec_distance_cosine(fe.embedding, ?)) >= ?
+                ORDER BY similarity DESC
+                LIMIT ?
+            ";
+            
+            $results = DB::select($sql, [
+                $queryBlob, // For similarity calculation
+                $queryBlob, // For score calculation  
+                $provider,
+                $queryBlob, // For threshold comparison
+                $threshold,
+                $limit
+            ]);
+            
+            return array_map(function ($row) {
+                return new VectorSearchResult(
+                    fragmentId: $row->fragment_id,
+                    similarity: (float) $row->similarity,
+                    textRank: (float) $row->text_rank,
+                    combinedScore: (float) $row->combined_score,
+                    snippet: $row->snippet
+                );
+            }, $results);
+            
+        } catch (\Exception $e) {
+            Log::error('SQLite vector store: search failed', [
+                'provider' => $provider,
+                'limit' => $limit,
+                'error' => $e->getMessage(),
+            ]);
+            return [];
+        }
+    }
+
+    // Diagnostic methods
+    public function diagnoseConnection(): array
+    {
+        $diagnosis = [
+            'sqlite_version' => null,
+            'extension_loaded' => $this->extensionLoaded,
+            'extension_version' => null,
+            'tables_exist' => false,
+            'sample_query_works' => false,
         ];
+        
+        try {
+            $diagnosis['sqlite_version'] = $this->pdo->query("SELECT sqlite_version()")->fetchColumn();
+            
+            if ($this->extensionLoaded) {
+                $diagnosis['extension_version'] = $this->getExtensionVersion();
+                
+                // Test basic vector operation
+                $testVector = array_fill(0, 10, 0.1);
+                $testBlob = $this->vectorToBlob($testVector);
+                $stmt = $this->pdo->prepare("SELECT vec_distance_cosine(?, ?)");
+                $stmt->execute([$testBlob, $testBlob]);
+                $diagnosis['sample_query_works'] = true;
+            }
+            
+            // Check table existence
+            $tables = DB::select("SELECT name FROM sqlite_master WHERE type='table' AND name='fragment_embeddings'");
+            $diagnosis['tables_exist'] = !empty($tables);
+            
+        } catch (\Exception $e) {
+            $diagnosis['error'] = $e->getMessage();
+        }
+        
+        return $diagnosis;
     }
 }

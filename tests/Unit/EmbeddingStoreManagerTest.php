@@ -25,8 +25,18 @@ class EmbeddingStoreManagerTest extends TestCase
 
     public function test_resolves_sqlite_driver_for_sqlite_connection()
     {
-        // Mock database driver detection
-        DB::shouldReceive('connection->getDriverName')->andReturn('sqlite');
+        // Mock database driver detection and PDO connection
+        $mockStatement = \Mockery::mock(\PDOStatement::class);
+        $mockStatement->shouldReceive('fetchColumn')->andThrow(new \PDOException('Extension not available'));
+        
+        $mockPdo = \Mockery::mock(\PDO::class);
+        $mockPdo->shouldReceive('query')->with("SELECT vec_version()")->andReturn($mockStatement);
+        
+        $mockConnection = \Mockery::mock();
+        $mockConnection->shouldReceive('getDriverName')->andReturn('sqlite');
+        $mockConnection->shouldReceive('getPdo')->andReturn($mockPdo);
+        
+        DB::shouldReceive('connection')->andReturn($mockConnection);
         
         $manager = new EmbeddingStoreManager();
         $driver = $manager->driver();
