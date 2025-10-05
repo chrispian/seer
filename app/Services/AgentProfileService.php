@@ -211,17 +211,29 @@ class AgentProfileService
             throw new \InvalidArgumentException('Agent name is required.');
         }
 
-        $slugSource = $filtered['slug'] ?? null;
+        $slug = $profile?->slug;
+        $hasSlugInput = array_key_exists('slug', $filtered);
+        $slugInput = $hasSlugInput ? $filtered['slug'] : null;
 
-        if (is_string($slugSource) && $slugSource !== '') {
-            $slugSource = Str::slug($slugSource) ?: null;
+        if (is_string($slugInput) && $slugInput !== '') {
+            $slugInput = Str::slug($slugInput) ?: null;
         }
 
-        if (empty($slugSource)) {
-            $slugSource = $filtered['name'] ?? null;
+        if ($hasSlugInput) {
+            if ($slugInput) {
+                $slug = $this->makeUniqueSlug($slugInput, $profile?->getKey());
+            } elseif (! $profile) {
+                $slug = $this->makeUniqueSlug($filtered['name'] ?? null, null);
+            }
+        } elseif (! $profile) {
+            $slug = $this->makeUniqueSlug($filtered['name'] ?? null, null);
         }
 
-        $filtered['slug'] = $this->makeUniqueSlug($slugSource, $profile?->getKey());
+        if (! $slug) {
+            throw new \InvalidArgumentException('Agent slug could not be resolved.');
+        }
+
+        $filtered['slug'] = $slug;
 
         if (array_key_exists('type', $filtered)) {
             $filtered['type'] = $this->normaliseValue($filtered['type'], AgentType::class);

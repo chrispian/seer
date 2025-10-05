@@ -65,6 +65,21 @@ it('updates an agent profile and normalises list data', function () {
     expect($updated->mode)->toBe(AgentMode::Review);
 });
 
+it('preserves existing slug when updating without providing one', function () {
+    $agent = AgentProfile::factory()->create([
+        'name' => 'Original Agent Name',
+        'slug' => 'custom-agent-slug',
+    ]);
+
+    $service = new AgentProfileService();
+
+    $updated = $service->update($agent, [
+        'description' => 'Updated description only.',
+    ]);
+
+    expect($updated->slug)->toBe('custom-agent-slug');
+});
+
 it('lists agent profiles with filters applied', function () {
     $backend = AgentProfile::factory()->create([
         'type' => AgentType::BackendEngineer->value,
