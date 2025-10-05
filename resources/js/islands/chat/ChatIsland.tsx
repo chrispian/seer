@@ -21,7 +21,6 @@ function useCsrf() {
 }
 
 export default function ChatIsland() {
-  console.log('DEBUG: ChatIsland component mounting/rendering')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isSending, setSending] = useState(false)
   const [commandResult, setCommandResult] = useState<any>(null)
@@ -123,7 +122,12 @@ export default function ChatIsland() {
   }
 
   async function onSend(content: string, attachments?: Array<{markdown: string, url: string, filename: string}>) {
-    if (!content.trim() || isSending || !currentSessionId) return
+    if (!content.trim() || isSending || !currentSessionId) {
+      if (!currentSessionId) {
+        console.error('No chat session selected. Please select or create a chat session first.')
+      }
+      return
+    }
 
     // Close any existing stream before starting a new one
     if (activeStreamRef.current) {
@@ -161,7 +165,14 @@ export default function ChatIsland() {
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
         body: JSON.stringify(payload),
       })
-      const { message_id } = await resp.json()
+      
+      if (!resp.ok) {
+        const errorText = await resp.text()
+        throw new Error(`Failed to send message: ${resp.status} ${resp.statusText}. ${errorText}`)
+      }
+
+      const responseData = await resp.json()
+      const { message_id } = responseData
 
       // Update user message with server message ID
       const messagesWithMessageId = updatedMessages.map(msg =>
@@ -224,6 +235,14 @@ export default function ChatIsland() {
       console.error('Failed to send message:', error)
       setSending(false)
       activeStreamRef.current = null
+      
+      // Show error to user
+      const errorMessage: ChatMessage = { 
+        id: uuid(`error-${streamSessionId}`), 
+        role: 'assistant', 
+        md: `❌ **Error sending message**: ${error instanceof Error ? error.message : 'Unknown error occurred'}. Please try again.` 
+      }
+      setMessages(prevMessages => [...prevMessages, errorMessage])
     }
   }
 

@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
 
         // Setup defaults
         $this->call([
+            DefaultVaultProjectSeeder::class, // Must run first to ensure vault/project exist
             DemoRoutingDataSeeder::class,
             TypeSeeder::class,
         ]);
