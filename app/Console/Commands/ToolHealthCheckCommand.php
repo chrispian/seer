@@ -22,7 +22,7 @@ class ToolHealthCheckCommand extends Command
             $this->info("Checking health of tool: {$specificTool}");
             $result = [$specificTool => $monitor->checkTool($specificTool)];
         } else {
-            $this->info("Checking health of all tools...");
+            $this->info('Checking health of all tools...');
             $result = $monitor->checkAllTools();
         }
 
@@ -34,14 +34,14 @@ class ToolHealthCheckCommand extends Command
 
         // Get system health summary
         $systemHealth = $monitor->getSystemHealth();
-        
+
         $this->info("\n=== System Health Summary ===");
         $this->info("Overall Health: {$systemHealth['overall_health']}%");
         $this->info("Healthy Tools: {$systemHealth['healthy_tools']}/{$systemHealth['total_tools']}");
 
         // Exit with error code if any tools are unhealthy
-        $hasUnhealthyTools = array_filter($result, fn($health) => $health['status'] !== 'healthy');
-        
+        $hasUnhealthyTools = array_filter($result, fn ($health) => $health['status'] !== 'healthy');
+
         return empty($hasUnhealthyTools) ? Command::SUCCESS : Command::FAILURE;
     }
 

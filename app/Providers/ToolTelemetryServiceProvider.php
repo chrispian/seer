@@ -6,7 +6,6 @@ use App\Http\Middleware\ToolTelemetryMiddleware;
 use App\Services\Telemetry\ToolHealthMonitor;
 use App\Services\Telemetry\ToolMetricsAnalyzer;
 use App\Services\Telemetry\ToolTelemetry;
-use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider;
 
 class ToolTelemetryServiceProvider extends ServiceProvider
@@ -24,7 +23,7 @@ class ToolTelemetryServiceProvider extends ServiceProvider
         // Publish configuration
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../../config/tool-telemetry.php' => config_path('tool-telemetry.php'),
+                __DIR__.'/../../config/tool-telemetry.php' => config_path('tool-telemetry.php'),
             ], 'tool-telemetry-config');
         }
 
@@ -41,9 +40,9 @@ class ToolTelemetryServiceProvider extends ServiceProvider
     private function scheduleHealthChecks()
     {
         $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
-        
+
         $interval = config('tool-telemetry.health.check_interval_minutes', 5);
-        
+
         $schedule->call(function () {
             $monitor = app(ToolHealthMonitor::class);
             $monitor->checkAllTools();

@@ -17,7 +17,7 @@ class ToolRegistry
         if (config('tool-telemetry.enabled', true)) {
             $tool = ToolTelemetryDecorator::wrap($tool);
         }
-        
+
         $this->tools[$tool->name()] = $tool;
     }
 

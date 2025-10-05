@@ -127,6 +127,14 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'settings_audit' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/settings-audit.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 90, // Keep audit logs for 90 days
+            'replace_placeholders' => true,
+        ],
+
         'chat-telemetry' => [
             'driver' => 'daily',
             'path' => storage_path('logs/chat-telemetry.log'),

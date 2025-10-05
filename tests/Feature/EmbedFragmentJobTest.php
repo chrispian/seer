@@ -1,8 +1,8 @@
 <?php
 
+use App\Contracts\EmbeddingStoreInterface;
 use App\Jobs\EmbedFragment;
 use App\Models\Fragment;
-use App\Contracts\EmbeddingStoreInterface;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 

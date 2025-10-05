@@ -22,15 +22,156 @@ class SqliteVectorStore implements EmbeddingStoreInterface
 
     protected function initializeExtension(): void
     {
-        $extensionName = config('fragments.embeddings.drivers.sqlite.extension', 'sqlite-vec');
-        
+        if (VectorMigrationHelper::getDriver() !== 'sqlite') {
+            $this->extensionLoaded = false;
+            $this->driverInfo['error'] = 'Not using SQLite connection';
+            Log::debug('SQLite vector extension initialization failed', [
+                'error' => 'Not using SQLite connection',
+                'extension' => 'sqlite-vec'
+            ]);
+            return;
+        }
+
+        // Try to auto-load extension if configured
+        $this->attemptExtensionLoading();
+
         try {
-            $this->pdo = DB::connection()->getPdo();
+            // Try to call a sqlite-vec function to test if it's available
+            $result = DB::select("SELECT vec_version() as version");
             
-            // Check if we're actually on SQLite
-            if (DB::connection()->getDriverName() !== 'sqlite') {
-                throw new PDOException('Not using SQLite connection');
+            if (!empty($result)) {
+                $this->extensionLoaded = true;
+                $this->driverInfo = [
+                    'driver' => 'sqlite',
+                    'extension' => 'sqlite-vec',
+                    'version' => $result[0]->version,
+                    'status' => 'available',
+                ];
+                
+                Log::info('SQLite vector extension loaded successfully', [
+                    'version' => $result[0]->version
+                ]);
             }
+            
+        } catch (\Exception $e) {
+            $this->extensionLoaded = false;
+            $this->driverInfo = [
+                'driver' => 'sqlite',
+                'extension' => 'sqlite-vec',
+                'status' => 'not_available',
+                'error' => $e->getMessage(),
+            ];
+            
+            Log::debug('SQLite vector extension not available', [
+                'error' => $e->getMessage(),
+                'extension' => 'sqlite-vec'
+            ]);
+        }
+    }
+
+    protected function attemptExtensionLoading(): void
+    {
+        if (!config('vectors.drivers.sqlite.auto_load_extension', true)) {
+            return;
+        }
+
+        $extensionPath = $this->detectExtensionPath();
+        if (!$extensionPath) {
+            return;
+        }
+
+        try {
+            DB::statement("SELECT load_extension(?)", [$extensionPath]);
+            Log::info('SQLite vector extension loaded from path', [
+                'path' => $extensionPath
+            ]);
+        } catch (\Exception $e) {
+            Log::debug('Failed to load SQLite vector extension', [
+                'path' => $extensionPath,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    protected function detectExtensionPath(): ?string
+    {
+        // Check explicit configuration first
+        $configuredPath = config('vectors.drivers.sqlite.extension_path');
+        if ($configuredPath && $configuredPath !== 'auto-detect' && file_exists($configuredPath)) {
+            return $configuredPath;
+        }
+
+        // Auto-detection for NativePHP deployments
+        if ($configuredPath === 'auto-detect' || !$configuredPath) {
+            return $this->autoDetectExtensionPath();
+        }
+
+        return null;
+    }
+
+    protected function autoDetectExtensionPath(): ?string
+    {
+        $basePath = base_path();
+        
+        // Platform detection
+        $platform = PHP_OS_FAMILY;
+        $arch = php_uname('m');
+        
+        // Normalize names
+        $platformMap = [
+            'Darwin' => 'macos',
+            'Linux' => 'linux',
+            'Windows' => 'windows',
+        ];
+        
+        $archMap = [
+            'x86_64' => 'x86_64',
+            'aarch64' => 'aarch64', 
+            'arm64' => 'aarch64',
+            'AMD64' => 'x86_64',
+        ];
+        
+        $extensionMap = [
+            'macos' => '.dylib',
+            'linux' => '.so',
+            'windows' => '.dll',
+        ];
+        
+        $normalizedPlatform = $platformMap[$platform] ?? strtolower($platform);
+        $normalizedArch = $archMap[$arch] ?? $arch;
+        $extension = $extensionMap[$normalizedPlatform] ?? '.so';
+        
+        // Search paths in order of preference
+        $searchPaths = [
+            // Platform-specific packaged extension
+            "{$basePath}/storage/extensions/vec-{$normalizedPlatform}-{$normalizedArch}{$extension}",
+            
+            // Generic extension in storage
+            "{$basePath}/storage/extensions/vec{$extension}",
+            "{$basePath}/storage/extensions/sqlite-vec{$extension}",
+            
+            // System-wide installations
+            "/usr/local/lib/vec{$extension}",
+            "/usr/lib/sqlite3/vec{$extension}",
+            
+            // Homebrew on macOS
+            "/opt/homebrew/lib/vec{$extension}",
+            "/usr/local/homebrew/lib/vec{$extension}",
+        ];
+        
+        foreach ($searchPaths as $path) {
+            if (file_exists($path)) {
+                Log::debug('Auto-detected SQLite vector extension', [
+                    'path' => $path,
+                    'platform' => $normalizedPlatform,
+                    'arch' => $normalizedArch
+                ]);
+                return $path;
+            }
+        }
+        
+        return null;
+    }
             
             // Try to load extension if PDO supports it and extension loading is enabled
             if (method_exists($this->pdo, 'loadExtension')) {
@@ -137,6 +278,19 @@ class SqliteVectorStore implements EmbeddingStoreInterface
     public function getDriverInfo(): array
     {
         return $this->driverInfo;
+    }
+
+    public function embed(string $text): array
+    {
+        // For now, delegate to a simple embedding service
+        // In the future, this could be configurable per provider
+        $embeddingService = app(\App\Services\EmbeddingService::class);
+        return $embeddingService->embed($text);
+    }
+
+    public function convertToBlob(array $vector): string
+    {
+        return $this->vectorToBlob($vector);
     }
 
     // Vector data conversion methods

@@ -6,8 +6,8 @@ return [
     | Tool Invocation Telemetry Configuration
     |--------------------------------------------------------------------------
     |
-    | This file contains configuration for TELEMETRY-005: Enhanced Tool 
-    | Invocation Correlation system that provides comprehensive observability 
+    | This file contains configuration for TELEMETRY-005: Enhanced Tool
+    | Invocation Correlation system that provides comprehensive observability
     | into the tool execution ecosystem.
     |
     */
@@ -17,7 +17,7 @@ return [
     | Enable Telemetry
     |--------------------------------------------------------------------------
     |
-    | Enable or disable the tool telemetry system. When disabled, no 
+    | Enable or disable the tool telemetry system. When disabled, no
     | telemetry data will be collected, but tools will still function normally.
     |
     */
@@ -64,7 +64,7 @@ return [
         ],
         'data_size_thresholds' => [
             'small_payload' => 1024,     // < 1KB
-            'medium_payload' => 102400,  // 1KB-100KB  
+            'medium_payload' => 102400,  // 1KB-100KB
             'large_payload' => 1048576,  // 100KB-1MB
             // > 1MB = very_large
         ],
@@ -126,7 +126,7 @@ return [
         'parameter_allowlist' => [
             'entity',
             'limit',
-            'offset', 
+            'offset',
             'format',
             'scope',
             'kind',

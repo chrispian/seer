@@ -4,7 +4,6 @@ namespace App\Decorators;
 
 use App\Contracts\ToolContract;
 use App\Services\Telemetry\ToolTelemetry;
-use Exception;
 use Throwable;
 
 class ToolTelemetryDecorator implements ToolContract
@@ -37,10 +36,11 @@ class ToolTelemetryDecorator implements ToolContract
     public function run(array $payload): array
     {
         $invocationId = $this->telemetry->startInvocation($this->tool, $payload);
-        
+
         try {
             $result = $this->tool->run($payload);
             $this->telemetry->completeInvocation($invocationId, $result);
+
             return $result;
         } catch (Throwable $e) {
             $this->telemetry->completeInvocation($invocationId, [], $e->getMessage());
@@ -61,10 +61,10 @@ class ToolTelemetryDecorator implements ToolContract
      */
     public static function wrap(ToolContract $tool): self
     {
-        if (!config('tool-telemetry.enabled', true)) {
+        if (! config('tool-telemetry.enabled', true)) {
             return $tool;
         }
-        
+
         return new self($tool, app(ToolTelemetry::class));
     }
 }

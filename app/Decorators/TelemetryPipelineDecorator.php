@@ -10,7 +10,9 @@ use Illuminate\Support\Str;
 class TelemetryPipelineDecorator
 {
     protected $action;
+
     protected string $stepName;
+
     protected array $context;
 
     public function __construct($action, ?string $stepName = null, array $context = [])
@@ -23,7 +25,7 @@ class TelemetryPipelineDecorator
     public function handle(Fragment $fragment, $next)
     {
         $decoratedFragment = $this->executeWithTelemetry($fragment, 'pipeline');
-        
+
         return $next($decoratedFragment);
     }
 
@@ -36,7 +38,7 @@ class TelemetryPipelineDecorator
     {
         $stepId = (string) Str::uuid();
         $startTime = microtime(true);
-        
+
         $baseContext = [
             'step_id' => $stepId,
             'step_name' => $this->stepName,
@@ -58,21 +60,21 @@ class TelemetryPipelineDecorator
 
         try {
             // Execute the wrapped action
-            $result = $executionMode === 'pipeline' 
-                ? $this->action->handle($fragment, fn($f) => $f)
+            $result = $executionMode === 'pipeline'
+                ? $this->action->handle($fragment, fn ($f) => $f)
                 : $this->action->__invoke($fragment);
 
             $durationMs = round((microtime(true) - $startTime) * 1000, 2);
-            
+
             $this->logStepCompleted($logContext, $durationMs, $result);
-            
+
             return $result;
 
         } catch (\Throwable $e) {
             $durationMs = round((microtime(true) - $startTime) * 1000, 2);
-            
+
             $this->logStepFailed($logContext, $durationMs, $e);
-            
+
             // Re-throw the exception to maintain pipeline behavior
             throw $e;
         }
@@ -134,7 +136,7 @@ class TelemetryPipelineDecorator
     {
         return match (true) {
             $durationMs < 100 => 'fast',
-            $durationMs < 500 => 'normal', 
+            $durationMs < 500 => 'normal',
             $durationMs < 2000 => 'slow',
             default => 'very_slow'
         };
@@ -157,9 +159,10 @@ class TelemetryPipelineDecorator
             if (is_array($action)) {
                 [$actionInstance, $stepName, $stepContext] = $action;
                 $context = array_merge($globalContext, $stepContext ?? []);
+
                 return static::wrap($actionInstance, $stepName, $context);
             }
-            
+
             return static::wrap($action, null, $globalContext);
         }, $actions);
     }

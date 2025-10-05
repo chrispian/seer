@@ -22,13 +22,13 @@ class CommandTelemetryDecorator
     public function execute(string $slug, array $context = [], bool $dryRun = false): array
     {
         $startTime = microtime(true);
-        $commandId = 'cmd_' . uniqid();
-        
+        $commandId = 'cmd_'.uniqid();
+
         // Set up correlation context for this command execution
-        if (!CorrelationContext::hasContext()) {
+        if (! CorrelationContext::hasContext()) {
             CorrelationContext::set($commandId);
         }
-        
+
         CorrelationContext::addContext('command_slug', $slug);
         CorrelationContext::addContext('execution_type', 'dsl');
 
@@ -45,28 +45,28 @@ class CommandTelemetryDecorator
         try {
             // Execute the actual command
             $result = $this->commandRunner->execute($slug, $context, $dryRun);
-            
+
             $success = $result['success'] ?? false;
             $error = $result['error'] ?? null;
-            
+
             // Extract metrics from the execution result
             $metrics = $this->extractMetrics($result);
-            
+
         } catch (\Exception $e) {
             $success = false;
             $error = $e->getMessage();
-            
+
             CommandTelemetry::logError('command_execution', $error, [
                 'command' => $slug,
                 'context' => array_keys($context),
                 'dry_run' => $dryRun,
             ]);
-            
+
             // Re-throw the exception to maintain original behavior
             throw $e;
         } finally {
             $duration = (microtime(true) - $startTime) * 1000;
-            
+
             CommandTelemetry::logCommandComplete(
                 $slug,
                 $context,
@@ -99,7 +99,7 @@ class CommandTelemetryDecorator
             } else {
                 $metrics['failed_steps']++;
             }
-            
+
             $stepType = $step['type'] ?? 'unknown';
             $metrics['step_types'][$stepType] = ($metrics['step_types'][$stepType] ?? 0) + 1;
         }

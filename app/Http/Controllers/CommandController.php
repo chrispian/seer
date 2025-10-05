@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Decorators\CommandTelemetryDecorator;
 use App\DTOs\CommandRequest;
 use App\Models\CommandRegistry as CommandRegistryModel;
 use App\Models\Fragment;
 use App\Services\CommandRegistry;
 use App\Services\Commands\DSL\CommandRunner;
 use App\Services\Telemetry\CommandTelemetry;
-use App\Decorators\CommandTelemetryDecorator;
 use Illuminate\Http\Request;
 
 class CommandController extends Controller
@@ -100,12 +100,12 @@ class CommandController extends Controller
                 $dbCommand = CommandRegistryModel::where('slug', $commandName)->first();
                 if ($dbCommand) {
                     $runner = app(CommandRunner::class);
-                    
+
                     // Wrap runner with telemetry if enabled
                     if (config('command-telemetry.enabled', true)) {
                         $runner = CommandTelemetryDecorator::wrap($runner);
                     }
-                    
+
                     $result = $runner->execute($commandName, $arguments);
 
                     $executionTime = round((microtime(true) - $startTime) * 1000, 2);

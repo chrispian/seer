@@ -62,63 +62,63 @@ class StreamChatProvider
             // Enhanced error categorization for better debugging
             $errorCategory = $this->categorizeError($e);
             $isRetryable = $this->isRetryableError($e);
-            
+
             CorrelationContext::addContext('error_category', $errorCategory);
             CorrelationContext::addContext('is_retryable', $isRetryable);
             CorrelationContext::addContext('error_class', get_class($e));
-            
+
             // Re-throw with enhanced context for caller telemetry
             throw $e;
         }
     }
-    
+
     /**
      * Categorize errors for better debugging and monitoring
      */
     private function categorizeError(\Exception $e): string
     {
         $message = strtolower($e->getMessage());
-        
+
         // Provider availability issues
         if (str_contains($message, 'not found') || str_contains($message, 'not available')) {
             return 'provider_unavailable';
         }
-        
+
         // Authentication/authorization issues
         if (str_contains($message, 'auth') || str_contains($message, 'unauthorized') || str_contains($message, 'api key')) {
             return 'authentication_error';
         }
-        
+
         // Rate limiting
         if (str_contains($message, 'rate limit') || str_contains($message, 'quota') || str_contains($message, 'too many requests')) {
             return 'rate_limit_exceeded';
         }
-        
+
         // Network/connectivity issues
         if (str_contains($message, 'timeout') || str_contains($message, 'connection') || str_contains($message, 'network')) {
             return 'network_error';
         }
-        
+
         // Model/parameter issues
         if (str_contains($message, 'model') || str_contains($message, 'parameter') || str_contains($message, 'invalid request')) {
             return 'request_error';
         }
-        
+
         // Server-side issues
         if (str_contains($message, 'server error') || str_contains($message, 'internal error') || str_contains($message, '500')) {
             return 'server_error';
         }
-        
+
         return 'unknown_error';
     }
-    
+
     /**
      * Determine if an error is retryable
      */
     private function isRetryableError(\Exception $e): bool
     {
         $category = $this->categorizeError($e);
-        
+
         // Retryable categories
         return in_array($category, [
             'network_error',

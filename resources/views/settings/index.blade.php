@@ -19,6 +19,9 @@ window.settingsData = {
         updatePreferences: '{{ route('settings.preferences.update') }}',
         updateAI: '{{ route('settings.ai.update') }}',
         exportSettings: '{{ route('settings.export') }}',
+        importSettings: '{{ route('settings.import') }}',
+        resetSettings: '{{ route('settings.reset') }}',
+        resetToken: '{{ route('settings.reset.token') }}',
         home: '{{ route('root') }}'
     }
 };

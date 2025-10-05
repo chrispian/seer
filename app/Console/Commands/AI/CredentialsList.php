@@ -31,7 +31,7 @@ class CredentialsList extends Command
             return self::SUCCESS;
         }
 
-        $headers = ['Provider', 'Type', 'Status', 'Created', 'Expires'];
+        $headers = ['Provider', 'Type', 'Status', 'Storage', 'Created', 'Expires'];
         $rows = [];
 
         foreach ($credentials as $credential) {
@@ -39,10 +39,14 @@ class CredentialsList extends Command
             $created = $credential->created_at->format('Y-m-d H:i');
             $expires = $credential->expires_at ? $credential->expires_at->format('Y-m-d H:i') : 'Never';
 
+            // Get storage backend from metadata or default to 'database'
+            $storageBackend = $credential->metadata['storage_backend'] ?? 'database';
+
             $rows[] = [
                 $credential->provider,
                 $credential->credential_type,
                 $status,
+                $storageBackend,
                 $created,
                 $expires,
             ];

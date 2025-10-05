@@ -2,11 +2,10 @@
 
 namespace App\Services\Commands\DSL;
 
-use App\Services\Commands\CommandPackLoader;
-use App\Services\Commands\DSL\Steps\StepFactory;
-use App\Services\Telemetry\CommandTelemetry;
 use App\Decorators\StepTelemetryDecorator;
 use App\Decorators\TemplateEngineTelemetryDecorator;
+use App\Services\Commands\CommandPackLoader;
+use App\Services\Commands\DSL\Steps\StepFactory;
 
 class CommandRunner
 {
@@ -117,7 +116,7 @@ class CommandRunner
         try {
             // Create step handler
             $step = $this->stepFactory->create($stepType);
-            
+
             // Wrap step with telemetry if enabled
             if (config('command-telemetry.enabled', true)) {
                 $step = StepTelemetryDecorator::wrap($step);

@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         $driver = DB::connection()->getDriverName();
-        
+
         if ($driver === 'sqlite') {
             $this->createSqliteVectorSupport();
         } elseif ($driver === 'pgsql') {
@@ -21,7 +21,7 @@ return new class extends Migration
     protected function createSqliteVectorSupport(): void
     {
         // Check if fragment_embeddings table exists, if not create it
-        if (!Schema::hasTable('fragment_embeddings')) {
+        if (! Schema::hasTable('fragment_embeddings')) {
             Schema::create('fragment_embeddings', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('fragment_id')->constrained()->cascadeOnDelete();
@@ -37,13 +37,13 @@ return new class extends Migration
         } else {
             // Add missing columns if table exists
             Schema::table('fragment_embeddings', function (Blueprint $table) {
-                if (!Schema::hasColumn('fragment_embeddings', 'model')) {
+                if (! Schema::hasColumn('fragment_embeddings', 'model')) {
                     $table->string('model')->after('provider');
                 }
-                if (!Schema::hasColumn('fragment_embeddings', 'content_hash')) {
+                if (! Schema::hasColumn('fragment_embeddings', 'content_hash')) {
                     $table->string('content_hash')->after('embedding');
                 }
-                if (!Schema::hasColumn('fragment_embeddings', 'embedding')) {
+                if (! Schema::hasColumn('fragment_embeddings', 'embedding')) {
                     $table->binary('embedding')->after('dims');
                 }
             });
@@ -55,14 +55,14 @@ return new class extends Migration
                 CREATE VIRTUAL TABLE IF NOT EXISTS fragments_fts 
                 USING fts5(title, message, content='fragments', content_rowid='id')
             ");
-            
+
             // Populate FTS table if it's empty
-            $ftsCount = DB::select("SELECT COUNT(*) as count FROM fragments_fts")[0]->count;
+            $ftsCount = DB::select('SELECT COUNT(*) as count FROM fragments_fts')[0]->count;
             if ($ftsCount == 0) {
-                DB::statement("
+                DB::statement('
                     INSERT INTO fragments_fts(rowid, title, message) 
                     SELECT id, title, message FROM fragments
-                ");
+                ');
             }
         } catch (\Exception $e) {
             // FTS5 might not be available, that's OK
@@ -74,10 +74,10 @@ return new class extends Migration
         // Add missing columns to existing PostgreSQL table if needed
         if (Schema::hasTable('fragment_embeddings')) {
             Schema::table('fragment_embeddings', function (Blueprint $table) {
-                if (!Schema::hasColumn('fragment_embeddings', 'model')) {
+                if (! Schema::hasColumn('fragment_embeddings', 'model')) {
                     $table->string('model')->after('provider');
                 }
-                if (!Schema::hasColumn('fragment_embeddings', 'content_hash')) {
+                if (! Schema::hasColumn('fragment_embeddings', 'content_hash')) {
                     $table->string('content_hash')->after('embedding');
                 }
             });
@@ -95,11 +95,11 @@ return new class extends Migration
     public function down(): void
     {
         $driver = DB::connection()->getDriverName();
-        
+
         if ($driver === 'sqlite') {
             // Drop FTS table if it exists
             try {
-                DB::statement("DROP TABLE IF EXISTS fragments_fts");
+                DB::statement('DROP TABLE IF EXISTS fragments_fts');
             } catch (\Exception $e) {
                 // Ignore if table doesn't exist
             }

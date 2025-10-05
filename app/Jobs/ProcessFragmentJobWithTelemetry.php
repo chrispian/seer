@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Decorators\TelemetryPipelineDecorator;
 use App\Events\FragmentProcessed;
 use App\Models\Fragment;
 use App\Services\Telemetry\FragmentProcessingTelemetry;
@@ -76,12 +75,12 @@ class ProcessFragmentJobWithTelemetry implements ShouldQueue
             foreach ($steps as $stepClass) {
                 $stepInstance = app($stepClass);
                 $stepName = class_basename($stepClass);
-                
+
                 $decoratedSteps[] = new TelemetryPipelineStepDecorator(
                     $stepInstance,
                     $stepName,
                     $pipelineId,
-                    function($stepName, $durationMs, $success, $error = null, $context = []) use (&$stepMetrics) {
+                    function ($stepName, $durationMs, $success, $error = null, $context = []) use (&$stepMetrics) {
                         $stepMetrics[] = [
                             'step_name' => $stepName,
                             'duration_ms' => $durationMs,
@@ -123,7 +122,7 @@ class ProcessFragmentJobWithTelemetry implements ShouldQueue
                     'processing_stage' => 'complete',
                     'fragments_created' => count($fragments),
                     'step_count' => count($stepMetrics),
-                    'successful_steps' => count(array_filter($stepMetrics, fn($s) => $s['success'])),
+                    'successful_steps' => count(array_filter($stepMetrics, fn ($s) => $s['success'])),
                 ]
             ));
 
@@ -149,7 +148,7 @@ class ProcessFragmentJobWithTelemetry implements ShouldQueue
                     'processing_stage' => 'failed',
                     'exception_class' => get_class($e),
                     'completed_steps' => count($stepMetrics),
-                    'failed_steps' => count(array_filter($stepMetrics, fn($s) => !$s['success'])),
+                    'failed_steps' => count(array_filter($stepMetrics, fn ($s) => ! $s['success'])),
                 ]
             ));
         }
@@ -193,8 +192,11 @@ class ProcessFragmentJobWithTelemetry implements ShouldQueue
 class TelemetryPipelineStepDecorator
 {
     protected $action;
+
     protected string $stepName;
+
     protected string $pipelineId;
+
     protected $metricsCallback;
 
     public function __construct($action, string $stepName, string $pipelineId, callable $metricsCallback)
@@ -214,21 +216,21 @@ class TelemetryPipelineStepDecorator
         $result = null;
 
         try {
-            $result = $this->action->handle($fragment, fn($f) => $f);
-            
+            $result = $this->action->handle($fragment, fn ($f) => $f);
+
             // Log state changes
             FragmentProcessingTelemetry::logFragmentStateChange($this->pipelineId, $this->stepName, $beforeFragment, $result);
-            
+
         } catch (\Throwable $e) {
             $success = false;
             $error = $e;
             $result = $fragment; // Return original fragment on error
-            
+
             // Don't re-throw here, let the pipeline handle it
             throw $e;
         } finally {
             $durationMs = round((microtime(true) - $startTime) * 1000, 2);
-            
+
             // Log step execution
             FragmentProcessingTelemetry::logStepExecution(
                 $this->pipelineId,
@@ -242,7 +244,7 @@ class TelemetryPipelineStepDecorator
                     'peak_memory_mb' => round(memory_get_peak_usage(true) / 1024 / 1024, 2),
                 ]
             );
-            
+
             // Call metrics callback
             ($this->metricsCallback)($this->stepName, $durationMs, $success, $error, [
                 'fragment_id' => ($result ?? $fragment)->id,

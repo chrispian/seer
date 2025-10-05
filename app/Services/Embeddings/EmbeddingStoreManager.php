@@ -13,8 +13,8 @@ class EmbeddingStoreManager
     public function driver(?string $connection = null): EmbeddingStoreInterface
     {
         $connection = $connection ?? $this->getDefaultDriver();
-        
-        if (!isset($this->drivers[$connection])) {
+
+        if (! isset($this->drivers[$connection])) {
             $this->drivers[$connection] = $this->createDriver($connection);
         }
 
@@ -24,7 +24,7 @@ class EmbeddingStoreManager
     protected function getDefaultDriver(): string
     {
         $configured = config('fragments.embeddings.driver', 'auto');
-        
+
         if ($configured === 'auto') {
             return $this->detectOptimalDriver();
         }
@@ -35,7 +35,7 @@ class EmbeddingStoreManager
     protected function detectOptimalDriver(): string
     {
         $dbDriver = DB::connection()->getDriverName();
-        
+
         return match ($dbDriver) {
             'sqlite' => 'sqlite',
             'pgsql' => 'postgresql',
@@ -46,8 +46,8 @@ class EmbeddingStoreManager
     protected function createDriver(string $driver): EmbeddingStoreInterface
     {
         return match ($driver) {
-            'sqlite' => new SqliteVectorStore(),
-            'postgresql' => new PgVectorStore(),
+            'sqlite' => new SqliteVectorStore,
+            'postgresql' => new PgVectorStore,
             default => throw new InvalidArgumentException("Unknown embedding driver: {$driver}")
         };
     }

@@ -15,7 +15,7 @@ class ToolTelemetryMiddleware
     public function handle(Request $request, Closure $next)
     {
         // Set up correlation context for tool calls
-        if (!CorrelationContext::hasContext()) {
+        if (! CorrelationContext::hasContext()) {
             $correlationId = $request->header('X-Correlation-ID') ?? (string) Str::uuid();
             CorrelationContext::set($correlationId);
         }
@@ -24,7 +24,7 @@ class ToolTelemetryMiddleware
         CorrelationContext::addContext('request_method', $request->method());
         CorrelationContext::addContext('request_path', $request->path());
         CorrelationContext::addContext('user_agent', $request->userAgent());
-        
+
         if ($request->ip()) {
             CorrelationContext::addContext('client_ip', $request->ip());
         }

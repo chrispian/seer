@@ -11,10 +11,10 @@
 |
 */
 
-use App\Models\Fragment;
-use App\Services\Telemetry\TelemetryPipelineBuilder;
-use App\Services\Telemetry\FragmentProcessingTelemetry;
 use App\Decorators\TelemetryPipelineDecorator;
+use App\Models\Fragment;
+use App\Services\Telemetry\FragmentProcessingTelemetry;
+use App\Services\Telemetry\TelemetryPipelineBuilder;
 
 // Example 1: Using TelemetryPipelineBuilder for complete pipeline processing
 function processFragmentWithFullTelemetry(Fragment $fragment): Fragment
@@ -61,13 +61,13 @@ function enrichFragmentWithTelemetry(Fragment $fragment): Fragment
 function manualTelemetryExample(Fragment $fragment): Fragment
 {
     $parseAction = app(\App\Actions\ParseAtomicFragment::class);
-    
+
     $decoratedAction = TelemetryPipelineDecorator::wrap(
         $parseAction,
         'custom_parse_step',
         ['manual_execution' => true]
     );
-    
+
     return $decoratedAction($fragment);
 }
 
@@ -76,14 +76,14 @@ function processBatchWithCorrelation(array $fragments): array
 {
     $results = [];
     $batchId = \Illuminate\Support\Str::uuid();
-    
+
     // Log batch correlation
     FragmentProcessingTelemetry::logFragmentCorrelation(
         array_column($fragments, 'id'),
         'batch_processing',
         ['batch_id' => $batchId, 'batch_size' => count($fragments)]
     );
-    
+
     foreach ($fragments as $fragment) {
         $results[] = TelemetryPipelineBuilder::standard()
             ->withContext([
@@ -93,15 +93,15 @@ function processBatchWithCorrelation(array $fragments): array
             ])
             ->process($fragment);
     }
-    
+
     return $results;
 }
 
 // Example 7: Conditional telemetry based on environment
 function processFragmentConditionalTelemetry(Fragment $fragment): Fragment
 {
-    $telemetryEnabled = config('fragment-telemetry.enabled') && !app()->runningUnitTests();
-    
+    $telemetryEnabled = config('fragment-telemetry.enabled') && ! app()->runningUnitTests();
+
     return TelemetryPipelineBuilder::standard()
         ->withTelemetry($telemetryEnabled)
         ->withContext(['environment' => app()->environment()])
@@ -112,7 +112,7 @@ function processFragmentConditionalTelemetry(Fragment $fragment): Fragment
 function processHighPriorityFragment(Fragment $fragment): Fragment
 {
     $startTime = microtime(true);
-    
+
     $result = TelemetryPipelineBuilder::create()
         ->addSteps([
             [\App\Actions\ParseAtomicFragment::class, 'priority_parse', ['priority' => 'high']],
@@ -124,9 +124,9 @@ function processHighPriorityFragment(Fragment $fragment): Fragment
             'sla_target_ms' => 5000,
         ])
         ->process($fragment);
-    
+
     $durationMs = round((microtime(true) - $startTime) * 1000, 2);
-    
+
     // Alert if SLA exceeded
     if ($durationMs > 5000) {
         FragmentProcessingTelemetry::logPerformanceAlert(
@@ -140,7 +140,7 @@ function processHighPriorityFragment(Fragment $fragment): Fragment
             ]
         );
     }
-    
+
     return $result;
 }
 
@@ -151,7 +151,7 @@ function processFragmentWithErrorRecovery(Fragment $fragment): Fragment
         return TelemetryPipelineBuilder::standard()
             ->withContext(['error_recovery_enabled' => true])
             ->process($fragment);
-            
+
     } catch (\Exception $e) {
         // Log the error and attempt fallback processing
         FragmentProcessingTelemetry::logPerformanceAlert(
@@ -163,7 +163,7 @@ function processFragmentWithErrorRecovery(Fragment $fragment): Fragment
                 'attempting_fallback' => true,
             ]
         );
-        
+
         // Fallback to lightweight processing
         return TelemetryPipelineBuilder::lightweight()
             ->withContext([
@@ -178,20 +178,21 @@ function processFragmentWithErrorRecovery(Fragment $fragment): Fragment
 class ProcessFragmentWithTelemetryJob
 {
     use \App\Jobs\HasCorrelationContext;
-    
+
     public Fragment $fragment;
+
     public array $context;
-    
+
     public function __construct(Fragment $fragment, array $context = [])
     {
         $this->fragment = $fragment;
         $this->context = $context;
     }
-    
+
     public function handle(): Fragment
     {
         $this->restoreCorrelationContext();
-        
+
         return TelemetryPipelineBuilder::standard()
             ->withContext(array_merge($this->context, [
                 'job_execution' => true,

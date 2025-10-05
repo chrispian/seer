@@ -8,7 +8,7 @@ return [
         'provider' => env('EMBEDDINGS_PROVIDER', 'openai'),
         'model' => env('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small'),
         'version' => env('EMBEDDINGS_VERSION', '1'),
-        
+
         // Driver-specific configuration
         'drivers' => [
             'sqlite' => [
@@ -184,6 +184,51 @@ return [
         'registry' => [
             'auto_update' => env('FRAGMENT_REGISTRY_AUTO_UPDATE', true),
             'rebuild_on_deploy' => env('FRAGMENT_REGISTRY_REBUILD_DEPLOY', true),
+        ],
+    ],
+
+    'credential_storage' => [
+        // Default storage backend
+        'default' => env('CREDENTIAL_STORAGE_DEFAULT', 'database'),
+
+        // Storage backend preference order (highest to lowest priority)
+        'preference_order' => [
+            'native_keychain',    // NativePHP OS keychain (future)
+            'browser_keychain',   // Browser Web Authentication API (future)
+            'database',          // Current Laravel database storage
+        ],
+
+        // Available storage backends configuration
+        'backends' => [
+            'database' => [
+                'enabled' => env('CREDENTIAL_STORAGE_DATABASE_ENABLED', true),
+                'encryption' => 'laravel_crypt',
+                'soft_delete' => true,
+            ],
+            'browser_keychain' => [
+                'enabled' => env('CREDENTIAL_STORAGE_BROWSER_KEYCHAIN_ENABLED', false),
+                'require_biometric' => env('CREDENTIAL_STORAGE_BROWSER_REQUIRE_BIOMETRIC', false),
+                'fallback_to_database' => env('CREDENTIAL_STORAGE_BROWSER_FALLBACK', true),
+            ],
+            'native_keychain' => [
+                'enabled' => env('CREDENTIAL_STORAGE_NATIVE_KEYCHAIN_ENABLED', false),
+                'require_biometric' => env('CREDENTIAL_STORAGE_NATIVE_REQUIRE_BIOMETRIC', true),
+                'fallback_to_database' => env('CREDENTIAL_STORAGE_NATIVE_FALLBACK', true),
+            ],
+        ],
+
+        // Migration settings
+        'migration' => [
+            'auto_migrate' => env('CREDENTIAL_STORAGE_AUTO_MIGRATE', false),
+            'backup_before_migration' => env('CREDENTIAL_STORAGE_BACKUP_MIGRATION', true),
+            'verify_integrity' => env('CREDENTIAL_STORAGE_VERIFY_INTEGRITY', true),
+        ],
+
+        // Security settings
+        'security' => [
+            'audit_operations' => env('CREDENTIAL_STORAGE_AUDIT', true),
+            'require_user_consent' => env('CREDENTIAL_STORAGE_REQUIRE_CONSENT', true),
+            'max_failed_attempts' => env('CREDENTIAL_STORAGE_MAX_FAILED_ATTEMPTS', 3),
         ],
     ],
 

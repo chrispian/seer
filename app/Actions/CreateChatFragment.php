@@ -18,7 +18,7 @@ class CreateChatFragment
 
         // Get default vault and project with error handling
         $defaultVault = Vault::getDefault();
-        if (!$defaultVault) {
+        if (! $defaultVault) {
             Log::error('No default vault found - creating one');
             $defaultVault = Vault::create([
                 'name' => 'Default',
@@ -29,7 +29,7 @@ class CreateChatFragment
         }
 
         $defaultProject = Project::getDefaultForVault($defaultVault->id);
-        if (!$defaultProject) {
+        if (! $defaultProject) {
             Log::error('No default project found for vault - creating one', ['vault_id' => $defaultVault->id]);
             $defaultProject = Project::create([
                 'name' => 'General',

@@ -95,6 +95,4 @@ class EmbedFragment implements ShouldQueue
             throw $e; // Re-throw for job retry mechanisms
         }
     }
-
-
 }

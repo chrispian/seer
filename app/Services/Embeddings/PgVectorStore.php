@@ -11,12 +11,12 @@ class PgVectorStore implements EmbeddingStoreInterface
 {
     public function store(int $fragmentId, string $provider, string $model, int $dimensions, array $vector, string $contentHash): void
     {
-        if (!$this->isVectorSupportAvailable()) {
+        if (! $this->isVectorSupportAvailable()) {
             throw new \RuntimeException('pgvector extension is not available');
         }
 
-        $vec = '[' . implode(',', $vector) . ']';
-        
+        $vec = '['.implode(',', $vector).']';
+
         DB::statement('
             INSERT INTO fragment_embeddings (fragment_id, provider, model, dims, embedding, content_hash, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?::vector, ?, now(), now())
@@ -44,11 +44,11 @@ class PgVectorStore implements EmbeddingStoreInterface
 
     public function search(array $queryVector, string $provider, int $limit = 20, float $threshold = 0.0): array
     {
-        if (!$this->isVectorSupportAvailable()) {
+        if (! $this->isVectorSupportAvailable()) {
             return [];
         }
 
-        $queryVec = '[' . implode(',', $queryVector) . ']';
+        $queryVec = '['.implode(',', $queryVector).']';
 
         // Use PostgreSQL vector search with cosine similarity
         $results = DB::select('
@@ -72,7 +72,7 @@ class PgVectorStore implements EmbeddingStoreInterface
             $provider,
             $queryVec,          // threshold comparison
             $threshold,
-            $limit
+            $limit,
         ]);
 
         return array_map(function ($row) {
@@ -90,9 +90,11 @@ class PgVectorStore implements EmbeddingStoreInterface
     {
         try {
             $result = DB::select("SELECT 1 FROM pg_extension WHERE extname = 'vector'");
-            return !empty($result);
+
+            return ! empty($result);
         } catch (\Throwable $e) {
             Log::warning('PgVectorStore: could not check pgvector availability', ['error' => $e->getMessage()]);
+
             return false;
         }
     }
@@ -102,15 +104,42 @@ class PgVectorStore implements EmbeddingStoreInterface
         return [
             'driver' => 'postgresql',
             'extension' => 'pgvector',
-            'available' => $this->isVectorSupportAvailable(),
-            'version' => $this->getExtensionVersion(),
+            'version' => $this->getPgVectorVersion(),
+            'status' => $this->isVectorSupportAvailable() ? 'available' : 'not_available',
         ];
+    }
+
+    public function embed(string $text): array
+    {
+        // For now, delegate to a simple embedding service
+        // In the future, this could be configurable per provider
+        $embeddingService = app(\App\Services\EmbeddingService::class);
+
+        return $embeddingService->embed($text);
+    }
+
+    public function convertToBlob(array $vector): string
+    {
+        // PostgreSQL uses array format, not blob
+        return '['.implode(',', $vector).']';
+    }
+
+    private function getPgVectorVersion(): ?string
+    {
+        try {
+            $result = DB::select("SELECT extversion FROM pg_extension WHERE extname = 'vector'");
+
+            return $result[0]->extversion ?? null;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     protected function getExtensionVersion(): ?string
     {
         try {
             $result = DB::select("SELECT extversion FROM pg_extension WHERE extname = 'vector'");
+
             return $result[0]->extversion ?? null;
         } catch (\Throwable) {
             return null;

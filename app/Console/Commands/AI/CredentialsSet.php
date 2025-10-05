@@ -3,6 +3,7 @@
 namespace App\Console\Commands\AI;
 
 use App\Models\AICredential;
+use App\Services\CredentialStorageManager;
 use Illuminate\Console\Command;
 
 use function Laravel\Prompts\confirm;
@@ -15,15 +16,17 @@ class CredentialsSet extends Command
     protected $signature = 'ai:credentials:set
                             {provider? : Provider name (openai, anthropic, ollama, openrouter)}
                             {--type=api_key : Credential type}
-                            {--key= : API key (for non-interactive mode)}';
+                            {--key= : API key (for non-interactive mode)}
+                            {--storage= : Storage backend to use (database, browser_keychain, native_keychain)}';
 
     protected $description = 'Set AI provider credentials securely';
 
-    public function handle(): int
+    public function handle(CredentialStorageManager $storageManager): int
     {
         $provider = $this->argument('provider');
         $type = $this->option('type');
         $key = $this->option('key');
+        $storageType = $this->option('storage');
 
         // Get available providers from config
         $availableProviders = array_keys(config('fragments.models.providers', []));
@@ -78,19 +81,27 @@ class CredentialsSet extends Command
             }
         }
 
+        // Select storage backend
+        $storage = $this->selectStorageBackend($storageManager, $storageType);
+        if (! $storage) {
+            return self::FAILURE;
+        }
+
         // Store the credentials
         try {
-            AICredential::storeCredentials(
+            $credentialId = $storage->store(
                 $provider,
                 $credentials,
-                $type,
                 [
-                    'created_by' => 'artisan',
-                    'created_at' => now()->toISOString(),
+                    'type' => $type,
+                    'metadata' => [
+                        'created_by' => 'artisan',
+                        'created_at' => now()->toISOString(),
+                    ],
                 ]
             );
 
-            $this->info("✅ Credentials for {$provider} stored successfully");
+            $this->info("✅ Credentials for {$provider} stored successfully (ID: {$credentialId})");
 
             // Test the credentials
             if (confirm('Would you like to test the credentials now?')) {
@@ -148,5 +159,62 @@ class CredentialsSet extends Command
     protected function formatConfigKeyName(string $configKey): string
     {
         return ucwords(str_replace('_', ' ', strtolower($configKey)));
+    }
+
+    protected function selectStorageBackend(CredentialStorageManager $storageManager, ?string $requestedType)
+    {
+        // If specific storage type requested, validate and use it
+        if ($requestedType) {
+            try {
+                $storage = $storageManager->getStorage($requestedType);
+                if (! $storage->isAvailable()) {
+                    $this->error("Storage backend '{$requestedType}' is not available");
+
+                    return null;
+                }
+
+                $this->info("Using {$requestedType} storage backend");
+
+                return $storage;
+            } catch (\InvalidArgumentException $e) {
+                $this->error("Unknown storage backend: {$requestedType}");
+
+                $availableTypes = $storageManager->getAvailableStorageTypes();
+                $typeNames = array_column($availableTypes, 'type');
+                $this->info('Available backends: '.implode(', ', $typeNames));
+
+                return null;
+            }
+        }
+
+        // Use default storage backend
+        try {
+            $defaultType = $storageManager->getDefaultStorageType();
+            $storage = $storageManager->getStorage($defaultType);
+
+            if (! $storage->isAvailable()) {
+                $this->warn("Default storage backend '{$defaultType}' is not available, finding alternative...");
+
+                // Try to find the best available storage
+                $availableTypes = $storageManager->getAvailableStorageTypes();
+                if (empty($availableTypes)) {
+                    $this->error('No storage backends are available');
+
+                    return null;
+                }
+
+                $bestType = $availableTypes[0]['type'];
+                $storage = $storageManager->getStorage($bestType);
+                $this->info("Using {$bestType} storage backend");
+            } else {
+                $this->info("Using default {$defaultType} storage backend");
+            }
+
+            return $storage;
+        } catch (\Exception $e) {
+            $this->error("Failed to initialize storage backend: {$e->getMessage()}");
+
+            return null;
+        }
     }
 }

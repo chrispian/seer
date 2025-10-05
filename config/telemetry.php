@@ -6,7 +6,7 @@ return [
     | Unified Telemetry Configuration
     |--------------------------------------------------------------------------
     |
-    | This file contains configuration for TELEMETRY-006: Local Telemetry 
+    | This file contains configuration for TELEMETRY-006: Local Telemetry
     | Sink & Query Interface system that provides unified telemetry data
     | management across all systems.
     |
@@ -17,7 +17,7 @@ return [
     | Enable Telemetry Sink
     |--------------------------------------------------------------------------
     |
-    | Enable or disable the unified telemetry sink system. When disabled, 
+    | Enable or disable the unified telemetry sink system. When disabled,
     | telemetry data will only be logged, not stored in the database.
     |
     */
@@ -246,7 +246,7 @@ return [
         'anonymize_user_data' => env('TELEMETRY_ANONYMIZE_USERS', false),
         'sensitive_fields' => [
             'password', 'secret', 'token', 'key', 'credential', 'api_key',
-            'email', 'phone', 'address', 'credit_card', 'ssn'
+            'email', 'phone', 'address', 'credit_card', 'ssn',
         ],
         'max_field_length' => 1000,
         'hash_long_values' => true,

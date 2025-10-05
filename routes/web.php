@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AppShellController;
+use App\Http\Controllers\Settings\ImportExportController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SetupController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,11 @@ Route::middleware([\App\Http\Middleware\EnsureDefaultUser::class])->group(functi
         Route::post('/preferences', [SettingsController::class, 'updatePreferences'])->name('preferences.update');
         Route::post('/ai', [SettingsController::class, 'updateAISettings'])->name('ai.update');
         Route::get('/export', [SettingsController::class, 'exportSettings'])->name('export');
+
+        // Import/Export/Reset routes
+        Route::post('/import', [ImportExportController::class, 'import'])->name('import');
+        Route::post('/reset', [ImportExportController::class, 'reset'])->name('reset');
+        Route::post('/reset-token', [ImportExportController::class, 'generateResetToken'])->name('reset.token');
     });
 });
 

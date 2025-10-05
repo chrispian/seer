@@ -26,14 +26,14 @@ class GenerateCommandTelemetryReportCommand extends Command
 
         if ($format === 'json') {
             $output = json_encode($summary, JSON_PRETTY_PRINT);
-            
+
             if ($outputFile) {
                 file_put_contents($outputFile, $output);
                 $this->info("Report saved to: {$outputFile}");
             } else {
                 $this->line($output);
             }
-            
+
             return;
         }
 
@@ -50,20 +50,20 @@ class GenerateCommandTelemetryReportCommand extends Command
     protected function displayTableReport(array $summary): void
     {
         $this->info('📊 Command Telemetry Report');
-        $this->info('Generated: ' . $summary['generated_at']);
-        $this->info('Period: Last ' . $summary['period_days'] . ' days');
+        $this->info('Generated: '.$summary['generated_at']);
+        $this->info('Period: Last '.$summary['period_days'].' days');
         $this->newLine();
 
         // Command Popularity
-        if (!empty($summary['command_popularity'])) {
+        if (! empty($summary['command_popularity'])) {
             $this->info('🏆 Most Popular Commands');
             $popularityData = [];
             foreach (array_slice($summary['command_popularity'], 0, 10, true) as $command => $stats) {
                 $popularityData[] = [
                     'Command' => $command,
                     'Executions' => $stats['count'],
-                    'Success Rate' => $stats['success_rate'] . '%',
-                    'Avg Duration' => round($stats['avg_duration'], 1) . 'ms',
+                    'Success Rate' => $stats['success_rate'].'%',
+                    'Avg Duration' => round($stats['avg_duration'], 1).'ms',
                 ];
             }
             $this->table(['Command', 'Executions', 'Success Rate', 'Avg Duration'], $popularityData);
@@ -72,13 +72,13 @@ class GenerateCommandTelemetryReportCommand extends Command
 
         // Performance Bottlenecks
         $bottlenecks = $summary['performance_bottlenecks'];
-        if (!empty($bottlenecks['slow_commands'])) {
+        if (! empty($bottlenecks['slow_commands'])) {
             $this->warn('🐌 Slowest Commands');
             $slowData = [];
             foreach (array_slice($bottlenecks['slow_commands'], 0, 5) as $slow) {
                 $slowData[] = [
                     'Command' => $slow['command'],
-                    'Duration' => round($slow['duration_ms'], 1) . 'ms',
+                    'Duration' => round($slow['duration_ms'], 1).'ms',
                     'Category' => $slow['performance_category'],
                     'When' => date('M j H:i', strtotime($slow['timestamp'])),
                 ];
@@ -87,13 +87,13 @@ class GenerateCommandTelemetryReportCommand extends Command
             $this->newLine();
         }
 
-        if (!empty($bottlenecks['slow_steps'])) {
+        if (! empty($bottlenecks['slow_steps'])) {
             $this->warn('🔧 Slowest Steps');
             $stepData = [];
             foreach (array_slice($bottlenecks['slow_steps'], 0, 5) as $slow) {
                 $stepData[] = [
                     'Step Type' => $slow['step_type'],
-                    'Duration' => round($slow['duration_ms'], 1) . 'ms',
+                    'Duration' => round($slow['duration_ms'], 1).'ms',
                     'Category' => $slow['performance_category'],
                     'When' => date('M j H:i', strtotime($slow['timestamp'])),
                 ];
@@ -103,7 +103,7 @@ class GenerateCommandTelemetryReportCommand extends Command
         }
 
         // Error Patterns
-        if (!empty($summary['error_patterns'])) {
+        if (! empty($summary['error_patterns'])) {
             $this->error('❌ Error Patterns');
             $errorData = [];
             foreach ($summary['error_patterns'] as $category => $contexts) {
@@ -127,8 +127,8 @@ class GenerateCommandTelemetryReportCommand extends Command
             $this->line("Total Renders: {$templatePerf['total_renders']}");
             $this->line("Cache Hit Rate: {$templatePerf['cache_hit_rate']}%");
             $this->line("Average Duration: {$templatePerf['avg_duration']}ms");
-            
-            if (!empty($templatePerf['slow_renders'])) {
+
+            if (! empty($templatePerf['slow_renders'])) {
                 $this->newLine();
                 $this->warn('Slowest Template Renders:');
                 $templateData = [];
@@ -136,7 +136,7 @@ class GenerateCommandTelemetryReportCommand extends Command
                     $templateData[] = [
                         'Hash' => substr($slow['template_hash'], 0, 8),
                         'Length' => $slow['template_length'],
-                        'Duration' => round($slow['duration_ms'], 1) . 'ms',
+                        'Duration' => round($slow['duration_ms'], 1).'ms',
                         'Cache Hit' => $slow['cache_hit'] ? 'Yes' : 'No',
                     ];
                 }
@@ -152,9 +152,9 @@ class GenerateCommandTelemetryReportCommand extends Command
         $output .= "Period: Last {$summary['period_days']} days\n\n";
 
         // Add all sections in text format
-        if (!empty($summary['command_popularity'])) {
+        if (! empty($summary['command_popularity'])) {
             $output .= "COMMAND POPULARITY\n";
-            $output .= str_repeat("=", 50) . "\n";
+            $output .= str_repeat('=', 50)."\n";
             foreach (array_slice($summary['command_popularity'], 0, 10, true) as $command => $stats) {
                 $output .= sprintf("%-30s %5d executions, %5.1f%% success, %6.1fms avg\n",
                     $command, $stats['count'], $stats['success_rate'], $stats['avg_duration']);
@@ -162,9 +162,9 @@ class GenerateCommandTelemetryReportCommand extends Command
             $output .= "\n";
         }
 
-        if (!empty($summary['performance_bottlenecks']['slow_commands'])) {
+        if (! empty($summary['performance_bottlenecks']['slow_commands'])) {
             $output .= "PERFORMANCE BOTTLENECKS\n";
-            $output .= str_repeat("=", 50) . "\n";
+            $output .= str_repeat('=', 50)."\n";
             foreach (array_slice($summary['performance_bottlenecks']['slow_commands'], 0, 10) as $slow) {
                 $output .= sprintf("%-30s %8.1fms (%s)\n",
                     $slow['command'], $slow['duration_ms'], $slow['performance_category']);

@@ -6,8 +6,8 @@ return [
     | Command & DSL Execution Telemetry Configuration
     |--------------------------------------------------------------------------
     |
-    | This file contains configuration for TELEMETRY-004: Command & DSL 
-    | Execution Metrics system that provides comprehensive observability 
+    | This file contains configuration for TELEMETRY-004: Command & DSL
+    | Execution Metrics system that provides comprehensive observability
     | into the command execution pipeline.
     |
     */
@@ -17,7 +17,7 @@ return [
     | Enable Telemetry
     |--------------------------------------------------------------------------
     |
-    | Enable or disable the command telemetry system. When disabled, no 
+    | Enable or disable the command telemetry system. When disabled, no
     | telemetry data will be collected, but commands will still function normally.
     |
     */

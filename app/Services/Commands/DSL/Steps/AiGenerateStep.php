@@ -54,7 +54,7 @@ class AiGenerateStep extends Step
                 ]);
 
                 $duration = round((microtime(true) - $startTime) * 1000, 2);
-                
+
                 // Log AI generation telemetry
                 if (config('command-telemetry.enabled', true)) {
                     CommandTelemetry::logAiGeneration(strlen($prompt), $duration, true, [
@@ -64,7 +64,7 @@ class AiGenerateStep extends Step
                         'expect_type' => $expect,
                     ]);
                 }
-                
+
                 \Log::info('AI Generate Step Performance', [
                     'duration_ms' => $duration,
                     'tokens' => $maxTokens,
@@ -80,7 +80,7 @@ class AiGenerateStep extends Step
 
             } catch (\Exception $e) {
                 $duration = round((microtime(true) - $startTime) * 1000, 2);
-                
+
                 // Log AI generation failure telemetry
                 if (config('command-telemetry.enabled', true)) {
                     CommandTelemetry::logAiGeneration(strlen($prompt), $duration, false, [
@@ -90,7 +90,7 @@ class AiGenerateStep extends Step
                         'expect_type' => $expect,
                     ]);
                 }
-                
+
                 \Log::error('AI Generate Step Failed', [
                     'duration_ms' => $duration,
                     'error' => $e->getMessage(),

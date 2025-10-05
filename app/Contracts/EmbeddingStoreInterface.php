@@ -45,4 +45,14 @@ interface EmbeddingStoreInterface
      * Get driver-specific information
      */
     public function getDriverInfo(): array;
+
+    /**
+     * Generate embedding for text
+     */
+    public function embed(string $text): array;
+
+    /**
+     * Convert vector array to database-specific format
+     */
+    public function convertToBlob(array $vector): string;
 }

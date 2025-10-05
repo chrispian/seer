@@ -74,22 +74,22 @@ class TelemetryQueryService
         $cacheKey = 'telemetry_event_stats_'.md5(serialize($filters));
 
         return Cache::remember($cacheKey, $this->cacheTtl * 60, function () use ($filters) {
-            $query = TelemetryEvent::query();
-            $this->applyEventFilters($query, $filters);
+            $baseQuery = TelemetryEvent::query();
+            $this->applyEventFilters($baseQuery, $filters);
 
             $stats = [
-                'total_events' => $query->count(),
-                'events_by_type' => $query->select('event_type', DB::raw('count(*) as count'))
+                'total_events' => (clone $baseQuery)->count(),
+                'events_by_type' => (clone $baseQuery)->select('event_type', DB::raw('count(*) as count'))
                     ->groupBy('event_type')
                     ->pluck('count', 'event_type'),
-                'events_by_level' => $query->select('level', DB::raw('count(*) as count'))
+                'events_by_level' => (clone $baseQuery)->select('level', DB::raw('count(*) as count'))
                     ->groupBy('level')
                     ->pluck('count', 'level'),
-                'events_by_component' => $query->select('component', DB::raw('count(*) as count'))
+                'events_by_component' => (clone $baseQuery)->select('component', DB::raw('count(*) as count'))
                     ->groupBy('component')
                     ->pluck('count', 'component'),
-                'error_rate' => $this->calculateErrorRate($query),
-                'recent_activity' => $this->getRecentActivity($query),
+                'error_rate' => $this->calculateErrorRate(clone $baseQuery),
+                'recent_activity' => $this->getRecentActivity(clone $baseQuery),
             ];
 
             return $stats;

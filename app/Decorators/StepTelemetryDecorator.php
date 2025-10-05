@@ -23,7 +23,7 @@ class StepTelemetryDecorator extends Step
     public function execute(array $config, array $context, bool $dryRun = false): mixed
     {
         $stepType = $this->step->getType();
-        $stepId = $config['id'] ?? 'step_' . uniqid();
+        $stepId = $config['id'] ?? 'step_'.uniqid();
         $startTime = microtime(true);
 
         CommandTelemetry::logStepStart($stepType, $stepId, $config);
@@ -37,25 +37,25 @@ class StepTelemetryDecorator extends Step
             // Execute the actual step
             $result = $this->step->execute($config, $context, $dryRun);
             $success = true;
-            
+
             // Extract step-specific metrics
             $metrics = $this->extractStepMetrics($stepType, $result, $config, $context);
-            
+
         } catch (\Exception $e) {
             $success = false;
             $error = $e->getMessage();
-            
+
             CommandTelemetry::logError('step_execution', $error, [
                 'step_type' => $stepType,
                 'step_id' => $stepId,
                 'config_keys' => array_keys($config),
             ]);
-            
+
             // Re-throw the exception to maintain original behavior
             throw $e;
         } finally {
             $duration = (microtime(true) - $startTime) * 1000;
-            
+
             CommandTelemetry::logStepComplete(
                 $stepType,
                 $stepId,
@@ -87,7 +87,7 @@ class StepTelemetryDecorator extends Step
                 $metrics['max_tokens'] = $config['max_tokens'] ?? null;
                 $metrics['cache_enabled'] = $config['cache'] ?? false;
                 $metrics['expect_type'] = $config['expect'] ?? 'text';
-                
+
                 if (is_string($result)) {
                     $metrics['response_length'] = strlen($result);
                 } elseif (is_array($result)) {

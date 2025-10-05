@@ -25,7 +25,7 @@ class DefaultVaultProjectSeeder extends Seeder
             $this->command->info("Created default vault: {$vault->name} (ID: {$vault->id})");
         } else {
             // Ensure at least one vault is marked as default
-            if (!Vault::where('is_default', true)->exists()) {
+            if (! Vault::where('is_default', true)->exists()) {
                 $vault = Vault::first();
                 $vault->update(['is_default' => true]);
                 $this->command->info("Marked vault '{$vault->name}' as default");
@@ -35,7 +35,7 @@ class DefaultVaultProjectSeeder extends Seeder
         // Create default project if none exists
         if (Project::count() === 0) {
             $defaultVault = Vault::where('is_default', true)->first();
-            
+
             $project = Project::create([
                 'name' => 'General',
                 'description' => 'Default project for general fragments and conversations',
@@ -49,7 +49,7 @@ class DefaultVaultProjectSeeder extends Seeder
             // Ensure each vault has at least one default project
             $vaults = Vault::all();
             foreach ($vaults as $vault) {
-                if (!$vault->projects()->where('is_default', true)->exists()) {
+                if (! $vault->projects()->where('is_default', true)->exists()) {
                     $project = $vault->projects()->first();
                     if ($project) {
                         $project->update(['is_default' => true]);
