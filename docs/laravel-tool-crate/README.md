@@ -1,5 +1,7 @@
 # Laravel Tool Crate
 
+> ⚠️ **Status: _Not Ready for Use_** — active development preview. Expect breaking changes, incomplete docs, and missing test coverage. Please do **not** depend on this package in production yet.
+
 **hollis-labs/laravel-tool-crate** — an opinionated, local-first MCP server for Laravel (built on **official `laravel/mcp`**), with:
 - a context-lean **help** layer (`help.index`, `help.tool`),
 - **developer tools**: `json.query`, `text.search`, `file.read`, `text.replace`,
