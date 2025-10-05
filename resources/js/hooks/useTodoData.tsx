@@ -168,11 +168,10 @@ export function useTodoData(): UseTodoDataReturn {
     ))
 
     try {
-      // Find the todo by position for the complete command
-      const todoIndex = todos.findIndex(t => t.id === todoId)
+      // Use ID-based commands to avoid position issues
       const command = newStatus === 'completed' 
-        ? `todo complete:${todoIndex + 1}`
-        : `todo reopen:${todoIndex + 1}` // Assuming reopen command exists
+        ? `todo complete:${todoId}`
+        : `todo reopen:${todoId}`
 
       const result = await executeCommand(command)
       
@@ -219,11 +218,11 @@ export function useTodoData(): UseTodoDataReturn {
 
   const deleteTodo = useCallback(async (todoId: string) => {
     try {
-      const todoIndex = todos.findIndex(t => t.id === todoId)
-      if (todoIndex === -1) throw new Error('Todo not found')
+      const todo = todos.find(t => t.id === todoId)
+      if (!todo) throw new Error('Todo not found')
 
-      // Assuming delete command exists
-      const command = `todo delete:${todoIndex + 1}`
+      // Use ID-based delete command
+      const command = `todo delete:${todoId}`
       
       const result = await executeCommand(command)
       

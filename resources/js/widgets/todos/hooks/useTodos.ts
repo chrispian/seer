@@ -116,11 +116,10 @@ export function useTodos() {
       const todo = todos.find(t => t.id === todoId)
       if (!todo) throw new Error('Todo not found')
 
-      const todoIndex = todos.findIndex(t => t.id === todoId)
       const newStatus = todo.status === 'completed' ? 'open' : 'completed'
       const command = newStatus === 'completed' 
-        ? `todo complete:${todoIndex + 1}`
-        : `todo reopen:${todoIndex + 1}` // Assuming reopen command exists
+        ? `todo complete:${todoId}`
+        : `todo reopen:${todoId}`
 
       const result = await executeCommand(command)
       
