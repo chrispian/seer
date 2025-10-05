@@ -12,7 +12,7 @@ class ResponsePanelStep extends Step
     public function execute(array $config, array $context, bool $dryRun = false): mixed
     {
         $with = $config['with'] ?? [];
-        
+
         $responseType = $with['type'] ?? 'panel';
         $panelData = $with['panel_data'] ?? [];
         $message = $with['message'] ?? '';
@@ -40,15 +40,15 @@ class ResponsePanelStep extends Step
             case 'recall':
                 $result = $this->formatRecallResponse($result, $panelData);
                 break;
-                
+
             case 'inbox':
                 $result = $this->formatInboxResponse($result, $panelData);
                 break;
-                
+
             case 'todo':
                 $result = $this->formatTodoResponse($result, $panelData);
                 break;
-                
+
             default:
                 // Generic panel response
                 break;
@@ -69,8 +69,8 @@ class ResponsePanelStep extends Step
         // Build contextual message if not provided
         if (empty($result['message'])) {
             $count = count($fragments);
-            $message = "📝 Found **{$count}** {$fragmentType}" . ($count !== 1 ? 's' : '');
-            
+            $message = "📝 Found **{$count}** {$fragmentType}".($count !== 1 ? 's' : '');
+
             $filters = [];
             if ($status && $status !== 'open') {
                 $filters[] = "status:{$status}";
@@ -78,14 +78,14 @@ class ResponsePanelStep extends Step
             if ($search) {
                 $filters[] = "matching '{$search}'";
             }
-            if (!empty($tags)) {
-                $filters[] = 'tagged #' . implode(', #', $tags);
+            if (! empty($tags)) {
+                $filters[] = 'tagged #'.implode(', #', $tags);
             }
-            
-            if (!empty($filters)) {
-                $message .= ' ' . implode(' and ', $filters);
+
+            if (! empty($filters)) {
+                $message .= ' '.implode(' and ', $filters);
             }
-            
+
             $result['message'] = $message;
         }
 
@@ -103,7 +103,7 @@ class ResponsePanelStep extends Step
     {
         $action = $panelData['action'] ?? 'pending';
         $fragments = $panelData['fragments'] ?? [];
-        
+
         // Build contextual message if not provided
         if (empty($result['message'])) {
             $count = count($fragments);
@@ -114,11 +114,11 @@ class ResponsePanelStep extends Step
                 'all' => 'actionable item',
                 default => 'item',
             };
-            
+
             if ($count === 0) {
                 $result['message'] = "📥 No {$actionText}s found.";
             } else {
-                $result['message'] = "📥 Found **{$count}** {$actionText}" . ($count !== 1 ? 's' : '');
+                $result['message'] = "📥 Found **{$count}** {$actionText}".($count !== 1 ? 's' : '');
             }
         }
 
@@ -136,16 +136,16 @@ class ResponsePanelStep extends Step
     {
         $status = $panelData['status'] ?? 'open';
         $fragments = $panelData['fragments'] ?? [];
-        
+
         // Build contextual message if not provided
         if (empty($result['message'])) {
             $count = count($fragments);
             $statusText = $status === 'complete' ? 'completed' : $status;
-            
+
             if ($count === 0) {
                 $result['message'] = "📝 No {$statusText} todos found.";
             } else {
-                $result['message'] = "📝 Found **{$count}** {$statusText} todo" . ($count !== 1 ? 's' : '');
+                $result['message'] = "📝 Found **{$count}** {$statusText} todo".($count !== 1 ? 's' : '');
             }
         }
 
@@ -163,6 +163,7 @@ class ResponsePanelStep extends Step
     public function validate(array $config): bool
     {
         $with = $config['with'] ?? [];
+
         return isset($with['panel_data']) && is_array($with['panel_data']);
     }
 }

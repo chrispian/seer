@@ -33,27 +33,27 @@ class ValidateStep extends Step
         foreach ($rules as $field => $ruleString) {
             $fieldRules = explode('|', $ruleString);
             $value = $this->getFieldValue($field, $context);
-            
+
             foreach ($fieldRules as $rule) {
                 $ruleName = $rule;
                 $ruleParam = null;
-                
+
                 if (str_contains($rule, ':')) {
                     [$ruleName, $ruleParam] = explode(':', $rule, 2);
                 }
-                
+
                 $validationResult = $this->validateRule($field, $value, $ruleName, $ruleParam);
-                
+
                 if ($validationResult !== true) {
-                    $customMessage = $messages["{$field}.{$ruleName}"] ?? 
-                                   $messages[$field] ?? 
+                    $customMessage = $messages["{$field}.{$ruleName}"] ??
+                                   $messages[$field] ??
                                    $validationResult;
                     $errors[$field][] = $customMessage;
                     break; // Stop on first error for this field
                 }
             }
-            
-            if (!isset($errors[$field])) {
+
+            if (! isset($errors[$field])) {
                 $validatedData[$field] = $value;
             }
         }
@@ -90,6 +90,7 @@ class ValidateStep extends Step
                 if (is_null($value) || $value === '' || (is_array($value) && empty($value))) {
                     return "The {$field} field is required.";
                 }
+
                 return true;
 
             case 'min':
@@ -100,6 +101,7 @@ class ValidateStep extends Step
                 if (is_numeric($value) && $value < $min) {
                     return "The {$field} field must be at least {$min}.";
                 }
+
                 return true;
 
             case 'max':
@@ -110,41 +112,47 @@ class ValidateStep extends Step
                 if (is_numeric($value) && $value > $max) {
                     return "The {$field} field must not exceed {$max}.";
                 }
+
                 return true;
 
             case 'length':
-                if (!is_string($value)) {
+                if (! is_string($value)) {
                     return "The {$field} field must be a string.";
                 }
                 $length = (int) $param;
                 if (strlen($value) !== $length) {
                     return "The {$field} field must be exactly {$length} characters.";
                 }
+
                 return true;
 
             case 'numeric':
-                if (!is_numeric($value)) {
+                if (! is_numeric($value)) {
                     return "The {$field} field must be numeric.";
                 }
+
                 return true;
 
             case 'string':
-                if (!is_string($value)) {
+                if (! is_string($value)) {
                     return "The {$field} field must be a string.";
                 }
+
                 return true;
 
             case 'in':
                 $options = explode(',', $param);
-                if (!in_array($value, $options)) {
-                    return "The {$field} field must be one of: " . implode(', ', $options) . ".";
+                if (! in_array($value, $options)) {
+                    return "The {$field} field must be one of: ".implode(', ', $options).'.';
                 }
+
                 return true;
 
             case 'not_starts_with':
                 if (is_string($value) && str_starts_with($value, $param)) {
                     return "The {$field} field must not start with '{$param}'.";
                 }
+
                 return true;
 
             default:
@@ -155,6 +163,7 @@ class ValidateStep extends Step
     public function validate(array $config): bool
     {
         $with = $config['with'] ?? [];
+
         return isset($with['rules']) && is_array($with['rules']);
     }
 }

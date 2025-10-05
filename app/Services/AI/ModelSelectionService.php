@@ -2,7 +2,9 @@
 
 namespace App\Services\AI;
 
+use App\Models\AICredential;
 use App\Models\Project;
+use App\Models\Provider;
 use App\Models\Vault;
 use Illuminate\Support\Facades\Log;
 
@@ -251,33 +253,35 @@ class ModelSelectionService
      */
     protected function isModelAvailable(string $provider, string $model): bool
     {
+        // Check if provider exists in config
         if (! isset($this->providers[$provider])) {
             return false;
         }
 
-        $providerConfig = $this->providers[$provider];
+        // Check if provider is enabled in database
+        $providerConfig = Provider::where('provider', $provider)->first();
+        if (! $providerConfig || ! $providerConfig->enabled) {
+            return false;
+        }
 
-        // Check if required config keys are set
-        foreach ($providerConfig['config_keys'] ?? [] as $configKey) {
-            // For providers that don't need API keys (like Ollama), just check if base URL is configured
-            if ($configKey === 'OLLAMA_BASE_URL') {
-                if (empty(config("services.{$provider}.base"))) {
+        // Check if provider has valid credentials
+        $credential = AICredential::getActiveEnabledCredential($provider);
+        if (! $credential) {
+            // For Ollama, check if base URL is configured instead of credentials
+            if ($provider === 'ollama') {
+                if (empty(config('services.ollama.base'))) {
                     return false;
                 }
             } else {
-                // For other providers, check for API keys - need at least one valid configuration
-                $hasConfigKey = ! empty(config("services.{$provider}.key"));
-                $hasEnvKey = ! empty(env($configKey));
-                if (! $hasConfigKey && ! $hasEnvKey) {
-                    return false;
-                }
+                return false;
             }
         }
 
         // Check if model exists in provider's model list
+        $capabilities = $providerConfig->getCapabilities();
         $allModels = array_merge(
-            array_keys($providerConfig['text_models'] ?? []),
-            array_keys($providerConfig['embedding_models'] ?? [])
+            array_keys($capabilities['text_models'] ?? []),
+            array_keys($capabilities['embedding_models'] ?? [])
         );
 
         return in_array($model, $allModels);

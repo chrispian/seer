@@ -34,11 +34,11 @@ class FragmentCreateStep extends Step
         if ($title) {
             $fragmentData['title'] = $title;
         }
-        
+
         if ($vault) {
             $fragmentData['vault'] = $vault;
         }
-        
+
         if ($source) {
             $fragmentData['source'] = $source;
         }
@@ -59,7 +59,7 @@ class FragmentCreateStep extends Step
                 'type' => $fragment->type,
                 'created_at' => $fragment->created_at->toISOString(),
             ];
-            
+
             // Optionally return full fragment for job dispatching
             if ($returnFragment) {
                 $result['fragment'] = $fragment;

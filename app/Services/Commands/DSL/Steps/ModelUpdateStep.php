@@ -141,10 +141,10 @@ class ModelUpdateStep extends Step
 
             // Handle special operators that need specific Eloquent methods
             if (in_array(strtoupper($operator), ['IN', 'NOT IN'])) {
-                if (!is_array($value)) {
+                if (! is_array($value)) {
                     throw new InvalidArgumentException("Value for {$operator} operator must be an array");
                 }
-                
+
                 if (str_contains($field, '.')) {
                     // JSON path IN queries need special handling
                     // Convert field.path notation to field->path for Laravel's JSON syntax

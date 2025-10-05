@@ -15,7 +15,7 @@ class FragmentUpdateStep extends Step
     {
         $with = $config['with'] ?? [];
 
-        if (!isset($with['id'])) {
+        if (! isset($with['id'])) {
             throw new \InvalidArgumentException('Fragment update requires an id');
         }
 
@@ -33,7 +33,7 @@ class FragmentUpdateStep extends Step
 
         // Find the fragment
         $fragment = Fragment::find($fragmentId);
-        if (!$fragment) {
+        if (! $fragment) {
             throw new \InvalidArgumentException("Fragment not found: {$fragmentId}");
         }
 
@@ -73,7 +73,7 @@ class FragmentUpdateStep extends Step
                         if (is_array($value)) {
                             $fragment->state = $value;
                         } else {
-                            throw new \InvalidArgumentException("State must be an array");
+                            throw new \InvalidArgumentException('State must be an array');
                         }
                         break;
                     default:
@@ -118,6 +118,7 @@ class FragmentUpdateStep extends Step
     public function validate(array $config): bool
     {
         $with = $config['with'] ?? [];
+
         return isset($with['id']) && isset($with['data']) && is_array($with['data']);
     }
 }

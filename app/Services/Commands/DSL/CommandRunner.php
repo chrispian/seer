@@ -2,6 +2,8 @@
 
 namespace App\Services\Commands\DSL;
 
+use App\Decorators\StepTelemetryDecorator;
+use App\Decorators\TemplateEngineTelemetryDecorator;
 use App\Services\Commands\CommandPackLoader;
 use App\Services\Commands\DSL\Steps\StepFactory;
 
@@ -11,7 +13,12 @@ class CommandRunner
         protected CommandPackLoader $loader,
         protected TemplateEngine $templateEngine,
         protected StepFactory $stepFactory
-    ) {}
+    ) {
+        // Wrap template engine with telemetry if enabled
+        if (config('command-telemetry.enabled', true)) {
+            $this->templateEngine = TemplateEngineTelemetryDecorator::wrap($this->templateEngine);
+        }
+    }
 
     /**
      * Execute a command by slug with given context
@@ -61,7 +68,7 @@ class CommandRunner
                     break;
                 }
             }
-            
+
             // Add performance metrics
             $totalDuration = round((microtime(true) - $totalStartTime) * 1000, 2);
             $execution['performance'] = [
@@ -69,7 +76,7 @@ class CommandRunner
                 'step_count' => count($steps),
                 'avg_step_duration_ms' => count($steps) > 0 ? round($totalDuration / count($steps), 2) : 0,
             ];
-            
+
             // Log performance for analysis
             if ($totalDuration > 1000) { // Log commands taking > 1 second
                 \Log::info('Slow Command Execution', [
@@ -109,6 +116,11 @@ class CommandRunner
         try {
             // Create step handler
             $step = $this->stepFactory->create($stepType);
+
+            // Wrap step with telemetry if enabled
+            if (config('command-telemetry.enabled', true)) {
+                $step = StepTelemetryDecorator::wrap($step);
+            }
 
             // Render step configuration with context
             $renderedConfig = $this->renderStepConfig($stepConfig, $context);

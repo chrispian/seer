@@ -66,18 +66,44 @@ export function CustomizationPanel({ isOpen, onClose }: CustomizationPanelProps)
   } = useLayoutStore()
 
   const [importText, setImportText] = useState('')
+  const [importMethod, setImportMethod] = useState<'text' | 'file'>('file')
 
   const handleExport = () => {
     const exported = exportPreferences()
+    
+    // Create and download file (consistent with user settings)
+    const blob = new Blob([exported], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `fragments-layout-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    
+    // Also copy to clipboard as backup
     navigator.clipboard.writeText(exported)
-    // Could add a toast here
   }
 
   const handleImport = () => {
     if (importText.trim()) {
       importPreferences(importText)
       setImportText('')
-      // Could add a toast here
+    }
+  }
+
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      try {
+        const content = await file.text()
+        importPreferences(content)
+        // Reset the file input
+        event.target.value = ''
+      } catch (error) {
+        console.error('Failed to import layout file:', error)
+      }
     }
   }
 
@@ -311,24 +337,57 @@ export function CustomizationPanel({ isOpen, onClose }: CustomizationPanelProps)
                       <DialogHeader>
                         <DialogTitle>Import Layout Settings</DialogTitle>
                         <DialogDescription>
-                          Paste your exported layout configuration below to restore your settings.
+                          Import your layout configuration from a file or paste the JSON directly.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
-                        <textarea
-                          className="w-full h-32 p-2 border rounded text-sm font-mono"
-                          placeholder="Paste exported settings here..."
-                          value={importText}
-                          onChange={(e) => setImportText(e.target.value)}
-                        />
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setImportText('')}>
-                            Clear
+                        <div className="flex gap-2 mb-4">
+                          <Button
+                            variant={importMethod === 'file' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setImportMethod('file')}
+                          >
+                            Upload File
                           </Button>
-                          <Button onClick={handleImport} disabled={!importText.trim()}>
-                            Import
+                          <Button
+                            variant={importMethod === 'text' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setImportMethod('text')}
+                          >
+                            Paste JSON
                           </Button>
                         </div>
+
+                        {importMethod === 'file' ? (
+                          <div>
+                            <input
+                              type="file"
+                              accept=".json"
+                              onChange={handleFileImport}
+                              className="w-full p-2 border rounded"
+                            />
+                            <p className="text-sm text-muted-foreground mt-2">
+                              Select a JSON file exported from Fragments Engine
+                            </p>
+                          </div>
+                        ) : (
+                          <div>
+                            <textarea
+                              className="w-full h-32 p-2 border rounded text-sm font-mono"
+                              placeholder="Paste exported settings here..."
+                              value={importText}
+                              onChange={(e) => setImportText(e.target.value)}
+                            />
+                            <div className="flex justify-end gap-2 mt-2">
+                              <Button variant="outline" onClick={() => setImportText('')}>
+                                Clear
+                              </Button>
+                              <Button onClick={handleImport} disabled={!importText.trim()}>
+                                Import
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </DialogContent>
                   </Dialog>

@@ -23,8 +23,6 @@ class TextParseStep extends Step
         $parser = $withConfig['parser'] ?? 'todo';
         $rules = $withConfig['rules'] ?? [];
 
-
-
         if ($input === '' || $input === null) {
             throw new \InvalidArgumentException('Text parse step requires input text');
         }
@@ -42,7 +40,7 @@ class TextParseStep extends Step
         $startTime = microtime(true);
 
         try {
-            $result = match($parser) {
+            $result = match ($parser) {
                 'todo' => $this->parseTodoText($input, $rules),
                 default => throw new \InvalidArgumentException("Unsupported parser type: {$parser}")
             };
@@ -80,15 +78,15 @@ class TextParseStep extends Step
         $result = $this->todoParser->parse($input);
 
         // Apply any custom rules
-        if (isset($rules['extract_due_date']) && !$rules['extract_due_date']) {
+        if (isset($rules['extract_due_date']) && ! $rules['extract_due_date']) {
             $result['due_date'] = null;
         }
 
-        if (isset($rules['extract_priority']) && !$rules['extract_priority']) {
+        if (isset($rules['extract_priority']) && ! $rules['extract_priority']) {
             $result['priority'] = 'medium';
         }
 
-        if (isset($rules['extract_tags']) && !$rules['extract_tags']) {
+        if (isset($rules['extract_tags']) && ! $rules['extract_tags']) {
             $result['tags'] = ['todo'];
         }
 
@@ -108,7 +106,7 @@ class TextParseStep extends Step
      */
     protected function getFallbackResult(string $input, string $parser): array
     {
-        return match($parser) {
+        return match ($parser) {
             'todo' => [
                 'title' => $this->createFallbackTitle($input),
                 'description' => $input,
@@ -132,7 +130,7 @@ class TextParseStep extends Step
     {
         // Clean up the input and take first part as title
         $title = trim($input);
-        
+
         // Remove common prefixes
         $prefixes = ['todo:', 'task:', 'do:', 'reminder:'];
         foreach ($prefixes as $prefix) {
@@ -144,7 +142,7 @@ class TextParseStep extends Step
 
         // Limit length
         if (strlen($title) > 80) {
-            $title = substr($title, 0, 77) . '...';
+            $title = substr($title, 0, 77).'...';
         }
 
         return $title ?: 'Untitled Todo';
@@ -153,15 +151,15 @@ class TextParseStep extends Step
     public function validate(array $config): bool
     {
         $withConfig = $config['with'] ?? $config;
-        
-        if (!isset($withConfig['input']) || empty($withConfig['input'])) {
+
+        if (! isset($withConfig['input']) || empty($withConfig['input'])) {
             return false;
         }
 
         $parser = $withConfig['parser'] ?? 'todo';
         $supportedParsers = ['todo'];
 
-        if (!in_array($parser, $supportedParsers)) {
+        if (! in_array($parser, $supportedParsers)) {
             return false;
         }
 

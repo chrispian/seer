@@ -32,7 +32,7 @@ class StepFactory
 
         // Text processing operations
         'text.parse' => TextParseStep::class,
-        
+
         // Utility steps for data manipulation
         'context.merge' => ContextMergeStep::class,
         'string.format' => StringFormatStep::class,

@@ -12,17 +12,17 @@ class DatabaseUpdateStep extends Step
     public function execute(array $config, array $context, bool $dryRun = false): mixed
     {
         $with = $config['with'] ?? [];
-        
+
         $model = $with['model'] ?? null;
         $id = $with['id'] ?? null;
         $data = $with['data'] ?? [];
         $conditions = $with['conditions'] ?? [];
 
-        if (!$model) {
+        if (! $model) {
             throw new \InvalidArgumentException('Database update requires a model');
         }
 
-        if (!$id && empty($conditions)) {
+        if (! $id && empty($conditions)) {
             throw new \InvalidArgumentException('Database update requires either id or conditions');
         }
 
@@ -39,7 +39,7 @@ class DatabaseUpdateStep extends Step
 
         // Get the model class
         $modelClass = $this->getModelClass($model);
-        if (!$modelClass) {
+        if (! $modelClass) {
             throw new \InvalidArgumentException("Unknown model: {$model}");
         }
 
@@ -56,7 +56,7 @@ class DatabaseUpdateStep extends Step
 
         // Find the record
         $record = $query->first();
-        if (!$record) {
+        if (! $record) {
             throw new \InvalidArgumentException("Record not found for model: {$model}");
         }
 
@@ -95,7 +95,8 @@ class DatabaseUpdateStep extends Step
     public function validate(array $config): bool
     {
         $with = $config['with'] ?? [];
-        return isset($with['model']) && isset($with['data']) && 
+
+        return isset($with['model']) && isset($with['data']) &&
                (isset($with['id']) || isset($with['conditions']));
     }
 }

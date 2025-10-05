@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\AI;
 
+use App\Models\Provider;
 use App\Services\AI\AIProviderManager;
 use Illuminate\Console\Command;
 
@@ -33,10 +34,20 @@ class HealthCheck extends Command
             $result = $providerManager->healthCheck($providerName);
             $this->displayHealthResult($providerName, $result, $verbose);
 
+            // Update provider config health status
+            $this->updateProviderHealthStatus($providerName, $result);
+
             return $result['status'] === 'healthy' ? self::SUCCESS : self::FAILURE;
 
         } catch (\Exception $e) {
             $this->error("Health check failed for {$providerName}: {$e->getMessage()}");
+
+            // Update provider config with failed status
+            $this->updateProviderHealthStatus($providerName, [
+                'status' => 'unhealthy',
+                'error' => $e->getMessage(),
+                'checked_at' => now()->toISOString(),
+            ]);
 
             return self::FAILURE;
         }
@@ -57,6 +68,9 @@ class HealthCheck extends Command
             $status = $result['status'] === 'healthy' ? '<fg=green>Healthy</>' : '<fg=red>Failed</>';
             $responseTime = isset($result['response_time_ms']) ? "{$result['response_time_ms']}ms" : 'N/A';
             $message = $result['message'] ?? $result['error'] ?? 'Unknown';
+
+            // Update provider config health status
+            $this->updateProviderHealthStatus($providerName, $result);
 
             // Truncate long messages for table display
             if (! $verbose && strlen($message) > 50) {
@@ -119,5 +133,23 @@ class HealthCheck extends Command
                 $this->line("   Version: {$result['version']}");
             }
         }
+    }
+
+    /**
+     * Update provider config health status
+     */
+    protected function updateProviderHealthStatus(string $providerName, array $result): void
+    {
+        $config = Provider::getOrCreateForProvider($providerName);
+
+        $isHealthy = ($result['status'] ?? 'unhealthy') === 'healthy';
+
+        $config->updateHealthStatus($isHealthy, [
+            'response_time_ms' => $result['response_time_ms'] ?? null,
+            'message' => $result['message'] ?? null,
+            'error' => $result['error'] ?? null,
+            'version' => $result['version'] ?? null,
+            'capabilities_checked' => $result['capabilities'] ?? null,
+        ]);
     }
 }

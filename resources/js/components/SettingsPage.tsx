@@ -1,7 +1,5 @@
 import React, { useState } from 'react'
 
-import React, { useState } from 'react'
-
 declare global {
   interface Window {
     settingsData?: {
@@ -23,7 +21,11 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { AvatarUpload } from '@/components/AvatarUpload'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ArrowLeft, User, Settings, Brain, Palette, Download, Upload, RotateCcw, CheckCircle, AlertCircle } from 'lucide-react'
+import { ArrowLeft, User, Settings, Brain, Palette, Download, Upload, RotateCcw, CheckCircle, AlertCircle, Bot } from 'lucide-react'
+import { ImportDialog } from '@/islands/Settings/components/ImportDialog'
+import { ResetDialog } from '@/islands/Settings/components/ResetDialog'
+import { ProvidersManagement } from '@/components/providers/ProvidersManagement'
+import { providersApi } from '@/lib/api/providers'
 
 interface SettingsPageProps {
   user: any
@@ -37,6 +39,8 @@ export function SettingsPage({ user, profileSettings, routes }: SettingsPageProp
   const [activeTab, setActiveTab] = useState('profile')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [providers, setProviders] = useState<any[]>([])
+  const [availableModels, setAvailableModels] = useState<any[]>([])
   
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
@@ -75,6 +79,38 @@ export function SettingsPage({ user, profileSettings, routes }: SettingsPageProp
   })
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [showImportDialog, setShowImportDialog] = useState(false)
+  const [showResetDialog, setShowResetDialog] = useState(false)
+
+  // Load providers and models when component mounts
+  React.useEffect(() => {
+    const loadProviders = async () => {
+      try {
+        const providersData = await providersApi.getProviders()
+        setProviders(providersData)
+        
+        // Extract all models from all providers
+        const allModels = providersData.flatMap(provider => 
+          provider.models.map(model => ({
+            id: `${provider.id}/${model.id}`,
+            name: `${provider.name} - ${model.name}`,
+            provider: provider.id,
+            providerName: provider.name,
+            modelId: model.id,
+            modelName: model.name,
+            capabilities: model.capabilities,
+            enabled: model.enabled && provider.enabled
+          }))
+        ).filter(model => model.enabled)
+        
+        setAvailableModels(allModels)
+      } catch (error) {
+        console.error('Failed to load providers:', error)
+      }
+    }
+    
+    loadProviders()
+  }, [])
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text })
@@ -161,6 +197,16 @@ export function SettingsPage({ user, profileSettings, routes }: SettingsPageProp
     window.location.href = routes.exportSettings
   }
 
+  const handleImportSuccess = () => {
+    showMessage('success', 'Settings imported successfully')
+    // Page will reload automatically from the hook
+  }
+
+  const handleResetSuccess = () => {
+    showMessage('success', 'Settings reset successfully')
+    // Page will reload automatically from the hook
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -201,7 +247,7 @@ export function SettingsPage({ user, profileSettings, routes }: SettingsPageProp
       {/* Settings Content */}
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile" className="gap-2">
               <User className="w-4 h-4" />
               Profile
@@ -209,6 +255,10 @@ export function SettingsPage({ user, profileSettings, routes }: SettingsPageProp
             <TabsTrigger value="preferences" className="gap-2">
               <Settings className="w-4 h-4" />
               Preferences
+            </TabsTrigger>
+            <TabsTrigger value="providers" className="gap-2">
+              <Bot className="w-4 h-4" />
+              Providers
             </TabsTrigger>
             <TabsTrigger value="ai" className="gap-2">
               <Brain className="w-4 h-4" />
@@ -426,6 +476,11 @@ export function SettingsPage({ user, profileSettings, routes }: SettingsPageProp
             </Card>
           </TabsContent>
 
+          {/* Providers Tab */}
+          <TabsContent value="providers">
+            <ProvidersManagement />
+          </TabsContent>
+
           {/* AI Settings Tab */}
           <TabsContent value="ai" className="space-y-6">
             <Card>
@@ -442,30 +497,89 @@ export function SettingsPage({ user, profileSettings, routes }: SettingsPageProp
                       <Label htmlFor="default_provider">Default Provider</Label>
                       <Select 
                         value={aiData.default_provider} 
-                        onValueChange={(value) => 
-                          setAIData(prev => ({ ...prev, default_provider: value }))
-                        }
+                        onValueChange={(value) => {
+                          setAIData(prev => ({ 
+                            ...prev, 
+                            default_provider: value,
+                            default_model: '' // Reset model when provider changes
+                          }))
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select provider" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="openai">OpenAI</SelectItem>
-                          <SelectItem value="anthropic">Anthropic</SelectItem>
-                          <SelectItem value="ollama">Ollama</SelectItem>
-                          <SelectItem value="openrouter">OpenRouter</SelectItem>
+                          {providers.filter(p => p.enabled && p.models.length > 0).map((provider) => (
+                            <SelectItem key={provider.id} value={provider.id}>
+                              <div className="flex items-center gap-2">
+                                <span>{provider.name}</span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {provider.models.length} models
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                          ))}
+                          {providers.filter(p => p.enabled && p.models.length > 0).length === 0 && (
+                            <SelectItem value="" disabled>
+                              No providers available
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
+                      {providers.length > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {providers.filter(p => p.enabled).length} of {providers.length} providers enabled
+                        </p>
+                      )}
                     </div>
                     
                     <div>
                       <Label htmlFor="default_model">Default Model</Label>
-                      <Input
-                        id="default_model"
-                        value={aiData.default_model}
-                        onChange={(e) => setAIData(prev => ({ ...prev, default_model: e.target.value }))}
-                        placeholder="e.g., gpt-4, claude-3-sonnet"
-                      />
+                      <Select 
+                        value={aiData.default_model} 
+                        onValueChange={(value) => 
+                          setAIData(prev => ({ ...prev, default_model: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a model" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[300px]">
+                          {aiData.default_provider && (
+                            <>
+                              {/* Models from selected provider */}
+                              {availableModels
+                                .filter(model => model.provider === aiData.default_provider)
+                                .map((model) => (
+                                  <SelectItem key={model.id} value={model.id}>
+                                    <div className="flex flex-col">
+                                      <span>{model.modelName}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {model.capabilities.join(', ')}
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ))
+                              }
+                              {availableModels.filter(model => model.provider === aiData.default_provider).length === 0 && (
+                                <SelectItem value="" disabled>
+                                  No models available for this provider
+                                </SelectItem>
+                              )}
+                            </>
+                          )}
+                          {!aiData.default_provider && (
+                            <SelectItem value="" disabled>
+                              Please select a provider first
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {aiData.default_provider && availableModels.filter(model => model.provider === aiData.default_provider).length > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {availableModels.filter(model => model.provider === aiData.default_provider).length} models available
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -651,12 +765,12 @@ export function SettingsPage({ user, profileSettings, routes }: SettingsPageProp
                     Export Settings
                   </Button>
                   
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" className="gap-2" onClick={() => setShowImportDialog(true)}>
                     <Upload className="w-4 h-4" />
                     Import Settings
                   </Button>
                   
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" className="gap-2" onClick={() => setShowResetDialog(true)}>
                     <RotateCcw className="w-4 h-4" />
                     Reset to Defaults
                   </Button>
@@ -666,6 +780,19 @@ export function SettingsPage({ user, profileSettings, routes }: SettingsPageProp
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Import/Reset Dialogs */}
+      <ImportDialog
+        open={showImportDialog}
+        onOpenChange={setShowImportDialog}
+        onSuccess={handleImportSuccess}
+      />
+      
+      <ResetDialog
+        open={showResetDialog}
+        onOpenChange={setShowResetDialog}
+        onSuccess={handleResetSuccess}
+      />
     </div>
   )
 }

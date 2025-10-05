@@ -54,7 +54,7 @@ test('search command uses hybrid search when embeddings enabled', function () {
     // Assert
     expect($response->type)->toBe('search');
     expect($response->shouldOpenPanel)->toBe(true);
-    expect($response->panelData['search_mode'])->toBeIn(['hybrid', 'text-only']); // May fall back to text-only if pgvector not available
+    expect($response->panelData['search_mode'])->toBeIn(['hybrid', 'text-only', 'text-fallback']); // May fall back to text-only if pgvector not available
 
     // If we found results, they should not contain the text-only indicator
     if (! empty($response->panelData['fragments'])) {

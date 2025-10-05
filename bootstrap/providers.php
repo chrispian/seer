@@ -7,4 +7,9 @@ return [
     App\Providers\HorizonServiceProvider::class,
     App\Providers\FragmentsPipelineEventServiceProvider::class,
     App\Providers\ToolServiceProvider::class,
+    App\Providers\ToolTelemetryServiceProvider::class,
+    App\Providers\TelemetryServiceProvider::class,
+    App\Providers\EmbeddingStoreServiceProvider::class,
+    App\Providers\HybridSearchServiceProvider::class,
+    App\Providers\CredentialStorageServiceProvider::class,
 ];

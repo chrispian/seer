@@ -44,17 +44,17 @@ class BenchmarkCommandsCommand extends Command
 
         foreach ($commands as $command) {
             $this->line("Testing {$command}...");
-            
+
             $durations = [];
             $errors = 0;
-            
+
             for ($i = 0; $i < $runs; $i++) {
                 $startTime = microtime(true);
-                
+
                 try {
                     $execution = $runner->execute($command, $defaultContext, false);
                     $duration = round((microtime(true) - $startTime) * 1000, 2);
-                    
+
                     if ($execution['success']) {
                         $durations[] = $duration;
                     } else {
@@ -63,12 +63,12 @@ class BenchmarkCommandsCommand extends Command
                 } catch (\Exception $e) {
                     $errors++;
                 }
-                
+
                 // Prevent overwhelming the system
                 usleep(100000); // 100ms between runs
             }
-            
-            if (!empty($durations)) {
+
+            if (! empty($durations)) {
                 $results[$command] = [
                     'min' => min($durations),
                     'max' => max($durations),
@@ -90,7 +90,7 @@ class BenchmarkCommandsCommand extends Command
         }
 
         $this->displayResults($results);
-        
+
         return self::SUCCESS;
     }
 
@@ -110,7 +110,7 @@ class BenchmarkCommandsCommand extends Command
                 $stats['max'],
                 $stats['avg'],
                 $stats['median'],
-                $stats['success_rate'] . '%',
+                $stats['success_rate'].'%',
             ];
         }
 
@@ -119,20 +119,20 @@ class BenchmarkCommandsCommand extends Command
         // Summary statistics
         $allAvgs = array_column($results, 'avg');
         $allSuccessRates = array_column($results, 'success_rate');
-        
+
         $this->newLine();
         $this->info('📈 Summary');
-        $this->line('  Overall avg performance: ' . round(array_sum($allAvgs) / count($allAvgs), 2) . 'ms');
-        $this->line('  Overall success rate: ' . round(array_sum($allSuccessRates) / count($allSuccessRates), 1) . '%');
-        $this->line('  Fastest command: ' . array_keys($results, min($results))[0] . ' (' . min($allAvgs) . 'ms avg)');
-        $this->line('  Slowest command: ' . array_keys($results, max($results))[0] . ' (' . max($allAvgs) . 'ms avg)');
+        $this->line('  Overall avg performance: '.round(array_sum($allAvgs) / count($allAvgs), 2).'ms');
+        $this->line('  Overall success rate: '.round(array_sum($allSuccessRates) / count($allSuccessRates), 1).'%');
+        $this->line('  Fastest command: '.array_keys($results, min($results))[0].' ('.min($allAvgs).'ms avg)');
+        $this->line('  Slowest command: '.array_keys($results, max($results))[0].' ('.max($allAvgs).'ms avg)');
     }
 
     protected function median(array $numbers): float
     {
         sort($numbers);
         $count = count($numbers);
-        
+
         if ($count % 2 === 0) {
             return ($numbers[$count / 2 - 1] + $numbers[$count / 2]) / 2;
         } else {

@@ -127,6 +127,54 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'settings_audit' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/settings-audit.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 90, // Keep audit logs for 90 days
+            'replace_placeholders' => true,
+        ],
+
+        'chat-telemetry' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/chat-telemetry.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        'fragment-processing-telemetry' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/fragment-processing-telemetry.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        'command-telemetry' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/command-telemetry.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        'tool-telemetry' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/tool-telemetry.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        'telemetry-unified' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/telemetry-unified.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

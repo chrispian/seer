@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Decorators\CommandTelemetryDecorator;
 use App\DTOs\CommandRequest;
 use App\Models\CommandRegistry as CommandRegistryModel;
 use App\Models\Fragment;
 use App\Services\CommandRegistry;
 use App\Services\Commands\DSL\CommandRunner;
+use App\Services\Telemetry\CommandTelemetry;
 use Illuminate\Http\Request;
 
 class CommandController extends Controller
@@ -43,6 +45,14 @@ class CommandController extends Controller
             try {
                 $commandClass = CommandRegistry::find($commandName);
 
+                // Log command start for hardcoded commands
+                if (config('command-telemetry.enabled', true)) {
+                    CommandTelemetry::logCommandStart($commandName, $arguments, [
+                        'source_type' => 'hardcoded',
+                        'class' => $commandClass,
+                    ]);
+                }
+
                 // Create command request
                 $commandRequest = new CommandRequest(
                     command: $commandName,
@@ -55,6 +65,18 @@ class CommandController extends Controller
                 $response = $commandInstance->handle($commandRequest);
 
                 $executionTime = round((microtime(true) - $startTime) * 1000, 2); // milliseconds
+
+                // Log command completion for hardcoded commands
+                if (config('command-telemetry.enabled', true)) {
+                    CommandTelemetry::logCommandComplete(
+                        $commandName,
+                        $arguments,
+                        $executionTime,
+                        true,
+                        ['response_type' => $response->type],
+                        null
+                    );
+                }
 
                 // Log command execution as a fragment for activity tracking
                 $this->logCommandExecution($commandName, $commandText, $arguments, $response, $executionTime, true);
@@ -78,6 +100,12 @@ class CommandController extends Controller
                 $dbCommand = CommandRegistryModel::where('slug', $commandName)->first();
                 if ($dbCommand) {
                     $runner = app(CommandRunner::class);
+
+                    // Wrap runner with telemetry if enabled
+                    if (config('command-telemetry.enabled', true)) {
+                        $runner = CommandTelemetryDecorator::wrap($runner);
+                    }
+
                     $result = $runner->execute($commandName, $arguments);
 
                     $executionTime = round((microtime(true) - $startTime) * 1000, 2);
@@ -191,7 +219,7 @@ class CommandController extends Controller
         // Look for response-generating steps (notify, response.panel, etc.)
         foreach ($result['steps'] as $step) {
             $stepOutput = $step['output'] ?? [];
-            
+
             // Handle notify steps with panel_data for navigation
             if ($step['type'] === 'notify' && isset($stepOutput['panel_data'])) {
                 $panelData = $stepOutput['panel_data'];
@@ -201,11 +229,11 @@ class CommandController extends Controller
                     $response->message = $stepOutput['message'] ?? 'Navigating...';
                 }
             }
-            
+
             // Handle notify steps with response_data
             if ($step['type'] === 'notify' && isset($stepOutput['response_data'])) {
                 $responseData = $stepOutput['response_data'];
-                
+
                 // Apply response_data properties to the response
                 if (isset($responseData['type'])) {
                     $response->type = $responseData['type'];
@@ -228,16 +256,16 @@ class CommandController extends Controller
                 if (isset($responseData['toastData'])) {
                     $response->toastData = $responseData['toastData'];
                 }
-                
+
                 // Use the notify message if provided, otherwise keep existing
-                if (isset($stepOutput['message']) && !empty($stepOutput['message'])) {
+                if (isset($stepOutput['message']) && ! empty($stepOutput['message'])) {
                     $response->message = $stepOutput['message'];
                 }
             }
-            
+
             // Handle simple notify steps (just message)
-            if ($step['type'] === 'notify' && isset($stepOutput['message']) && 
-                !isset($stepOutput['panel_data']) && !isset($stepOutput['response_data'])) {
+            if ($step['type'] === 'notify' && isset($stepOutput['message']) &&
+                ! isset($stepOutput['panel_data']) && ! isset($stepOutput['response_data'])) {
                 $response->message = $stepOutput['message'];
                 if (isset($stepOutput['level']) && $stepOutput['level'] === 'success') {
                     $response->shouldShowSuccessToast = true;
@@ -245,7 +273,7 @@ class CommandController extends Controller
                     $response->shouldShowErrorToast = true;
                 }
             }
-            
+
             // Handle response.panel steps
             if ($step['type'] === 'response.panel' && isset($stepOutput['shouldOpenPanel'])) {
                 $response->type = $stepOutput['type'] ?? 'panel';
@@ -253,12 +281,12 @@ class CommandController extends Controller
                 $response->shouldOpenPanel = $stepOutput['shouldOpenPanel'];
                 $response->panelData = $stepOutput['panel_data'] ?? null;
             }
-            
+
             // Handle condition steps that may contain response steps
             if ($step['type'] === 'condition' && isset($stepOutput['steps_executed'])) {
                 foreach ($stepOutput['steps_executed'] as $subStep) {
                     $subStepOutput = $subStep['output'] ?? [];
-                    
+
                     // Check for response.panel in condition branches
                     if ($subStep['type'] === 'response.panel' && isset($subStepOutput['shouldOpenPanel'])) {
                         $response->type = $subStepOutput['type'] ?? 'panel';
@@ -266,7 +294,7 @@ class CommandController extends Controller
                         $response->shouldOpenPanel = $subStepOutput['shouldOpenPanel'];
                         $response->panelData = $subStepOutput['panel_data'] ?? null;
                     }
-                    
+
                     // Check for notify in condition branches
                     if ($subStep['type'] === 'notify' && isset($subStepOutput['message'])) {
                         $response->message = $subStepOutput['message'];

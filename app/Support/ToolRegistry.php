@@ -3,8 +3,7 @@
 namespace App\Support;
 
 use App\Contracts\ToolContract;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\File;
+use App\Decorators\ToolTelemetryDecorator;
 use Illuminate\Support\Facades\Log;
 
 class ToolRegistry
@@ -14,6 +13,11 @@ class ToolRegistry
 
     public function register(ToolContract $tool): void
     {
+        // Automatically wrap tools with telemetry if enabled
+        if (config('tool-telemetry.enabled', true)) {
+            $tool = ToolTelemetryDecorator::wrap($tool);
+        }
+
         $this->tools[$tool->name()] = $tool;
     }
 
@@ -25,8 +29,11 @@ class ToolRegistry
     /** Load JSON schemas located in resources/tools/contracts */
     public function loadContract(string $name): ?array
     {
-        $path = config('tools.contracts_path') . DIRECTORY_SEPARATOR . "{$name}.json";
-        if (!file_exists($path)) return null;
+        $path = config('tools.contracts_path').DIRECTORY_SEPARATOR."{$name}.json";
+        if (! file_exists($path)) {
+            return null;
+        }
+
         return json_decode(file_get_contents($path), true);
     }
 
@@ -34,7 +41,7 @@ class ToolRegistry
     public function ensureScope(string $scope): void
     {
         $allowed = config('tools.scopes', []);
-        if (!in_array($scope, $allowed, true)) {
+        if (! in_array($scope, $allowed, true)) {
             // In production, throw AccessDenied; here we log and allow to let dev start
             Log::warning("Tool scope not in config/tools.php scopes: {$scope}");
         }

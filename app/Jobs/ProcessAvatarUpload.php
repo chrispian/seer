@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ProcessAvatarUpload implements ShouldQueue
 {
-    use Queueable;
+    use HasCorrelationContext, Queueable;
 
     public function __construct(
         public int $userId,
@@ -20,11 +20,17 @@ class ProcessAvatarUpload implements ShouldQueue
 
     public function handle(): void
     {
-        Log::debug('ProcessAvatarUpload::handle()', [
-            'user_id' => $this->userId,
-            'temp_file' => $this->tempFilePath,
-            'original_name' => $this->originalName,
-        ]);
+        // Restore correlation context for this job
+        $this->restoreCorrelationContext();
+
+        Log::debug('ProcessAvatarUpload::handle()', array_merge(
+            $this->getJobContext(),
+            [
+                'user_id' => $this->userId,
+                'temp_file' => $this->tempFilePath,
+                'original_name' => $this->originalName,
+            ]
+        ));
 
         $user = User::find($this->userId);
         if (! $user) {

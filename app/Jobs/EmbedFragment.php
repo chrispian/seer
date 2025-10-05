@@ -2,12 +2,12 @@
 
 namespace App\Jobs;
 
+use App\Contracts\EmbeddingStoreInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class EmbedFragment implements ShouldQueue
@@ -21,7 +21,7 @@ class EmbedFragment implements ShouldQueue
         public string $contentHash
     ) {}
 
-    public function handle(\App\Services\AI\Embeddings $emb): void
+    public function handle(\App\Services\AI\Embeddings $emb, EmbeddingStoreInterface $store): void
     {
         if (! config('fragments.embeddings.enabled')) {
             Log::debug('EmbedFragment: embeddings disabled, skipping', ['fragment_id' => $this->fragmentId]);
@@ -43,11 +43,14 @@ class EmbedFragment implements ShouldQueue
             return;
         }
 
-        // Check if we have pgvector support before attempting to embed
-        if (! $this->hasPgVectorSupport()) {
-            Log::warning('EmbedFragment: pgvector extension not available, skipping', [
+        // Check if vector support is available before attempting to embed
+        if (! $store->isVectorSupportAvailable()) {
+            $driverInfo = $store->getDriverInfo();
+            Log::warning('EmbedFragment: vector extension not available, skipping', [
                 'fragment_id' => $this->fragmentId,
-                'database' => DB::connection()->getDriverName(),
+                'driver' => $driverInfo['driver'],
+                'extension' => $driverInfo['extension'],
+                'available' => $driverInfo['available'],
             ]);
 
             return;
@@ -64,20 +67,23 @@ class EmbedFragment implements ShouldQueue
             ];
 
             $res = $emb->embed($text, $context); // returns ['dims'=>..,'vector'=>[..],'provider'=>..,'model'=>..]
-            $vec = '['.implode(',', $res['vector']).']';
 
-            DB::statement('
-                INSERT INTO fragment_embeddings (fragment_id, provider, model, dims, embedding, content_hash, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?::vector, ?, now(), now())
-                ON CONFLICT (fragment_id, provider, model, content_hash)
-                DO UPDATE SET dims = EXCLUDED.dims, embedding = EXCLUDED.embedding, updated_at = now()
-            ', [$fragment->id, $this->provider, $this->model, $res['dims'], $vec, $this->contentHash]);
+            // Use abstraction layer for storage
+            $store->store(
+                fragmentId: $fragment->id,
+                provider: $this->provider,
+                model: $this->model,
+                dimensions: $res['dims'],
+                vector: $res['vector'],
+                contentHash: $this->contentHash
+            );
 
-            Log::debug('EmbedFragment: embedding saved', [
+            Log::debug('EmbedFragment: embedding saved via abstraction layer', [
                 'fragment_id' => $this->fragmentId,
                 'provider' => $this->provider,
                 'model' => $this->model,
                 'dimensions' => $res['dims'],
+                'driver' => $store->getDriverInfo()['driver'],
             ]);
         } catch (\Throwable $e) {
             Log::error('EmbedFragment: failed to create embedding', [
@@ -87,28 +93,6 @@ class EmbedFragment implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
             throw $e; // Re-throw for job retry mechanisms
-        }
-    }
-
-    private function hasPgVectorSupport(): bool
-    {
-        $driver = DB::connection()->getDriverName();
-
-        if ($driver !== 'pgsql') {
-            return false;
-        }
-
-        try {
-            // Check if pgvector extension is installed
-            $result = DB::select("SELECT 1 FROM pg_extension WHERE extname = 'vector'");
-
-            return ! empty($result);
-        } catch (\Throwable $e) {
-            Log::warning('EmbedFragment: could not check pgvector availability', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return false;
         }
     }
 }

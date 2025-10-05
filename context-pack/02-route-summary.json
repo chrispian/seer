@@ -1,0 +1,2490 @@
+[
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "/",
+        "name": "root",
+        "action": "App\\Http\\Controllers\\AppShellController@index",
+        "controller": "App\\Http\\Controllers\\AppShellController",
+        "controllerMethod": "index",
+        "controllerPath": "app/Http/Controllers/AppShellController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "_boost/browser-logs",
+        "name": "boost.browser-logs",
+        "action": "Closure",
+        "controller": null,
+        "controllerMethod": null,
+        "controllerPath": null,
+        "middleware": [],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/analyze-fragment",
+        "name": "generated::a6w1kVayVihGicIz",
+        "action": "App\\Http\\Controllers\\AnalyzeFragmentController",
+        "controller": "App\\Http\\Controllers\\AnalyzeFragmentController",
+        "controllerMethod": null,
+        "controllerPath": "app/Http/Controllers/AnalyzeFragmentController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/autocomplete/commands",
+        "name": "generated::0NaLUJwtcWNcIdhs",
+        "action": "App\\Http\\Controllers\\AutocompleteController@commands",
+        "controller": "App\\Http\\Controllers\\AutocompleteController",
+        "controllerMethod": "commands",
+        "controllerPath": "app/Http/Controllers/AutocompleteController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/autocomplete/contacts",
+        "name": "generated::R8QAgAPJRKOwSh6l",
+        "action": "App\\Http\\Controllers\\AutocompleteController@contacts",
+        "controller": "App\\Http\\Controllers\\AutocompleteController",
+        "controllerMethod": "contacts",
+        "controllerPath": "app/Http/Controllers/AutocompleteController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/autocomplete/fragments",
+        "name": "generated::zt5DApqhBV8KwsA5",
+        "action": "App\\Http\\Controllers\\AutocompleteController@fragments",
+        "controller": "App\\Http\\Controllers\\AutocompleteController",
+        "controllerMethod": "fragments",
+        "controllerPath": "app/Http/Controllers/AutocompleteController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/bookmarks/recent",
+        "name": "generated::TJfcpDHxuLNkfpMd",
+        "action": "App\\Http\\Controllers\\BookmarkController@getRecent",
+        "controller": "App\\Http\\Controllers\\BookmarkController",
+        "controllerMethod": "getRecent",
+        "controllerPath": "app/Http/Controllers/BookmarkController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/bookmarks/search",
+        "name": "generated::awlzGFAhmDBy6Nef",
+        "action": "App\\Http\\Controllers\\BookmarkController@search",
+        "controller": "App\\Http\\Controllers\\BookmarkController",
+        "controllerMethod": "search",
+        "controllerPath": "app/Http/Controllers/BookmarkController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/bookmarks/{id}/mark-viewed",
+        "name": "generated::aIry4zS3JF2mLuSv",
+        "action": "App\\Http\\Controllers\\BookmarkController@markAsViewed",
+        "controller": "App\\Http\\Controllers\\BookmarkController",
+        "controllerMethod": "markAsViewed",
+        "controllerPath": "app/Http/Controllers/BookmarkController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/chat-sessions",
+        "name": "generated::vKLohnoZbLFk7J2O",
+        "action": "App\\Http\\Controllers\\ChatSessionController@index",
+        "controller": "App\\Http\\Controllers\\ChatSessionController",
+        "controllerMethod": "index",
+        "controllerPath": "app/Http/Controllers/ChatSessionController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/chat-sessions",
+        "name": "generated::updlbFSbhPv2bxhA",
+        "action": "App\\Http\\Controllers\\ChatSessionController@store",
+        "controller": "App\\Http\\Controllers\\ChatSessionController",
+        "controllerMethod": "store",
+        "controllerPath": "app/Http/Controllers/ChatSessionController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/chat-sessions/context",
+        "name": "generated::0XiwD7ocrBqU6aQR",
+        "action": "App\\Http\\Controllers\\ChatSessionController@getContext",
+        "controller": "App\\Http\\Controllers\\ChatSessionController",
+        "controllerMethod": "getContext",
+        "controllerPath": "app/Http/Controllers/ChatSessionController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/chat-sessions/pin-order",
+        "name": "generated::90leh0GKDbC79Vws",
+        "action": "App\\Http\\Controllers\\ChatSessionController@updatePinOrder",
+        "controller": "App\\Http\\Controllers\\ChatSessionController",
+        "controllerMethod": "updatePinOrder",
+        "controllerPath": "app/Http/Controllers/ChatSessionController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/chat-sessions/pinned",
+        "name": "generated::83b944vZL1ER4STg",
+        "action": "App\\Http\\Controllers\\ChatSessionController@pinned",
+        "controller": "App\\Http\\Controllers\\ChatSessionController",
+        "controllerMethod": "pinned",
+        "controllerPath": "app/Http/Controllers/ChatSessionController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/chat-sessions/{chatSession}",
+        "name": "generated::mDIaa7pDN4fyAGjQ",
+        "action": "App\\Http\\Controllers\\ChatSessionController@show",
+        "controller": "App\\Http\\Controllers\\ChatSessionController",
+        "controllerMethod": "show",
+        "controllerPath": "app/Http/Controllers/ChatSessionController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "PUT"
+        ],
+        "uri": "api/chat-sessions/{chatSession}",
+        "name": "generated::FjVgFtAIzeYCNiNB",
+        "action": "App\\Http\\Controllers\\ChatSessionController@update",
+        "controller": "App\\Http\\Controllers\\ChatSessionController",
+        "controllerMethod": "update",
+        "controllerPath": "app/Http/Controllers/ChatSessionController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "DELETE"
+        ],
+        "uri": "api/chat-sessions/{chatSession}",
+        "name": "generated::MlsOvE67oJB4eMkS",
+        "action": "App\\Http\\Controllers\\ChatSessionController@destroy",
+        "controller": "App\\Http\\Controllers\\ChatSessionController",
+        "controllerMethod": "destroy",
+        "controllerPath": "app/Http/Controllers/ChatSessionController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "PUT"
+        ],
+        "uri": "api/chat-sessions/{chatSession}/model",
+        "name": "generated::qTKWEJSRct6OESKz",
+        "action": "App\\Http\\Controllers\\ChatSessionController@updateModel",
+        "controller": "App\\Http\\Controllers\\ChatSessionController",
+        "controllerMethod": "updateModel",
+        "controllerPath": "app/Http/Controllers/ChatSessionController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/chat-sessions/{chatSession}/pin",
+        "name": "generated::RZa668fTMf5OJYcX",
+        "action": "App\\Http\\Controllers\\ChatSessionController@togglePin",
+        "controller": "App\\Http\\Controllers\\ChatSessionController",
+        "controllerMethod": "togglePin",
+        "controllerPath": "app/Http/Controllers/ChatSessionController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/chat/stream/{messageId}",
+        "name": "generated::EkOKh7uDLXtV5n40",
+        "action": "App\\Http\\Controllers\\ChatApiController@stream",
+        "controller": "App\\Http\\Controllers\\ChatApiController",
+        "controllerMethod": "stream",
+        "controllerPath": "app/Http/Controllers/ChatApiController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/commands/execute",
+        "name": "generated::sOyAjhC4CQ76ERxs",
+        "action": "App\\Http\\Controllers\\CommandController@execute",
+        "controller": "App\\Http\\Controllers\\CommandController",
+        "controllerMethod": "execute",
+        "controllerPath": "app/Http/Controllers/CommandController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/contacts/{id}",
+        "name": "generated::1SxZtjA25XmB86U8",
+        "action": "App\\Http\\Controllers\\ContactController@show",
+        "controller": "App\\Http\\Controllers\\ContactController",
+        "controllerMethod": "show",
+        "controllerPath": "app/Http/Controllers/ContactController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/files",
+        "name": "generated::aRDUiYOZ2FXbEc1d",
+        "action": "App\\Http\\Controllers\\FileUploadController@store",
+        "controller": "App\\Http\\Controllers\\FileUploadController",
+        "controllerMethod": "store",
+        "controllerPath": "app/Http/Controllers/FileUploadController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/fragment",
+        "name": "generated::xkWQVTAtDabx3VXu",
+        "action": "App\\Http\\Controllers\\FragmentController@store",
+        "controller": "App\\Http\\Controllers\\FragmentController",
+        "controllerMethod": "store",
+        "controllerPath": "app/Http/Controllers/FragmentController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/fragment",
+        "name": "generated::FtgNhP680zLtH5Jh",
+        "action": "App\\Http\\Controllers\\FragmentController@index",
+        "controller": "App\\Http\\Controllers\\FragmentController",
+        "controllerMethod": "index",
+        "controllerPath": "app/Http/Controllers/FragmentController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "PATCH"
+        ],
+        "uri": "api/fragment/{fragment}",
+        "name": "generated::YagYI1jMSrdVvHHn",
+        "action": "App\\Http\\Controllers\\FragmentController@update",
+        "controller": "App\\Http\\Controllers\\FragmentController",
+        "controllerMethod": "update",
+        "controllerPath": "app/Http/Controllers/FragmentController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "DELETE"
+        ],
+        "uri": "api/fragments/{fragment}",
+        "name": "generated::v2MOOf6RzVP50QTK",
+        "action": "App\\Http\\Controllers\\FragmentController@destroy",
+        "controller": "App\\Http\\Controllers\\FragmentController",
+        "controllerMethod": "destroy",
+        "controllerPath": "app/Http/Controllers/FragmentController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/fragments/{id}",
+        "name": "generated::wKxoOKVLQ0mTc8Ej",
+        "action": "App\\Http\\Controllers\\FragmentDetailController@show",
+        "controller": "App\\Http\\Controllers\\FragmentDetailController",
+        "controllerMethod": "show",
+        "controllerPath": "app/Http/Controllers/FragmentDetailController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/fragments/{id}/bookmark",
+        "name": "generated::Twp7utezSWPiooQK",
+        "action": "App\\Http\\Controllers\\BookmarkController@checkBookmarkStatus",
+        "controller": "App\\Http\\Controllers\\BookmarkController",
+        "controllerMethod": "checkBookmarkStatus",
+        "controllerPath": "app/Http/Controllers/BookmarkController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/fragments/{id}/bookmark",
+        "name": "generated::Rknh74Tw0duLDVat",
+        "action": "App\\Http\\Controllers\\BookmarkController@toggleBookmark",
+        "controller": "App\\Http\\Controllers\\BookmarkController",
+        "controllerMethod": "toggleBookmark",
+        "controllerPath": "app/Http/Controllers/BookmarkController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/inbox",
+        "name": "generated::HXtdl7CLZ1F9zZyJ",
+        "action": "App\\Http\\Controllers\\InboxController@index",
+        "controller": "App\\Http\\Controllers\\InboxController",
+        "controllerMethod": "index",
+        "controllerPath": "app/Http/Controllers/InboxController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/inbox/accept-all",
+        "name": "generated::ys0Usm6NmJNUOT0O",
+        "action": "App\\Http\\Controllers\\InboxController@acceptAll",
+        "controller": "App\\Http\\Controllers\\InboxController",
+        "controllerMethod": "acceptAll",
+        "controllerPath": "app/Http/Controllers/InboxController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/inbox/accept-multiple",
+        "name": "generated::nhhdIDpCD0IeI7J9",
+        "action": "App\\Http\\Controllers\\InboxController@acceptMultiple",
+        "controller": "App\\Http\\Controllers\\InboxController",
+        "controllerMethod": "acceptMultiple",
+        "controllerPath": "app/Http/Controllers/InboxController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/inbox/stats",
+        "name": "generated::9YmTOMJNqfVoAFp0",
+        "action": "App\\Http\\Controllers\\InboxController@stats",
+        "controller": "App\\Http\\Controllers\\InboxController",
+        "controllerMethod": "stats",
+        "controllerPath": "app/Http/Controllers/InboxController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/inbox/{fragmentId}/accept",
+        "name": "generated::cyUkIUn5wcw6dwmg",
+        "action": "App\\Http\\Controllers\\InboxController@accept",
+        "controller": "App\\Http\\Controllers\\InboxController",
+        "controllerMethod": "accept",
+        "controllerPath": "app/Http/Controllers/InboxController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/inbox/{fragmentId}/ai-assist",
+        "name": "generated::ayAAjZ4P6DAUUPPX",
+        "action": "App\\Http\\Controllers\\InboxController@aiAssist",
+        "controller": "App\\Http\\Controllers\\InboxController",
+        "controllerMethod": "aiAssist",
+        "controllerPath": "app/Http/Controllers/InboxController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/inbox/{fragmentId}/archive",
+        "name": "generated::z5IztA4Kfoa1Jryd",
+        "action": "App\\Http\\Controllers\\InboxController@archive",
+        "controller": "App\\Http\\Controllers\\InboxController",
+        "controllerMethod": "archive",
+        "controllerPath": "app/Http/Controllers/InboxController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/inbox/{fragmentId}/reopen",
+        "name": "generated::RdV5RTZTHdCFd71h",
+        "action": "App\\Http\\Controllers\\InboxController@reopen",
+        "controller": "App\\Http\\Controllers\\InboxController",
+        "controllerMethod": "reopen",
+        "controllerPath": "app/Http/Controllers/InboxController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/inbox/{fragmentId}/skip",
+        "name": "generated::Zgny2bQCG3wdZBtv",
+        "action": "App\\Http\\Controllers\\InboxController@skip",
+        "controller": "App\\Http\\Controllers\\InboxController",
+        "controllerMethod": "skip",
+        "controllerPath": "app/Http/Controllers/InboxController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/internal/db/query",
+        "name": "generated::IBmeAWDa1R8eBmB6",
+        "action": "App\\Http\\Controllers\\Internal\\DbQueryController@query",
+        "controller": "App\\Http\\Controllers\\Internal\\DbQueryController",
+        "controllerMethod": "query",
+        "controllerPath": "app/Http/Controllers/Internal/DbQueryController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/internal/export/generate",
+        "name": "generated::DmzpCkw5YU2A1JUD",
+        "action": "App\\Http\\Controllers\\Internal\\ExportController@generate",
+        "controller": "App\\Http\\Controllers\\Internal\\ExportController",
+        "controllerMethod": "generate",
+        "controllerPath": "app/Http/Controllers/Internal/ExportController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/internal/memory/search",
+        "name": "generated::NReXUOEGj4yKJek4",
+        "action": "App\\Http\\Controllers\\Internal\\MemoryController@search",
+        "controller": "App\\Http\\Controllers\\Internal\\MemoryController",
+        "controllerMethod": "search",
+        "controllerPath": "app/Http/Controllers/Internal/MemoryController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/internal/memory/write",
+        "name": "generated::N5YQYDBOxkvuDW0C",
+        "action": "App\\Http\\Controllers\\Internal\\MemoryController@write",
+        "controller": "App\\Http\\Controllers\\Internal\\MemoryController",
+        "controllerMethod": "write",
+        "controllerPath": "app/Http/Controllers/Internal/MemoryController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/log",
+        "name": "generated::fUqg6u9BaMjCdkuc",
+        "action": "App\\Http\\Controllers\\SeerLogController@store",
+        "controller": "App\\Http\\Controllers\\SeerLogController",
+        "controllerMethod": "store",
+        "controllerPath": "app/Http/Controllers/SeerLogController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/messages",
+        "name": "generated::S4xQJaEU09i3QocY",
+        "action": "App\\Http\\Controllers\\ChatApiController@send",
+        "controller": "App\\Http\\Controllers\\ChatApiController",
+        "controllerMethod": "send",
+        "controllerPath": "app/Http/Controllers/ChatApiController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/models/available",
+        "name": "generated::0gsTSXt783QF2bqt",
+        "action": "App\\Http\\Controllers\\ModelController@available",
+        "controller": "App\\Http\\Controllers\\ModelController",
+        "controllerMethod": "available",
+        "controllerPath": "app/Http/Controllers/ModelController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/projects",
+        "name": "generated::NHc96B9lw0SCVlwg",
+        "action": "App\\Http\\Controllers\\ProjectController@index",
+        "controller": "App\\Http\\Controllers\\ProjectController",
+        "controllerMethod": "index",
+        "controllerPath": "app/Http/Controllers/ProjectController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/projects",
+        "name": "generated::r0pmkJ2fafCRNzOI",
+        "action": "App\\Http\\Controllers\\ProjectController@store",
+        "controller": "App\\Http\\Controllers\\ProjectController",
+        "controllerMethod": "store",
+        "controllerPath": "app/Http/Controllers/ProjectController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/projects/{project}",
+        "name": "generated::FvMBMvhsrAJuoRmA",
+        "action": "App\\Http\\Controllers\\ProjectController@show",
+        "controller": "App\\Http\\Controllers\\ProjectController",
+        "controllerMethod": "show",
+        "controllerPath": "app/Http/Controllers/ProjectController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "PUT"
+        ],
+        "uri": "api/projects/{project}",
+        "name": "generated::2RlgKNDqJuXOHo0P",
+        "action": "App\\Http\\Controllers\\ProjectController@update",
+        "controller": "App\\Http\\Controllers\\ProjectController",
+        "controllerMethod": "update",
+        "controllerPath": "app/Http/Controllers/ProjectController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "DELETE"
+        ],
+        "uri": "api/projects/{project}",
+        "name": "generated::aYhYHk6xBMk7Xorl",
+        "action": "App\\Http\\Controllers\\ProjectController@destroy",
+        "controller": "App\\Http\\Controllers\\ProjectController",
+        "controllerMethod": "destroy",
+        "controllerPath": "app/Http/Controllers/ProjectController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/projects/{project}/set-default",
+        "name": "generated::BwwXTkWBV5NFn8qW",
+        "action": "App\\Http\\Controllers\\ProjectController@setDefault",
+        "controller": "App\\Http\\Controllers\\ProjectController",
+        "controllerMethod": "setDefault",
+        "controllerPath": "app/Http/Controllers/ProjectController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/recall",
+        "name": "generated::6YzyUhLe10YlJlz8",
+        "action": "App\\Http\\Controllers\\FragmentController@recall",
+        "controller": "App\\Http\\Controllers\\FragmentController",
+        "controllerMethod": "recall",
+        "controllerPath": "app/Http/Controllers/FragmentController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/schedules",
+        "name": "generated::I1piRQt4NawyQqPj",
+        "action": "App\\Http\\Controllers\\ScheduleController@index",
+        "controller": "App\\Http\\Controllers\\ScheduleController",
+        "controllerMethod": "index",
+        "controllerPath": "app/Http/Controllers/ScheduleController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/schedules/runs",
+        "name": "generated::esyPTyWwypMi7Q8X",
+        "action": "App\\Http\\Controllers\\ScheduleController@runs",
+        "controller": "App\\Http\\Controllers\\ScheduleController",
+        "controllerMethod": "runs",
+        "controllerPath": "app/Http/Controllers/ScheduleController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/schedules/stats",
+        "name": "generated::Y1rkhuBlpaKAfd5T",
+        "action": "App\\Http\\Controllers\\ScheduleController@stats",
+        "controller": "App\\Http\\Controllers\\ScheduleController",
+        "controllerMethod": "stats",
+        "controllerPath": "app/Http/Controllers/ScheduleController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/schedules/{id}",
+        "name": "generated::Rvu157YrAIf1gwDW",
+        "action": "App\\Http\\Controllers\\ScheduleController@show",
+        "controller": "App\\Http\\Controllers\\ScheduleController",
+        "controllerMethod": "show",
+        "controllerPath": "app/Http/Controllers/ScheduleController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/search",
+        "name": "generated::TBVt8LihYgKAIJms",
+        "action": "App\\Http\\Controllers\\FragmentController@search",
+        "controller": "App\\Http\\Controllers\\FragmentController",
+        "controllerMethod": "search",
+        "controllerPath": "app/Http/Controllers/FragmentController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/search/hybrid",
+        "name": "fragments.hybrid-search",
+        "action": "App\\Http\\Controllers\\FragmentController@hybridSearch",
+        "controller": "App\\Http\\Controllers\\FragmentController",
+        "controllerMethod": "hybridSearch",
+        "controllerPath": "app/Http/Controllers/FragmentController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/types",
+        "name": "generated::K3AbEOBJVi4WRl2b",
+        "action": "App\\Http\\Controllers\\TypeController@index",
+        "controller": "App\\Http\\Controllers\\TypeController",
+        "controllerMethod": "index",
+        "controllerPath": "app/Http/Controllers/TypeController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/types/stats",
+        "name": "generated::6XP4AsTc8qBsq5vk",
+        "action": "App\\Http\\Controllers\\TypeController@stats",
+        "controller": "App\\Http\\Controllers\\TypeController",
+        "controllerMethod": "stats",
+        "controllerPath": "app/Http/Controllers/TypeController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/types/{slug}",
+        "name": "generated::JClhOPXQZ7RHlSlr",
+        "action": "App\\Http\\Controllers\\TypeController@show",
+        "controller": "App\\Http\\Controllers\\TypeController",
+        "controllerMethod": "show",
+        "controllerPath": "app/Http/Controllers/TypeController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/types/{slug}/validate",
+        "name": "generated::Tiw0GgRsW08zwXvz",
+        "action": "App\\Http\\Controllers\\TypeController@validate",
+        "controller": "App\\Http\\Controllers\\TypeController",
+        "controllerMethod": "validate",
+        "controllerPath": "app/Http/Controllers/TypeController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/user",
+        "name": "generated::1XNuil18eNFDhJP9",
+        "action": "App\\Http\\Controllers\\UserController@show",
+        "controller": "App\\Http\\Controllers\\UserController",
+        "controllerMethod": "show",
+        "controllerPath": "app/Http/Controllers/UserController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/vaults",
+        "name": "generated::yVCJCEMonHHGWF2e",
+        "action": "App\\Http\\Controllers\\VaultController@index",
+        "controller": "App\\Http\\Controllers\\VaultController",
+        "controllerMethod": "index",
+        "controllerPath": "app/Http/Controllers/VaultController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/vaults",
+        "name": "generated::yENctsNJpdgkiDgT",
+        "action": "App\\Http\\Controllers\\VaultController@store",
+        "controller": "App\\Http\\Controllers\\VaultController",
+        "controllerMethod": "store",
+        "controllerPath": "app/Http/Controllers/VaultController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/vaults/{vault}",
+        "name": "generated::iEvEz1aefAAoNvVc",
+        "action": "App\\Http\\Controllers\\VaultController@show",
+        "controller": "App\\Http\\Controllers\\VaultController",
+        "controllerMethod": "show",
+        "controllerPath": "app/Http/Controllers/VaultController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "PUT"
+        ],
+        "uri": "api/vaults/{vault}",
+        "name": "generated::onXLAZDIMa0lArMC",
+        "action": "App\\Http\\Controllers\\VaultController@update",
+        "controller": "App\\Http\\Controllers\\VaultController",
+        "controllerMethod": "update",
+        "controllerPath": "app/Http/Controllers/VaultController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "DELETE"
+        ],
+        "uri": "api/vaults/{vault}",
+        "name": "generated::HDnYYuxKCzjdoCCS",
+        "action": "App\\Http\\Controllers\\VaultController@destroy",
+        "controller": "App\\Http\\Controllers\\VaultController",
+        "controllerMethod": "destroy",
+        "controllerPath": "app/Http/Controllers/VaultController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/vaults/{vault}/projects",
+        "name": "generated::cxbGayMVmcS7TjjA",
+        "action": "App\\Http\\Controllers\\ProjectController@getForVault",
+        "controller": "App\\Http\\Controllers\\ProjectController",
+        "controllerMethod": "getForVault",
+        "controllerPath": "app/Http/Controllers/ProjectController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "api/vaults/{vault}/set-default",
+        "name": "generated::YgQkWEsDwzRYabfo",
+        "action": "App\\Http\\Controllers\\VaultController@setDefault",
+        "controller": "App\\Http\\Controllers\\VaultController",
+        "controllerMethod": "setDefault",
+        "controllerPath": "app/Http/Controllers/VaultController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/widgets/bookmarks",
+        "name": "generated::5DWUSWedDkhgkJu3",
+        "action": "App\\Http\\Controllers\\WidgetApiController@bookmarks",
+        "controller": "App\\Http\\Controllers\\WidgetApiController",
+        "controllerMethod": "bookmarks",
+        "controllerPath": "app/Http/Controllers/WidgetApiController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/widgets/today-activity",
+        "name": "generated::K8LFRXbLioIjn3Cj",
+        "action": "App\\Http\\Controllers\\WidgetApiController@todayActivity",
+        "controller": "App\\Http\\Controllers\\WidgetApiController",
+        "controllerMethod": "todayActivity",
+        "controllerPath": "app/Http/Controllers/WidgetApiController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "api/widgets/tool-calls",
+        "name": "generated::TSGZCOsUn68pv7bT",
+        "action": "App\\Http\\Controllers\\WidgetApiController@toolCalls",
+        "controller": "App\\Http\\Controllers\\WidgetApiController",
+        "controllerMethod": "toolCalls",
+        "controllerPath": "app/Http/Controllers/WidgetApiController.php",
+        "middleware": [
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|POST|HEAD"
+        ],
+        "uri": "broadcasting/auth",
+        "name": "generated::RGGQEeuoPEtvRJTp",
+        "action": "Illuminate\\Broadcasting\\BroadcastController@authenticate",
+        "controller": "Illuminate\\Broadcasting\\BroadcastController",
+        "controllerMethod": "authenticate",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "design",
+        "name": "generated::vNnY5T7CMDuWTusn",
+        "action": "Closure",
+        "controller": null,
+        "controllerMethod": null,
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "filament/exports/{export}/download",
+        "name": "filament.exports.download",
+        "action": "Filament\\Actions\\Exports\\Http\\Controllers\\DownloadExport",
+        "controller": "Filament\\Actions\\Exports\\Http\\Controllers\\DownloadExport",
+        "controllerMethod": null,
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "filament/imports/{import}/failed-rows/download",
+        "name": "filament.imports.failed-rows.download",
+        "action": "Filament\\Actions\\Imports\\Http\\Controllers\\DownloadImportFailureCsv",
+        "controller": "Filament\\Actions\\Imports\\Http\\Controllers\\DownloadImportFailureCsv",
+        "controllerMethod": null,
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "flux/editor.css",
+        "name": "generated::pNpJCjyTDgEYQply",
+        "action": "Flux\\AssetManager@editorCss",
+        "controller": "Flux\\AssetManager",
+        "controllerMethod": "editorCss",
+        "controllerPath": null,
+        "middleware": [],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "flux/editor.js",
+        "name": "generated::hArrgGjtvjb5iILQ",
+        "action": "Flux\\AssetManager@editorJs",
+        "controller": "Flux\\AssetManager",
+        "controllerMethod": "editorJs",
+        "controllerPath": null,
+        "middleware": [],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "flux/editor.min.js",
+        "name": "generated::NUgxEM3jIxwfMt8l",
+        "action": "Flux\\AssetManager@editorMinJs",
+        "controller": "Flux\\AssetManager",
+        "controllerMethod": "editorMinJs",
+        "controllerPath": null,
+        "middleware": [],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "flux/flux.js",
+        "name": "generated::bLzOU8N43sTk3ybz",
+        "action": "Flux\\AssetManager@fluxJs",
+        "controller": "Flux\\AssetManager",
+        "controllerMethod": "fluxJs",
+        "controllerPath": null,
+        "middleware": [],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "flux/flux.min.js",
+        "name": "generated::2VLdgKc288Q7Hcjh",
+        "action": "Flux\\AssetManager@fluxMinJs",
+        "controller": "Flux\\AssetManager",
+        "controllerMethod": "fluxMinJs",
+        "controllerPath": null,
+        "middleware": [],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "fragments",
+        "name": "filament.fragments.pages.dashboard",
+        "action": "Filament\\Pages\\Dashboard",
+        "controller": "Filament\\Pages\\Dashboard",
+        "controllerMethod": null,
+        "controllerPath": null,
+        "middleware": [
+            "Filament\\Http\\Middleware\\SetUpPanel:fragments",
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Filament\\Http\\Middleware\\Authenticate",
+            "Filament\\Http\\Middleware\\AuthenticateSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "Filament\\Http\\Middleware\\DisableBladeIconComponents",
+            "Filament\\Http\\Middleware\\DispatchServingFilamentEvent"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "fragments/fragments",
+        "name": "filament.fragments.resources.fragments.index",
+        "action": "App\\Filament\\Resources\\FragmentResource\\Pages\\ListFragments",
+        "controller": "App\\Filament\\Resources\\FragmentResource\\Pages\\ListFragments",
+        "controllerMethod": null,
+        "controllerPath": "app/Filament/Resources/FragmentResource/Pages/ListFragments.php",
+        "middleware": [
+            "Filament\\Http\\Middleware\\SetUpPanel:fragments",
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Filament\\Http\\Middleware\\Authenticate",
+            "Filament\\Http\\Middleware\\AuthenticateSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "Filament\\Http\\Middleware\\DisableBladeIconComponents",
+            "Filament\\Http\\Middleware\\DispatchServingFilamentEvent"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "fragments/fragments/create",
+        "name": "filament.fragments.resources.fragments.create",
+        "action": "App\\Filament\\Resources\\FragmentResource\\Pages\\CreateFragment",
+        "controller": "App\\Filament\\Resources\\FragmentResource\\Pages\\CreateFragment",
+        "controllerMethod": null,
+        "controllerPath": "app/Filament/Resources/FragmentResource/Pages/CreateFragment.php",
+        "middleware": [
+            "Filament\\Http\\Middleware\\SetUpPanel:fragments",
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Filament\\Http\\Middleware\\Authenticate",
+            "Filament\\Http\\Middleware\\AuthenticateSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "Filament\\Http\\Middleware\\DisableBladeIconComponents",
+            "Filament\\Http\\Middleware\\DispatchServingFilamentEvent"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "fragments/fragments/lens",
+        "name": "filament.fragments.resources.fragments.lens",
+        "action": "App\\Filament\\Resources\\FragmentResource\\Pages\\ChatInterface",
+        "controller": "App\\Filament\\Resources\\FragmentResource\\Pages\\ChatInterface",
+        "controllerMethod": null,
+        "controllerPath": "app/Filament/Resources/FragmentResource/Pages/ChatInterface.php",
+        "middleware": [
+            "Filament\\Http\\Middleware\\SetUpPanel:fragments",
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Filament\\Http\\Middleware\\Authenticate",
+            "Filament\\Http\\Middleware\\AuthenticateSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "Filament\\Http\\Middleware\\DisableBladeIconComponents",
+            "Filament\\Http\\Middleware\\DispatchServingFilamentEvent"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "fragments/fragments/{record}/edit",
+        "name": "filament.fragments.resources.fragments.edit",
+        "action": "App\\Filament\\Resources\\FragmentResource\\Pages\\EditFragment",
+        "controller": "App\\Filament\\Resources\\FragmentResource\\Pages\\EditFragment",
+        "controllerMethod": null,
+        "controllerPath": "app/Filament/Resources/FragmentResource/Pages/EditFragment.php",
+        "middleware": [
+            "Filament\\Http\\Middleware\\SetUpPanel:fragments",
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Filament\\Http\\Middleware\\Authenticate",
+            "Filament\\Http\\Middleware\\AuthenticateSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "Filament\\Http\\Middleware\\DisableBladeIconComponents",
+            "Filament\\Http\\Middleware\\DispatchServingFilamentEvent"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "fragments/login",
+        "name": "filament.fragments.auth.login",
+        "action": "Filament\\Auth\\Pages\\Login",
+        "controller": "Filament\\Auth\\Pages\\Login",
+        "controllerMethod": null,
+        "controllerPath": null,
+        "middleware": [
+            "Filament\\Http\\Middleware\\SetUpPanel:fragments",
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Filament\\Http\\Middleware\\AuthenticateSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "Filament\\Http\\Middleware\\DisableBladeIconComponents",
+            "Filament\\Http\\Middleware\\DispatchServingFilamentEvent"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "fragments/logout",
+        "name": "filament.fragments.auth.logout",
+        "action": "Filament\\Auth\\Http\\Controllers\\LogoutController",
+        "controller": "Filament\\Auth\\Http\\Controllers\\LogoutController",
+        "controllerMethod": null,
+        "controllerPath": null,
+        "middleware": [
+            "Filament\\Http\\Middleware\\SetUpPanel:fragments",
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Filament\\Http\\Middleware\\Authenticate",
+            "Filament\\Http\\Middleware\\AuthenticateSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "Filament\\Http\\Middleware\\DisableBladeIconComponents",
+            "Filament\\Http\\Middleware\\DispatchServingFilamentEvent"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/batches",
+        "name": "horizon.jobs-batches.index",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\BatchesController@index",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\BatchesController",
+        "controllerMethod": "index",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "horizon/api/batches/retry/{id}",
+        "name": "horizon.jobs-batches.retry",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\BatchesController@retry",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\BatchesController",
+        "controllerMethod": "retry",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/batches/{id}",
+        "name": "horizon.jobs-batches.show",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\BatchesController@show",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\BatchesController",
+        "controllerMethod": "show",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/jobs/completed",
+        "name": "horizon.completed-jobs.index",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\CompletedJobsController@index",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\CompletedJobsController",
+        "controllerMethod": "index",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/jobs/failed",
+        "name": "horizon.failed-jobs.index",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\FailedJobsController@index",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\FailedJobsController",
+        "controllerMethod": "index",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/jobs/failed/{id}",
+        "name": "horizon.failed-jobs.show",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\FailedJobsController@show",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\FailedJobsController",
+        "controllerMethod": "show",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/jobs/pending",
+        "name": "horizon.pending-jobs.index",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\PendingJobsController@index",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\PendingJobsController",
+        "controllerMethod": "index",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "horizon/api/jobs/retry/{id}",
+        "name": "horizon.retry-jobs.show",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\RetryController@store",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\RetryController",
+        "controllerMethod": "store",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/jobs/silenced",
+        "name": "horizon.silenced-jobs.index",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\SilencedJobsController@index",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\SilencedJobsController",
+        "controllerMethod": "index",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/jobs/{id}",
+        "name": "horizon.jobs.show",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\JobsController@show",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\JobsController",
+        "controllerMethod": "show",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/masters",
+        "name": "horizon.masters.index",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\MasterSupervisorController@index",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\MasterSupervisorController",
+        "controllerMethod": "index",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/metrics/jobs",
+        "name": "horizon.jobs-metrics.index",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\JobMetricsController@index",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\JobMetricsController",
+        "controllerMethod": "index",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/metrics/jobs/{id}",
+        "name": "horizon.jobs-metrics.show",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\JobMetricsController@show",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\JobMetricsController",
+        "controllerMethod": "show",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/metrics/queues",
+        "name": "horizon.queues-metrics.index",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\QueueMetricsController@index",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\QueueMetricsController",
+        "controllerMethod": "index",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/metrics/queues/{id}",
+        "name": "horizon.queues-metrics.show",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\QueueMetricsController@show",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\QueueMetricsController",
+        "controllerMethod": "show",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/monitoring",
+        "name": "horizon.monitoring.index",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\MonitoringController@index",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\MonitoringController",
+        "controllerMethod": "index",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "horizon/api/monitoring",
+        "name": "horizon.monitoring.store",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\MonitoringController@store",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\MonitoringController",
+        "controllerMethod": "store",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/monitoring/{tag}",
+        "name": "horizon.monitoring-tag.paginate",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\MonitoringController@paginate",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\MonitoringController",
+        "controllerMethod": "paginate",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "DELETE"
+        ],
+        "uri": "horizon/api/monitoring/{tag}",
+        "name": "horizon.monitoring-tag.destroy",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\MonitoringController@destroy",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\MonitoringController",
+        "controllerMethod": "destroy",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/stats",
+        "name": "horizon.stats.index",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\DashboardStatsController@index",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\DashboardStatsController",
+        "controllerMethod": "index",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/api/workload",
+        "name": "horizon.workload.index",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\WorkloadController@index",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\WorkloadController",
+        "controllerMethod": "index",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "horizon/{view?}",
+        "name": "horizon.index",
+        "action": "Laravel\\Horizon\\Http\\Controllers\\HomeController@index",
+        "controller": "Laravel\\Horizon\\Http\\Controllers\\HomeController",
+        "controllerMethod": "index",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost",
+            "Laravel\\Horizon\\Http\\Middleware\\Authenticate"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "livewire/livewire.js",
+        "name": "generated::UZ48RqSQj5Zd7emE",
+        "action": "Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@returnJavaScriptAsFile",
+        "controller": "Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets",
+        "controllerMethod": "returnJavaScriptAsFile",
+        "controllerPath": null,
+        "middleware": [],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "livewire/livewire.min.js.map",
+        "name": "generated::8C2R874VrklcBm2n",
+        "action": "Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@maps",
+        "controller": "Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets",
+        "controllerMethod": "maps",
+        "controllerPath": null,
+        "middleware": [],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "livewire/preview-file/{filename}",
+        "name": "livewire.preview-file",
+        "action": "Livewire\\Features\\SupportFileUploads\\FilePreviewController@handle",
+        "controller": "Livewire\\Features\\SupportFileUploads\\FilePreviewController",
+        "controllerMethod": "handle",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "livewire/update",
+        "name": "livewire.update",
+        "action": "Livewire\\Mechanisms\\HandleRequests\\HandleRequests@handleUpdate",
+        "controller": "Livewire\\Mechanisms\\HandleRequests\\HandleRequests",
+        "controllerMethod": "handleUpdate",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "livewire/upload-file",
+        "name": "livewire.upload-file",
+        "action": "Livewire\\Features\\SupportFileUploads\\FileUploadController@handle",
+        "controller": "Livewire\\Features\\SupportFileUploads\\FileUploadController",
+        "controllerMethod": "handle",
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\ThrottleRequests:60,1",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "settings",
+        "name": "settings.index",
+        "action": "App\\Http\\Controllers\\SettingsController@index",
+        "controller": "App\\Http\\Controllers\\SettingsController",
+        "controllerMethod": "index",
+        "controllerPath": "app/Http/Controllers/SettingsController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "settings/ai",
+        "name": "settings.ai.update",
+        "action": "App\\Http\\Controllers\\SettingsController@updateAISettings",
+        "controller": "App\\Http\\Controllers\\SettingsController",
+        "controllerMethod": "updateAISettings",
+        "controllerPath": "app/Http/Controllers/SettingsController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "settings/avatar",
+        "name": "settings.avatar.update",
+        "action": "App\\Http\\Controllers\\SettingsController@updateAvatar",
+        "controller": "App\\Http\\Controllers\\SettingsController",
+        "controllerMethod": "updateAvatar",
+        "controllerPath": "app/Http/Controllers/SettingsController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "settings/export",
+        "name": "settings.export",
+        "action": "App\\Http\\Controllers\\SettingsController@exportSettings",
+        "controller": "App\\Http\\Controllers\\SettingsController",
+        "controllerMethod": "exportSettings",
+        "controllerPath": "app/Http/Controllers/SettingsController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "settings/preferences",
+        "name": "settings.preferences.update",
+        "action": "App\\Http\\Controllers\\SettingsController@updatePreferences",
+        "controller": "App\\Http\\Controllers\\SettingsController",
+        "controllerMethod": "updatePreferences",
+        "controllerPath": "app/Http/Controllers/SettingsController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "settings/profile",
+        "name": "settings.profile.update",
+        "action": "App\\Http\\Controllers\\SettingsController@updateProfile",
+        "controller": "App\\Http\\Controllers\\SettingsController",
+        "controllerMethod": "updateProfile",
+        "controllerPath": "app/Http/Controllers/SettingsController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "setup/avatar",
+        "name": "setup.avatar",
+        "action": "App\\Http\\Controllers\\SetupController@avatar",
+        "controller": "App\\Http\\Controllers\\SetupController",
+        "controllerMethod": "avatar",
+        "controllerPath": "app/Http/Controllers/SetupController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "setup/avatar",
+        "name": "setup.avatar.store",
+        "action": "App\\Http\\Controllers\\SetupController@storeAvatar",
+        "controller": "App\\Http\\Controllers\\SetupController",
+        "controllerMethod": "storeAvatar",
+        "controllerPath": "app/Http/Controllers/SetupController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "setup/complete",
+        "name": "setup.complete",
+        "action": "App\\Http\\Controllers\\SetupController@complete",
+        "controller": "App\\Http\\Controllers\\SetupController",
+        "controllerMethod": "complete",
+        "controllerPath": "app/Http/Controllers/SetupController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "setup/finalize",
+        "name": "setup.finalize",
+        "action": "App\\Http\\Controllers\\SetupController@finalize",
+        "controller": "App\\Http\\Controllers\\SetupController",
+        "controllerMethod": "finalize",
+        "controllerPath": "app/Http/Controllers/SetupController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "setup/preferences",
+        "name": "setup.preferences",
+        "action": "App\\Http\\Controllers\\SetupController@preferences",
+        "controller": "App\\Http\\Controllers\\SetupController",
+        "controllerMethod": "preferences",
+        "controllerPath": "app/Http/Controllers/SetupController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "setup/preferences",
+        "name": "setup.preferences.store",
+        "action": "App\\Http\\Controllers\\SetupController@storePreferences",
+        "controller": "App\\Http\\Controllers\\SetupController",
+        "controllerMethod": "storePreferences",
+        "controllerPath": "app/Http/Controllers/SetupController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "setup/profile",
+        "name": "setup.profile",
+        "action": "App\\Http\\Controllers\\SetupController@profile",
+        "controller": "App\\Http\\Controllers\\SetupController",
+        "controllerMethod": "profile",
+        "controllerPath": "app/Http/Controllers/SetupController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "POST"
+        ],
+        "uri": "setup/profile",
+        "name": "setup.profile.store",
+        "action": "App\\Http\\Controllers\\SetupController@storeProfile",
+        "controller": "App\\Http\\Controllers\\SetupController",
+        "controllerMethod": "storeProfile",
+        "controllerPath": "app/Http/Controllers/SetupController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "setup/welcome",
+        "name": "setup.welcome",
+        "action": "App\\Http\\Controllers\\SetupController@welcome",
+        "controller": "App\\Http\\Controllers\\SetupController",
+        "controllerMethod": "welcome",
+        "controllerPath": "app/Http/Controllers/SetupController.php",
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "storage/{path}",
+        "name": "storage.local",
+        "action": "Closure",
+        "controller": null,
+        "controllerMethod": null,
+        "controllerPath": null,
+        "middleware": [],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "test-ui",
+        "name": "generated::ESFA1jNL5lEdYB3s",
+        "action": "Closure",
+        "controller": null,
+        "controllerMethod": null,
+        "controllerPath": null,
+        "middleware": [
+            "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+            "Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse",
+            "Illuminate\\Session\\Middleware\\StartSession",
+            "Illuminate\\View\\Middleware\\ShareErrorsFromSession",
+            "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken",
+            "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "App\\Http\\Middleware\\EnsureDefaultUser",
+            "App\\Http\\Middleware\\EnsureUserSetupComplete",
+            "Laravel\\Boost\\Middleware\\InjectBoost"
+        ],
+        "prefix": null
+    },
+    {
+        "method": [
+            "GET|HEAD"
+        ],
+        "uri": "up",
+        "name": "generated::bSiHkqfrIdfpiFmv",
+        "action": "Closure",
+        "controller": null,
+        "controllerMethod": null,
+        "controllerPath": null,
+        "middleware": [],
+        "prefix": null
+    }
+]

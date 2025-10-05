@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\AnalyzeFragmentController;
+use App\Http\Controllers\Api\CredentialController;
+use App\Http\Controllers\Api\ModelController as ApiModelController;
+use App\Http\Controllers\Api\ProviderController;
 use App\Http\Controllers\AutocompleteController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\ChatApiController;
@@ -55,6 +58,48 @@ Route::post('/commands/execute', [CommandController::class, 'execute']);
 // Model endpoints
 Route::get('/models/available', [ModelController::class, 'available']);
 
+// Provider API endpoints
+Route::prefix('providers')->middleware(['throttle:60,1'])->group(function () {
+    // Provider management
+    Route::get('/', [ProviderController::class, 'index']);
+    Route::get('/statistics', [ProviderController::class, 'statistics']);
+    Route::post('/health-check', [ProviderController::class, 'bulkHealthCheck']);
+    Route::post('/sync-capabilities', [ProviderController::class, 'syncCapabilities']);
+
+    Route::prefix('{provider}')->group(function () {
+        // Provider details and management
+        Route::get('/', [ProviderController::class, 'show']);
+        Route::put('/', [ProviderController::class, 'update']);
+        Route::post('/toggle', [ProviderController::class, 'toggle']);
+
+        // Provider testing (rate limited more strictly)
+        Route::middleware(['throttle:10,1'])->group(function () {
+            Route::post('/test', [ProviderController::class, 'test']);
+            Route::get('/health', [ProviderController::class, 'health']);
+        });
+
+        // Credential management
+        Route::prefix('credentials')->group(function () {
+            Route::get('/', [CredentialController::class, 'index']);
+            Route::post('/', [CredentialController::class, 'store']);
+            Route::put('/{credential}', [CredentialController::class, 'update']);
+            Route::delete('/{credential}', [CredentialController::class, 'destroy']);
+            Route::post('/{credential}/test', [CredentialController::class, 'test'])->middleware(['throttle:5,1']);
+        });
+
+        // Provider models
+        Route::get('/models', [ApiModelController::class, 'providerModels']);
+        Route::put('/models/{model}', [ApiModelController::class, 'updateModel']);
+    });
+});
+
+// Enhanced Model API endpoints
+Route::prefix('models')->group(function () {
+    Route::get('/', [ApiModelController::class, 'index']);
+    Route::get('/show', [ApiModelController::class, 'show']);
+    Route::get('/recommendations', [ApiModelController::class, 'recommendations']);
+});
+
 // Chat session endpoints
 Route::get('/chat-sessions', [ChatSessionController::class, 'index']);
 Route::get('/chat-sessions/pinned', [ChatSessionController::class, 'pinned']);
@@ -87,7 +132,7 @@ Route::post('/projects/{project}/set-default', [ProjectController::class, 'setDe
 // Search endpoints
 Route::get('/search/hybrid', [\App\Http\Controllers\FragmentController::class, 'hybridSearch'])->name('fragments.hybrid-search');
 
-Route::middleware('web')->group(function () {
+Route::middleware(['web', \App\Http\Middleware\ChatTelemetryMiddleware::class])->group(function () {
     Route::post('/messages', [ChatApiController::class, 'send']);
     Route::get('/chat/stream/{messageId}', [ChatApiController::class, 'stream']);
     Route::get('/user', [UserController::class, 'show']);

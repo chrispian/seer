@@ -57,8 +57,8 @@ class Schedule extends Model
     {
         $run = ScheduleRun::createForSchedule($this, $plannedRunAt);
 
-        // Dispatch the job to execute the command
-        \App\Jobs\RunScheduledCommandJob::dispatch($run->id);
+        // Dispatch the job to execute the command with correlation context
+        \App\Jobs\RunScheduledCommandJob::dispatch($run->id)->withCorrelationContext();
 
         return $run;
     }

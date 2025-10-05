@@ -105,12 +105,12 @@ class AvatarService
             $tempPath = $file->store('temp', 'local');
             $fullTempPath = storage_path('app/'.$tempPath);
 
-            // Dispatch processing job
+            // Dispatch processing job with correlation context
             ProcessAvatarUpload::dispatch(
                 $user->id,
                 $fullTempPath,
                 $file->getClientOriginalName()
-            );
+            )->withCorrelationContext();
 
             Log::info('Avatar upload queued for processing', [
                 'user_id' => $user->id,
