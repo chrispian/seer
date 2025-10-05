@@ -87,7 +87,7 @@ Route::post('/projects/{project}/set-default', [ProjectController::class, 'setDe
 // Search endpoints
 Route::get('/search/hybrid', [\App\Http\Controllers\FragmentController::class, 'hybridSearch'])->name('fragments.hybrid-search');
 
-Route::middleware('web')->group(function () {
+Route::middleware(['web', \App\Http\Middleware\ChatTelemetryMiddleware::class])->group(function () {
     Route::post('/messages', [ChatApiController::class, 'send']);
     Route::get('/chat/stream/{messageId}', [ChatApiController::class, 'stream']);
     Route::get('/user', [UserController::class, 'show']);

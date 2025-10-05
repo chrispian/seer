@@ -12,13 +12,13 @@ class JobDispatchStep extends Step
     public function execute(array $config, array $context, bool $dryRun = false): mixed
     {
         $with = $config['with'] ?? [];
-        
+
         $jobClass = $with['job'] ?? null;
         $parameters = $with['parameters'] ?? [];
         $queue = $with['queue'] ?? null;
         $delay = $with['delay'] ?? null;
 
-        if (!$jobClass) {
+        if (! $jobClass) {
             throw new \InvalidArgumentException('Job dispatch requires a job class');
         }
 
@@ -42,7 +42,7 @@ class JobDispatchStep extends Step
 
         $actualJobClass = $jobClassMap[$jobClass] ?? $jobClass;
 
-        if (!class_exists($actualJobClass)) {
+        if (! class_exists($actualJobClass)) {
             throw new \InvalidArgumentException("Unknown job class: {$jobClass}");
         }
 
@@ -114,6 +114,7 @@ class JobDispatchStep extends Step
     public function validate(array $config): bool
     {
         $with = $config['with'] ?? [];
+
         return isset($with['job']);
     }
 }

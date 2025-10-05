@@ -67,6 +67,7 @@ class NotifyStep extends Step
     public function validate(array $config): bool
     {
         $with = $config['with'] ?? [];
+
         // Either message or response_data should be present
         return isset($with['message']) || isset($with['response_data']);
     }

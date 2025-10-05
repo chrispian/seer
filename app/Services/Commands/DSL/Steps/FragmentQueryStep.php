@@ -26,7 +26,7 @@ class FragmentQueryStep extends Step
 
         // Apply basic filters
         $with = $config['with'] ?? [];
-        
+
         if (isset($with['type'])) {
             $query->where('type', $with['type']);
         }
@@ -45,7 +45,7 @@ class FragmentQueryStep extends Step
         }
 
         // Apply search filter
-        if (isset($with['search']) && !empty($with['search'])) {
+        if (isset($with['search']) && ! empty($with['search'])) {
             $searchTerm = $with['search'];
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('message', 'LIKE', "%{$searchTerm}%")
@@ -133,11 +133,12 @@ class FragmentQueryStep extends Step
 
     private function createSnippet(?string $message): string
     {
-        if (!$message) {
+        if (! $message) {
             return '';
         }
 
         $cleaned = strip_tags($message);
-        return strlen($cleaned) > 150 ? substr($cleaned, 0, 150) . '...' : $cleaned;
+
+        return strlen($cleaned) > 150 ? substr($cleaned, 0, 150).'...' : $cleaned;
     }
 }

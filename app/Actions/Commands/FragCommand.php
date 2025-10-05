@@ -31,8 +31,10 @@ class FragCommand implements HandlesCommand
             'metadata' => ['aside' => true], // Mark as aside to exclude from main chat
         ]);
 
-        // Dispatch async processing
-        ProcessFragmentJob::dispatch($fragment)->onQueue('fragments');
+        // Dispatch async processing with correlation context
+        ProcessFragmentJob::dispatch($fragment)
+            ->withCorrelationContext()
+            ->onQueue('fragments');
 
         // Respond with success toast (no panel needed)
         return new CommandResponse(

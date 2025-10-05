@@ -1,28 +1,32 @@
 # Fragments Engine - Sprint Status Dashboard
 
-*Last Updated: 2025-01-04 | Auto-Generated from Delegation System*
+*Last Updated: 2025-01-04 | Sprint 49 Completed | Auto-Generated from Delegation System*
 
 ## 📊 Current Sprint Overview
 
-### **Active Sprint: Sprint 49 - System Polish & Agent Tooling Foundation**
-**Priority**: HIGH | **Status**: Ready to Start | **Type**: Polish & Strategic Foundation
+### **Active Sprint: Sprint 56 - Structured Telemetry Foundation**
+**Priority**: HIGH | **Status**: Ready to Start | **Type**: Strategic Foundation
 
-**Timeline**: TBD → TBD | **Estimated**: 10-16 hours (1.5-2 days)
+**Timeline**: TBD → TBD | **Estimated**: 46 hours (5-6 days)
 
 **Business Goals**:
-- 🔧 **System Polish**: Fix remaining Sprint 48 condition parsing issue
-- 🤖 **Agent Tooling**: Establish foundation for advanced agent capabilities  
-- 📚 **Developer Experience**: Build SDK and tooling for rapid development
-- 🛡️ **Security Foundation**: Leverage Sprint 48 database security patterns
+- 📊 **Structured Telemetry**: Transform logging from ad-hoc strings to structured, privacy-respecting telemetry
+- 🔍 **Correlation IDs**: Enable request tracking across entire system pipeline
+- 🚀 **Enhanced Debugging**: Build foundation for advanced observability and monitoring
+- 📈 **Performance Insights**: Enable data-driven optimization decisions
 
-### **Sprint 49 Task Status**
+### **Sprint 56 Task Status**
 
 | Task ID | Description | Status | Agent | Estimated | Dependencies |
 |---------|-------------|--------|-------|-----------|--------------|
-| **ENG-10-01** | Condition YAML Parsing Fix | `todo` | Backend Engineer | 2-4h | None |
-| **ENG-10-02** | Agent Tooling Foundation | `todo` | Backend Engineer | 8-12h | ENG-10-01 |
+| **TELEMETRY-001** | Request Correlation Middleware | `todo` | Backend Engineer | 6h | None |
+| **TELEMETRY-002** | Structured Chat Pipeline Logging | `todo` | Backend Engineer | 8h | TELEMETRY-001 |
+| **TELEMETRY-003** | Fragment Processing Telemetry Decorator | `todo` | Backend Engineer | 10h | TELEMETRY-001 |
+| **TELEMETRY-004** | Command & DSL Execution Metrics | `todo` | Backend Engineer | 8h | TELEMETRY-001 |
+| **TELEMETRY-005** | Enhanced Tool Invocation Correlation | `todo` | Backend Engineer | 6h | TELEMETRY-001 |
+| **TELEMETRY-006** | Local Telemetry Sink & Query Interface | `todo` | Frontend Engineer | 8h | TELEMETRY-002 |
 
-**Progress Summary**: 0/2 tasks completed (0%)
+**Progress Summary**: 0/6 tasks completed (0%)
 
 ---
 
@@ -81,19 +85,33 @@
 
 ## 🆕 DSL Evolution & Fragment Pipeline Sprints (New)
 
-### **Sprint 50: DSL Deterministic Foundation**
-**Priority**: HIGH | **Estimated**: 48-78 hours (6-10 days) | **Tasks**: 8
+### **Sprint 56: Structured Telemetry Foundation** 🆕
+**Priority**: HIGH | **Estimated**: 46 hours (5-6 days) | **Tasks**: 6
+
+Transform logging from ad-hoc strings to structured, privacy-respecting telemetry with correlation IDs.
 
 | Task ID | Description | Status | Estimated |
 |---------|-------------|--------|-----------|
-| **MIGRATE-TODO-001** | Replace AI parsing with regex/rule-based todo parser | `todo` | 13-20h |
-| **MIGRATE-TODO-002** | Add utility steps (context.merge, list.map, string.format) | `todo` | 8-12h |
-| **AUDIT-AI-001** | Catalog all AI-dependent commands for migration planning | `todo` | 4-6h |
-| **AUDIT-AI-002** | Create deterministic alternatives for AI-dependent operations | `todo` | 8-12h |
-| **AUDIT-AI-003** | Add capability flags to differentiate AI vs deterministic commands | `todo` | 4-6h |
-| **AUDIT-AI-004** | Enhance UI filtering based on AI dependency flags | `todo` | 6-10h |
-| **MIGRATE-TODO-003** | Update existing todo commands to use new parser | `todo` | 3-6h |
-| **MIGRATE-TODO-004** | Enhance validation and error handling for deterministic execution | `todo` | 2-6h |
+| **TELEMETRY-001** | Request Correlation Middleware | `todo` | 6h |
+| **TELEMETRY-002** | Structured Chat Pipeline Logging | `todo` | 8h |
+| **TELEMETRY-003** | Fragment Processing Telemetry Decorator | `todo` | 10h |
+| **TELEMETRY-004** | Command & DSL Execution Metrics | `todo` | 8h |
+| **TELEMETRY-005** | Enhanced Tool Invocation Correlation | `todo` | 6h |
+| **TELEMETRY-006** | Local Telemetry Sink & Query Interface | `todo` | 8h |
+
+### **Sprint 57: SQLite-First Vector Store Rollout** 🆕
+**Priority**: HIGH | **Estimated**: 52-78 hours (6.5-9.8 days) | **Tasks**: 6
+
+Transform from PostgreSQL+pgvector dependency to dual-database architecture supporting SQLite+sqlite-vec (default) and PostgreSQL+pgvector (optional) for NativePHP desktop builds.
+
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **VECTOR-001** | EmbeddingStore Abstraction Layer | `todo` | 12-18h |
+| **VECTOR-002** | SQLite Vector Store Implementation | `todo` | 14-20h |
+| **VECTOR-003** | Dual-Path Database Migrations | `todo` | 8-12h |
+| **VECTOR-004** | Hybrid Search Abstraction | `todo` | 10-16h |
+| **VECTOR-005** | Configuration & Feature Detection | `todo` | 4-6h |
+| **VECTOR-006** | NativePHP Packaging & Testing | `todo` | 4-6h |
 
 ### **Sprint 51: Enhanced Error Handling**
 **Priority**: MEDIUM | **Estimated**: 18-30 hours (2-4 days) | **Tasks**: 3
@@ -139,20 +157,6 @@
 | **EMBED-001** | Embeddings revival with vector + fulltext search | `todo` | 10-14h |
 | **PROMPT-001** | Prompt optimization for 30% cost reduction | `todo` | 6-8h |
 
-### **Sprint 56: Structured Telemetry Foundation** 🆕
-**Priority**: HIGH | **Estimated**: 46 hours (5-6 days) | **Tasks**: 6
-
-Transform logging from ad-hoc strings to structured, privacy-respecting telemetry with correlation IDs.
-
-| Task ID | Description | Status | Estimated |
-|---------|-------------|--------|-----------|
-| **TELEMETRY-001** | Request Correlation Middleware | `todo` | 6h |
-| **TELEMETRY-002** | Structured Chat Pipeline Logging | `todo` | 8h |
-| **TELEMETRY-003** | Fragment Processing Telemetry Decorator | `todo` | 10h |
-| **TELEMETRY-004** | Command & DSL Execution Metrics | `todo` | 8h |
-| **TELEMETRY-005** | Enhanced Tool Invocation Correlation | `todo` | 6h |
-| **TELEMETRY-006** | Local Telemetry Sink & Query Interface | `todo` | 8h |
-
 ### **Sprint 57: SQLite-First Vector Store Rollout** 🆕
 **Priority**: HIGH | **Estimated**: 52-78 hours (6.5-9.8 days) | **Tasks**: 6
 
@@ -166,6 +170,37 @@ Transform from PostgreSQL+pgvector dependency to dual-database architecture supp
 | **VECTOR-004** | Hybrid Search Abstraction | `todo` | 10-16h |
 | **VECTOR-005** | Configuration & Feature Detection | `todo` | 4-6h |
 | **VECTOR-006** | NativePHP Packaging & Testing | `todo` | 4-6h |
+
+### **Sprint 58: DSL Slash Command UX Enhancement** 🆕
+**Priority**: MEDIUM-HIGH | **Estimated**: 40-56 hours (5-7 days) | **Tasks**: 6
+
+Transform the DSL slash command system from static discovery to dynamic, metadata-rich command experience with seamless alias support and reliable interaction patterns.
+
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **DSL-UX-001** | Enhanced Registry Schema & Metadata | `ready` | 8-12h |
+| **DSL-UX-002** | Unified Autocomplete Service | `ready` | 10-14h |
+| **DSL-UX-003** | Dynamic Help System | `ready` | 8-12h |
+| **DSL-UX-004** | Keyboard Navigation Fixes | `ready` | 4-6h |
+| **DSL-UX-005** | Observability & Testing | `ready` | 6-8h |
+| **DSL-UX-006** | Alias Conflict Resolution | `ready` | 4-6h |
+
+**📁 Location**: `delegation/sprint-58/` (complete documentation)
+
+### **Sprint 59: Settings Experience Enhancement** 🆕
+**Priority**: MEDIUM-HIGH | **Estimated**: 40-56 hours (5-7 days) | **Tasks**: 5
+
+Transform the settings experience with complete import/reset functionality, dynamic AI provider configuration, granular notification preferences, admin configuration panels, and per-section loading states.
+
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **SETTINGS-001** | Import/Reset Settings Pipeline | `ready` | 10-14h |
+| **SETTINGS-002** | Dynamic AI Provider Configuration | `ready` | 12-16h |
+| **SETTINGS-003** | Granular Notification Preferences | `ready` | 8-12h |
+| **SETTINGS-004** | Admin Configuration Panels | `ready` | 6-10h |
+| **SETTINGS-005** | Per-Section Loading States | `ready` | 4-6h |
+
+**📁 Location**: `delegation/sprint-59/` (complete documentation)
 
 ---
 
@@ -198,6 +233,7 @@ Transform from PostgreSQL+pgvector dependency to dual-database architecture supp
 - **Sprint 53-55** (Pipeline) form sequential dependency chain
 - **Sprint 56** (Telemetry) can run independently, enhances debugging for all sprints
 - **Sprint 57** (Vector Store) can run independently, enables NativePHP desktop builds
+- **Sprint 58** (DSL UX) can run independently, enhances command discoverability
 
 ### **Resource Conflicts**
 - 🟡 **Backend Resources**: Multiple sprints require Laravel expertise
@@ -209,10 +245,10 @@ Transform from PostgreSQL+pgvector dependency to dual-database architecture supp
 ## 📈 Progress Metrics
 
 ### **Overall Project Status**
-- **Total Tasks**: 71 across 12 active sprints
-- **Estimated Total**: 430-665 hours  
-- **Completed**: Sprint 40-42 ✅, Sprint 46 ✅, Sprint 48 ✅
-- **Active Planning**: Sprint 49+ 🚀
+- **Total Tasks**: 82 across 14 active sprints (10 tasks completed across 6 sprints)
+- **Estimated Total**: 492-745 hours (includes Sprint 59)
+- **Completed**: Sprint 40-42 ✅, Sprint 46 ✅, Sprint 48 ✅, Sprint 49 ✅, Sprint 50 ✅
+- **Active Planning**: Sprint 56+ 🚀
 - **Backlog**: Future enhancements
 
 ### **Completed Sprints** ✅
@@ -221,13 +257,16 @@ Transform from PostgreSQL+pgvector dependency to dual-database architecture supp
 - **Sprint 42**: User Setup & Profile Management System (6 tasks)
 - **Sprint 46**: Command System Unification (4 tasks)
 - **Sprint 48**: Command System Continuation & Migration (7 tasks)
+- **Sprint 49**: System Polish & Agent Tooling Foundation (2 tasks)
+- **Sprint 50**: DSL Deterministic Foundation & TodoManagement Modal (8 tasks)
 
 ### **Sprint Completion Targets**
-- **Sprint 49**: System polish - immediate priority
-- **Sprint 56**: Telemetry foundation - critical for debugging
+- **Sprint 56**: Telemetry foundation - critical for debugging (current priority)
 - **Sprint 57**: Vector store rollout - enables NativePHP desktop builds
+- **Sprint 58**: DSL UX enhancement - improves command discoverability
+- **Sprint 59**: Settings experience - complete settings management card
 - **Sprint 43**: Enhanced UX - high value user improvements
-- **Sprint 50-55**: DSL evolution and pipeline unification
+- **Sprint 51-55**: DSL evolution and pipeline unification
 
 ---
 
@@ -235,27 +274,35 @@ Transform from PostgreSQL+pgvector dependency to dual-database architecture supp
 
 ### **Ready-to-Execute Commands**
 ```bash
-# Start Sprint 49 - System Polish & Agent Tooling
-/sprint-start 49
-
-# Start Sprint 56 - Telemetry Foundation (can run parallel)
+# Start Sprint 56 - Telemetry Foundation (current priority)
 /sprint-start 56
 
 # Start Sprint 57 - Vector Store Rollout (enables desktop builds)
 /sprint-start 57
 
+# Start Sprint 58 - DSL UX Enhancement (improves command discovery)
+/sprint-start 58
+
+# Start Sprint 59 - Settings Experience Enhancement (complete settings management)
+/sprint-start 59
+
+# Start Sprint 43 - Enhanced UX (high value user improvements)
+/sprint-start 43
+
 # Analyze individual tasks  
-/task-analyze ENG-10-01-condition-yaml-parsing-fix
 /task-analyze TELEMETRY-001-correlation-middleware
 /task-analyze VECTOR-001-embedding-store-abstraction
+/task-analyze DSL-UX-001-enhanced-registry-schema
+/task-analyze SETTINGS-001-import-reset-pipeline
+/task-analyze UX-04-01-todo-management-modal
 
 # Create specialized agents
 /agent-create backend-engineer alice
 /agent-create frontend-engineer bob
 
 # Assign agents to tasks
-/agent-assign alice ENG-10-01
-/agent-assign bob TELEMETRY-001
+/agent-assign alice TELEMETRY-001
+/agent-assign bob DSL-UX-004
 ```
 
 ### **Status Legend**

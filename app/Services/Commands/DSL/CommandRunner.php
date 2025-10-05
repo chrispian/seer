@@ -61,7 +61,7 @@ class CommandRunner
                     break;
                 }
             }
-            
+
             // Add performance metrics
             $totalDuration = round((microtime(true) - $totalStartTime) * 1000, 2);
             $execution['performance'] = [
@@ -69,7 +69,7 @@ class CommandRunner
                 'step_count' => count($steps),
                 'avg_step_duration_ms' => count($steps) > 0 ? round($totalDuration / count($steps), 2) : 0,
             ];
-            
+
             // Log performance for analysis
             if ($totalDuration > 1000) { // Log commands taking > 1 second
                 \Log::info('Slow Command Execution', [

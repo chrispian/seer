@@ -16,7 +16,7 @@ abstract class UtilityStep extends Step
     protected function validateConfig(array $config): void
     {
         $withConfig = $config['with'] ?? $config;
-        
+
         if (empty($withConfig)) {
             throw new \InvalidArgumentException('Utility step requires configuration in "with" block');
         }
@@ -28,7 +28,7 @@ abstract class UtilityStep extends Step
     protected function renderTemplates(array $data, array $context): array
     {
         $rendered = [];
-        
+
         foreach ($data as $key => $value) {
             if (is_string($value)) {
                 $rendered[$key] = $this->templateEngine->render($value, $context);
@@ -38,7 +38,7 @@ abstract class UtilityStep extends Step
                 $rendered[$key] = $value;
             }
         }
-        
+
         return $rendered;
     }
 
@@ -50,7 +50,7 @@ abstract class UtilityStep extends Step
         foreach ($transforms as $transform) {
             $value = $this->applyTransform($value, $transform);
         }
-        
+
         return $value;
     }
 
@@ -63,14 +63,14 @@ abstract class UtilityStep extends Step
             // Simple transform like "uppercase", "lowercase", "trim"
             return $this->applySimpleTransform($value, $transform);
         }
-        
+
         if (is_array($transform)) {
             // Complex transform with parameters
             foreach ($transform as $transformName => $params) {
                 $value = $this->applyComplexTransform($value, $transformName, $params);
             }
         }
-        
+
         return $value;
     }
 
@@ -79,13 +79,13 @@ abstract class UtilityStep extends Step
      */
     protected function applySimpleTransform(mixed $value, string $transform): mixed
     {
-        if (!is_string($value) && !is_numeric($value)) {
+        if (! is_string($value) && ! is_numeric($value)) {
             return $value;
         }
-        
+
         $stringValue = (string) $value;
-        
-        return match($transform) {
+
+        return match ($transform) {
             'uppercase' => strtoupper($stringValue),
             'lowercase' => strtolower($stringValue),
             'trim' => trim($stringValue),
@@ -101,7 +101,7 @@ abstract class UtilityStep extends Step
      */
     protected function applyComplexTransform(mixed $value, string $transform, mixed $params): mixed
     {
-        return match($transform) {
+        return match ($transform) {
             'truncate' => $this->truncateValue($value, $params),
             'substring' => $this->substringValue($value, $params),
             'replace' => $this->replaceValue($value, $params),
@@ -119,13 +119,13 @@ abstract class UtilityStep extends Step
         $string = (string) $value;
         $length = is_numeric($params) ? (int) $params : 100;
         $suffix = '...';
-        
+
         if (is_array($params)) {
             $length = $params['length'] ?? 100;
             $suffix = $params['suffix'] ?? '...';
         }
-        
-        return strlen($string) > $length ? substr($string, 0, $length) . $suffix : $string;
+
+        return strlen($string) > $length ? substr($string, 0, $length).$suffix : $string;
     }
 
     /**
@@ -136,14 +136,14 @@ abstract class UtilityStep extends Step
         $string = (string) $value;
         $start = 0;
         $length = null;
-        
+
         if (is_numeric($params)) {
             $start = (int) $params;
         } elseif (is_array($params)) {
             $start = $params['start'] ?? 0;
             $length = $params['length'] ?? null;
         }
-        
+
         return $length ? substr($string, $start, $length) : substr($string, $start);
     }
 
@@ -153,11 +153,11 @@ abstract class UtilityStep extends Step
     protected function replaceValue(mixed $value, mixed $params): string
     {
         $string = (string) $value;
-        
+
         if (is_array($params) && isset($params['search']) && isset($params['replace'])) {
             return str_replace($params['search'], $params['replace'], $string);
         }
-        
+
         return $string;
     }
 
@@ -170,7 +170,7 @@ abstract class UtilityStep extends Step
             // Simple template like "Value: {value}"
             return str_replace('{value}', (string) $value, $params);
         }
-        
+
         return (string) $value;
     }
 
@@ -179,7 +179,7 @@ abstract class UtilityStep extends Step
      */
     protected function castValue(mixed $value, string $type): mixed
     {
-        return match($type) {
+        return match ($type) {
             'string' => (string) $value,
             'int', 'integer' => (int) $value,
             'float', 'double' => (float) $value,
@@ -202,10 +202,10 @@ abstract class UtilityStep extends Step
                     $target[$key] = $this->deepMerge($target[$key], $value, $strategy);
                 } else {
                     // Handle conflicts based on strategy
-                    $target[$key] = match($strategy) {
+                    $target[$key] = match ($strategy) {
                         'left_wins' => $target[$key],
                         'right_wins' => $value,
-                        'merge_arrays' => is_array($target[$key]) ? 
+                        'merge_arrays' => is_array($target[$key]) ?
                             array_merge((array) $target[$key], (array) $value) : $value,
                         default => $value
                     };
@@ -214,7 +214,7 @@ abstract class UtilityStep extends Step
                 $target[$key] = $value;
             }
         }
-        
+
         return $target;
     }
 
@@ -223,7 +223,7 @@ abstract class UtilityStep extends Step
      */
     protected function validateType(mixed $value, string $expectedType, string $fieldName): mixed
     {
-        $isValid = match($expectedType) {
+        $isValid = match ($expectedType) {
             'string' => is_string($value),
             'array' => is_array($value),
             'object' => is_object($value) || is_array($value),
@@ -231,11 +231,11 @@ abstract class UtilityStep extends Step
             'boolean' => is_bool($value),
             default => true
         };
-        
-        if (!$isValid) {
+
+        if (! $isValid) {
             throw new \InvalidArgumentException("Field '{$fieldName}' must be of type '{$expectedType}'");
         }
-        
+
         return $value;
     }
 

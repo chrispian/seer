@@ -16,6 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'setup.complete' => \App\Http\Middleware\EnsureUserSetupComplete::class,
             'default.user' => \App\Http\Middleware\EnsureDefaultUser::class,
+            'correlation' => \App\Http\Middleware\InjectCorrelationId::class,
+        ]);
+
+        // Apply correlation middleware globally
+        $middleware->append([
+            \App\Http\Middleware\InjectCorrelationId::class,
         ]);
 
         // Apply middlewares to web routes

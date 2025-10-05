@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class RunScheduledCommandJob implements ShouldQueue
 {
-    use Queueable;
+    use HasCorrelationContext, Queueable;
 
     public function __construct(
         protected int $scheduleRunId
@@ -21,9 +21,15 @@ class RunScheduledCommandJob implements ShouldQueue
      */
     public function handle(): void
     {
+        // Restore correlation context for this job
+        $this->restoreCorrelationContext();
+
         $scheduleRun = ScheduleRun::find($this->scheduleRunId);
         if (! $scheduleRun) {
-            Log::warning('Schedule run not found', ['id' => $this->scheduleRunId]);
+            Log::warning('Schedule run not found', array_merge(
+                $this->getJobContext(),
+                ['schedule_run_id' => $this->scheduleRunId]
+            ));
 
             return;
         }

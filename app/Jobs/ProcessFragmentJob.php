@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
 
 class ProcessFragmentJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, HasCorrelationContext, InteractsWithQueue, Queueable, SerializesModels;
 
     public Fragment $fragment;
 
@@ -29,8 +29,13 @@ class ProcessFragmentJob implements ShouldQueue
 
     public function handle()
     {
+        // Restore correlation context for this job
+        $this->restoreCorrelationContext();
+
         $messages = [];
         $fragments = [];
+
+        $startTime = microtime(true);
 
         if (app()->runningUnitTests()) {
             app(ParseAtomicFragment::class)($this->fragment);
@@ -48,7 +53,14 @@ class ProcessFragmentJob implements ShouldQueue
         DB::beginTransaction();
 
         try {
-            Log::info('🔧 Processing Fragment', ['fragment_id' => $this->fragment->id]);
+            Log::info('🔧 Processing Fragment', array_merge(
+                $this->getJobContext(),
+                [
+                    'fragment_id' => $this->fragment->id,
+                    'fragment_type' => $this->fragment->type?->value,
+                    'processing_stage' => 'start',
+                ]
+            ));
 
             $processed = app(Pipeline::class)
                 ->send($this->fragment)
@@ -75,17 +87,35 @@ class ProcessFragmentJob implements ShouldQueue
 
             DB::commit();
 
-            Log::info('✅ Fragment processing complete', ['fragment_id' => $this->fragment->id]);
+            $processingTime = round((microtime(true) - $startTime) * 1000, 2);
+
+            Log::info('✅ Fragment processing complete', array_merge(
+                $this->getJobContext(),
+                [
+                    'fragment_id' => $this->fragment->id,
+                    'processing_time_ms' => $processingTime,
+                    'processing_stage' => 'complete',
+                    'fragments_created' => count($fragments),
+                ]
+            ));
 
         } catch (\Throwable $e) {
             DB::rollBack();
 
             $messages[] = "⚠️ Failed to store fragment: {$e->getMessage()}";
 
-            Log::error('❌ Fragment processing failed', [
-                'fragment_id' => $this->fragment->id,
-                'error' => $e->getMessage(),
-            ]);
+            $processingTime = round((microtime(true) - $startTime) * 1000, 2);
+
+            Log::error('❌ Fragment processing failed', array_merge(
+                $this->getJobContext(),
+                [
+                    'fragment_id' => $this->fragment->id,
+                    'error' => $e->getMessage(),
+                    'processing_time_ms' => $processingTime,
+                    'processing_stage' => 'failed',
+                    'exception_class' => get_class($e),
+                ]
+            ));
         }
 
         FragmentProcessed::dispatch(

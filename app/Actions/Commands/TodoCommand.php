@@ -216,7 +216,7 @@ class TodoCommand implements HandlesCommand
             ->whereRaw("(state::jsonb->>'status') IN ('open', 'in_progress', 'blocked') OR (state::jsonb->>'status') IS NULL")
             ->first();
 
-        if (!$todo) {
+        if (! $todo) {
             return new CommandResponse(
                 type: 'system',
                 shouldShowErrorToast: true,
@@ -229,7 +229,7 @@ class TodoCommand implements HandlesCommand
         return new CommandResponse(
             type: 'system',
             shouldShowSuccessToast: true,
-            message: "✅ Completed todo: ".$this->truncate($todo->message, 50),
+            message: '✅ Completed todo: '.$this->truncate($todo->message, 50),
         );
     }
 
@@ -319,7 +319,7 @@ class TodoCommand implements HandlesCommand
             ->whereRaw("(state::jsonb->>'status') = 'complete'")
             ->first();
 
-        if (!$todo) {
+        if (! $todo) {
             return new CommandResponse(
                 type: 'system',
                 shouldShowErrorToast: true,
@@ -332,7 +332,7 @@ class TodoCommand implements HandlesCommand
         return new CommandResponse(
             type: 'system',
             shouldShowSuccessToast: true,
-            message: "🔄 Reopened todo: ".$this->truncate($todo->message, 50),
+            message: '🔄 Reopened todo: '.$this->truncate($todo->message, 50),
         );
     }
 
@@ -397,7 +397,7 @@ class TodoCommand implements HandlesCommand
         $completedTodos = Fragment::completedTodos()
             ->orderByRaw("(state::jsonb->>'completed_at') DESC")
             ->get();
-        
+
         $allTodos = $openTodos->concat($completedTodos);
 
         if ($position < 1 || $position > $allTodos->count()) {
@@ -410,7 +410,7 @@ class TodoCommand implements HandlesCommand
 
         $todo = $allTodos->skip($position - 1)->first();
         $todoMessage = $this->truncate($todo->message, 50);
-        
+
         $todo->delete();
 
         return new CommandResponse(
@@ -426,7 +426,7 @@ class TodoCommand implements HandlesCommand
             ->where('id', $id)
             ->first();
 
-        if (!$todo) {
+        if (! $todo) {
             return new CommandResponse(
                 type: 'system',
                 shouldShowErrorToast: true,
