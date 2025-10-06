@@ -255,7 +255,7 @@ export function AiLogsModal({
       onRefresh={onRefresh}
       customHeader={
         <div className="text-sm text-muted-foreground">
-          View and analyze AI interaction logs from Codex, OpenCode, and Claude. Click any row to expand details.
+          View and analyze AI interaction logs from Codex, OpenCode, and Claude. Click the chevron to expand details.
         </div>
       }
       emptyStateMessage="No AI logs found"

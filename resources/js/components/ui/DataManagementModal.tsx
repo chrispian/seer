@@ -59,6 +59,7 @@ interface DataRowProps<T extends DataItem> {
   actionItems?: Array<{ key: string; label: string; className?: string }>
   clickableRows?: boolean
   expandedContentMaxWidth?: string
+  onRowClick?: (item: T) => void
 }
 
 const DataRow = <T extends DataItem>({
@@ -71,7 +72,8 @@ const DataRow = <T extends DataItem>({
   onAction,
   actionItems = [],
   clickableRows = false,
-  expandedContentMaxWidth = '85%'
+  expandedContentMaxWidth = '85%',
+  onRowClick
 }: DataRowProps<T>) => {
   
   const handleRowClick = (e: React.MouseEvent) => {
@@ -81,15 +83,19 @@ const DataRow = <T extends DataItem>({
       return
     }
     
-    if (clickableRows && expandedContent) {
-      onToggleExpanded(item.id)
+    if (clickableRows) {
+      if (onRowClick) {
+        onRowClick(item)
+      } else if (expandedContent) {
+        onToggleExpanded(item.id)
+      }
     }
   }
 
   return (
     <TableRow 
       key={item.id} 
-      className={`hover:bg-muted/50 ${clickableRows && expandedContent ? 'cursor-pointer' : ''}`}
+      className={`hover:bg-muted/50 ${clickableRows && (expandedContent || onRowClick) ? 'cursor-pointer' : ''}`}
       onClick={handleRowClick}
     >
       {columns.map((column) => {
@@ -207,6 +213,7 @@ interface DataManagementModalProps<T extends DataItem> {
   defaultSortDirection?: 'asc' | 'desc'
   clickableRows?: boolean
   expandedContentMaxWidth?: string
+  onRowClick?: (item: T) => void
 }
 
 export function DataManagementModal<T extends DataItem>({
@@ -231,7 +238,8 @@ export function DataManagementModal<T extends DataItem>({
   defaultSort,
   defaultSortDirection = 'desc',
   clickableRows = false,
-  expandedContentMaxWidth = '85%'
+  expandedContentMaxWidth = '85%',
+  onRowClick
 }: DataManagementModalProps<T>) {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({})
@@ -432,6 +440,7 @@ export function DataManagementModal<T extends DataItem>({
                     actionItems={actionItems}
                     clickableRows={clickableRows}
                     expandedContentMaxWidth={expandedContentMaxWidth}
+                    onRowClick={onRowClick}
                   />
                 ))}
               </TableBody>

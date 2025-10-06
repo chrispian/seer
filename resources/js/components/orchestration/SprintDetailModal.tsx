@@ -137,37 +137,7 @@ export function SprintDetailModal({
     return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
   })
 
-  const expandedContent = (task: Task) => (
-    <div className="space-y-3 text-sm">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <span className="font-medium">Assignment:</span>
-          <div className="text-muted-foreground mt-1 space-y-1">
-            <div>Status: {task.delegation_status || 'Unassigned'}</div>
-            {task.current_agent && (
-              <div>Agent: {task.current_agent}</div>
-            )}
-            {task.agent_recommendation && (
-              <div>Recommended: {task.agent_recommendation}</div>
-            )}
-          </div>
-        </div>
-        
-        <div>
-          <span className="font-medium">Details:</span>
-          <div className="text-muted-foreground mt-1 space-y-1">
-            {task.estimate_text && (
-              <div>Estimate: {task.estimate_text}</div>
-            )}
-            <div>Updated: {new Date(task.updated_at).toLocaleDateString()}</div>
-            {task.todo_progress && task.todo_progress.total > 0 && (
-              <div>Todo Progress: {task.todo_progress.completed}/{task.todo_progress.total}</div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+
 
   const columns: ColumnDefinition<Task>[] = [
     {
@@ -280,13 +250,14 @@ export function SprintDetailModal({
       filters={filters}
       searchPlaceholder="Search tasks..."
       searchFields={['task_code', 'task_name', 'current_agent', 'agent_recommendation']}
-      expandedContent={expandedContent}
       onAction={(action, task) => {
         if (action === 'view' || action === 'assign') {
           onTaskSelect?.(task)
         }
       }}
       actionItems={actionItems}
+      clickableRows={true}
+      onRowClick={onTaskSelect}
       onRefresh={onRefresh}
       customHeader={
         <div className="space-y-3">

@@ -341,21 +341,7 @@ export function TaskListModal({
     { key: 'assign', label: 'Assign Agent' }
   ]
 
-  // Custom expanded content that shows a "View Details" button instead of actual content
-  const limitedExpandedContent = (task: Task) => (
-    <div className="flex items-center justify-between py-2">
-      <span className="text-sm text-muted-foreground">
-        Click "View Details" to see full task information
-      </span>
-      <Button 
-        size="sm" 
-        onClick={() => onTaskSelect?.(task)}
-        className="ml-4"
-      >
-        View Details
-      </Button>
-    </div>
-  )
+
 
   return (
     <DataManagementModal
@@ -369,7 +355,6 @@ export function TaskListModal({
       filters={filters}
       searchPlaceholder="Search tasks..."
       searchFields={['task_code', 'task_name', 'description', 'current_agent', 'agent_recommendation']}
-      expandedContent={limitedExpandedContent}
       onAction={(action, task) => {
         if (action === 'view' || action === 'assign') {
           onTaskSelect?.(task)
@@ -377,6 +362,7 @@ export function TaskListModal({
       }}
       actionItems={actionItems}
       clickableRows={true}
+      onRowClick={onTaskSelect}
       onRefresh={onRefresh}
       customHeader={
         <div className="text-sm text-muted-foreground">
