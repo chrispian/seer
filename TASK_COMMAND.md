@@ -169,7 +169,7 @@ Converted 16 critical commands to PHP classes with proper modal routing.
 
 ## **COMMAND CONVERSION TRACKING**
 
-### **✅ COMPLETED (18/36 commands) - CORE SYSTEM WORKING**
+### **✅ COMPLETED (21/36 commands) - CORE SYSTEM WORKING**
 
 **Command Infrastructure:**
 - ✅ `/help` - HelpCommand.php (enhanced with aliases, markdown formatting, categories)
@@ -179,7 +179,9 @@ Converted 16 critical commands to PHP classes with proper modal routing.
 - ✅ `/todo` - TodoCommand.php **NEWLY FIXED** - loads 50 todos in TodoManagementModal
 
 **Fragment & Search Commands:**
-- ✅ `/search` - SearchCommand.php (backend ready, UI next)
+- ✅ `/search` - SearchCommand.php (FragmentListModal with filters/search/sort)
+- ✅ `/frag` - FragCommand.php (reuses FragmentListModal, lists recent fragments)
+- ✅ `/inbox` - InboxCommand.php (reuses FragmentListModal, queries inbox items)
 - ✅ `/vault` - VaultCommand.php
 - ✅ `/project` - ProjectCommand.php
 - ✅ `/recall` - RecallCommand.php
@@ -189,6 +191,9 @@ Converted 16 critical commands to PHP classes with proper modal routing.
 - ✅ `/task-detail` - TaskDetailCommand.php
 - ✅ `/task-create` - TaskCreateCommand.php
 - ✅ `/task-assign` - TaskAssignCommand.php
+
+**Communication Commands:**
+- ✅ `/channels` - ChannelsCommand.php (ChannelListModal with type/status filters)
 
 **Utility Commands:**
 - ✅ `/bookmark` - BookmarkCommand.php
