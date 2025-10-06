@@ -196,8 +196,13 @@ Converted 16 critical commands to PHP classes with proper modal routing.
 - ✅ `/session` - SessionCommand.php
 - ✅ `/backlog-list` - BacklogListCommand.php
 
-### **🎯 CURRENT WORK**
-- ⏳ Fixing SearchCommand UI integration (backend complete)
+### **🎯 CURRENT WORK - Phase 4: Search Command Enhancement**
+- ⏳ `/search` - Enhancing SearchCommand with full-featured modal
+  - Backend complete, needs UI improvements
+  - Add search bar, filter chips, sort options
+  - Implement fragment click → navigate to chat session with context (±5 fragments)
+  - Requires new chat view feature: focused fragment with lazy loading
+  - **Dependency:** Fragment navigation task (T-FRAG-NAV-01) - needed for bookmarks too
 
 ### **📋 HIGH PRIORITY QUEUE (4 commands)**
 - ⬜ `/agents` - Agent listing (orchestration core)

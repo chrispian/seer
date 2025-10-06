@@ -14,6 +14,7 @@ import { SprintListModal } from '@/components/orchestration/SprintListModal'
 import { TaskListModal } from '@/components/orchestration/TaskListModal'
 import { AgentListModal } from '@/components/orchestration/AgentListModal'
 import { TodoManagementModal } from '@/islands/chat/TodoManagementModal'
+import { FragmentListModal } from '@/components/fragments/FragmentListModal'
 
 
 interface CommandResult {
@@ -148,6 +149,26 @@ export function CommandResultModal({
               onClose={() => {
                 console.log('TodoManagementModal onClose called')
                 onClose()
+              }}
+            />
+          )
+        case 'FragmentListModal':
+          return (
+            <FragmentListModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('FragmentListModal onClose called')
+                onClose()
+              }}
+              fragments={result.data}
+              onFragmentSelect={(fragment) => {
+                console.log('Fragment selected:', fragment)
+                // TODO: Implement fragment navigation (T-FRAG-NAV-01)
+                alert(`Fragment Navigation\n\nClicked: ${fragment.id}\n\nTask T-FRAG-NAV-01 required:\n- Navigate to chat session\n- Focus on fragment with ±5 context\n- Lazy loading`)
+              }}
+              onRefresh={() => {
+                console.log('Fragment refresh requested')
+                alert('Fragment refresh not implemented yet.')
               }}
             />
           )
