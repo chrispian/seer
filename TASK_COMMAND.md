@@ -235,15 +235,11 @@ Next batch: Simple action/utility commands that don't need complex modals.
 - ⬜ `/backlog-list` - Backlog management (workflow) **NOTE: Discuss todo/backlog relationship**
 - ⬜ `/bookmark` - Bookmark functionality (user feature)
 
-### **📝 REMAINING COMMANDS (15 commands)**
+### **📝 REMAINING COMMANDS (11 commands)**
 **Fragment & Content Commands:**
-- ⬜ `/accept` - Accept Inbox Fragment
-- ⬜ `/join` - Join Channel
-- ⬜ `/link` - Link
-- ⬜ `/name` - Set Channel Name
+- ⬜ `/link` - Link management
 - ⬜ `/note` - Create Note
 - ⬜ `/recall` - Recall fragments (COMPLEX - save for later)
-- ⬜ `/routing` - Routing Management
 - ⬜ `/compose` - Compose message (COMPLEX - save for later)
 
 **Task & Project Management:**
@@ -273,6 +269,7 @@ Next batch: Simple action/utility commands that don't need complex modals.
 
 ### **🗑️ REMOVED COMMANDS**
 - ❌ `/settings` - Removed (UI command, not data command)
+- ❌ `/accept` - Removed (GUI/keyboard shortcuts better for inbox management)
 
 ### **📝 DISCUSSION NOTES**
 - **Todo vs Backlog**: Need to clarify relationship between `/todo`, `/backlog-list`, and task management
