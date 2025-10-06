@@ -9,14 +9,18 @@ use App\Services\Commands\DSL\Steps\StepFactory;
 
 class CommandRunner
 {
+    protected TemplateEngine $templateEngine;
+
     public function __construct(
         protected CommandPackLoader $loader,
-        protected TemplateEngine $templateEngine,
+        TemplateEngine $templateEngine,
         protected StepFactory $stepFactory
     ) {
         // Wrap template engine with telemetry if enabled
         if (config('command-telemetry.enabled', true)) {
-            $this->templateEngine = TemplateEngineTelemetryDecorator::wrap($this->templateEngine);
+            $this->templateEngine = TemplateEngineTelemetryDecorator::wrap($templateEngine);
+        } else {
+            $this->templateEngine = $templateEngine;
         }
     }
 

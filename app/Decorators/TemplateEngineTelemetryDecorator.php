@@ -9,11 +9,13 @@ use App\Services\Telemetry\CommandTelemetry;
  * Decorator for TemplateEngine that adds telemetry tracking
  * for template rendering performance and cache efficiency.
  */
-class TemplateEngineTelemetryDecorator
+class TemplateEngineTelemetryDecorator extends TemplateEngine
 {
     public function __construct(
         protected TemplateEngine $templateEngine
-    ) {}
+    ) {
+        // Don't call parent constructor - we'll delegate to the wrapped engine
+    }
 
     /**
      * Render template with telemetry tracking

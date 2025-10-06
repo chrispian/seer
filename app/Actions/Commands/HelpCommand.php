@@ -5,6 +5,7 @@ namespace App\Actions\Commands;
 use App\Contracts\HandlesCommand;
 use App\DTOs\CommandRequest;
 use App\DTOs\CommandResponse;
+use Illuminate\Support\Facades\File;
 
 class HelpCommand implements HandlesCommand
 {
@@ -12,7 +13,10 @@ class HelpCommand implements HandlesCommand
     {
         $section = $command->arguments['identifier'] ?? '';
 
-        // Define all sections
+        // Get tool-provided help content
+        $toolHelp = $this->discoverToolHelp();
+        
+        // Define core sections
         $sections = [
             'recall' => $this->getRecallSection(),
             'bookmark' => $this->getBookmarkSection(),
@@ -23,7 +27,11 @@ class HelpCommand implements HandlesCommand
             'session' => $this->getSessionSection(),
             'system' => $this->getSystemSection(),
             'tools' => $this->getToolsSection(),
+            'orchestration' => $this->getOrchestrationSection(),
         ];
+
+        // Merge tool-provided help
+        $allSections = array_merge($sections, $toolHelp);
 
         // Handle aliases
         if ($section === 'sessions') {
@@ -31,15 +39,35 @@ class HelpCommand implements HandlesCommand
         }
 
         // If specific section requested, return only that section
-        if (! empty($section) && isset($sections[$section])) {
-            $message = "# {$this->getSectionTitle($section)}\n\n".$sections[$section];
+        if (! empty($section)) {
+            // First check if there's full tool documentation available
+            $toolDoc = $this->getToolDocumentation($section);
+            if ($toolDoc) {
+                $message = $toolDoc;
+            } elseif (isset($allSections[$section])) {
+                $message = "# {$this->getSectionTitle($section)}\n\n".$allSections[$section];
+            } else {
+                $message = "# Command Not Found\n\nNo help available for `/{$section}`. Use `/help` to see all available commands.";
+            }
         } else {
             // Return all sections
             $message = "# Commands Cheat Sheet\n\nHere are the commands you can use in the chat:\n\n";
+            
+            // Core sections first
             foreach ($sections as $key => $content) {
                 $message .= "## {$this->getSectionTitle($key)}\n{$content}\n\n";
             }
-            $message .= "---\nAll fragments are stored and processed. Bookmarks and sessions give you quick access to curated memories and grouped ideas.";
+            
+            // Tool-provided sections
+            if (!empty($toolHelp)) {
+                $message .= "## Tool-Provided Commands\n\n";
+                foreach ($toolHelp as $key => $content) {
+                    $message .= "### {$this->getSectionTitle($key)}\n{$content}\n\n";
+                }
+            }
+            
+            $message .= "---\n**Navigation:** Use `/help <command>` for detailed help on specific commands.\n";
+            $message .= "All fragments are stored and processed. Bookmarks and sessions give you quick access to curated memories and grouped ideas.";
         }
 
         return new CommandResponse(
@@ -49,6 +77,121 @@ class HelpCommand implements HandlesCommand
                 'message' => $message,
             ],
         );
+    }
+
+    private function discoverToolHelp(): array
+    {
+        $helpContent = [];
+        $commandsPath = base_path('fragments/commands');
+        
+        if (!File::exists($commandsPath)) {
+            return $helpContent;
+        }
+        
+        $commandDirs = File::directories($commandsPath);
+        
+        foreach ($commandDirs as $dir) {
+            $commandName = basename($dir);
+            $readmePath = $dir . '/README.md';
+            
+            if (File::exists($readmePath)) {
+                $content = File::get($readmePath);
+                
+                // Extract a brief summary from the README for the main help
+                $summary = $this->extractSummary($content, $commandName);
+                if ($summary) {
+                    $helpContent[$commandName] = $summary;
+                }
+            }
+        }
+        
+        return $helpContent;
+    }
+
+    private function extractSummary(string $content, string $commandName): string
+    {
+        // Try to extract a concise summary for the main help view
+        $lines = explode("\n", $content);
+        
+        // Look for usage examples or overview section
+        $summary = '';
+        $inUsageSection = false;
+        $inOverviewSection = false;
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            
+            // Check for overview section
+            if (preg_match('/^##?\s*(overview|description|about)/i', $line)) {
+                $inOverviewSection = true;
+                continue;
+            }
+            
+            // Check for usage section
+            if (preg_match('/^##?\s*(usage|examples?|commands?)/i', $line)) {
+                $inUsageSection = true;
+                continue;
+            }
+            
+            // Stop at next section
+            if (preg_match('/^##?\s+/', $line) && ($inUsageSection || $inOverviewSection)) {
+                break;
+            }
+            
+            // Collect content from overview or usage
+            if (($inOverviewSection || $inUsageSection) && !empty($line) && !preg_match('/^#{1,6}\s/', $line)) {
+                $summary .= $line . "\n";
+                
+                // Limit summary length
+                if (strlen($summary) > 300) {
+                    $summary = substr($summary, 0, 300) . "...\n\n*Use `/help {$commandName}` for full documentation.*";
+                    break;
+                }
+            }
+        }
+        
+        // Fallback: generate basic summary from command name
+        if (empty($summary)) {
+            $summary = "- `/{$commandName}` – Advanced {$commandName} command functionality\n\n*Use `/help {$commandName}` for full documentation.*";
+        } else {
+            $summary .= "\n\n*Use `/help {$commandName}` for full documentation.*";
+        }
+        
+        return $summary;
+    }
+
+    private function getToolDocumentation(string $commandName): ?string
+    {
+        $commandPath = base_path("fragments/commands/{$commandName}");
+        $readmePath = $commandPath . '/README.md';
+        
+        if (!File::exists($readmePath)) {
+            return null;
+        }
+        
+        $content = File::get($readmePath);
+        
+        // Return the full README content as markdown
+        return $content;
+    }
+
+    private function getOrchestrationSection(): string
+    {
+        return <<<'MARKDOWN'
+- `/sprints` – List all sprints with progress summaries
+- `/tasks` – List work items and tasks with filtering options
+- `/agents` – List agent profiles and capabilities
+- `/ailogs` – View AI interaction logs from various sources
+- `/task-create "Title" --priority=high --estimate="2 days"` – Create new tasks
+- `/sprint-detail <id>` – View detailed sprint information
+- `/task-detail <id>` – View detailed task information
+
+**Examples:**
+- `/tasks --status=todo --priority=high` – List high-priority todos
+- `/sprints --limit=5` – Show recent 5 sprints
+- `/agents --status=active` – List active agents
+- `/ailogs --source=claude --limit=20` – View recent Claude logs
+MARKDOWN;
     }
 
     private function getSectionTitle(string $section): string
@@ -63,7 +206,9 @@ class HelpCommand implements HandlesCommand
             'session' => 'Sessions',
             'system' => 'System Management',
             'tools' => 'Chat Tools',
-            default => 'Commands',
+            'orchestration' => 'Orchestration & Task Management',
+            // Dynamic titles for tool-provided commands
+            default => ucwords(str_replace(['-', '_'], ' ', $section)) . ' Command',
         };
     }
 
