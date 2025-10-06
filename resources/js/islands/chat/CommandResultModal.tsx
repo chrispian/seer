@@ -15,6 +15,7 @@ import { TaskListModal } from '@/components/orchestration/TaskListModal'
 import { AgentListModal } from '@/components/orchestration/AgentListModal'
 import { TodoManagementModal } from '@/islands/chat/TodoManagementModal'
 import { FragmentListModal } from '@/components/fragments/FragmentListModal'
+import { ChannelListModal } from '@/components/channels/ChannelListModal'
 
 
 interface CommandResult {
@@ -174,6 +175,25 @@ export function CommandResultModal({
               onRefresh={() => {
                 console.log('Fragment refresh requested')
                 alert('Fragment refresh not implemented yet.')
+              }}
+            />
+          )
+        case 'ChannelListModal':
+          return (
+            <ChannelListModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('ChannelListModal onClose called')
+                onClose()
+              }}
+              channels={result.data}
+              onChannelSelect={(channel) => {
+                console.log('Channel selected:', channel)
+                alert(`Channel: ${channel.name}\n\nChannel interaction coming soon.\nThis will allow joining/viewing channel details.`)
+              }}
+              onRefresh={() => {
+                console.log('Channel refresh requested')
+                alert('Channel refresh not implemented yet.')
               }}
             />
           )
