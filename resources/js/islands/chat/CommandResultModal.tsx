@@ -59,8 +59,12 @@ export function CommandResultModal({
   }
 
   const handleBackToList = () => {
+    console.log('CommandResultModal: Going back to list view')
     setDetailView({ type: null, data: null })
   }
+
+  // Debug current state
+  console.log('CommandResultModal render - detailView:', detailView, 'result.type:', result?.type)
 
   // Check if this is an orchestration command that should use rich UI
   const isOrchestrationCommand = () => {
@@ -120,6 +124,7 @@ export function CommandResultModal({
           loading={false}
           error={null}
           onSprintSelect={(sprint) => {
+            console.log('CommandResultModal: Sprint selected from list:', sprint)
             setDetailView({ type: 'sprint', data: sprint })
           }}
         />
@@ -155,6 +160,7 @@ export function CommandResultModal({
           title={panelData.sprint_filter ? `Tasks - ${panelData.sprint_filter}` : "Task List"}
           currentSprintOnly={!panelData.sprint_filter}
           onTaskSelect={(task) => {
+            console.log('CommandResultModal: Task selected from list:', task)
             setDetailView({ type: 'task', data: task })
           }}
         />

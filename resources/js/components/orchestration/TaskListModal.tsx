@@ -356,13 +356,20 @@ export function TaskListModal({
       searchPlaceholder="Search tasks..."
       searchFields={['task_code', 'task_name', 'description', 'current_agent', 'agent_recommendation']}
       onAction={(action, task) => {
+        console.log('TaskListModal action clicked:', action, task)
+        alert(`Action "${action}" clicked for task: ${task.task_name}`)
         if (action === 'view' || action === 'assign') {
+          console.log('Calling onTaskSelect with:', task)
           onTaskSelect?.(task)
         }
       }}
       actionItems={actionItems}
       clickableRows={true}
-      onRowClick={onTaskSelect}
+      onRowClick={(task) => {
+        console.log('TaskListModal row clicked:', task)
+        alert(`Row clicked for task: ${task.task_name}`)
+        onTaskSelect?.(task)
+      }}
       onRefresh={onRefresh}
       customHeader={
         <div className="text-sm text-muted-foreground">
