@@ -69,6 +69,11 @@ export function CommandResultModal({
 
   // Check if this is an orchestration command that should use rich UI
   const isOrchestrationCommand = () => {
+    // New PHP command system - check for component field first
+    if (result.component) {
+      return true
+    }
+    // Legacy - check result.type for YAML commands
     return result.type === 'sprint' || result.type === 'task' || result.type === 'backlog' || result.type === 'agent' || result.type === 'ailogs'
   }
 
