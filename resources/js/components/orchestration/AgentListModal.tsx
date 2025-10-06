@@ -206,7 +206,7 @@ export function AgentListModal({
       data={agents}
       columns={columns}
       loading={loading}
-      error={error}
+      error={error ?? undefined}
       filters={filters}
       searchPlaceholder="Search agents..."
       searchFields={['name', 'slug', 'description', 'capabilities', 'tools']}
@@ -215,9 +215,9 @@ export function AgentListModal({
           onAgentSelect?.(agent)
         }
       }}
+      actionItems={actionItems}
       clickableRows={true}
       onRowClick={onAgentSelect}
-      actionItems={actionItems}
       onRefresh={onRefresh}
       customHeader={
         <div className="text-sm text-muted-foreground">

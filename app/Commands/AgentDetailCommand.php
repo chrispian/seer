@@ -38,10 +38,45 @@ class AgentDetailCommand extends BaseCommand
             $content = $response->content();
             $data = json_decode((string) $content, true);
             
+            $agent = $data['agent'] ?? null;
+            if (!$agent) {
+                throw new \Exception('Agent data not found');
+            }
+            
+            $stats = $data['stats'] ?? [];
+            $assignments = $data['recent_assignments'] ?? [];
+            
+            $message = "**{$agent['name']}** (`{$agent['slug']}`)\n\n";
+            $message .= "**Type:** {$agent['type']}\n";
+            $message .= "**Mode:** {$agent['mode']}\n";
+            $message .= "**Status:** {$agent['status']}\n\n";
+            
+            if (!empty($agent['capabilities'])) {
+                $message .= "**Capabilities:**\n";
+                foreach ($agent['capabilities'] as $capability) {
+                    $message .= "- {$capability}\n";
+                }
+                $message .= "\n";
+            }
+            
+            if (!empty($stats)) {
+                $message .= "**Assignment Stats:**\n";
+                $message .= "- Total: {$stats['assignments_total']}\n";
+                $message .= "- Active: {$stats['assignments_active']}\n";
+                $message .= "- Completed: {$stats['assignments_completed']}\n\n";
+            }
+            
+            if (!empty($assignments)) {
+                $message .= "**Recent Assignments:**\n";
+                foreach (array_slice($assignments, 0, 5) as $assignment) {
+                    $message .= "- {$assignment['work_item_code']} ({$assignment['status']})\n";
+                }
+            }
+            
             return [
-                'type' => 'agent',
-                'component' => 'AgentDetailModal',
-                'data' => $data
+                'type' => 'message',
+                'component' => null,
+                'message' => $message
             ];
         } catch (\Exception $e) {
             return [

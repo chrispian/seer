@@ -40,16 +40,29 @@ class SprintDetailCommand extends BaseCommand
             
             $response = $tool->handle($request);
             $content = $response->content();
-            $data = json_decode((string) $content, true);
+            $rawData = json_decode((string) $content, true);
             
-            if (!$data || (isset($data['error']) && $data['error'])) {
-                throw new \Exception($data['error'] ?? 'Sprint not found');
+            if (!$rawData || (isset($rawData['error']) && $rawData['error'])) {
+                throw new \Exception($rawData['error'] ?? 'Sprint not found');
             }
+            
+            $sprint = $rawData['sprint'] ?? null;
+            if (!$sprint) {
+                throw new \Exception('Sprint data not found');
+            }
+            
+            $tasks = $sprint['tasks'] ?? [];
+            $stats = $sprint['stats'] ?? ['total' => 0, 'completed' => 0, 'in_progress' => 0, 'todo' => 0, 'backlog' => 0];
+            unset($sprint['tasks'], $sprint['stats']);
             
             return [
                 'type' => 'sprint',
                 'component' => 'SprintDetailModal',
-                'data' => $data
+                'data' => [
+                    'sprint' => $sprint,
+                    'tasks' => $tasks,
+                    'stats' => $stats
+                ]
             ];
         } catch (\Exception $e) {
             return [

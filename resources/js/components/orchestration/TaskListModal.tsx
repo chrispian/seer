@@ -132,8 +132,8 @@ export function TaskListModal({
       'backlog': 6
     }
     
-    const aOrder = statusOrder[a.status?.toLowerCase()] || 999
-    const bOrder = statusOrder[b.status?.toLowerCase()] || 999
+    const aOrder = statusOrder[a.status?.toLowerCase() as keyof typeof statusOrder] || 999
+    const bOrder = statusOrder[b.status?.toLowerCase() as keyof typeof statusOrder] || 999
     
     if (aOrder !== bOrder) {
       return aOrder - bOrder
@@ -351,7 +351,7 @@ export function TaskListModal({
       data={sortedTasks}
       columns={columns}
       loading={loading}
-      error={error}
+      error={error ?? undefined}
       filters={filters}
       searchPlaceholder="Search tasks..."
       searchFields={['task_code', 'task_name', 'description', 'current_agent', 'agent_recommendation']}
@@ -367,7 +367,6 @@ export function TaskListModal({
       clickableRows={true}
       onRowClick={(task) => {
         console.log('TaskListModal row clicked:', task)
-        alert(`Row clicked for task: ${task.task_name}`)
         onTaskSelect?.(task)
       }}
       onRefresh={onRefresh}
