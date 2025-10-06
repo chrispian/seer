@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import {
@@ -49,9 +49,17 @@ export function CommandResultModal({
   result, 
   command 
 }: CommandResultModalProps) {
+  const [detailView, setDetailView] = useState<{
+    type: 'sprint' | 'task' | 'agent' | 'ailog' | null
+    data: any
+  }>({ type: null, data: null })
 
   if (!result) {
     return null
+  }
+
+  const handleBackToList = () => {
+    setDetailView({ type: null, data: null })
   }
 
   // Check if this is an orchestration command that should use rich UI
@@ -66,6 +74,43 @@ export function CommandResultModal({
 
     const { panelData } = result
 
+    // Show detail view if we have one
+    if (detailView.type && detailView.data) {
+      if (detailView.type === 'sprint') {
+        return (
+          <SprintDetailModal
+            isOpen={isOpen}
+            onClose={onClose}
+            sprint={detailView.data}
+            tasks={detailView.data.tasks || []}
+            stats={detailView.data.stats || {}}
+            loading={false}
+            error={null}
+            onBack={handleBackToList}
+            onTaskSelect={(task) => {
+              setDetailView({ type: 'task', data: task })
+            }}
+          />
+        )
+      }
+
+      if (detailView.type === 'task') {
+        return (
+          <TaskDetailModal
+            isOpen={isOpen}
+            onClose={onClose}
+            task={detailView.data}
+            currentAssignment={detailView.data.current_assignment}
+            assignments={detailView.data.assignments || []}
+            content={detailView.data.content || {}}
+            loading={false}
+            error={null}
+            onBack={handleBackToList}
+          />
+        )
+      }
+    }
+
     if (result.type === 'sprint' && panelData.action === 'list') {
       return (
         <SprintListModal
@@ -75,8 +120,7 @@ export function CommandResultModal({
           loading={false}
           error={null}
           onSprintSelect={(sprint) => {
-            console.log('Sprint selected:', sprint)
-            // Could navigate to sprint detail or open another modal
+            setDetailView({ type: 'sprint', data: sprint })
           }}
         />
       )
@@ -111,8 +155,7 @@ export function CommandResultModal({
           title={panelData.sprint_filter ? `Tasks - ${panelData.sprint_filter}` : "Task List"}
           currentSprintOnly={!panelData.sprint_filter}
           onTaskSelect={(task) => {
-            console.log('Task selected:', task)
-            // Could open task detail modal
+            setDetailView({ type: 'task', data: task })
           }}
         />
       )
