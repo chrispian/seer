@@ -53,9 +53,9 @@ class FileReadTool extends Tool implements SummarizesTool
         ]);
     }
 
-    public static function name(): string { return 'file.read'; }
-    public static function title(): string { return 'Read file'; }
-    public static function shortDescription(): string { return 'Read file content with size cap.'; }
+    public static function summaryName(): string { return 'file.read'; }
+    public static function summaryTitle(): string { return 'Read file'; }
+    public static function summaryDescription(): string { return 'Read file content with size cap.'; }
     public static function schemaSummary(): array
     {
         return [

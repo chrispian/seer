@@ -10,6 +10,13 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { SprintListModal } from '@/components/orchestration/SprintListModal'
+import { SprintDetailModal } from '@/components/orchestration/SprintDetailModal'
+import { TaskListModal } from '@/components/orchestration/TaskListModal'
+import { TaskDetailModal } from '@/components/orchestration/TaskDetailModal'
+import { BacklogListModal } from '@/components/orchestration/BacklogListModal'
+import { AgentListModal } from '@/components/orchestration/AgentListModal'
+import { AiLogsModal } from '@/components/orchestration/AiLogsModal'
 
 interface CommandResult {
   success: boolean
@@ -18,6 +25,10 @@ interface CommandResult {
   error?: string
   panelData?: {
     message?: string
+    action?: string
+    sprints?: any[]
+    tasks?: any[]
+    [key: string]: any
   }
   fragments?: any[]
   shouldResetChat?: boolean
@@ -38,8 +49,146 @@ export function CommandResultModal({
   result, 
   command 
 }: CommandResultModalProps) {
+
   if (!result) {
     return null
+  }
+
+  // Check if this is an orchestration command that should use rich UI
+  const isOrchestrationCommand = () => {
+    return result.type === 'sprint' || result.type === 'task' || result.type === 'backlog' || result.type === 'agent' || result.type === 'ailogs'
+  }
+
+  const renderOrchestrationUI = () => {
+    if (!result.success || !result.panelData) {
+      return null
+    }
+
+    const { panelData } = result
+
+    if (result.type === 'sprint' && panelData.action === 'list') {
+      return (
+        <SprintListModal
+          isOpen={isOpen}
+          onClose={onClose}
+          sprints={panelData.sprints || []}
+          loading={false}
+          error={null}
+          onSprintSelect={(sprint) => {
+            console.log('Sprint selected:', sprint)
+            // Could navigate to sprint detail or open another modal
+          }}
+        />
+      )
+    }
+
+    if (result.type === 'sprint' && panelData.action === 'detail') {
+      return (
+        <SprintDetailModal
+          isOpen={isOpen}
+          onClose={onClose}
+          sprint={panelData.sprint || {}}
+          tasks={panelData.tasks || []}
+          stats={panelData.stats || {}}
+          loading={false}
+          error={null}
+          onTaskSelect={(task) => {
+            console.log('Task selected:', task)
+            // Could open task detail modal
+          }}
+        />
+      )
+    }
+
+    if (result.type === 'task' && panelData.action === 'list') {
+      return (
+        <TaskListModal
+          isOpen={isOpen}
+          onClose={onClose}
+          tasks={panelData.tasks || []}
+          loading={false}
+          error={null}
+          title={panelData.sprint_filter ? `Tasks - ${panelData.sprint_filter}` : "Task List"}
+          currentSprintOnly={!panelData.sprint_filter}
+          onTaskSelect={(task) => {
+            console.log('Task selected:', task)
+            // Could open task detail modal
+          }}
+        />
+      )
+    }
+
+    if (result.type === 'task' && panelData.action === 'detail') {
+      return (
+        <TaskDetailModal
+          isOpen={isOpen}
+          onClose={onClose}
+          task={panelData.task || {}}
+          currentAssignment={panelData.current_assignment}
+          assignments={panelData.assignments || []}
+          content={panelData.content || {}}
+          loading={false}
+          error={null}
+        />
+      )
+    }
+
+    if (result.type === 'backlog' && panelData.action === 'backlog_list') {
+      return (
+        <BacklogListModal
+          isOpen={isOpen}
+          onClose={onClose}
+          backlogItems={panelData.tasks || []}
+          loading={false}
+          error={null}
+          onBacklogItemSelect={(item) => {
+            console.log('Backlog item selected:', item)
+          }}
+        />
+      )
+    }
+
+    if (result.type === 'agent' && panelData.action === 'list') {
+      return (
+        <AgentListModal
+          isOpen={isOpen}
+          onClose={onClose}
+          agents={panelData.agents || []}
+          loading={false}
+          error={null}
+          onAgentSelect={(agent) => {
+            console.log('Agent selected:', agent)
+            // Could open agent detail modal or assignment interface
+          }}
+        />
+      )
+    }
+
+    if (result.type === 'ailogs' && panelData.action === 'list') {
+      return (
+        <AiLogsModal
+          isOpen={isOpen}
+          onClose={onClose}
+          logs={panelData.logs || []}
+          loading={false}
+          error={null}
+          onRefresh={() => {
+            console.log('AI logs refresh requested')
+            // Could trigger a re-fetch of logs
+          }}
+        />
+      )
+    }
+
+    return null
+  }
+
+  // If this is an orchestration command, render the rich UI instead of the modal
+  if (isOrchestrationCommand() && result.success) {
+    const orchestrationUI = renderOrchestrationUI()
+    if (orchestrationUI) {
+      return orchestrationUI
+    }
   }
 
   const getTitle = () => {

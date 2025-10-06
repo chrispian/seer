@@ -33,3 +33,16 @@ Schedule::command('sync:ollama-local --queue')
     ->onFailure(function () {
         error('Failed to sync local Ollama models');
     });
+
+// Schedule daily import of agent logs
+Schedule::command('logs:import --since=yesterday')
+    ->dailyAt('04:00')
+    ->timezone('UTC')
+    ->name('import-agent-logs')
+    ->description('Import new agent logs from OpenCode and Claude')
+    ->onSuccess(function () {
+        info('Successfully imported agent logs');
+    })
+    ->onFailure(function () {
+        error('Failed to import agent logs');
+    });

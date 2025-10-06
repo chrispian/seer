@@ -96,9 +96,9 @@ class TextSearchTool extends Tool implements SummarizesTool
         return Response::json(['matches' => $matches]);
     }
 
-    public static function name(): string { return 'text.search'; }
-    public static function title(): string { return 'Search text (grep-like)'; }
-    public static function shortDescription(): string { return 'Regex/literal search with context.'; }
+    public static function summaryName(): string { return 'text.search'; }
+    public static function summaryTitle(): string { return 'Search text (grep-like)'; }
+    public static function summaryDescription(): string { return 'Regex/literal search with context.'; }
     public static function schemaSummary(): array
     {
         return [
