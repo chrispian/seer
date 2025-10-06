@@ -169,7 +169,7 @@ Converted 16 critical commands to PHP classes with proper modal routing.
 
 ## **COMMAND CONVERSION TRACKING**
 
-### **✅ COMPLETED (24/36 commands) - CORE SYSTEM WORKING**
+### **✅ COMPLETED (25/36 commands) - CORE SYSTEM WORKING**
 
 **Command Infrastructure:**
 - ✅ `/help` - HelpCommand.php (enhanced with aliases, markdown formatting, categories)
@@ -184,7 +184,9 @@ Converted 16 critical commands to PHP classes with proper modal routing.
 - ✅ `/inbox` - InboxCommand.php (reuses FragmentListModal, queries inbox items)
 - ✅ `/vault` - VaultCommand.php
 - ✅ `/project` - ProjectCommand.php
-- ✅ `/recall` - RecallCommand.php
+- ✅ `/context` - ContextCommand.php (message response, shows vault/project/session)
+- ⏳ `/recall` - RecallCommand.php (COMPLEX - in progress)
+- ⏳ `/compose` - ComposeCommand.php (COMPLEX - in progress)
 
 **Detail/Management Commands:**
 - ✅ `/sprint-detail` - SprintDetailCommand.php
