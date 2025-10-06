@@ -57,4 +57,27 @@ return [
         'sprint_service' => \App\Services\SprintOrchestrationService::class,
         'agent_service' => \App\Services\AgentOrchestrationService::class,
     ],
+
+    'artifacts' => [
+        'disk' => env('FE_ARTIFACTS_DISK', 'local'),
+        'root' => env('FE_ARTIFACTS_ROOT', 'orchestration/artifacts'),
+    ],
+
+    'messaging' => [
+        'retention_days' => (int) env('FE_MSG_RETENTION_DAYS', 365),
+    ],
+
+    'secret_redaction' => [
+        'enabled' => env('FE_REDACTION_ENABLED', true),
+        'patterns' => [
+            'AWS_(ACCESS|SECRET)_KEY',
+            'APP_KEY',
+            'Bearer [A-Za-z0-9._-]+',
+            'OPENAI_API_KEY',
+            'ANTHROPIC_API_KEY',
+        ],
+        'custom_patterns' => env('FE_REDACT_PATTERNS') 
+            ? explode(',', env('FE_REDACT_PATTERNS')) 
+            : [],
+    ],
 ];
