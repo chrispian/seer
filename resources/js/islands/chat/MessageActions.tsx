@@ -23,13 +23,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Copy, Bookmark, Trash2, MoreVertical } from 'lucide-react'
+import { Copy, Bookmark, Trash2, MoreVertical, Download } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 
 interface MessageActionsProps {
-  messageId: string // Client-side ID for React
-  serverMessageId?: string // Server-side message ID from API
-  serverFragmentId?: string // Server-side fragment ID if exists
+  messageId: string
+  serverMessageId?: string
+  serverFragmentId?: string
   content: string
   isBookmarked?: boolean
   onDelete?: (messageId: string) => void
@@ -63,7 +63,6 @@ export function MessageActions({
       await navigator.clipboard.writeText(content)
       console.log('Message copied to clipboard')
       
-      // Show visual feedback (could be enhanced with toast)
       const button = document.querySelector(`[data-message-id="${messageId}"] [data-action="copy"]`) as HTMLElement
       if (button) {
         const originalHTML = button.innerHTML
@@ -77,7 +76,6 @@ export function MessageActions({
       }
     } catch (error) {
       console.error('Failed to copy message:', error)
-      // Fallback for older browsers
       try {
         const textArea = document.createElement('textarea')
         textArea.value = content
@@ -92,13 +90,35 @@ export function MessageActions({
     }
   }
 
+  const handleDownload = () => {
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0]
+      const timeOnly = new Date().toTimeString().split(' ')[0].replace(/:/g, '-')
+      const filename = `chat-message-${timestamp}-${timeOnly}.md`
+      
+      const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
+      console.log('Message downloaded:', filename)
+    } catch (error) {
+      console.error('Failed to download message:', error)
+    }
+  }
+
   const handleBookmarkToggle = async () => {
     if (isTogglingBookmark) return
     
     setIsTogglingBookmark(true)
     try {
       if (!bookmarked) {
-        // If we already have a fragment ID, bookmark it directly
         if (serverFragmentId) {
           const bookmarkResponse = await fetch(`/api/fragments/${serverFragmentId}/bookmark`, {
             method: 'POST',
@@ -115,10 +135,8 @@ export function MessageActions({
           setBookmarked(true)
           onBookmarkToggle?.(messageId, true, serverFragmentId)
           
-          // Invalidate bookmark queries to refresh the widget
           queryClient.invalidateQueries({ queryKey: ['widgets', 'bookmarks'] })
         } else {
-          // Create a new fragment from the chat message
           const response = await fetch('/api/fragment', {
             method: 'POST',
             headers: {
@@ -138,7 +156,6 @@ export function MessageActions({
           const fragmentData = await response.json()
           const fragmentId = fragmentData.id
           
-          // Now bookmark the created fragment
           const bookmarkResponse = await fetch(`/api/fragments/${fragmentId}/bookmark`, {
             method: 'POST',
             headers: {
@@ -154,11 +171,9 @@ export function MessageActions({
           setBookmarked(true)
           onBookmarkToggle?.(messageId, true, fragmentId)
           
-          // Invalidate bookmark queries to refresh the widget
           queryClient.invalidateQueries({ queryKey: ['widgets', 'bookmarks'] })
         }
       } else {
-        // Remove bookmark if we have a fragment ID
         if (serverFragmentId) {
           const bookmarkResponse = await fetch(`/api/fragments/${serverFragmentId}/bookmark`, {
             method: 'POST',
@@ -175,21 +190,17 @@ export function MessageActions({
           setBookmarked(false)
           onBookmarkToggle?.(messageId, false)
           
-          // Invalidate bookmark queries to refresh the widget
           queryClient.invalidateQueries({ queryKey: ['widgets', 'bookmarks'] })
         } else {
           console.log('Cannot remove bookmark: no fragment ID available')
-          // Just update local state for now
           setBookmarked(false)
           onBookmarkToggle?.(messageId, false)
           
-          // Still invalidate queries in case of local state changes
           queryClient.invalidateQueries({ queryKey: ['widgets', 'bookmarks'] })
         }
       }
     } catch (error) {
       console.error('Failed to toggle bookmark:', error)
-      // Could show error toast here
     } finally {
       setIsTogglingBookmark(false)
     }
@@ -200,7 +211,6 @@ export function MessageActions({
     
     setIsDeleting(true)
     try {
-      // If we have a server fragment ID, try to delete it from the server
       if (serverFragmentId) {
         const response = await fetch(`/api/fragments/${serverFragmentId}`, {
           method: 'DELETE',
@@ -215,12 +225,10 @@ export function MessageActions({
         }
       }
       
-      // Always remove from local state (even if server delete fails)
       onDelete?.(messageId)
       setShowDeleteDialog(false)
     } catch (error) {
       console.error('Failed to delete message:', error)
-      // Still remove from local state even if server delete failed
       onDelete?.(messageId)
       setShowDeleteDialog(false)
     } finally {
@@ -232,7 +240,6 @@ export function MessageActions({
     <>
       <div className={`${className}`} data-message-id={messageId}>
         <Menubar className="h-8 bg-gray-50 border-gray-300 rounded-md shadow-sm">
-          {/* Copy Button */}
           <MenubarMenu>
             <MenubarTrigger 
               onClick={handleCopy}
@@ -244,7 +251,6 @@ export function MessageActions({
             </MenubarTrigger>
           </MenubarMenu>
 
-          {/* Bookmark Button */}
           <MenubarMenu>
             <MenubarTrigger
               onClick={handleBookmarkToggle}
@@ -256,7 +262,16 @@ export function MessageActions({
             </MenubarTrigger>
           </MenubarMenu>
 
-          {/* More Actions Dropdown */}
+          <MenubarMenu>
+            <MenubarTrigger
+              onClick={handleDownload}
+              className="h-6 px-2 text-xs data-[state=open]:bg-primary data-[state=open]:text-primary-foreground hover:bg-gray-100"
+              title="Download as markdown"
+            >
+              <Download className="w-3 h-3" />
+            </MenubarTrigger>
+          </MenubarMenu>
+
           <MenubarMenu>
             <MenubarTrigger className="h-6 px-2 text-xs data-[state=open]:bg-primary data-[state=open]:text-primary-foreground hover:bg-gray-100" title="More actions">
               <MoreVertical className="w-3 h-3" />
@@ -274,7 +289,6 @@ export function MessageActions({
         </Menubar>
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -10,8 +10,8 @@ class BacklogListCommand extends BaseCommand
         $tasks = $this->getBacklogTasks();
         
         return [
-            'type' => 'task',
-            'component' => 'TaskListModal',
+            'type' => 'backlog',
+            'component' => 'BacklogListModal',
             'data' => $tasks
         ];
     }

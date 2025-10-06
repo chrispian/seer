@@ -15,6 +15,7 @@ import { SprintDetailModal } from '@/components/orchestration/SprintDetailModal'
 import { TaskListModal } from '@/components/orchestration/TaskListModal'
 import { TaskDetailModal } from '@/components/orchestration/TaskDetailModal'
 import { AgentListModal } from '@/components/orchestration/AgentListModal'
+import { BacklogListModal } from '@/components/orchestration/BacklogListModal'
 import { TodoManagementModal } from '@/islands/chat/TodoManagementModal'
 import { FragmentListModal } from '@/components/fragments/FragmentListModal'
 import { ChannelListModal } from '@/components/channels/ChannelListModal'
@@ -175,6 +176,26 @@ export function CommandResultModal({
               onRefresh={() => {
                 console.log('Agent refresh requested')
                 alert('Agent refresh functionality not implemented yet.')
+              }}
+            />
+          )
+        case 'BacklogListModal':
+          return (
+            <BacklogListModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('BacklogListModal onClose called')
+                handleBackToList()
+                onClose()
+              }}
+              tasks={currentResult.data}
+              onTaskSelect={(task) => {
+                console.log('Backlog task selected:', task)
+                executeDetailCommand(`/task-detail ${task.task_code}`)
+              }}
+              onRefresh={() => {
+                console.log('Backlog refresh requested')
+                alert('Backlog refresh functionality not implemented yet.')
               }}
             />
           )
