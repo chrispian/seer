@@ -11,7 +11,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { SprintListModal } from '@/components/orchestration/SprintListModal'
+import { SprintDetailModal } from '@/components/orchestration/SprintDetailModal'
 import { TaskListModal } from '@/components/orchestration/TaskListModal'
+import { TaskDetailModal } from '@/components/orchestration/TaskDetailModal'
 import { AgentListModal } from '@/components/orchestration/AgentListModal'
 import { TodoManagementModal } from '@/islands/chat/TodoManagementModal'
 import { FragmentListModal } from '@/components/fragments/FragmentListModal'
@@ -207,6 +209,29 @@ export function CommandResultModal({
                 onClose()
               }}
               routingData={result.data}
+            />
+          )
+        case 'SprintDetailModal':
+          return (
+            <SprintDetailModal
+              isOpen={isOpen}
+              onClose={onClose}
+              sprint={result.data?.sprint}
+              tasks={result.data?.tasks || []}
+              stats={result.data?.stats || { total: 0, completed: 0, in_progress: 0, todo: 0, backlog: 0 }}
+              onBack={onClose}
+            />
+          )
+        case 'TaskDetailModal':
+          return (
+            <TaskDetailModal
+              isOpen={isOpen}
+              onClose={onClose}
+              task={result.data?.task}
+              currentAssignment={result.data?.current_assignment}
+              assignments={result.data?.assignments || []}
+              content={result.data?.content || {}}
+              onBack={onClose}
             />
           )
         case 'HelpModal':
