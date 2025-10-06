@@ -51,7 +51,8 @@
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
+            "Database\\Seeders\\": "database/seeders/",
+            "HollisLabs\\ToolCrate\\": "laravel-tool-crate/src/"
         }
     },
     "autoload-dev": {

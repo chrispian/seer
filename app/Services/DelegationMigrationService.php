@@ -317,6 +317,14 @@ class DelegationMigrationService
                 'summary' => File::exists("{$taskDir}/IMPLEMENTATION_SUMMARY.md"),
             ];
 
+            $contents = [
+                'agent' => $documents['agent'] ? File::get("{$taskDir}/AGENT.md") : null,
+                'plan' => $documents['plan'] ? File::get("{$taskDir}/PLAN.md") : null,
+                'context' => $documents['context'] ? File::get("{$taskDir}/CONTEXT.md") : null,
+                'todo' => $documents['todo'] ? File::get("{$taskDir}/TODO.md") : null,
+                'summary' => $documents['summary'] ? File::get("{$taskDir}/IMPLEMENTATION_SUMMARY.md") : null,
+            ];
+
             $todoProgress = File::exists("{$taskDir}/TODO.md")
                 ? $this->parseTodoProgress(File::get("{$taskDir}/TODO.md"))
                 : ['completed' => 0, 'total' => 0];
@@ -333,6 +341,7 @@ class DelegationMigrationService
                 'path' => $taskDir,
                 'relative_path' => Str::after($taskDir, base_path().'/'),
                 'documents' => $documents,
+                'contents' => $contents,
                 'todo_progress' => $todoProgress,
                 'metadata' => [
                     'dependencies' => $statusEntry['dependencies'] ?? null,

@@ -33,3 +33,5 @@ Schedule::command('sync:ollama-local --queue')
     ->onFailure(function () {
         error('Failed to sync local Ollama models');
     });
+
+

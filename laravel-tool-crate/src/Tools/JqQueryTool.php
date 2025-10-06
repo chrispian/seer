@@ -41,9 +41,9 @@ class JqQueryTool extends Tool implements SummarizesTool
         return Response::json(['stdout' => $res->stdout]);
     }
 
-    public static function name(): string { return 'json.query'; }
-    public static function title(): string { return 'Query JSON with jq'; }
-    public static function shortDescription(): string { return 'Query/transform JSON via jq.'; }
+    public static function summaryName(): string { return 'json.query'; }
+    public static function summaryTitle(): string { return 'Query JSON with jq'; }
+    public static function summaryDescription(): string { return 'Query/transform JSON via jq.'; }
     public static function schemaSummary(): array
     {
         return [

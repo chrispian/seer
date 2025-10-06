@@ -64,9 +64,9 @@ class TextReplaceTool extends Tool implements SummarizesTool
         return implode("\n", $out) . "\n";
     }
 
-    public static function name(): string { return 'text.replace'; }
-    public static function title(): string { return 'Replace text (diff preview)'; }
-    public static function shortDescription(): string { return 'Regex/literal replace; returns diff.'; }
+    public static function summaryName(): string { return 'text.replace'; }
+    public static function summaryTitle(): string { return 'Replace text (diff preview)'; }
+    public static function summaryDescription(): string { return 'Regex/literal replace; returns diff.'; }
     public static function schemaSummary(): array
     {
         return [

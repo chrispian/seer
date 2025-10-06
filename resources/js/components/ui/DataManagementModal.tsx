@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -56,6 +57,9 @@ interface DataRowProps<T extends DataItem> {
   onToggleCheckbox?: (itemId: string | number, checked: boolean) => void
   onAction?: (action: string, item: T) => void
   actionItems?: Array<{ key: string; label: string; className?: string }>
+  clickableRows?: boolean
+  expandedContentMaxWidth?: string
+  onRowClick?: (item: T) => void
 }
 
 const DataRow = <T extends DataItem>({
@@ -66,10 +70,35 @@ const DataRow = <T extends DataItem>({
   onToggleExpanded,
   onToggleCheckbox,
   onAction,
-  actionItems = []
-}: DataRowProps<T>) => (
-  <TableRow key={item.id} className="hover:bg-muted/50">
-    {columns.map((column) => {
+  actionItems = [],
+  clickableRows = false,
+  expandedContentMaxWidth = '85%',
+  onRowClick
+}: DataRowProps<T>) => {
+  
+  const handleRowClick = (e: React.MouseEvent) => {
+    // Don't trigger row click if clicking on buttons, checkboxes, or other interactive elements
+    const target = e.target as HTMLElement
+    if (target.closest('button') || target.closest('input') || target.closest('a') || target.closest('[role="button"]')) {
+      return
+    }
+    
+    if (clickableRows) {
+      if (onRowClick) {
+        onRowClick(item)
+      } else if (expandedContent) {
+        onToggleExpanded(item.id)
+      }
+    }
+  }
+
+  return (
+    <TableRow 
+      key={item.id} 
+      className={`hover:bg-muted/50 ${clickableRows && (expandedContent || onRowClick) ? 'cursor-pointer' : ''}`}
+      onClick={handleRowClick}
+    >
+      {columns.map((column) => {
       if (column.key === 'checkbox') {
         return (
           <TableCell key="checkbox" className="w-8">
@@ -140,7 +169,14 @@ const DataRow = <T extends DataItem>({
               <div>{content}</div>
               {isExpanded && (
                 <div className="pt-2 space-y-2 border-t border-muted">
-                  {expandedContent(item)}
+                  <div 
+                    className="overflow-hidden"
+                    style={{ maxWidth: expandedContentMaxWidth }}
+                  >
+                    <div className="overflow-x-auto max-h-96 overflow-y-auto border rounded p-3 bg-muted/10">
+                      {expandedContent(item)}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -150,8 +186,9 @@ const DataRow = <T extends DataItem>({
         </TableCell>
       )
     })}
-  </TableRow>
-)
+    </TableRow>
+  )
+}
 
 interface DataManagementModalProps<T extends DataItem> {
   isOpen: boolean
@@ -172,6 +209,11 @@ interface DataManagementModalProps<T extends DataItem> {
   customHeader?: React.ReactNode
   emptyStateMessage?: string
   emptyStateIcon?: React.ReactNode
+  defaultSort?: string
+  defaultSortDirection?: 'asc' | 'desc'
+  clickableRows?: boolean
+  expandedContentMaxWidth?: string
+  onRowClick?: (item: T) => void
 }
 
 export function DataManagementModal<T extends DataItem>({
@@ -192,7 +234,12 @@ export function DataManagementModal<T extends DataItem>({
   onRefresh,
   customHeader,
   emptyStateMessage = "No items found",
-  emptyStateIcon = <Info className="h-8 w-8" />
+  emptyStateIcon = <Info className="h-8 w-8" />,
+  defaultSort,
+  defaultSortDirection = 'desc',
+  clickableRows = false,
+  expandedContentMaxWidth = '85%',
+  onRowClick
 }: DataManagementModalProps<T>) {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({})
@@ -264,7 +311,7 @@ export function DataManagementModal<T extends DataItem>({
   if (!isOpen) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-6xl w-[95vw] sm:w-[85vw] h-[85vh] min-h-[600px] rounded-sm flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
@@ -273,6 +320,9 @@ export function DataManagementModal<T extends DataItem>({
               {filteredData.length} of {data.length}
             </Badge>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Data management interface for {title.toLowerCase()}
+          </DialogDescription>
           {customHeader}
         </DialogHeader>
 
@@ -388,6 +438,9 @@ export function DataManagementModal<T extends DataItem>({
                     onToggleCheckbox={onToggleItem}
                     onAction={onAction}
                     actionItems={actionItems}
+                    clickableRows={clickableRows}
+                    expandedContentMaxWidth={expandedContentMaxWidth}
+                    onRowClick={onRowClick}
                   />
                 ))}
               </TableBody>

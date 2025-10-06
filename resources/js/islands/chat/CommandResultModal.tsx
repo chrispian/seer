@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import {
@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
+
 interface CommandResult {
   success: boolean
   type: string
@@ -18,6 +19,10 @@ interface CommandResult {
   error?: string
   panelData?: {
     message?: string
+    action?: string
+    sprints?: any[]
+    tasks?: any[]
+    [key: string]: any
   }
   fragments?: any[]
   shouldResetChat?: boolean
@@ -38,8 +43,40 @@ export function CommandResultModal({
   result, 
   command 
 }: CommandResultModalProps) {
+  const [detailView, setDetailView] = useState<{
+    type: 'sprint' | 'task' | 'agent' | 'ailog' | null
+    data: any
+  }>({ type: null, data: null })
+
   if (!result) {
     return null
+  }
+
+  const handleBackToList = () => {
+    console.log('CommandResultModal: Going back to list view')
+    setDetailView({ type: null, data: null })
+  }
+
+  // Debug current state
+  console.log('CommandResultModal render - detailView:', detailView, 'result.type:', result?.type)
+
+  // Check if this is an orchestration command that should use rich UI
+  const isOrchestrationCommand = () => {
+    return result.type === 'sprint' || result.type === 'task' || result.type === 'backlog' || result.type === 'agent' || result.type === 'ailogs'
+  }
+
+  const renderOrchestrationUI = () => {
+    // TODO: Implement orchestration UI components
+    // These modals need to be created before this functionality can be used
+    return null
+  }
+
+  // If this is an orchestration command, render the rich UI instead of the modal
+  if (isOrchestrationCommand() && result.success) {
+    const orchestrationUI = renderOrchestrationUI()
+    if (orchestrationUI) {
+      return orchestrationUI
+    }
   }
 
   const getTitle = () => {

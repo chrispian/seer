@@ -28,6 +28,32 @@ class WorkItem extends Model
         'delegation_history' => 'array',
         'estimated_hours' => 'decimal:2',
         'actual_hours' => 'decimal:2',
+        'completed_at' => 'datetime',
+    ];
+
+    protected $fillable = [
+        'type',
+        'parent_id',
+        'assignee_type',
+        'assignee_id',
+        'status',
+        'priority',
+        'project_id',
+        'tags',
+        'state',
+        'metadata',
+        'delegation_status',
+        'delegation_context',
+        'delegation_history',
+        'estimated_hours',
+        'actual_hours',
+        'agent_content',
+        'plan_content',
+        'context_content',
+        'todo_content',
+        'summary_content',
+        'pr_url',
+        'completed_at',
     ];
 
     /**

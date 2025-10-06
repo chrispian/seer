@@ -12,11 +12,13 @@ class ToolRegistry
         foreach ($toolClasses as $cls) {
             if (is_subclass_of($cls, SummarizesTool::class)) {
                 /** @var SummarizesTool $cls */
-                $out[$cls::name()] = [
-                    'name'        => $cls::name(),
-                    'title'       => $cls::title(),
-                    'description' => $cls::shortDescription(),
-                    'hint'        => sprintf("Use help.tool { name: '%s' }", $cls::name()),
+                $name = $cls::summaryName();
+
+                $out[$name] = [
+                    'name'        => $name,
+                    'title'       => $cls::summaryTitle(),
+                    'description' => $cls::summaryDescription(),
+                    'hint'        => sprintf("Use help.tool { name: '%s' }", $name),
                     'schema'      => $cls::schemaSummary(),
                 ];
             }
