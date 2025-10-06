@@ -201,8 +201,13 @@ Converted 16 critical commands to PHP classes with proper modal routing.
 - ✅ `/session` - SessionCommand.php
 - ✅ `/backlog-list` - BacklogListCommand.php
 
-### **🎯 CURRENT WORK - Phase 5: Additional Commands**
-Continuing command conversions - 3 commands at a time, dealers choice.
+### **🎯 CURRENT WORK - Phase 6: Action & Utility Commands**
+Next batch: Simple action/utility commands that don't need complex modals.
+
+### **✅ PHASE 5 COMPLETE: Communication & Fragment Commands**
+- ✅ `/channels` - ChannelListModal (type/status filters, member counts)
+- ✅ `/inbox` - Reuses FragmentListModal (queries inbox fragments)
+- ✅ `/frag` - Reuses FragmentListModal (lists recent fragments)
 
 ### **✅ PHASE 4 COMPLETE: Search Command Enhancement**
 - ✅ `/search` - SearchCommand with FragmentListModal
@@ -227,23 +232,16 @@ Continuing command conversions - 3 commands at a time, dealers choice.
 - ⬜ `/backlog-list` - Backlog management (workflow) **NOTE: Discuss todo/backlog relationship**
 - ⬜ `/bookmark` - Bookmark functionality (user feature)
 
-### **📝 REMAINING COMMANDS (30 commands)**
+### **📝 REMAINING COMMANDS (15 commands)**
 **Fragment & Content Commands:**
 - ⬜ `/accept` - Accept Inbox Fragment
-- ⬜ `/bookmark` - Bookmark Management *(already listed above)*
-- ⬜ `/channels` - List Channels  
-- ⬜ `/clear` - Clear Chat
-- ⬜ `/frag` - Create Fragment
-- ⬜ `/frag-simple` - Create Fragment Simple
-- ⬜ `/inbox` - Inbox Management (Unified)
 - ⬜ `/join` - Join Channel
 - ⬜ `/link` - Link
 - ⬜ `/name` - Set Channel Name
 - ⬜ `/note` - Create Note
-- ⬜ `/recall` - Recall fragments
+- ⬜ `/recall` - Recall fragments (COMPLEX - save for later)
 - ⬜ `/routing` - Routing Management
-- ⬜ `/search` - Fragment Search (Unified)
-- ⬜ `/session` - Session Management
+- ⬜ `/compose` - Compose message (COMPLEX - save for later)
 
 **Task & Project Management:**
 - ⬜ `/agents` - Agent List *(already listed above)*
