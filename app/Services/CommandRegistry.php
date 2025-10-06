@@ -20,25 +20,36 @@ use App\Actions\Commands\SessionCommand;
 use App\Actions\Commands\TodoCommand;
 use App\Actions\Commands\VaultCommand;
 
+// Orchestration commands
+use App\Actions\Commands\SprintDetailCommand;
+use App\Actions\Commands\SprintListCommand;
+use App\Actions\Commands\TaskAssignCommand;
+use App\Actions\Commands\TaskCreateCommand;
+use App\Actions\Commands\TaskDetailCommand;
+use App\Actions\Commands\TaskListCommand;
+use App\Actions\Commands\BacklogListCommand;
+use App\Actions\Commands\AgentListCommand;
+use App\Actions\Commands\AiLogsCommand;
+
 class CommandRegistry
 {
     protected static array $commands = [
-        // Core commands
-        // 'session' => SessionCommand::class, // Migrated to YAML
-        'recall' => RecallCommand::class,
-        // 'bookmark' => BookmarkCommand::class, // Migrated to YAML
-        // 'help' => HelpCommand::class, // Migrated to YAML
-        // 'clear' => ClearCommand::class, // Migrated to YAML
-        // 'frag' => FragCommand::class, // Migrated to YAML (simplified)
-        // 'search' => SearchCommand::class, // Migrated to YAML (unified)
-        // 's' => SearchCommand::class, // alias for search
-        'todo' => TodoCommand::class, // Re-enabled for list functionality
-        't' => TodoCommand::class, // alias for todo
-        // 'join' => JoinCommand::class, // Migrated to YAML
-        // 'j' => JoinCommand::class, // alias for join - Migrated to YAML
-        // 'channels' => ChannelsCommand::class, // Migrated to YAML
-        // 'name' => NameCommand::class, // Migrated to YAML (simplified)
-        // 'routing' => RoutingCommand::class, // Migrated to YAML
+        // Core commands  
+        // 'session' => SessionCommand::class, // MIGRATED: Using YAML v2.0.0
+        // 'recall' => RecallCommand::class, // MIGRATED: Using YAML v1.0.0/v2.0.0
+        // 'bookmark' => BookmarkCommand::class, // MIGRATED: Using YAML v2.0.0
+        'help' => HelpCommand::class, // KEEP: Enhanced version with tool discovery
+        // 'clear' => ClearCommand::class, // MIGRATED: Using YAML v2.0.0  
+        // 'frag' => FragCommand::class, // MIGRATED: Using YAML v2.0.0
+        // 'search' => SearchCommand::class, // MIGRATED: Using YAML v2.0.0 
+        // 's' => SearchCommand::class, // MIGRATED: Using alias resolution in CommandController
+        // 'todo' => TodoCommand::class, // MIGRATED: Using YAML v3.0.0
+        // 't' => TodoCommand::class, // MIGRATED: Using alias resolution in CommandController
+        // 'join' => JoinCommand::class, // MIGRATED: Using YAML v2.0.0
+        // 'j' => JoinCommand::class, // MIGRATED: Using alias resolution in CommandController
+        // 'channels' => ChannelsCommand::class, // MIGRATED: Using YAML v2.0.0
+        // 'name' => NameCommand::class, // MIGRATED: Using YAML v2.0.0
+        // 'routing' => RoutingCommand::class, // MIGRATED: Using YAML v2.0.0
 
         // New CMD-01 commands
         'vault' => VaultCommand::class,
@@ -47,10 +58,32 @@ class CommandRegistry
         'p' => ProjectCommand::class, // alias for project
         'context' => ContextCommand::class,
         'ctx' => ContextCommand::class, // alias for context
-        // 'inbox' => InboxCommand::class, // Migrated to YAML (unified)
+        'inbox' => InboxCommand::class, // TODO: Migrate to YAML (unified)
         'in' => InboxCommand::class, // alias for inbox
         'compose' => ComposeCommand::class,
         'c' => ComposeCommand::class, // alias for compose
+
+        // Orchestration commands
+        'sprint-detail' => SprintDetailCommand::class,
+        'sd' => SprintDetailCommand::class, // alias for sprint-detail
+        'sprint-list' => SprintListCommand::class,
+        'sl' => SprintListCommand::class, // alias for sprint-list
+        'sprints' => SprintListCommand::class, // default to list
+        'task-assign' => TaskAssignCommand::class,
+        'ta' => TaskAssignCommand::class, // alias for task-assign
+        'task-create' => TaskCreateCommand::class,
+        'tc' => TaskCreateCommand::class, // alias for task-create
+        'task-detail' => TaskDetailCommand::class,
+        'td' => TaskDetailCommand::class, // alias for task-detail
+        'task-list' => TaskListCommand::class,
+        'tl' => TaskListCommand::class, // alias for task-list
+        'tasks' => TaskListCommand::class, // default to list
+        'backlog-list' => BacklogListCommand::class,
+        'bl' => BacklogListCommand::class, // alias for backlog-list
+        'agent-list' => AgentListCommand::class,
+        'al' => AgentListCommand::class, // alias for agent-list
+        'agents' => AgentListCommand::class, // default to list
+        'ailogs' => AiLogsCommand::class, // AI logs viewer
 
         // 'export' => ExportCommand::class (future)
     ];

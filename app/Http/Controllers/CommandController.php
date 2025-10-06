@@ -33,6 +33,9 @@ class CommandController extends Controller
         $commandName = $parts[0];
         $rawArguments = $parts[1] ?? '';
 
+        // Handle common aliases for YAML commands
+        $commandName = $this->resolveAlias($commandName);
+
         // Parse arguments from the raw string
         if (! empty($rawArguments) && empty($arguments)) {
             $arguments = $this->parseArguments($rawArguments);
@@ -367,5 +370,19 @@ class CommandController extends Controller
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Resolve command aliases to their actual command names
+     */
+    private function resolveAlias(string $commandName): string
+    {
+        $aliases = [
+            't' => 'todo',
+            's' => 'search',
+            'j' => 'join',
+        ];
+
+        return $aliases[$commandName] ?? $commandName;
     }
 }
