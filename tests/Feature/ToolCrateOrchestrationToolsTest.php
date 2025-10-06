@@ -33,26 +33,12 @@ uses(RefreshDatabase::class);
 
 function sampleTaskCode(): string
 {
-    $workItem = WorkItem::query()->whereNotNull('metadata->task_code')->firstOrFail();
-
-    $taskCode = Arr::get($workItem->metadata ?? [], 'task_code');
-
-    if (! is_string($taskCode) || $taskCode === '') {
-        throw new \RuntimeException('Unable to locate delegation task code for sample data.');
-    }
-
-    return $taskCode;
+    return 'TEST-TASK-001';
 }
 
 function sampleAgentSlug(): string
 {
-    $slug = AgentProfile::query()->value('slug');
-
-    if (! is_string($slug) || $slug === '') {
-        throw new \RuntimeException('Unable to locate sample agent slug.');
-    }
-
-    return $slug;
+    return 'test-agent';
 }
 
 function createSampleAgent(string $name = 'Temp Agent'): AgentProfile
@@ -74,9 +60,35 @@ beforeEach(function () {
     config()->set('tool-crate.orchestration.agent_service', AgentOrchestrationService::class);
     config()->set('tool-crate.orchestration.sprint_service', SprintOrchestrationService::class);
 
-    /** @var DelegationMigrationService $migration */
-    $migration = app(DelegationMigrationService::class);
-    $migration->import(['sprint' => ['SPRINT-62']]);
+    // Create test data directly instead of relying on delegation import
+    $sprint = Sprint::create([
+        'code' => 'SPRINT-TEST',
+        'title' => 'Test Sprint',
+        'description' => 'Test sprint for orchestration tools',
+        'status' => 'active',
+        'metadata' => ['test' => true]
+    ]);
+
+    $workItem = WorkItem::create([
+        'code' => 'TEST-TASK-001',
+        'title' => 'Test Task',
+        'description' => 'Test task for orchestration tools',
+        'status' => 'todo',
+        'priority' => 'medium',
+        'metadata' => [
+            'task_code' => 'TEST-TASK-001',
+            'sprint_code' => 'SPRINT-TEST'
+        ],
+        'estimated_hours' => 4.0
+    ]);
+
+    AgentProfile::create([
+        'name' => 'Test Agent',
+        'slug' => 'test-agent',
+        'type' => AgentType::BackendEngineer->value,
+        'mode' => AgentMode::Implementation->value,
+        'status' => AgentStatus::Active->value,
+    ]);
 });
 
 test('agents list tool returns filtered agent summaries', function () {

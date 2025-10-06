@@ -418,13 +418,6 @@ class DelegationMigrationService
             'path' => $task['relative_path'],
         ]];
         $model->estimated_hours = $task['estimated_hours'];
-        
-        // Store content from delegation files
-        $model->agent_content = $task['contents']['agent'] ?? null;
-        $model->plan_content = $task['contents']['plan'] ?? null;
-        $model->context_content = $task['contents']['context'] ?? null;
-        $model->todo_content = $task['contents']['todo'] ?? null;
-        $model->summary_content = $task['contents']['summary'] ?? null;
 
         $model->save();
 
