@@ -14,18 +14,25 @@ class TaskListCommand implements HandlesCommand
         $sprintCode = $command->arguments['identifier'] ?? null;
         $query = WorkItem::query();
 
-        // Filter by sprint if provided
+        // Filter by sprint if provided, otherwise default to sprint tasks only
         if ($sprintCode) {
             $normalizedCode = $this->normalizeSprintCode($sprintCode);
             $query->where('metadata->sprint_code', $normalizedCode);
+        } else {
+            // Default to showing only sprint tasks (exclude backlog imports)
+            $query->whereNotNull('metadata->sprint_code');
         }
 
-        $tasks = $query->with(['assignedAgent'])->orderByDesc('created_at')->take(50)->get();
+        $tasks = $query->with(['assignedAgent'])
+            ->orderByRaw("CASE WHEN status = 'todo' THEN 1 WHEN status = 'backlog' THEN 2 ELSE 3 END")
+            ->orderByDesc('created_at')
+            ->take(50)
+            ->get();
 
         if ($tasks->isEmpty()) {
             $message = $sprintCode
                 ? "📋 No tasks found for sprint: {$sprintCode}. Use `/sprint-list` to see available sprints."
-                : '📋 No tasks found. Import delegation data to populate tasks.';
+                : '📋 No sprint tasks found. Use `/tasks <sprint>` to filter by specific sprint.';
 
             return new CommandResponse(
                 message: $message,
