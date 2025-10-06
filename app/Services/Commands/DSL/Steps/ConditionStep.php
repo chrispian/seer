@@ -94,7 +94,18 @@ class ConditionStep extends Step
 
     protected function evaluateCondition(string $condition, array $context): bool
     {
-        // Note: condition should already be rendered when passed to this method
+        // Check if this is a template condition, and render it
+        if (str_contains($condition, '{{') && str_contains($condition, '}}')) {
+            // This is a template condition, extract the expression and evaluate it
+            if (preg_match('/\{\{\s*(.+?)\s*\}\}/', $condition, $matches)) {
+                $expression = trim($matches[1]);
+                return $this->evaluateTemplateCondition($expression, $context);
+            } else {
+                throw new \InvalidArgumentException('Invalid template condition format: '.$condition);
+            }
+        }
+        
+        // This is a direct condition string
         $renderedCondition = $condition;
 
         // Simple condition evaluation
@@ -212,9 +223,24 @@ class ConditionStep extends Step
     protected function renderStepConfig(array $stepConfig, array $context): array
     {
         $rendered = [];
+        $stepType = $stepConfig['type'] ?? '';
 
         foreach ($stepConfig as $key => $value) {
-            if (is_string($value)) {
+            // Special handling for condition steps - don't pre-render condition templates
+            if ($stepType === 'condition' && $key === 'condition' && is_string($value)) {
+                // Pass condition template as-is to let ConditionStep handle evaluation
+                $rendered[$key] = $value;
+            }
+            // Special handling for transform steps - don't pre-render template 
+            elseif ($stepType === 'transform' && $key === 'template' && is_string($value)) {
+                // Pass template as-is to let TransformStep handle rendering with updated context
+                $rendered[$key] = $value;
+            }
+            // Special handling for response.panel steps - don't pre-render with section
+            elseif ($stepType === 'response.panel' && $key === 'with' && is_array($value)) {
+                // Pass with section as-is to let ResponsePanelStep handle rendering with updated context
+                $rendered[$key] = $value;
+            } elseif (is_string($value)) {
                 $rendered[$key] = $this->templateEngine->render($value, $context);
             } elseif (is_array($value)) {
                 $rendered[$key] = $this->renderStepConfig($value, $context);

@@ -1,0 +1,22 @@
+name: Create To-Do
+slug: todo
+version: 1.0.0
+requires: { secrets: [], capabilities: ["fragment.create","ai.generate"] }
+steps:
+  - id: input
+    type: transform
+    template: "{{ ctx.body }}"
+  - id: parse
+    type: ai.generate
+    prompt: "Parse task JSON from: {{ steps.input.output }}"
+    expect: json
+  - id: create
+    type: fragment.create
+    with:
+      type: todo
+      title: "{{ steps.parse.output.title }}"
+      content: "{{ steps.input.output }}"
+      state:
+        status: "{{ steps.parse.output.status }}"
+        due_at: "{{ steps.parse.output.due_at }}"
+        priority: "{{ steps.parse.output.priority }}"

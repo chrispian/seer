@@ -1,0 +1,30 @@
+{
+  "name": "memory.search",
+  "version": "1.0.0",
+  "scope": "memory.search",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string"
+      },
+      "filters": {
+        "type": "object"
+      }
+    },
+    "required": [
+      "query"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "scheduler",
+  "version": "1.0.0",
+  "scope": "scheduler",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string",
+        "enum": [
+          "runLater",
+          "runEvery"
+        ]
+      },
+      "when": {
+        "type": "string"
+      },
+      "task": {
+        "type": "string"
+      },
+      "params": {
+        "type": "object"
+      }
+    },
+    "required": [
+      "action",
+      "task"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "scheduled_id": {
+        "type": "string"
+      },
+      "next_run": {
+        "type": "string"
+      }
+    }
+  }
+}

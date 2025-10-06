@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Decorators\CommandTelemetryDecorator;
-use App\DTOs\CommandRequest;
 use App\Models\CommandRegistry as CommandRegistryModel;
 use App\Models\Fragment;
 use App\Services\CommandRegistry;
@@ -41,101 +40,91 @@ class CommandController extends Controller
             $arguments = $this->parseArguments($rawArguments);
         }
 
+        // Add additional context from request
+        $additionalContext = [];
+        if ($request->has('vault_id')) {
+            $additionalContext['vault_id'] = $request->input('vault_id');
+        }
+        if ($request->has('session_id')) {
+            $additionalContext['session_id'] = $request->input('session_id');
+        }
+        if ($request->has('project_id')) {
+            $additionalContext['project_id'] = $request->input('project_id');
+        }
+
+        // Merge arguments with additional context
+        $arguments = array_merge($arguments, $additionalContext);
+
         try {
             $startTime = microtime(true);
 
-            // First try to find in hardcoded commands
-            try {
-                $commandClass = CommandRegistry::find($commandName);
-
-                // Log command start for hardcoded commands
-                if (config('command-telemetry.enabled', true)) {
-                    CommandTelemetry::logCommandStart($commandName, $arguments, [
-                        'source_type' => 'hardcoded',
-                        'class' => $commandClass,
-                    ]);
-                }
-
-                // Create command request
-                $commandRequest = new CommandRequest(
-                    command: $commandName,
-                    arguments: $arguments,
-                    raw: $commandText
-                );
-
-                // Execute the command
-                $commandInstance = app($commandClass);
-                $response = $commandInstance->handle($commandRequest);
-
-                $executionTime = round((microtime(true) - $startTime) * 1000, 2); // milliseconds
-
-                // Log command completion for hardcoded commands
-                if (config('command-telemetry.enabled', true)) {
-                    CommandTelemetry::logCommandComplete(
-                        $commandName,
-                        $arguments,
-                        $executionTime,
-                        true,
-                        ['response_type' => $response->type],
-                        null
-                    );
-                }
-
-                // Log command execution as a fragment for activity tracking
+            // Check for PHP command first (new system)
+            if (CommandRegistry::isPhpCommand($commandName)) {
+                $commandClass = CommandRegistry::getPhpCommand($commandName);
+                $command = app($commandClass);
+                $result = $command->handle();
+                
+                $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+                
+                // Format response to match expected frontend structure
+                $response = [
+                    'success' => true,
+                    'type' => $result['type'] ?? 'unknown',
+                    'component' => $result['component'] ?? null,
+                    'data' => $result['data'] ?? null,
+                    'message' => $result['message'] ?? null,
+                    'fragments' => [],
+                    'shouldResetChat' => false,
+                    'shouldOpenPanel' => true,
+                    'panelData' => $result['panelData'] ?? $result['data'] ?? null, // Use panelData if provided, fallback to data
+                    'shouldShowSuccessToast' => false,
+                    'toastData' => null,
+                    'shouldShowErrorToast' => false,
+                    'execution_time' => $executionTime,
+                ];
+                
+                // Log command execution
                 $this->logCommandExecution($commandName, $commandText, $arguments, $response, $executionTime, true);
+                
+                return response()->json($response);
+            }
+
+            // Try to find YAML command (legacy system)
+            $dbCommand = CommandRegistryModel::where('slug', $commandName)->first();
+            if ($dbCommand) {
+                $runner = app(CommandRunner::class);
+
+                // Wrap runner with telemetry if enabled
+                if (config('command-telemetry.enabled', true)) {
+                    $runner = CommandTelemetryDecorator::wrap($runner);
+                }
+
+                $result = $runner->execute($commandName, $arguments);
+
+                $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+
+                // Convert CommandRunner result to expected response format
+                $response = $this->convertDslResultToResponse($result);
+
+                // Log command execution
+                $this->logCommandExecution($commandName, $commandText, $arguments, $response, $executionTime, $result['success']);
 
                 return response()->json([
-                    'success' => true,
+                    'success' => $result['success'],
                     'type' => $response->type,
                     'message' => $response->message,
-                    'fragments' => $response->fragments,
-                    'shouldResetChat' => $response->shouldResetChat,
-                    'shouldOpenPanel' => $response->shouldOpenPanel,
-                    'panelData' => $response->panelData,
-                    'shouldShowSuccessToast' => $response->shouldShowSuccessToast,
-                    'toastData' => $response->toastData,
-                    'shouldShowErrorToast' => $response->shouldShowErrorToast,
-                    'data' => $response->data,
+                    'fragments' => $response->fragments ?? [],
+                    'shouldResetChat' => $response->shouldResetChat ?? false,
+                    'shouldOpenPanel' => $response->shouldOpenPanel ?? false,
+                    'panelData' => $response->panelData ?? null,
+                    'shouldShowSuccessToast' => $response->shouldShowSuccessToast ?? false,
+                    'toastData' => $response->toastData ?? null,
+                    'shouldShowErrorToast' => $response->shouldShowErrorToast ?? false,
+                    'data' => $response->data ?? null,
                 ]);
-
-            } catch (\InvalidArgumentException $e) {
-                // Not found in hardcoded commands, try file-based commands
-                $dbCommand = CommandRegistryModel::where('slug', $commandName)->first();
-                if ($dbCommand) {
-                    $runner = app(CommandRunner::class);
-
-                    // Wrap runner with telemetry if enabled
-                    if (config('command-telemetry.enabled', true)) {
-                        $runner = CommandTelemetryDecorator::wrap($runner);
-                    }
-
-                    $result = $runner->execute($commandName, $arguments);
-
-                    $executionTime = round((microtime(true) - $startTime) * 1000, 2);
-
-                    // Convert CommandRunner result to expected response format
-                    $response = $this->convertDslResultToResponse($result);
-
-                    // Log command execution
-                    $this->logCommandExecution($commandName, $commandText, $arguments, $response, $executionTime, $result['success']);
-
-                    return response()->json([
-                        'success' => $result['success'],
-                        'type' => $response->type,
-                        'message' => $response->message,
-                        'fragments' => $response->fragments ?? [],
-                        'shouldResetChat' => $response->shouldResetChat ?? false,
-                        'shouldOpenPanel' => $response->shouldOpenPanel ?? false,
-                        'panelData' => $response->panelData ?? null,
-                        'shouldShowSuccessToast' => $response->shouldShowSuccessToast ?? false,
-                        'toastData' => $response->toastData ?? null,
-                        'shouldShowErrorToast' => $response->shouldShowErrorToast ?? false,
-                        'data' => $response->data ?? null,
-                    ]);
-                } else {
-                    // Command not found in either system
-                    throw $e;
-                }
+            } else {
+                // Command not found
+                throw new \InvalidArgumentException("Command not recognized: {$commandName}");
             }
 
         } catch (\InvalidArgumentException $e) {
@@ -182,11 +171,11 @@ class CommandController extends Controller
                 [$key, $value] = explode(':', $part, 2);
                 $arguments[$key] = $value;
             } else {
-                // Treat as positional argument or add to 'identifier'
-                if (! isset($arguments['identifier'])) {
-                    $arguments['identifier'] = $part;
+                // Treat as positional argument or add to 'body' (for YAML template compatibility)
+                if (! isset($arguments['body'])) {
+                    $arguments['body'] = $part;
                 } else {
-                    $arguments['identifier'] .= ' '.$part;
+                    $arguments['body'] .= ' '.$part;
                 }
             }
         }
@@ -219,8 +208,18 @@ class CommandController extends Controller
             return $response;
         }
 
-        // Look for response-generating steps (notify, response.panel, etc.)
-        foreach ($result['steps'] as $step) {
+        // Look for response-generating steps (notify, response.panel, etc.) recursively
+        $this->processStepsForResponse($result['steps'], $response);
+
+        return $response;
+    }
+
+    /**
+     * Process steps recursively to find response-generating steps
+     */
+    private function processStepsForResponse(array $steps, object $response): void
+    {
+        foreach ($steps as $step) {
             $stepOutput = $step['output'] ?? [];
 
             // Handle notify steps with panel_data for navigation
@@ -278,40 +277,18 @@ class CommandController extends Controller
             }
 
             // Handle response.panel steps
-            if ($step['type'] === 'response.panel' && isset($stepOutput['shouldOpenPanel'])) {
+            if ($step['type'] === 'response.panel') {
                 $response->type = $stepOutput['type'] ?? 'panel';
                 $response->message = $stepOutput['message'] ?? 'Panel response';
-                $response->shouldOpenPanel = $stepOutput['shouldOpenPanel'];
-                $response->panelData = $stepOutput['panel_data'] ?? null;
+                $response->shouldOpenPanel = true; // Always open panel for response.panel steps
+                $response->panelData = $stepOutput['panel_data'] ?? $stepOutput;
             }
 
-            // Handle condition steps that may contain response steps
-            if ($step['type'] === 'condition' && isset($stepOutput['steps_executed'])) {
-                foreach ($stepOutput['steps_executed'] as $subStep) {
-                    $subStepOutput = $subStep['output'] ?? [];
-
-                    // Check for response.panel in condition branches
-                    if ($subStep['type'] === 'response.panel' && isset($subStepOutput['shouldOpenPanel'])) {
-                        $response->type = $subStepOutput['type'] ?? 'panel';
-                        $response->message = $subStepOutput['message'] ?? 'Panel response';
-                        $response->shouldOpenPanel = $subStepOutput['shouldOpenPanel'];
-                        $response->panelData = $subStepOutput['panel_data'] ?? null;
-                    }
-
-                    // Check for notify in condition branches
-                    if ($subStep['type'] === 'notify' && isset($subStepOutput['message'])) {
-                        $response->message = $subStepOutput['message'];
-                        if (isset($subStepOutput['level']) && $subStepOutput['level'] === 'success') {
-                            $response->shouldShowSuccessToast = true;
-                        } elseif (isset($subStepOutput['level']) && $subStepOutput['level'] === 'error') {
-                            $response->shouldShowErrorToast = true;
-                        }
-                    }
-                }
+            // Recursively process sub-steps (condition branches, etc.)
+            if (isset($stepOutput['steps_executed'])) {
+                $this->processStepsForResponse($stepOutput['steps_executed'], $response);
             }
         }
-
-        return $response;
     }
 
     /**

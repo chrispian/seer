@@ -155,6 +155,16 @@ class CommandRunner
             if ($stepType === 'condition' && $key === 'condition' && is_string($value)) {
                 // Pass condition template as-is to let ConditionStep handle evaluation
                 $rendered[$key] = $value;
+            }
+            // Special handling for transform steps - don't pre-render template 
+            elseif ($stepType === 'transform' && $key === 'template' && is_string($value)) {
+                // Pass template as-is to let TransformStep handle rendering with updated context
+                $rendered[$key] = $value;
+            }
+            // Special handling for response.panel steps - don't pre-render with section
+            elseif ($stepType === 'response.panel' && $key === 'with' && is_array($value)) {
+                // Pass with section as-is to let ResponsePanelStep handle rendering with updated context
+                $rendered[$key] = $value;
             } elseif (is_string($value)) {
                 $rendered[$key] = $this->templateEngine->render($value, $context);
             } elseif (is_array($value)) {
@@ -172,15 +182,15 @@ class CommandRunner
      */
     protected function buildExecutionContext(array $inputContext, array $commandPack): array
     {
-        // Merge input context directly instead of nesting under 'ctx'
-        // This ensures ctx.body works instead of ctx.ctx.body
-        return array_merge($inputContext, [
+        // Nest input context under 'ctx' key to support ctx.body template syntax
+        return [
+            'ctx' => $inputContext,
             'env' => [], // Environment variables (gated)
             'steps' => [], // Step outputs
             'now' => now()->toISOString(),
             'uuid' => \Str::uuid()->toString(),
             'ulid' => \Str::ulid()->toString(),
             'prompts' => $commandPack['prompts'] ?? [],
-        ]);
+        ];
     }
 }

@@ -14,6 +14,7 @@ use App\Tools\Orchestration\SprintTasksAttachTool;
 use App\Tools\Orchestration\TaskAssignTool;
 use App\Tools\Orchestration\TaskDetailTool;
 use App\Tools\Orchestration\TasksListTool;
+use App\Tools\Orchestration\TaskSaveTool;
 use App\Tools\Orchestration\TaskStatusTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Contracts\Transport;
@@ -31,6 +32,7 @@ class OrchestrationServer extends Server
         AgentStatusTool::class,
         SprintsListTool::class,
         TasksListTool::class,
+        TaskSaveTool::class,
         TaskDetailTool::class,
         TaskAssignTool::class,
         TaskStatusTool::class,
@@ -62,6 +64,7 @@ class OrchestrationServer extends Server
             AgentStatusTool::class => 'orchestration_agents_status',
             SprintsListTool::class => 'orchestration_sprints_list',
             TasksListTool::class => 'orchestration_tasks_list',
+            TaskSaveTool::class => 'orchestration_tasks_save',
             TaskDetailTool::class => 'orchestration_tasks_detail',
             TaskAssignTool::class => 'orchestration_tasks_assign',
             TaskStatusTool::class => 'orchestration_tasks_status',

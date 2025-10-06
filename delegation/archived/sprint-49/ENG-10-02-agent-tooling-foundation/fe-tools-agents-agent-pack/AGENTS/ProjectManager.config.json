@@ -1,0 +1,22 @@
+{
+  "agent_name": "ProjectManager",
+  "role": "Project Manager / Planner",
+  "mode": "Assistant",
+  "default_scopes": [
+    "read/db.query",
+    "export.generate",
+    "export.package",
+    "memory.write",
+    "memory.search",
+    "metrics.emit",
+    "notify.push"
+  ],
+  "restricted_scopes": [
+    "fs.write",
+    "shell.exec.safe",
+    "repo.git",
+    "secrets.get",
+    "scheduler"
+  ],
+  "notes": "High-risk scopes require explicit human approval."
+}

@@ -10,14 +10,20 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { SprintListModal } from '@/components/orchestration/SprintListModal'
+import { TaskListModal } from '@/components/orchestration/TaskListModal'
+import { AgentListModal } from '@/components/orchestration/AgentListModal'
+import { TodoManagementModal } from '@/islands/chat/TodoManagementModal'
 
 
 interface CommandResult {
   success: boolean
-  type: string
+  type?: string
+  component?: string  // New: direct component specification
+  data?: any          // New: clean data object
   message?: string
   error?: string
-  panelData?: {
+  panelData?: {       // Legacy: for old YAML commands
     message?: string
     action?: string
     sprints?: any[]
@@ -66,8 +72,106 @@ export function CommandResultModal({
   }
 
   const renderOrchestrationUI = () => {
-    // TODO: Implement orchestration UI components
-    // These modals need to be created before this functionality can be used
+    // New PHP command system - direct component routing
+    if (result.component && result.data) {
+      console.log('New PHP command - component:', result.component, 'data:', result.data)
+      
+      // Direct component routing based on component field
+      switch (result.component) {
+        case 'SprintListModal':
+          return (
+            <SprintListModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('SprintListModal onClose called')
+                onClose()
+              }}
+              sprints={result.data}
+              onSprintSelect={(sprint) => {
+                console.log('Sprint selected:', sprint)
+                // TODO: Implement sprint detail view
+                alert(`Sprint ${sprint.code}: ${sprint.title}\n\nDetail view not implemented yet.`)
+              }}
+              onRefresh={() => {
+                console.log('Refresh requested')
+                // TODO: Implement refresh functionality
+                alert('Refresh functionality not implemented yet.')
+              }}
+            />
+          )
+        case 'TaskListModal':
+          return (
+            <TaskListModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('TaskListModal onClose called')
+                onClose()
+              }}
+              tasks={result.data}
+              onTaskSelect={(task) => {
+                console.log('Task selected:', task)
+                // TODO: Implement task detail view
+                alert(`Task ${task.task_code}: ${task.task_name}\n\nDetail view not implemented yet.`)
+              }}
+              onRefresh={() => {
+                console.log('Task refresh requested')
+                // TODO: Implement refresh functionality
+                alert('Task refresh functionality not implemented yet.')
+              }}
+            />
+          )
+        case 'AgentListModal':
+          return (
+            <AgentListModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('AgentListModal onClose called')
+                onClose()
+              }}
+              agents={result.data}
+              onAgentSelect={(agent) => {
+                console.log('Agent selected:', agent)
+                // TODO: Implement agent detail view
+                alert(`Agent ${agent.name} (${agent.slug})\n\nDetail view not implemented yet.`)
+              }}
+              onRefresh={() => {
+                console.log('Agent refresh requested')
+                // TODO: Implement refresh functionality
+                alert('Agent refresh functionality not implemented yet.')
+              }}
+            />
+          )
+        case 'TodoManagementModal':
+          return (
+            <TodoManagementModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('TodoManagementModal onClose called')
+                onClose()
+              }}
+            />
+          )
+        case 'HelpModal':
+          // For now, use the regular modal for help until we create HelpModal
+          return null
+        default:
+          console.warn('Unknown component:', result.component)
+          return null
+      }
+    }
+    
+    // Legacy YAML command system fallback
+    if (result.type === 'sprint' && result.panelData?.sprints) {
+      console.log('Legacy YAML command - using panelData')
+      return (
+        <SprintListModal
+          isOpen={isOpen}
+          onClose={onClose}
+          sprints={result.panelData.sprints}
+        />
+      )
+    }
+    
     return null
   }
 
@@ -90,6 +194,16 @@ export function CommandResultModal({
   const getContent = () => {
     if (!result.success) {
       return result.error || result.message || 'Command execution failed'
+    }
+
+    // For new PHP help command
+    if (result.component === 'HelpModal' && result.data?.commands) {
+      const commands = result.data.commands
+      const helpContent = commands.map(cmd => 
+        `- **${cmd.usage}** – ${cmd.description}`
+      ).join('\n')
+      
+      return `# Available Commands\n\n${helpContent}\n\n**Tip**: Most commands work with or without arguments. Try them out!`
     }
 
     // For help command and other commands with panel data

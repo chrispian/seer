@@ -25,13 +25,13 @@ steps:
       
       - id: check-bookmarks-exist
         type: condition
-        condition: "{{ steps.query-bookmarks.output | length > 0 }}"
+        condition: "{{ steps.query-bookmarks.output.count > 0 }}"
         then:
           - id: format-bookmark-list
             type: transform
             template: |
-              📑 **Bookmarks ({{ steps.query-bookmarks.output | length }}):**
-              {% for bookmark in steps.query-bookmarks.output %}
+              📑 **Bookmarks ({{ steps.query-bookmarks.output.count }}):**
+              {% for bookmark in steps.query-bookmarks.output.results %}
               - `{{ bookmark.name }}` ({{ bookmark.fragment_ids | length }} fragment{% if bookmark.fragment_ids | length != 1 %}s{% endif %})
               {% endfor %}
           
@@ -42,7 +42,7 @@ steps:
               panel_data:
                 action: "list"
                 message: "{{ steps.format-bookmark-list.output }}"
-                bookmarks: "{{ steps.query-bookmarks.output }}"
+                bookmarks: "{{ steps.query-bookmarks.output.results }}"
         else:
           - id: show-no-bookmarks
             type: response.panel

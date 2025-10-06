@@ -1,0 +1,11 @@
+name: Search
+slug: search
+version: 1.0.0
+requires: { secrets: [], capabilities: ["search.query"] }
+steps:
+  - id: q
+    type: transform
+    template: "{{ ctx.body }}"
+  - id: search
+    type: search.query
+    with: { query: "{{ steps.q.output }}", limit: 25 }

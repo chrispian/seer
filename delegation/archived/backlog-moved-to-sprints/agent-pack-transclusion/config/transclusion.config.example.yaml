@@ -1,0 +1,8 @@
+features:
+  obsidianFriendlyEmbeds: true
+transclusion:
+  autoPreferCopyAcrossWorkspaces: true
+  crossWorkspaceIncludes:
+    mode: opt-in              # opt-in | allow-by-default
+    allowlist: []             # list of workspace slugs/ids
+    ephemeralAllows: true     # permit one-off includes via prompt

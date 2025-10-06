@@ -1,0 +1,182 @@
+name: "Task Create"
+slug: task-create
+version: 1.0.0
+triggers:
+  slash: "/task-create"
+  input_mode: "inline"
+reserved: true
+
+requires:
+  secrets: []
+  capabilities: ["model.query", "model.create"]
+
+steps:
+  - id: parse-input
+    type: transform
+    template: |
+      {% set input = ctx.body | trim %}
+      {% if input == '' %}
+        {{ {"error": "Task title is required"} | json_encode }}
+      {% else %}
+        {% set parts = input | split('--', 2) %}
+        {% set title = parts.0 | trim %}
+        {% set options_raw = parts.1 | default: '' %}
+        
+        {# Parse options #}
+        {% set options = {} %}
+        {% if options_raw != '' %}
+          {% set option_matches = options_raw | regex_find_all: '--(\w+)=(["\']?)([^"\'\s]+)\2' %}
+          {% for match in option_matches %}
+            {% set options = options | merge({(match.1): match.3}) %}
+          {% endfor %}
+        {% endif %}
+        
+        {% set result = {
+          "title": title,
+          "priority": options.priority | default: 'medium',
+          "estimate": options.estimate | default: '2-3 days',
+          "type": options.type | default: 'task'
+        } %}
+        {{ result | json_encode }}
+      {% endif %}
+
+  - id: validate-input
+    type: condition
+    condition: "{{ (steps.parse-input.output | from_json).title is defined }}"
+    then:
+      - id: validate-priority
+        type: condition
+        condition: "{{ (steps.parse-input.output | from_json).priority in ['low', 'medium', 'high'] }}"
+        then:
+          - id: generate-task-code
+            type: transform
+            template: |
+              {% set parsed = steps.parse-input.output | from_json %}
+              {% set title_lower = parsed.title | lower %}
+              
+              {# Determine prefix based on title keywords #}
+              {% set prefix = 'TASK' %}
+              {% if 'bug' in title_lower or 'fix' in title_lower or 'error' in title_lower %}
+                {% set prefix = 'BUG' %}
+              {% elif 'implement' in title_lower or 'add' in title_lower or 'feature' in title_lower %}
+                {% set prefix = 'FEAT' %}
+              {% elif 'test' in title_lower or 'qa' in title_lower %}
+                {% set prefix = 'TEST' %}
+              {% elif 'doc' in title_lower or 'guide' in title_lower %}
+                {% set prefix = 'DOC' %}
+              {% elif 'upgrade' in title_lower or 'refactor' in title_lower or 'optimize' in title_lower %}
+                {% set prefix = 'TECH' %}
+              {% endif %}
+              
+              {{ prefix }}
+
+          - id: query-existing-codes
+            type: model.query
+            with:
+              model: "work_items"
+              conditions:
+                - field: "metadata->task_code"
+                  operator: "like"
+                  value: "{{ steps.generate-task-code.output }}-%"
+              order: "created_at DESC"
+              limit: 100
+
+          - id: calculate-next-number
+            type: transform
+            template: |
+              {% set prefix = steps.generate-task-code.output %}
+              {% set existing_codes = steps.query-existing-codes.output.results %}
+              {% set max_number = 0 %}
+              
+              {% for item in existing_codes %}
+                {% set code = item.metadata.task_code | default: '' %}
+                {% set pattern = '^' + prefix + '-(\\d+)$' %}
+                {% set matches = code | regex_extract: pattern %}
+                {% if matches %}
+                  {% set number = matches.0 | int %}
+                  {% if number > max_number %}
+                    {% set max_number = number %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+              
+              {% set next_number = max_number + 1 %}
+              {{ prefix }}-{{ '%03d' | sprintf: next_number }}
+
+          - id: calculate-estimated-hours
+            type: transform
+            template: |
+              {% set parsed = steps.parse-input.output | from_json %}
+              {% set estimate = parsed.estimate %}
+              {% set numbers = estimate | regex_find_all: '(\\d+)' %}
+              
+              {% if numbers | length > 0 %}
+                {% set value = numbers.0.0 | int %}
+                {% if 'hour' in estimate | lower %}
+                  {{ value }}
+                {% elif 'day' in estimate | lower %}
+                  {{ value * 8 }}
+                {% elif 'week' in estimate | lower %}
+                  {{ value * 40 }}
+                {% else %}
+                  {{ value * 8 }}
+                {% endif %}
+              {% else %}
+                16
+              {% endif %}
+
+          - id: create-task
+            type: model.create
+            with:
+              model: "work_items"
+              data:
+                type: "{{ (steps.parse-input.output | from_json).type }}"
+                status: "backlog"
+                priority: "{{ (steps.parse-input.output | from_json).priority }}"
+                estimated_hours: "{{ steps.calculate-estimated-hours.output | float }}"
+                metadata:
+                  task_name: "{{ (steps.parse-input.output | from_json).title }}"
+                  task_code: "{{ steps.calculate-next-number.output }}"
+                  description: "Created via /task-create command"
+                  estimate_text: "{{ (steps.parse-input.output | from_json).estimate }}"
+                context_content: "Context: Please update with background information and problem definition."
+                plan_content: "Plan: Please update with implementation strategy and approach."
+                todo_content: |
+                  - [ ] Define specific requirements
+                  - [ ] Plan implementation approach
+                  - [ ] Execute development work
+                  - [ ] Test and validate solution
+                summary_content: "{{ (steps.parse-input.output | from_json).title }}"
+
+          - id: format-success-message
+            type: transform
+            template: |
+              {% set parsed = steps.parse-input.output | from_json %}
+              {% set task_code = steps.calculate-next-number.output %}
+              {% set task_id = steps.create-task.output.id %}
+              ✅ Task created successfully!
+              
+              **{{ parsed.title }}** (`{{ task_code }}`)
+              - Priority: {{ parsed.priority }}
+              - Estimate: {{ parsed.estimate }}
+              - Status: backlog
+              
+              Use `/task-detail {{ task_id }}` to view and edit details.
+
+          - id: show-success
+            type: response.panel
+            with:
+              type: "success"
+              message: "{{ steps.format-success-message.output }}"
+        else:
+          - id: show-invalid-priority
+            type: response.panel
+            with:
+              type: "error"
+              message: "❌ Priority must be: low, medium, or high"
+    else:
+      - id: show-missing-title
+        type: response.panel
+        with:
+          type: "error"
+          message: "❌ Task title is required. Usage: `/task-create \"Task Title\" --priority=medium --estimate=\"2 days\"`"

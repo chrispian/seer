@@ -32,6 +32,82 @@ class TaskOrchestrationService
         'cancelled' => 'cancelled',
     ];
 
+    public function create(array $data, bool $upsert = true): WorkItem
+    {
+        $taskCode = $data['task_code'] ?? null;
+
+        if (!$taskCode) {
+            throw new InvalidArgumentException('task_code is required');
+        }
+
+        $existing = null;
+        if ($upsert) {
+            $existing = WorkItem::query()
+                ->where('metadata->task_code', $taskCode)
+                ->first();
+        }
+
+        if ($existing && !$upsert) {
+            throw new InvalidArgumentException("Task with code [{$taskCode}] already exists");
+        }
+
+        $model = $existing ?? new WorkItem();
+        $model->type = $data['type'] ?? 'task';
+        $model->status = $data['status'] ?? 'todo';
+        $model->priority = $data['priority'] ?? 'medium';
+        $model->delegation_status = $data['delegation_status'] ?? 'unassigned';
+        
+        if (isset($data['tags'])) {
+            $model->tags = is_array($data['tags']) ? $data['tags'] : [$data['tags']];
+        } elseif (!$existing) {
+            $model->tags = ['orchestration'];
+        }
+
+        $metadata = $model->metadata ?? [];
+        $metadata['task_code'] = $taskCode;
+        
+        if (isset($data['task_name'])) {
+            $metadata['task_name'] = $data['task_name'];
+            $metadata['description'] = $data['task_name'];
+        }
+        
+        if (isset($data['description'])) {
+            $metadata['description'] = $data['description'];
+        }
+        
+        if (isset($data['sprint_code'])) {
+            $metadata['sprint_code'] = $data['sprint_code'];
+        }
+        
+        if (isset($data['estimate_text'])) {
+            $metadata['estimate_text'] = $data['estimate_text'];
+        }
+        
+        if (isset($data['dependencies'])) {
+            $metadata['dependencies'] = is_array($data['dependencies']) 
+                ? $data['dependencies'] 
+                : [$data['dependencies']];
+        }
+        
+        if (isset($data['acceptance'])) {
+            $metadata['acceptance'] = $data['acceptance'];
+        }
+        
+        $model->metadata = $metadata;
+
+        if (isset($data['agent_content'])) {
+            $model->agent_content = $data['agent_content'];
+        }
+
+        if (isset($data['estimated_hours'])) {
+            $model->estimated_hours = $data['estimated_hours'];
+        }
+
+        $model->save();
+
+        return $model->fresh();
+    }
+
     public function resolveTask(string|WorkItem $task): WorkItem
     {
         if ($task instanceof WorkItem) {
