@@ -129,6 +129,7 @@ class DbQueryTool implements ToolContract
             'artifacts' => \App\Models\Artifact::query(),
             'agent_notes' => \App\Models\AgentNote::query(),
             'agent_decisions' => \App\Models\AgentDecision::query(),
+            'agent_profiles' => \App\Models\AgentProfile::query(),
             'sprints' => \App\Models\Sprint::query(),
             'sprint_items' => \App\Models\SprintItem::query(),
             default => null

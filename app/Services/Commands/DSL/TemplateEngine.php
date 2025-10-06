@@ -36,6 +36,9 @@ class TemplateEngine
             }
         }
 
+        // Process for loops with context (they need access to arrays)
+        $processedTemplate = $this->processForLoops($processedTemplate, $context);
+        
         // Then process variables with context
         return preg_replace_callback(
             '/\{\{\s*([^}]+)\s*\}\}/',
@@ -65,6 +68,9 @@ class TemplateEngine
      */
     protected function processControlStructures(string $template, array $context): string
     {
+        // Note: For loops are processed later with actual context, not here
+        // This method only processes control structures that don't need context (if/else)
+        
         // Handle nested if blocks by processing from inside out
         // Guard against infinite loops by tracking replacements
         $maxIterations = 100; // Reasonable limit for nested depth
@@ -104,6 +110,58 @@ class TemplateEngine
         }
 
         return $template;
+    }
+
+    /**
+     * Process for loops in templates
+     */
+    protected function processForLoops(string $template, array $context): string
+    {
+        // Handle {% for variable in array %} loops
+        return preg_replace_callback(
+            '/\{\%\s*for\s+(\w+)\s+in\s+([^%]+)\s*\%\}(.*?)\{\%\s*endfor\s*\%\}/s',
+            function ($matches) use ($context) {
+                $variable = trim($matches[1]);
+                $arrayPath = trim($matches[2]);
+                $loopTemplate = $matches[3];
+                
+                // Get the array from context
+                $array = $this->getValue($arrayPath, $context);
+                
+                if (!is_array($array)) {
+                    return ''; // If not an array, return empty
+                }
+                
+                $output = '';
+                foreach ($array as $index => $item) {
+                    // Create loop context with the current item
+                    $loopContext = array_merge($context, [
+                        $variable => $item,
+                        'loop' => [
+                            'index' => $index,
+                            'index0' => $index,
+                            'first' => $index === 0,
+                            'last' => $index === count($array) - 1,
+                            'length' => count($array),
+                        ]
+                    ]);
+                    
+                    // Render the loop template with the loop context
+                    $renderedItem = preg_replace_callback(
+                        '/\{\{\s*([^}]+)\s*\}\}/',
+                        function ($varMatches) use ($loopContext) {
+                            return $this->processVariable($varMatches[1], $loopContext);
+                        },
+                        $loopTemplate
+                    );
+                    
+                    $output .= $renderedItem;
+                }
+                
+                return $output;
+            },
+            $template
+        );
     }
 
     /**

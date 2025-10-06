@@ -1,0 +1,14 @@
+name: Inbox Summary
+slug: inbox
+version: 1.0.0
+requires: { secrets: [], capabilities: ["tool.call"] }
+steps:
+  - id: list
+    type: tool.call
+    with:
+      name: "mcp"
+      args: { server: "fragments", method: "inboxList", params: { status: "pending", limit: 20 } }
+  - id: notify
+    type: notify
+    with:
+      message: "Inbox: {{ steps.list.output.count }} pending"

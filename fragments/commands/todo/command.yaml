@@ -3,7 +3,7 @@ slug: todo
 version: 3.0.0
 triggers:
   slash: "/todo"
-  aliases: ["/t"]
+  aliases: ["/t", "/todos"]
   input_mode: "inline"
 reserved: true
 
@@ -12,11 +12,6 @@ requires:
   capabilities: ["text.parse", "fragment.create"]
 
 steps:
-  - id: coerce-input
-    type: transform
-    template: |
-      {{ ctx.body | default: ctx.selection | trim }}
-
   - id: parse-todo
     type: text.parse
     with:
@@ -32,7 +27,7 @@ steps:
     with:
       type: "todo"
       title: "{{ steps.parse-todo.output.output.title }}"
-      message: "{{ steps.coerce-input.output }}"
+      message: "{{ ctx.body }}"
       state:
         status: "{{ steps.parse-todo.output.output.status | default: 'open' }}"
         priority: "{{ steps.parse-todo.output.output.priority | default: 'medium' }}"

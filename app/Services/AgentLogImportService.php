@@ -208,6 +208,11 @@ class AgentLogImportService
                 'tool_calls' => $this->extractToolCalls($parsed),
             ];
 
+            if ($this->hasExistingLogEntry($logEntry)) {
+                $this->stats['entries_skipped']++;
+                continue;
+            }
+
             if (! $dryRun) {
                 AgentLog::create($logEntry);
             }
@@ -317,6 +322,11 @@ class AgentLogImportService
                 'model' => $this->extractCodexModel($parsed),
                 'tool_calls' => $this->extractCodexToolCalls($parsed),
             ];
+
+            if ($this->hasExistingLogEntry($logEntry)) {
+                $this->stats['entries_skipped']++;
+                continue;
+            }
 
             if (!$dryRun) {
                 AgentLog::create($logEntry);
@@ -511,6 +521,11 @@ class AgentLogImportService
                 'tool_calls' => $this->extractClaudeProjectToolCalls($parsed),
             ];
 
+            if ($this->hasExistingLogEntry($logEntry)) {
+                $this->stats['entries_skipped']++;
+                continue;
+            }
+
             if (!$dryRun) {
                 AgentLog::create($logEntry);
             }
@@ -564,21 +579,16 @@ class AgentLogImportService
     /**
      * Generate human-readable message from Claude Project log entry
      */
-    private function generateClaudeProjectMessage(string $type, array $message, array $json): string
+    private function generateClaudeProjectMessage(string $type, mixed $message, array $json): string
     {
-        $role = $message['role'] ?? 'unknown';
-        $content = $message['content'] ?? '';
-        
-        // Handle content as array or string
-        if (is_array($content)) {
-            $content = json_encode($content);
-        }
-        $content = (string) $content;
-        
+        $role = (string) ($this->getClaudeProjectMessageValue($message, 'role') ?? ($json['role'] ?? 'unknown'));
+        $rawContent = $this->getClaudeProjectMessageValue($message, 'content', '');
+        $content = $this->stringifyClaudeProjectContent($rawContent);
+
         switch ($type) {
             case 'user':
                 if ($json['isMeta'] ?? false) {
-                    return 'Meta message: ' . substr($content, 0, 100) . (strlen($content) > 100 ? '...' : '');
+                    return 'Meta message: ' . $this->summariseContent($content);
                 }
                 
                 // Check for command format
@@ -588,22 +598,141 @@ class AgentLogImportService
                     return "User command: {$commandName}";
                 }
                 
-                return 'User: ' . substr($content, 0, 100) . (strlen($content) > 100 ? '...' : '');
+                return 'User: ' . $this->summariseContent($content);
 
             case 'assistant':
-                $contentLength = strlen($content);
+                $contentLength = mb_strlen($content, 'UTF-8');
                 return "Assistant response ({$contentLength} chars)";
 
             case 'tool_use':
-                $toolName = $message['name'] ?? 'unknown';
+                $toolName = (string) ($this->getClaudeProjectMessageValue($message, 'name') ?? 'unknown');
                 return "Tool used: {$toolName}";
 
             case 'tool_result':
-                return "Tool result";
+                $isError = (bool) ($this->getClaudeProjectMessageValue($message, 'is_error') ?? false);
+                $summary = $this->summariseContent($content, 80);
+
+                return $isError ? "Tool result (error): {$summary}" : "Tool result: {$summary}";
 
             default:
                 return "Claude event: {$type}";
         }
+    }
+
+    /**
+     * Extract a target field from a Claude message payload regardless of structure
+     */
+    private function getClaudeProjectMessageValue(mixed $message, string $key, mixed $default = null): mixed
+    {
+        if (! is_array($message)) {
+            return $default;
+        }
+
+        if (array_key_exists($key, $message)) {
+            return $message[$key];
+        }
+
+        if (! $this->isAssociativeArray($message)) {
+            foreach ($message as $item) {
+                if (is_array($item) && array_key_exists($key, $item)) {
+                    return $item[$key];
+                }
+            }
+        }
+
+        return $default;
+    }
+
+    /**
+     * Convert Claude content payload into a plain string for summarisation
+     */
+    private function stringifyClaudeProjectContent(mixed $content): string
+    {
+        if (is_string($content)) {
+            return $content;
+        }
+
+        if (is_array($content)) {
+            // Handle associative array with direct text
+            if ($this->isAssociativeArray($content) && array_key_exists('text', $content)) {
+                return (string) $content['text'];
+            }
+
+            $parts = [];
+
+            foreach ($content as $segment) {
+                if (is_string($segment)) {
+                    $parts[] = $segment;
+                    continue;
+                }
+
+                if (is_array($segment)) {
+                    if (array_key_exists('text', $segment)) {
+                        $parts[] = (string) $segment['text'];
+                        continue;
+                    }
+
+                    if (($segment['type'] ?? null) === 'code' && isset($segment['code'])) {
+                        $parts[] = (string) $segment['code'];
+                        continue;
+                    }
+
+                    $parts[] = json_encode($segment, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                    continue;
+                }
+
+                if (is_bool($segment) || $segment === null) {
+                    $parts[] = json_encode($segment);
+                    continue;
+                }
+
+                $parts[] = (string) $segment;
+            }
+
+            $text = trim(implode("\n", array_filter($parts, fn ($value) => $value !== null && $value !== '')));
+
+            if ($text !== '') {
+                return $text;
+            }
+
+            return (string) json_encode($content, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }
+
+        if (is_bool($content) || $content === null) {
+            return json_encode($content);
+        }
+
+        return (string) $content;
+    }
+
+    /**
+     * Provide a short summary of content with ellipsis when truncated
+     */
+    private function summariseContent(string $content, int $limit = 100): string
+    {
+        $trimmed = trim($content);
+
+        if ($trimmed === '') {
+            return 'No content';
+        }
+
+        if (mb_strlen($trimmed, 'UTF-8') <= $limit) {
+            return $trimmed;
+        }
+
+        return mb_substr($trimmed, 0, $limit, 'UTF-8') . '...';
+    }
+
+    /**
+     * Determine if array is associative
+     */
+    private function isAssociativeArray(array $array): bool
+    {
+        if ($array === []) {
+            return false;
+        }
+
+        return array_keys($array) !== range(0, count($array) - 1);
     }
 
     /**
@@ -692,6 +821,11 @@ class AgentLogImportService
                 'model' => $this->extractModel($parsed),
                 'tool_calls' => $this->extractToolCalls($parsed),
             ];
+
+            if ($this->hasExistingLogEntry($logEntry)) {
+                $this->stats['entries_skipped']++;
+                continue;
+            }
 
             if (! $dryRun) {
                 AgentLog::create($logEntry);
@@ -877,6 +1011,30 @@ class AgentLogImportService
     private function markFileAsImported(string $fileName, string $checksum): void
     {
         $this->importedFiles[$fileName] = $checksum;
+    }
+
+    /**
+     * Determine whether a log entry has already been persisted
+     */
+    private function hasExistingLogEntry(array $logEntry): bool
+    {
+        $query = AgentLog::query()
+            ->where('source_type', $logEntry['source_type'])
+            ->where('source_file', $logEntry['source_file'])
+            ->where('log_timestamp', $logEntry['log_timestamp']);
+
+        if (array_key_exists('file_line_number', $logEntry) && $logEntry['file_line_number'] !== null) {
+            $query->where('file_line_number', $logEntry['file_line_number']);
+        } elseif (! empty($logEntry['message'])) {
+            // Fall back to message matching when line numbers are unavailable
+            $query->where('message', $logEntry['message']);
+        }
+
+        if (! empty($logEntry['session_id'])) {
+            $query->where('session_id', $logEntry['session_id']);
+        }
+
+        return $query->exists();
     }
 
     /**

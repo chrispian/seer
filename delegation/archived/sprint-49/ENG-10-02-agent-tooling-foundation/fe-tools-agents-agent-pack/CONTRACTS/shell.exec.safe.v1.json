@@ -1,0 +1,55 @@
+{
+  "name": "shell.exec",
+  "version": "1.0.0",
+  "scope": "shell.exec.safe",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "command": {
+        "type": "string"
+      },
+      "args": {
+        "type": "array",
+        "items": {}
+      },
+      "cwd": {
+        "type": "string"
+      },
+      "dry_run": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "required": [
+      "command"
+    ]
+  },
+  "policies": {
+    "allowlist_commands": [
+      "git",
+      "php",
+      "artisan",
+      "composer",
+      "npm",
+      "pnpm",
+      "yarn",
+      "make"
+    ],
+    "timeout_sec": 60,
+    "max_output_kb": 256
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "stdout": {
+        "type": "string"
+      },
+      "stderr": {
+        "type": "string"
+      },
+      "exit_code": {
+        "type": "integer"
+      }
+    }
+  }
+}

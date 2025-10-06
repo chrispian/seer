@@ -2,8 +2,14 @@
 
 namespace App\Services\Commands\DSL\Steps;
 
+use App\Services\Commands\DSL\TemplateEngine;
+
 class ResponsePanelStep extends Step
 {
+    public function __construct(
+        protected TemplateEngine $templateEngine
+    ) {}
+
     public function getType(): string
     {
         return 'response.panel';
@@ -12,6 +18,9 @@ class ResponsePanelStep extends Step
     public function execute(array $config, array $context, bool $dryRun = false): mixed
     {
         $with = $config['with'] ?? [];
+
+        // Render templates in the with section with current context
+        $with = $this->renderWithTemplates($with, $context);
 
         $responseType = $with['type'] ?? 'panel';
         $panelData = $with['panel_data'] ?? [];
@@ -55,6 +64,26 @@ class ResponsePanelStep extends Step
         }
 
         return $result;
+    }
+
+    /**
+     * Render templates in the with configuration section
+     */
+    protected function renderWithTemplates(array $with, array $context): array
+    {
+        $rendered = [];
+        
+        foreach ($with as $key => $value) {
+            if (is_string($value)) {
+                $rendered[$key] = $this->templateEngine->render($value, $context);
+            } elseif (is_array($value)) {
+                $rendered[$key] = $this->renderWithTemplates($value, $context);
+            } else {
+                $rendered[$key] = $value;
+            }
+        }
+        
+        return $rendered;
     }
 
     protected function formatRecallResponse(array $result, array $panelData): array

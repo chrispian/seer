@@ -68,7 +68,8 @@ class CommandRegistry
         'sd' => SprintDetailCommand::class, // alias for sprint-detail
         'sprint-list' => SprintListCommand::class,
         'sl' => SprintListCommand::class, // alias for sprint-list
-        'sprints' => SprintListCommand::class, // default to list
+        'sprints' => SprintListCommand::class,
+        'task-list' => TaskListCommand::class, // default to list
         'task-assign' => TaskAssignCommand::class,
         'ta' => TaskAssignCommand::class, // alias for task-assign
         'task-create' => TaskCreateCommand::class,
@@ -87,6 +88,104 @@ class CommandRegistry
 
         // 'export' => ExportCommand::class (future)
     ];
+
+    // New PHP command system methods
+    protected static array $phpCommands = [
+        'help' => \App\Commands\HelpCommand::class,
+        'sprints' => \App\Commands\SprintListCommand::class,
+        'sprint-list' => \App\Commands\SprintListCommand::class,  // Alias
+        'tasks' => \App\Commands\TaskListCommand::class,
+        'task-list' => \App\Commands\TaskListCommand::class,      // Alias
+        'agents' => \App\Commands\AgentListCommand::class,
+        'agent-list' => \App\Commands\AgentListCommand::class,    // Alias
+        'backlog-list' => \App\Commands\BacklogListCommand::class,
+        'bookmark' => \App\Commands\BookmarkListCommand::class,
+        'recall' => \App\Commands\RecallCommand::class,
+        'search' => \App\Commands\SearchCommand::class,
+        's' => \App\Commands\SearchCommand::class,               // Alias
+        'session' => \App\Commands\SessionListCommand::class,
+        'join' => \App\Commands\JoinCommand::class,
+        'j' => \App\Commands\JoinCommand::class,                 // Alias
+        'channels' => \App\Commands\ChannelsCommand::class,
+        'clear' => \App\Commands\ClearCommand::class,
+        'frag' => \App\Commands\FragCommand::class,
+        'todo' => \App\Commands\TodoCommand::class,
+        'todo list' => \App\Commands\TodoCommand::class,        // Hook alias
+        't' => \App\Commands\TodoCommand::class,                 // Alias
+        'name' => \App\Commands\NameCommand::class,
+        'routing' => \App\Commands\RoutingCommand::class,
+        'vault' => \App\Commands\VaultListCommand::class,
+        'v' => \App\Commands\VaultListCommand::class,             // Alias
+        'project' => \App\Commands\ProjectListCommand::class,
+        'p' => \App\Commands\ProjectListCommand::class,          // Alias
+        'context' => \App\Commands\ContextCommand::class,
+        'ctx' => \App\Commands\ContextCommand::class,            // Alias
+        'inbox' => \App\Commands\InboxCommand::class,
+        'in' => \App\Commands\InboxCommand::class,               // Alias
+        'compose' => \App\Commands\ComposeCommand::class,
+        'c' => \App\Commands\ComposeCommand::class,              // Alias
+    ];
+
+    public static function isPhpCommand(string $commandName): bool
+    {
+        return array_key_exists($commandName, self::$phpCommands);
+    }
+
+    public static function getPhpCommand(string $commandName): string
+    {
+        if (!self::isPhpCommand($commandName)) {
+            throw new \InvalidArgumentException("PHP Command not recognized: {$commandName}");
+        }
+        return self::$phpCommands[$commandName];
+    }
+
+    public static function getAllPhpCommands(): array
+    {
+        return self::$phpCommands;
+    }
+
+    public static function getAllCommandsWithHelp(): array
+    {
+        $commands = [];
+        $seenClasses = [];
+        
+        foreach (self::$phpCommands as $slug => $className) {
+            if (class_exists($className)) {
+                // Only include each class once (avoid alias duplicates)
+                if (!in_array($className, $seenClasses)) {
+                    $aliases = array_keys(array_filter(self::$phpCommands, fn($class) => $class === $className));
+                    $mainSlug = $aliases[0]; // Use first occurrence as main
+                    $aliasesForDisplay = array_slice($aliases, 1); // Get remaining as aliases
+                    
+                    $commands[] = [
+                        'slug' => $mainSlug,
+                        'name' => $className::getName(),
+                        'description' => $className::getDescription(),
+                        'usage' => $className::getUsage(),
+                        'category' => $className::getCategory(),
+                        'aliases' => $aliasesForDisplay,
+                    ];
+                    
+                    $seenClasses[] = $className;
+                }
+            }
+        }
+        
+        return $commands;
+    }
+    
+    public static function getCommandsByCategory(string $category = null): array
+    {
+        $commands = self::getAllCommandsWithHelp();
+        
+        if ($category) {
+            return array_filter($commands, fn($cmd) => 
+                strtolower($cmd['category']) === strtolower($category)
+            );
+        }
+        
+        return $commands;
+    }
 
     public static function find(string $commandName): string
     {

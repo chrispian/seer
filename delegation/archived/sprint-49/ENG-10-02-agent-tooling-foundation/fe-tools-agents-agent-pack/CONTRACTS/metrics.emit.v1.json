@@ -1,0 +1,38 @@
+{
+  "name": "metrics.emit",
+  "version": "1.0.0",
+  "scope": "metrics.emit",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "metric": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "counter",
+          "gauge",
+          "timer"
+        ]
+      },
+      "value": {},
+      "labels": {
+        "type": "object"
+      }
+    },
+    "required": [
+      "metric",
+      "type",
+      "value"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      }
+    }
+  }
+}

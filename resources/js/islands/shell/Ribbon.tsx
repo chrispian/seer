@@ -29,6 +29,8 @@ export function Ribbon() {
     }
   }, [])
 
+
+
   const handleNewVault = () => {
     setVaultDialogOpen(true)
   }

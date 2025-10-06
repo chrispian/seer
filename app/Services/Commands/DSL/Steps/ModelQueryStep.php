@@ -2,20 +2,30 @@
 
 namespace App\Services\Commands\DSL\Steps;
 
+use App\Models\AgentProfile;
 use App\Models\Bookmark;
 use App\Models\ChatSession;
 use App\Models\Fragment;
+use App\Models\Sprint;
+use App\Models\SprintItem;
+use App\Models\TaskAssignment;
 use App\Models\VaultRoutingRule;
+use App\Models\WorkItem;
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 
 class ModelQueryStep extends Step
 {
     protected array $modelMap = [
+        'agent_profiles' => AgentProfile::class,
         'bookmark' => Bookmark::class,
         'chat_session' => ChatSession::class,
         'fragment' => Fragment::class,
         'vault_routing_rule' => VaultRoutingRule::class,
+        'work_items' => WorkItem::class,
+        'sprints' => Sprint::class,
+        'sprint_items' => SprintItem::class,
+        'task_assignments' => TaskAssignment::class,
     ];
 
     public function getType(): string
@@ -43,7 +53,11 @@ class ModelQueryStep extends Step
         $query = $modelClass::query();
 
         // Apply conditions safely
-        $this->applyConditions($query, $with['conditions'] ?? []);
+        $conditions = $with['conditions'] ?? [];
+        if (is_string($conditions)) {
+            $conditions = json_decode(trim($conditions), true) ?? [];
+        }
+        $this->applyConditions($query, $conditions);
 
         // Apply search if provided
         if (! empty($with['search'])) {
@@ -56,7 +70,12 @@ class ModelQueryStep extends Step
         }
 
         // Apply ordering
-        $this->applyOrdering($query, $with['order'] ?? null);
+        $order = $with['order'] ?? null;
+        if (is_string($order)) {
+            $decoded = json_decode(trim($order), true);
+            $order = $decoded ?: $order; // Keep original if JSON decode fails
+        }
+        $this->applyOrdering($query, $order);
 
         // Apply pagination/limits
         $limit = $with['limit'] ?? 25;
@@ -201,6 +220,26 @@ class ModelQueryStep extends Step
             case 'bookmark':
                 $query->where('name', 'LIKE', "%{$searchTerm}%");
                 break;
+            case 'work_items':
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('task_name', 'LIKE', "%{$searchTerm}%")
+                        ->orWhere('description', 'LIKE', "%{$searchTerm}%")
+                        ->orWhere('task_code', 'LIKE', "%{$searchTerm}%");
+                });
+                break;
+            case 'sprints':
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('title', 'LIKE', "%{$searchTerm}%")
+                        ->orWhere('code', 'LIKE', "%{$searchTerm}%");
+                });
+                break;
+            case 'agent_profiles':
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('name', 'LIKE', "%{$searchTerm}%")
+                        ->orWhere('description', 'LIKE', "%{$searchTerm}%")
+                        ->orWhere('slug', 'LIKE', "%{$searchTerm}%");
+                });
+                break;
         }
     }
 
@@ -208,15 +247,32 @@ class ModelQueryStep extends Step
     {
         if (! $order) {
             $query->latest();
-
             return;
         }
 
+        // Handle array of order rules
+        if (is_array($order) && isset($order[0])) {
+            foreach ($order as $orderRule) {
+                $this->applySingleOrder($query, $orderRule);
+            }
+            return;
+        }
+
+        // Handle single order rule
+        $this->applySingleOrder($query, $order);
+    }
+
+    protected function applySingleOrder(Builder $query, mixed $order): void
+    {
         // Handle string format like "last_activity_at DESC"
         if (is_string($order)) {
             $parts = explode(' ', trim($order));
             $field = $parts[0];
             $direction = strtolower($parts[1] ?? 'desc');
+        } elseif (isset($order['sql'])) {
+            // Handle raw SQL ordering
+            $query->orderByRaw($order['sql']);
+            return;
         } else {
             // Handle array format
             $field = $order['field'] ?? 'created_at';
@@ -252,6 +308,18 @@ class ModelQueryStep extends Step
                 case 'bookmark':
                     $formatted['fragment_count'] = count($item->fragment_ids ?? []);
                     break;
+                case 'work_items':
+                    $formatted['status_display'] = ucfirst(str_replace('_', ' ', $item->status ?? 'unknown'));
+                    $formatted['priority_display'] = ucfirst($item->priority ?? 'medium');
+                    break;
+                case 'sprints':
+                    $formatted['status_display'] = $item->status ?? 'Unknown';
+                    $formatted['task_count'] = $item->relationLoaded('workItems') ? $item->workItems->count() : 0;
+                    break;
+                case 'agent_profiles':
+                    $formatted['status_display'] = ucfirst($item->status ?? 'active');
+                    $formatted['assignment_count'] = $item->assignments ? $item->assignments->count() : 0;
+                    break;
             }
 
             return $formatted;
@@ -271,8 +339,8 @@ class ModelQueryStep extends Step
 
     protected function isValidFieldName(string $field): bool
     {
-        // Allow alphanumeric, underscore, dot (for JSON paths), and common field names
-        return preg_match('/^[a-zA-Z0-9_\.]+$/', $field);
+        // Allow alphanumeric, underscore, dot (for JSON paths), and Laravel JSON syntax (->)
+        return preg_match('/^[a-zA-Z0-9_\.\->]+$/', $field);
     }
 
     protected function isValidOperator(string $operator): bool

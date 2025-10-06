@@ -1,0 +1,15 @@
+name: "Create Scheduled Task"
+slug: schedule-create
+version: 1.0.0
+triggers:
+  slash: "/schedule:create"
+  input_mode: "inline"
+
+requires:
+  secrets: []
+  capabilities: ["database.write"]
+
+steps:
+  - id: create-schedule
+    type: action
+    action: "App\\Actions\\Commands\\ScheduleCreateCommand"

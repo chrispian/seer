@@ -2,8 +2,14 @@
 
 namespace App\Services\Commands\DSL\Steps;
 
+use App\Services\Commands\DSL\TemplateEngine;
+
 class TransformStep extends Step
 {
+    public function __construct(
+        protected TemplateEngine $templateEngine
+    ) {}
+
     public function getType(): string
     {
         return 'transform';
@@ -18,8 +24,8 @@ class TransformStep extends Step
             throw new \InvalidArgumentException('Transform step requires a template');
         }
 
-        // Template is already rendered by CommandRunner
-        $result = $template;
+        // Render template with current context (which should include step outputs)
+        $result = $this->templateEngine->render($template, $context);
 
         // Handle output type
         if ($output === 'json') {

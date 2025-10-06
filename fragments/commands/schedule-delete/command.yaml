@@ -1,0 +1,15 @@
+name: "Delete Scheduled Task"
+slug: schedule-delete
+version: 1.0.0
+triggers:
+  slash: "/schedule:delete"
+  input_mode: "inline"
+
+requires:
+  secrets: []
+  capabilities: ["database.write"]
+
+steps:
+  - id: delete-schedule
+    type: action
+    action: "App\\Actions\\Commands\\ScheduleControlCommand"

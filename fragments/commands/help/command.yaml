@@ -47,13 +47,13 @@ steps:
       - `/news` – Get latest AI/tech news
 
       ## Orchestration Commands
-      - `/sprint-list` (or `/sl`) – List all sprints with progress tracking
-      - `/sprint-detail <code>` (or `/sd`) – Show sprint details and tasks
-      - `/task-list [sprint]` (or `/tl`) – List active tasks (optionally filter by sprint)
-      - `/backlog-list` (or `/bl`) – List backlog items and completed tasks
-      - `/task-detail <id>` (or `/td`) – Show task details with full content
-      - `/task-assign <task> <agent>` (or `/ta`) – Assign task to agent
-      - `/agent-list` (or `/al`) – List all available agents
+      - `/sprints` – List all sprints with progress tracking
+      - `/sprint-detail <code>` – Show sprint details and tasks
+      - `/tasks [sprint]` – List active tasks (optionally filter by sprint)
+      - `/backlog-list` – List backlog items and completed tasks
+      - `/task-detail <id>` – Show task details with full content
+      - `/task-create <title>` – Create a new task
+      - `/agents` – List all available agents
 
       **Tip**: Most commands work with or without arguments. Try them out!
 

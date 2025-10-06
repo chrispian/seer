@@ -154,7 +154,13 @@ class SprintOrchestrationService
      */
     public function summarise(Sprint $sprint, bool $withTasks = false, int $tasksLimit = 5, bool $includeAssignments = false): array
     {
-        $taskQuery = WorkItem::query()->where('metadata->sprint_code', $sprint->code);
+        // Get tasks via sprint_items relationship AND legacy metadata approach
+        $taskQuery = WorkItem::query()->where(function ($query) use ($sprint) {
+            $query->where('metadata->sprint_code', $sprint->code)
+                  ->orWhereHas('sprintItems', function ($subQuery) use ($sprint) {
+                      $subQuery->where('sprint_id', $sprint->id);
+                  });
+        });
 
         $total = (clone $taskQuery)->count();
         $completed = (clone $taskQuery)->where('delegation_status', 'completed')->count();

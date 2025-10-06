@@ -1,0 +1,16 @@
+name: "List Scheduled Tasks"
+slug: schedule-list
+version: 1.0.0
+triggers:
+  slash: "/schedule:list"
+  aliases: ["/schedules"]
+  input_mode: "none"
+
+requires:
+  secrets: []
+  capabilities: ["database.read"]
+
+steps:
+  - id: list-schedules
+    type: action
+    action: "App\\Actions\\Commands\\ScheduleListCommand"

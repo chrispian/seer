@@ -108,6 +108,29 @@ class WorkItem extends Model
     }
 
     /**
+     * Get the sprint items (many-to-many through sprint_items)
+     */
+    public function sprintItems(): HasMany
+    {
+        return $this->hasMany(SprintItem::class);
+    }
+
+    /**
+     * Get the sprints this work item belongs to
+     */
+    public function sprints()
+    {
+        return $this->hasManyThrough(
+            Sprint::class,
+            SprintItem::class,
+            'work_item_id',
+            'id',
+            'id',
+            'sprint_id'
+        );
+    }
+
+    /**
      * Scope for items assigned to agents
      */
     public function scopeAssignedToAgents($query)
