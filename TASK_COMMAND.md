@@ -169,7 +169,7 @@ Converted 16 critical commands to PHP classes with proper modal routing.
 
 ## **COMMAND CONVERSION TRACKING**
 
-### **✅ COMPLETED (21/36 commands) - CORE SYSTEM WORKING**
+### **✅ COMPLETED (24/36 commands) - CORE SYSTEM WORKING**
 
 **Command Infrastructure:**
 - ✅ `/help` - HelpCommand.php (enhanced with aliases, markdown formatting, categories)
@@ -194,12 +194,15 @@ Converted 16 critical commands to PHP classes with proper modal routing.
 
 **Communication Commands:**
 - ✅ `/channels` - ChannelsCommand.php (ChannelListModal with type/status filters)
+- ✅ `/join` - JoinCommand.php (message response, directs to /channels)
+- ✅ `/name` - NameCommand.php (message response, set names for sessions/contexts)
 
 **Utility Commands:**
 - ✅ `/bookmark` - BookmarkCommand.php
 - ✅ `/clear` - ClearChatCommand.php
 - ✅ `/session` - SessionCommand.php
 - ✅ `/backlog-list` - BacklogListCommand.php
+- ✅ `/routing` - RoutingCommand.php (RoutingInfoModal with context/routes info)
 
 ### **🎯 CURRENT WORK - Phase 6: Action & Utility Commands**
 Next batch: Simple action/utility commands that don't need complex modals.
