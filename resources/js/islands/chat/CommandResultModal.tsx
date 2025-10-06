@@ -16,6 +16,7 @@ import { AgentListModal } from '@/components/orchestration/AgentListModal'
 import { TodoManagementModal } from '@/islands/chat/TodoManagementModal'
 import { FragmentListModal } from '@/components/fragments/FragmentListModal'
 import { ChannelListModal } from '@/components/channels/ChannelListModal'
+import { RoutingInfoModal } from '@/components/routing/RoutingInfoModal'
 
 
 interface CommandResult {
@@ -195,6 +196,17 @@ export function CommandResultModal({
                 console.log('Channel refresh requested')
                 alert('Channel refresh not implemented yet.')
               }}
+            />
+          )
+        case 'RoutingInfoModal':
+          return (
+            <RoutingInfoModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('RoutingInfoModal onClose called')
+                onClose()
+              }}
+              routingData={result.data}
             />
           )
         case 'HelpModal':
