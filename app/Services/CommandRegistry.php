@@ -124,6 +124,13 @@ class CommandRegistry
         'in' => \App\Commands\InboxCommand::class,               // Alias
         'compose' => \App\Commands\ComposeCommand::class,
         'c' => \App\Commands\ComposeCommand::class,              // Alias
+        // Detail commands
+        'sprint-detail' => \App\Commands\SprintDetailCommand::class,
+        'sd' => \App\Commands\SprintDetailCommand::class,         // Alias
+        'task-detail' => \App\Commands\TaskDetailCommand::class,
+        'td' => \App\Commands\TaskDetailCommand::class,           // Alias
+        'agent-detail' => \App\Commands\AgentDetailCommand::class,
+        'ad' => \App\Commands\AgentDetailCommand::class,          // Alias
     ];
 
     public static function isPhpCommand(string $commandName): bool
