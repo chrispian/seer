@@ -164,17 +164,40 @@ class HelpCommand {
 2. ✅ **Remove settings command** - Not suitable for current system
 3. ✅ **Create backlog tasks** - UI commands and keyboard shortcuts
 
-### **Phase 3: Convert Remaining Commands (CURRENT)**
-**Priority Order**: `/tasks` → `/agents` → `/backlog-list` → `/bookmark` → others
+### **Phase 3: Convert Core Data Commands ✅ COMPLETED**
+Converted 16 critical commands to PHP classes with proper modal routing.
 
 ## **COMMAND CONVERSION TRACKING**
 
-### **✅ COMPLETED (2/36 commands)**
-- ✅ `/help` - HelpCommand.php (dynamic registry-driven)
-- ✅ `/sprints` - SprintListCommand.php (SprintListModal working)
+### **✅ COMPLETED (18/36 commands) - CORE SYSTEM WORKING**
 
-### **🎯 IN PROGRESS**
-- ⏳ `/tasks` - Next to convert
+**Command Infrastructure:**
+- ✅ `/help` - HelpCommand.php (enhanced with aliases, markdown formatting, categories)
+- ✅ `/sprints` - SprintListCommand.php (SprintListModal working)
+- ✅ `/tasks` - TaskListCommand.php (TaskListModal with filtering)
+- ✅ `/agents` - AgentListCommand.php (Agent management)
+- ✅ `/todo` - TodoCommand.php **NEWLY FIXED** - loads 50 todos in TodoManagementModal
+
+**Fragment & Search Commands:**
+- ✅ `/search` - SearchCommand.php (backend ready, UI next)
+- ✅ `/vault` - VaultCommand.php
+- ✅ `/project` - ProjectCommand.php
+- ✅ `/recall` - RecallCommand.php
+
+**Detail/Management Commands:**
+- ✅ `/sprint-detail` - SprintDetailCommand.php
+- ✅ `/task-detail` - TaskDetailCommand.php
+- ✅ `/task-create` - TaskCreateCommand.php
+- ✅ `/task-assign` - TaskAssignCommand.php
+
+**Utility Commands:**
+- ✅ `/bookmark` - BookmarkCommand.php
+- ✅ `/clear` - ClearChatCommand.php
+- ✅ `/session` - SessionCommand.php
+- ✅ `/backlog-list` - BacklogListCommand.php
+
+### **🎯 CURRENT WORK**
+- ⏳ Fixing SearchCommand UI integration (backend complete)
 
 ### **📋 HIGH PRIORITY QUEUE (4 commands)**
 - ⬜ `/agents` - Agent listing (orchestration core)

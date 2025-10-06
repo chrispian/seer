@@ -47,14 +47,14 @@ return [
     ],
 
     'models' => [
-        'agent' => \App\Models\AgentProfile::class,
-        'sprint' => \App\Models\Sprint::class,
-        'work_item' => \App\Models\WorkItem::class,
+        'agent_model' => \App\Models\AgentProfile::class,
+        'sprint_model' => \App\Models\Sprint::class,
+        'work_item_model' => \App\Models\WorkItem::class,
     ],
 
     'services' => [
-        'task' => \App\Services\TaskOrchestrationService::class,
-        'sprint' => \App\Services\SprintOrchestrationService::class,
-        'agent' => \App\Services\AgentOrchestrationService::class,
+        'task_service' => \App\Services\TaskOrchestrationService::class,
+        'sprint_service' => \App\Services\SprintOrchestrationService::class,
+        'agent_service' => \App\Services\AgentOrchestrationService::class,
     ],
 ];

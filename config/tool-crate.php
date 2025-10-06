@@ -2,22 +2,22 @@
 
 return [
     'enabled_tools' => [
-        'json.query'   => true,
-        'text.search'  => true,
-        'file.read'    => true,
-        'text.replace' => true,
-        'help.index'   => true,
-        'help.tool'    => true,
+        'json_query'   => true,
+        'text_search'  => true,
+        'file_read'    => true,
+        'text_replace' => true,
+        'help_index'   => true,
+        'help_tool'    => true,
     ],
     'priority_tools' => [
-        'json.query',
-        'text.search',
-        'file.read',
+        'json_query',
+        'text_search',
+        'file_read',
     ],
     'categories' => [
-        'JSON & Data' => ['json.query', 'table.query'],
-        'Text Ops'    => ['text.search', 'text.replace'],
-        'Files'       => ['file.read'],
-        'Help'        => ['help.index', 'help.tool'],
+        'JSON & Data' => ['json_query', 'table_query'],
+        'Text Ops'    => ['text_search', 'text_replace'],
+        'Files'       => ['file_read'],
+        'Help'        => ['help_index', 'help_tool'],
     ],
 ];
