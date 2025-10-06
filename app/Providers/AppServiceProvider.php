@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Servers\OrchestrationServer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use HollisLabs\ToolCrate\Servers\ToolCrateServer;
+use Laravel\Mcp\Facades\Mcp;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,5 +44,9 @@ class AppServiceProvider extends ServiceProvider
         Route::middleware(['api', 'tool.telemetry'])
             ->prefix('api/internal')
             ->group(base_path('routes/internal.php'));
+
+        // Register MCP servers
+        Mcp::local('laravel-tool-crate', ToolCrateServer::class);
+        Mcp::local('orchestration', OrchestrationServer::class);
     }
 }
