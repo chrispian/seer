@@ -78,7 +78,7 @@ class ArtifactsController extends Controller
             ]),
             'meta' => [
                 'task_id' => $task->id,
-                'total' => $artifacts->count(),
+                'count' => $artifacts->count(),
                 'total_size_bytes' => $artifacts->sum('size_bytes'),
             ],
         ]);

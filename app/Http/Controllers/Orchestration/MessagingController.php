@@ -96,7 +96,7 @@ class MessagingController extends Controller
                 'last_page' => $messages->lastPage(),
                 'per_page' => $messages->perPage(),
                 'total' => $messages->total(),
-                'unread_count' => Message::toAgent($agent->id)->unread()->count(),
+                'unread_count' => Message::query()->toAgent($agent->id)->unread()->count(),
             ],
         ]);
     }
