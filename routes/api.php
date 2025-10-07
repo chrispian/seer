@@ -173,3 +173,34 @@ Route::prefix('schedules')->group(function () {
     Route::get('/runs', [ScheduleController::class, 'runs']);
     Route::get('/{id}', [ScheduleController::class, 'show']);
 });
+
+// Orchestration Messaging API routes
+Route::prefix('orchestration')->group(function () {
+    Route::post('/agents/{agentId}/inbox', [\App\Http\Controllers\Orchestration\MessagingController::class, 'sendToAgent']);
+    Route::get('/agents/{agentId}/inbox', [\App\Http\Controllers\Orchestration\MessagingController::class, 'listAgentInbox']);
+    Route::post('/messages/{messageId}/read', [\App\Http\Controllers\Orchestration\MessagingController::class, 'markAsRead']);
+    Route::post('/projects/{projectId}/broadcast', [\App\Http\Controllers\Orchestration\MessagingController::class, 'broadcast']);
+    
+    Route::post('/tasks/{taskId}/artifacts', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'createArtifact']);
+    Route::get('/tasks/{taskId}/artifacts', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'listTaskArtifacts']);
+    Route::get('/artifacts/{artifactId}/download', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'downloadArtifact']);
+});
+
+// Agent Profile API routes
+Route::prefix('agent-profiles')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\AgentProfileController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\AgentProfileController::class, 'store']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\AgentProfileController::class, 'show']);
+    Route::put('/{id}', [\App\Http\Controllers\Api\AgentProfileController::class, 'update']);
+    Route::delete('/{id}', [\App\Http\Controllers\Api\AgentProfileController::class, 'destroy']);
+});
+
+// Agent API routes
+Route::prefix('agents')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\AgentController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\AgentController::class, 'store']);
+    Route::get('/generate-designation', [\App\Http\Controllers\Api\AgentController::class, 'generateDesignation']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\AgentController::class, 'show']);
+    Route::put('/{id}', [\App\Http\Controllers\Api\AgentController::class, 'update']);
+    Route::delete('/{id}', [\App\Http\Controllers\Api\AgentController::class, 'destroy']);
+});
