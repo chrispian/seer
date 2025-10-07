@@ -6,6 +6,7 @@ use App\Models\OrchestrationArtifact;
 use App\Models\Message;
 use App\Models\WorkItem;
 use App\Services\Orchestration\Artifacts\ContentStore;
+use App\Services\Orchestration\Security\SecretRedactor;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -31,7 +32,7 @@ class ProcessParcel implements ShouldQueue
         $this->onQueue('postmaster');
     }
 
-    public function handle(ContentStore $contentStore): array
+    public function handle(ContentStore $contentStore, SecretRedactor $redactor): array
     {
         Log::info('Postmaster: Processing parcel', [
             'task_id' => $this->taskId,
@@ -147,6 +148,9 @@ class ProcessParcel implements ShouldQueue
         }
 
         $content = $attachment['content'];
+        $redactor = app(SecretRedactor::class);
+        $content = $redactor->redact($content);
+        
         $filename = $attachment['filename'] ?? "attachment-{$key}";
         $mimeType = $attachment['mime_type'] ?? 'application/octet-stream';
 
@@ -172,6 +176,9 @@ class ProcessParcel implements ShouldQueue
 
     protected function processInlineContent(ContentStore $contentStore, WorkItem $task, string $key, string $content): ?OrchestrationArtifact
     {
+        $redactor = app(SecretRedactor::class);
+        $content = $redactor->redact($content);
+        
         $hash = $contentStore->put($content, [
             'source' => 'inline_content',
             'key' => $key,

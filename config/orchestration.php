@@ -77,11 +77,12 @@ return [
     'secret_redaction' => [
         'enabled' => env('FE_REDACTION_ENABLED', true),
         'patterns' => [
-            'AWS_(ACCESS|SECRET)_KEY',
-            'APP_KEY',
-            'Bearer [A-Za-z0-9._-]+',
-            'OPENAI_API_KEY',
-            'ANTHROPIC_API_KEY',
+            'AWS_ACCESS_KEY_ID=\S+',
+            'AWS_SECRET_ACCESS_KEY=\S+',
+            'APP_KEY=\S+',
+            'Bearer \S+',
+            'OPENAI_API_KEY=\S+',
+            'ANTHROPIC_API_KEY=\S+',
         ],
         'custom_patterns' => env('FE_REDACT_PATTERNS') 
             ? explode(',', env('FE_REDACT_PATTERNS')) 
