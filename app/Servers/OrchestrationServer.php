@@ -16,6 +16,10 @@ use App\Tools\Orchestration\TaskDetailTool;
 use App\Tools\Orchestration\TasksListTool;
 use App\Tools\Orchestration\TaskSaveTool;
 use App\Tools\Orchestration\TaskStatusTool;
+use App\Tools\Orchestration\MessagesCheckTool;
+use App\Tools\Orchestration\MessageAckTool;
+use App\Tools\Orchestration\ArtifactsPullTool;
+use App\Tools\Orchestration\HandoffTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Contracts\Transport;
 
@@ -40,6 +44,10 @@ class OrchestrationServer extends Server
         SprintSaveTool::class,
         SprintStatusTool::class,
         SprintTasksAttachTool::class,
+        MessagesCheckTool::class,
+        MessageAckTool::class,
+        ArtifactsPullTool::class,
+        HandoffTool::class,
     ];
 
     public function __construct(Transport $transport)
@@ -72,6 +80,10 @@ class OrchestrationServer extends Server
             SprintSaveTool::class => 'orchestration_sprints_save',
             SprintStatusTool::class => 'orchestration_sprints_status',
             SprintTasksAttachTool::class => 'orchestration_sprints_attach_tasks',
+            MessagesCheckTool::class => 'orchestration_messages_check',
+            MessageAckTool::class => 'orchestration_message_ack',
+            ArtifactsPullTool::class => 'orchestration_artifacts_pull',
+            HandoffTool::class => 'orchestration_handoff',
         ];
 
         return $map[$toolClass] ?? '';

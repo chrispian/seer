@@ -16,6 +16,10 @@ return [
         'orchestration_sprints_save' => true,
         'orchestration_sprints_status' => true,
         'orchestration_sprints_attach_tasks' => true,
+        'orchestration_messages_check' => true,
+        'orchestration_message_ack' => true,
+        'orchestration_artifacts_pull' => true,
+        'orchestration_handoff' => true,
     ],
 
     'priority_tools' => [
@@ -34,7 +38,6 @@ return [
             'orchestration_agents_save',
             'orchestration_agents_status',
             'orchestration_tasks_list',
-            'orchestration_tasks_save',
             'orchestration_sprints_list',
             'orchestration_tasks_detail',
             'orchestration_tasks_assign',
@@ -43,6 +46,10 @@ return [
             'orchestration_sprints_save',
             'orchestration_sprints_status',
             'orchestration_sprints_attach_tasks',
+            'orchestration_messages_check',
+            'orchestration_message_ack',
+            'orchestration_artifacts_pull',
+            'orchestration_handoff',
         ],
     ],
 
