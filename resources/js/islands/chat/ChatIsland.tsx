@@ -307,6 +307,7 @@ export default function ChatIsland() {
           messageId: msg.id,
           fragmentId: msg.fragment_id,
           isBookmarked: msg.is_bookmarked,
+          approvalRequest: msg.approval_request, // Restore approval data from session
         }
       })
       setMessages(sessionMessages)
