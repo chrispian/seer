@@ -1,7 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Security;
 
+/**
+ * Dry-run simulator for security-critical operations.
+ *
+ * Simulates tool calls, commands, file operations, and network requests
+ * without executing them. Provides:
+ * - Policy evaluation (allowlist checks)
+ * - Risk assessment (scoring and approval requirements)
+ * - Change prediction (what would happen if executed)
+ * - Parameter sanitization (redact sensitive values)
+ *
+ * Used for:
+ * - Pre-execution validation and preview
+ * - User approval workflows (show what will happen)
+ * - Debugging and testing security policies
+ * - Audit logging and compliance
+ *
+ * Example:
+ *     $simulator = new DryRunSimulator($policyRegistry, $riskScorer);
+ *     $result = $simulator->simulateCommand('rm -rf /tmp/cache');
+ *     // Shows policy check, risk score, predicted changes without executing
+ *
+ * @see PolicyRegistry For policy evaluation
+ * @see RiskScorer For risk assessment
+ * @see ApprovalManager For approval workflow integration
+ */
 class DryRunSimulator
 {
     public function __construct(
@@ -10,7 +37,35 @@ class DryRunSimulator
     ) {}
 
     /**
-     * Simulate a tool call without executing it
+     * Simulate a tool call without executing it.
+     *
+     * Evaluates:
+     * 1. Policy check (tool allowlist)
+     * 2. Risk assessment (scoring and approval requirements)
+     * 3. Change prediction (what files/resources would be affected)
+     * 4. Execution decision (would auto-approve or require approval)
+     *
+     * @param string $toolId Tool identifier (e.g., 'fs.write', 'shell.exec')
+     * @param array<string, mixed> $parameters Tool parameters (sanitized for sensitive values)
+     * @param array<string, mixed> $context Simulation context (user info, etc.)
+     * @return array{
+     *     tool_id: string,
+     *     parameters: array,
+     *     would_execute: bool,
+     *     policy_check: array|null,
+     *     risk_assessment: array|null,
+     *     predicted_changes: array[],
+     *     warnings: string[],
+     *     simulated_at: string
+     * } Simulation result
+     *
+     * Example - Auto-approved:
+     *     $result = $simulator->simulateToolCall('fs.read', ['path' => '/var/log/app.log']);
+     *     // ['would_execute' => true, 'risk_assessment' => ['action' => 'auto_approve'], ...]
+     *
+     * Example - Requires approval:
+     *     $result = $simulator->simulateToolCall('fs.delete', ['path' => '/etc/config']);
+     *     // ['would_execute' => false, 'warnings' => ['REQUIRES APPROVAL: Risk score 85 (high)'], ...]
      */
     public function simulateToolCall(string $toolId, array $parameters, array $context = []): array
     {
@@ -54,7 +109,22 @@ class DryRunSimulator
     }
 
     /**
-     * Simulate a shell command without executing
+     * Simulate a shell command without executing.
+     *
+     * Evaluates command through full security pipeline and predicts
+     * changes (file operations, package installs, etc.).
+     *
+     * @param string $command Shell command (e.g., 'rm -rf /tmp/cache', 'npm install')
+     * @param array<string, mixed> $context Simulation context
+     * @return array{
+     *     command: string,
+     *     would_execute: bool,
+     *     policy_check: array|null,
+     *     risk_assessment: array|null,
+     *     predicted_changes: array[],
+     *     warnings: string[],
+     *     simulated_at: string
+     * } Simulation result
      */
     public function simulateCommand(string $command, array $context = []): array
     {
@@ -97,7 +167,23 @@ class DryRunSimulator
     }
 
     /**
-     * Simulate file operation
+     * Simulate file operation without executing.
+     *
+     * Predicts changes based on operation type and file existence.
+     *
+     * @param string $path Filesystem path
+     * @param string $operation Operation type ('read', 'write', 'delete')
+     * @param array<string, mixed> $context Simulation context (size, etc.)
+     * @return array{
+     *     path: string,
+     *     operation: string,
+     *     would_execute: bool,
+     *     policy_check: array|null,
+     *     risk_assessment: array|null,
+     *     predicted_changes: array[],
+     *     warnings: string[],
+     *     simulated_at: string
+     * } Simulation result
      */
     public function simulateFileOperation(string $path, string $operation, array $context = []): array
     {
@@ -141,7 +227,22 @@ class DryRunSimulator
     }
 
     /**
-     * Simulate network operation
+     * Simulate network operation without executing.
+     *
+     * Evaluates URL/domain policies and predicts request details.
+     *
+     * @param string $url Request URL
+     * @param array<string, mixed> $context Simulation context (method, body, etc.)
+     * @return array{
+     *     url: string,
+     *     domain: string,
+     *     would_execute: bool,
+     *     policy_check: array|null,
+     *     risk_assessment: array|null,
+     *     predicted_changes: array[],
+     *     warnings: string[],
+     *     simulated_at: string
+     * } Simulation result
      */
     public function simulateNetworkOperation(string $url, array $context = []): array
     {
@@ -189,7 +290,16 @@ class DryRunSimulator
     // ==================== Change Prediction Methods ====================
 
     /**
-     * Predict changes from tool call
+     * Predict changes from tool call based on tool ID patterns.
+     *
+     * Recognizes:
+     * - fs.write: File write operations
+     * - fs.delete: File delete operations
+     * - *shell*: Shell command execution
+     *
+     * @param string $toolId Tool identifier
+     * @param array<string, mixed> $parameters Tool parameters
+     * @return array[] Predicted changes with type, target, description
      */
     private function predictChanges(string $toolId, array $parameters): array
     {
@@ -222,7 +332,15 @@ class DryRunSimulator
     }
 
     /**
-     * Predict changes from shell command
+     * Predict changes from shell command based on binary and patterns.
+     *
+     * Detects:
+     * - Known command effects (rm, mkdir, git, npm, composer)
+     * - Output redirection (> file)
+     *
+     * @param string $command Shell command
+     * @param array<string, mixed> $context Command context
+     * @return array[] Predicted changes with type and description
      */
     private function predictCommandChanges(string $command, array $context): array
     {
@@ -255,7 +373,17 @@ class DryRunSimulator
     }
 
     /**
-     * Predict changes from file operation
+     * Predict changes from file operation based on operation type and file existence.
+     *
+     * Handles:
+     * - write: Create new or modify existing file
+     * - delete: Remove existing file
+     * - read: Read file contents (no changes)
+     *
+     * @param string $path Filesystem path
+     * @param string $operation Operation type
+     * @param array<string, mixed> $context Operation context (size, etc.)
+     * @return array[] Predicted changes with type, target, description, size info
      */
     private function predictFileChanges(string $path, string $operation, array $context): array
     {
@@ -298,7 +426,15 @@ class DryRunSimulator
     }
 
     /**
-     * Predict changes from network operation
+     * Predict changes from network operation based on HTTP method and context.
+     *
+     * Detects:
+     * - Network request details (URL, method)
+     * - Data uploads (POST/PUT with body)
+     *
+     * @param string $url Request URL
+     * @param array<string, mixed> $context Request context (method, has_body, body_size)
+     * @return array[] Predicted changes with type and description
      */
     private function predictNetworkChanges(string $url, array $context): array
     {
@@ -324,7 +460,12 @@ class DryRunSimulator
     }
 
     /**
-     * Sanitize parameters for display (remove sensitive values)
+     * Sanitize parameters for display by redacting sensitive values.
+     *
+     * Redacts keys: password, secret, token, api_key, private_key, apiKey
+     *
+     * @param array<string, mixed> $parameters Raw parameters
+     * @return array<string, mixed> Sanitized parameters with ***REDACTED*** for sensitive values
      */
     private function sanitizeParameters(array $parameters): array
     {
