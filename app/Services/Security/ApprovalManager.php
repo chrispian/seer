@@ -70,6 +70,7 @@ class ApprovalManager
     private const AVERAGE_READING_SPEED_WPM = 200;
 
     public function __construct(
+        private RiskScorer $scorer,
         private DryRunSimulator $simulator
     ) {}
 
