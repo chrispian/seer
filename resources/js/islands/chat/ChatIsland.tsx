@@ -664,16 +664,17 @@ export default function ChatIsland() {
       // Update message with approved status and add execution result
       const updatedMessages = messages.map(m => {
         if (m.approvalRequest?.id === approvalId) {
+          // Start with original approval message, DON'T add approved text (it's in the green box)
           let updatedMd = m.md
           
-          // Add execution result (without duplicate "Approved" text - that's in the green box)
+          // Add execution result
           if (data.execution_result?.executed) {
             updatedMd += '\n\n**Execution Result:**\n```\n' + (data.execution_result.output || data.execution_result.error) + '\n```'
           }
           
           return {
             ...m,
-            approvalRequest: { ...m.approvalRequest, status: 'approved', approvedAt: new Date().toISOString() },
+            approvalRequest: { ...m.approvalRequest, status: 'approved' as const, approvedAt: new Date().toISOString() },
             md: updatedMd
           }
         }
