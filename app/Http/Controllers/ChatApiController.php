@@ -50,6 +50,44 @@ class ChatApiController extends Controller
             CorrelationContext::addContext('session_id', $sessionId);
         }
 
+        // Check for pending approval responses (before other processing)
+        if (!str_starts_with(trim($data['content']), ':')) {
+            $approvalManager = app(\App\Services\Security\ApprovalManager::class);
+            $pendingApprovals = $approvalManager->getPendingForConversation($conversationId);
+            
+            if ($pendingApprovals->isNotEmpty()) {
+                $intent = $approvalManager->detectApprovalInMessage($data['content']);
+                
+                if ($intent) {
+                    $approval = $pendingApprovals->first();
+                    
+                    if ($intent === 'approve') {
+                        $approvalManager->approveRequest($approval, auth()->id(), 'natural_language', $data['content']);
+                        
+                        return response()->json([
+                            'message_id' => $messageId,
+                            'conversation_id' => $conversationId,
+                            'skip_stream' => true,
+                            'assistant_message' => "✓ Interpreting as approval. Executing command...",
+                            'approval_approved' => true,
+                            'approval_id' => $approval->id,
+                        ]);
+                    } elseif ($intent === 'reject') {
+                        $approvalManager->rejectRequest($approval, auth()->id(), 'natural_language', $data['content']);
+                        
+                        return response()->json([
+                            'message_id' => $messageId,
+                            'conversation_id' => $conversationId,
+                            'skip_stream' => true,
+                            'assistant_message' => "✗ Request rejected. I won't proceed with that operation.",
+                            'approval_rejected' => true,
+                            'approval_id' => $approval->id,
+                        ]);
+                    }
+                }
+            }
+        }
+
         if (str_starts_with(trim($data['content']), ':exec-tool')) {
             \Log::info('Exec-tool prefix detected', [
                 'content' => $data['content'],
