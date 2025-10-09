@@ -175,6 +175,9 @@ export function ChatTranscript({
                     <ApprovalButtonSimple
                       requestId={message.approvalRequest.id}
                       riskScore={message.approvalRequest.riskScore}
+                      status={message.approvalRequest.status}
+                      approvedAt={message.approvalRequest.approvedAt}
+                      rejectedAt={message.approvalRequest.rejectedAt}
                       onApprove={() => onApprovalApprove?.(message.approvalRequest!.id)}
                       onReject={() => onApprovalReject?.(message.approvalRequest!.id)}
                     />

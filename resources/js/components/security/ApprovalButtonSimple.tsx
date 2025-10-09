@@ -1,6 +1,22 @@
 import React from 'react'
 
-export function ApprovalButtonSimple({ requestId, riskScore, onApprove, onReject }: any) {
+export function ApprovalButtonSimple({ requestId, riskScore, status, approvedAt, rejectedAt, onApprove, onReject }: any) {
+  if (status === 'approved') {
+    return (
+      <div style={{ padding: '10px', border: '2px solid green', margin: '10px 0', background: '#f0fdf4' }}>
+        <div>✓ Approved by user at {new Date(approvedAt).toLocaleTimeString()}</div>
+      </div>
+    )
+  }
+
+  if (status === 'rejected') {
+    return (
+      <div style={{ padding: '10px', border: '2px solid red', margin: '10px 0', background: '#fef2f2' }}>
+        <div>✗ Rejected by user at {new Date(rejectedAt).toLocaleTimeString()}</div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ padding: '10px', border: '2px solid orange', margin: '10px 0' }}>
       <div>Approval Request ID: {requestId}</div>

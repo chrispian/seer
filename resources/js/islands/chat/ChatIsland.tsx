@@ -359,6 +359,17 @@ export default function ChatIsland() {
       return
     }
 
+    // Auto-cancel any pending approval requests
+    const pendingApprovals = messages.filter(m => m.approvalRequest?.status === 'pending')
+    if (pendingApprovals.length > 0) {
+      console.log('Auto-canceling pending approvals:', pendingApprovals.length)
+      setMessages(msgs => msgs.map(m =>
+        m.approvalRequest?.status === 'pending'
+          ? { ...m, approvalRequest: { ...m.approvalRequest, status: 'timeout' } }
+          : m
+      ))
+    }
+
     // Close any existing stream before starting a new one
     if (activeStreamRef.current) {
       activeStreamRef.current.eventSource.close()
@@ -636,20 +647,26 @@ export default function ChatIsland() {
 
       const data = await response.json()
 
-      // Update message with approved status
-      setMessages(msgs => msgs.map(m =>
-        m.approvalRequest?.id === approvalId
-          ? { 
-              ...m, 
-              approvalRequest: { ...m.approvalRequest, status: 'approved', approvedAt: new Date().toISOString() },
-              md: m.md + '\n\n✓ Approved by user at ' + new Date().toLocaleTimeString()
-            }
-          : m
-      ))
+      // Update message with approved status and add execution result
+      setMessages(msgs => msgs.map(m => {
+        if (m.approvalRequest?.id === approvalId) {
+          let updatedMd = m.md + '\n\n✓ Approved by user at ' + new Date().toLocaleTimeString()
+          
+          // Add execution result
+          if (data.execution_result?.executed) {
+            updatedMd += '\n\n**Execution Result:**\n```\n' + (data.execution_result.output || data.execution_result.error) + '\n```'
+          }
+          
+          return {
+            ...m,
+            approvalRequest: { ...m.approvalRequest, status: 'approved', approvedAt: new Date().toISOString() },
+            md: updatedMd
+          }
+        }
+        return m
+      }))
 
-      console.log('Approval granted:', data)
-      
-      // TODO: Trigger command execution here
+      console.log('Approval granted and executed:', data)
       
     } catch (error) {
       console.error('Failed to approve:', error)

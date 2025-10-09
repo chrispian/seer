@@ -16,7 +16,7 @@ class ApprovalController extends Controller
 
     public function approve(Request $request, string $id): JsonResponse
     {
-        $approvalRequest = ApprovalRequest::findOrFail($id);
+        $approvalRequest = ApprovalRequest::with('fragment')->findOrFail($id);
 
         if (!$approvalRequest->isPending()) {
             return response()->json([
@@ -32,14 +32,49 @@ class ApprovalController extends Controller
                 'button_click'
             );
 
+            // Execute the approved operation
+            $executionResult = $this->executeApprovedOperation($approvalRequest);
+
             return response()->json([
                 'success' => true,
                 'approval' => $this->approvalManager->formatForChat($approvalRequest->fresh()),
+                'execution_result' => $executionResult,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    private function executeApprovedOperation(ApprovalRequest $approval): array
+    {
+        $details = $approval->operation_details;
+
+        try {
+            if ($approval->operation_type === 'command') {
+                $executor = app(\App\Services\Security\EnhancedShellExecutor::class);
+                $result = $executor->execute($details['command'], $details['context'] ?? []);
+                
+                return [
+                    'executed' => true,
+                    'success' => $result['success'],
+                    'output' => $result['stdout'] ?? '',
+                    'error' => $result['stderr'] ?? '',
+                ];
+            }
+
+            return ['executed' => false, 'reason' => 'Operation type not yet supported'];
+        } catch (\Exception $e) {
+            \Log::error('Failed to execute approved operation', [
+                'approval_id' => $approval->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'executed' => false,
+                'error' => $e->getMessage(),
+            ];
         }
     }
 
