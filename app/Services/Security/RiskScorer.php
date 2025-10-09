@@ -186,18 +186,18 @@ class RiskScorer
             $factors[] = ucfirst($operation) . " operation: +{$opWeight}";
         }
 
-        // Sensitive file patterns
-        $sensitivePatterns = [
-            '/\.ssh\//i' => ['weight' => 40, 'reason' => 'SSH keys'],
-            '/\.env/i' => ['weight' => 35, 'reason' => 'Environment secrets'],
-            '/\.aws\/credentials/i' => ['weight' => 40, 'reason' => 'AWS credentials'],
-            '/\/etc\/passwd/i' => ['weight' => 45, 'reason' => 'System password file'],
-            '/\/etc\/shadow/i' => ['weight' => 50, 'reason' => 'System shadow file'],
-            '/\.git\//i' => ['weight' => 15, 'reason' => 'Git repository data'],
+        // Sensitive file patterns (use preg_quote for paths)
+        $sensitiveChecks = [
+            '.ssh/' => ['weight' => 40, 'reason' => 'SSH keys'],
+            '.env' => ['weight' => 35, 'reason' => 'Environment secrets'],
+            '.aws/credentials' => ['weight' => 40, 'reason' => 'AWS credentials'],
+            '/etc/passwd' => ['weight' => 45, 'reason' => 'System password file'],
+            '/etc/shadow' => ['weight' => 50, 'reason' => 'System shadow file'],
+            '.git/' => ['weight' => 15, 'reason' => 'Git repository data'],
         ];
 
-        foreach ($sensitivePatterns as $pattern => $risk) {
-            if (preg_match($pattern, $path)) {
+        foreach ($sensitiveChecks as $pathPattern => $risk) {
+            if (str_contains($path, $pathPattern)) {
                 $score += $risk['weight'];
                 $factors[] = "{$risk['reason']}: +{$risk['weight']}";
             }
