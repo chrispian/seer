@@ -1,11 +1,59 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Security\Guards;
 
 use Symfony\Component\Process\Process;
 
+/**
+ * Resource-limited command execution guard.
+ *
+ * Executes shell commands with resource limits:
+ * - Timeout (execution time limit)
+ * - Memory (virtual memory limit)
+ * - Output truncation (50KB stdout/stderr max)
+ *
+ * Uses platform-specific ulimit wrapping:
+ * - macOS: CPU time limit only (ulimit -t)
+ * - Linux: CPU time + virtual memory (ulimit -t -v)
+ *
+ * Example:
+ *     $limiter = new ResourceLimiter();
+ *     $result = $limiter->executeWithLimits('npm install', [
+ *         'timeout' => 300,
+ *         'memory' => '1G'
+ *     ], '/path/to/project');
+ *
+ * @see ShellGuard For command validation before execution
+ * @see EnhancedShellExecutor For orchestrated execution
+ */
 class ResourceLimiter
 {
+    /**
+     * Execute command with resource limits enforced.
+     *
+     * Wraps command with ulimit and executes via Symfony Process.
+     * Output is truncated to 50KB to prevent memory issues.
+     *
+     * @param string $command Shell command to execute
+     * @param array<string, mixed> $limits Resource limits:
+     *        - 'timeout' (int): Execution timeout in seconds (default: 30)
+     *        - 'memory' (string): Memory limit (e.g., '128M', '1G', default: '128M')
+     * @param string|null $workdir Working directory (null = current directory)
+     * @return array{
+     *     exit_code: int,
+     *     stdout: string,
+     *     stderr: string,
+     *     success: bool,
+     *     execution_time_ms: int,
+     *     memory_limit: string
+     * } Execution result
+     *
+     * Example:
+     *     $result = $limiter->executeWithLimits('git clone repo', ['timeout' => 120, 'memory' => '512M']);
+     *     // ['success' => true, 'exit_code' => 0, 'stdout' => '...', ...]
+     */
     public function executeWithLimits(string $command, array $limits, ?string $workdir = null): array
     {
         $timeout = $limits['timeout'] ?? 30;
@@ -29,6 +77,16 @@ class ResourceLimiter
         ];
     }
 
+    /**
+     * Wrap command with platform-specific ulimit resource limits.
+     *
+     * - macOS: ulimit -t 60 (CPU time only)
+     * - Linux: ulimit -t 60 -v {memory_kb} (CPU time + virtual memory)
+     *
+     * @param string $command Command to wrap
+     * @param string $memoryLimit Memory limit (e.g., '128M', '1G')
+     * @return string Wrapped command with ulimit prefix
+     */
     private function wrapWithLimits(string $command, string $memoryLimit): string
     {
         $memoryKb = (int) ($this->parseMemoryLimit($memoryLimit) / 1024);
@@ -43,6 +101,18 @@ class ResourceLimiter
         }
     }
 
+    /**
+     * Parse memory limit string to bytes.
+     *
+     * Supports:
+     * - Bytes: '1024' -> 1024
+     * - Kilobytes: '128K' -> 131072
+     * - Megabytes: '256M' -> 268435456
+     * - Gigabytes: '1G' -> 1073741824
+     *
+     * @param string $limit Memory limit string
+     * @return int Memory limit in bytes (default: 128MB if parse fails)
+     */
     private function parseMemoryLimit(string $limit): int
     {
         $limit = strtoupper(trim($limit));
