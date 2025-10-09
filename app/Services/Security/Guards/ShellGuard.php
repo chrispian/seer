@@ -45,11 +45,11 @@ class ShellGuard
      * 5. Argument validation (binary-specific rules)
      * 6. Command sanitization (safe execution format)
      *
-     * @param string $command Raw shell command to validate (e.g., 'git status', 'npm install')
-     * @param array<string, mixed> $context Validation context:
-     *        - 'approved' (bool): Skip policy/risk checks if user pre-approved
-     *        - 'user_id' (int): User ID for risk scoring
-     *        - Additional risk scoring context
+     * @param  string  $command  Raw shell command to validate (e.g., 'git status', 'npm install')
+     * @param  array<string, mixed>  $context  Validation context:
+     *                                         - 'approved' (bool): Skip policy/risk checks if user pre-approved
+     *                                         - 'user_id' (int): User ID for risk scoring
+     *                                         - Additional risk scoring context
      * @return array{
      *     allowed: bool,
      *     sanitized_command: string|null,
@@ -147,7 +147,7 @@ class ShellGuard
      * - php: 60s, 256MB (script execution)
      * - default: 30s, 128MB (conservative limits)
      *
-     * @param string $binary Binary name (e.g., 'npm', 'git', 'php')
+     * @param  string  $binary  Binary name (e.g., 'npm', 'git', 'php')
      * @return array{timeout: int, memory: string} Resource limits
      *
      * Example:
@@ -172,7 +172,7 @@ class ShellGuard
      * - AND command chaining (&&)
      * - Command substitution ($(...))
      *
-     * @param string $command Raw command to check
+     * @param  string  $command  Raw command to check
      * @return array{safe: bool, reason?: string} Safety result with optional reason
      *
      * Example - Safe pipe:
@@ -213,7 +213,7 @@ class ShellGuard
      *
      * Splits command on whitespace, extracting binary name and arguments.
      *
-     * @param string $command Raw command string
+     * @param  string  $command  Raw command string
      * @return array{valid: bool, binary?: string, arguments?: string[], error?: string} Parse result
      *
      * Example:
@@ -239,8 +239,8 @@ class ShellGuard
      * - git: Block force push (push --force)
      * - default: Allow all arguments
      *
-     * @param string $binary Binary name
-     * @param string[] $arguments Command arguments
+     * @param  string  $binary  Binary name
+     * @param  string[]  $arguments  Command arguments
      * @return array{valid: bool, errors?: string[], warnings?: string[]} Validation result
      */
     private function validateArguments(string $binary, array $arguments): array
@@ -259,7 +259,7 @@ class ShellGuard
      * - Combined -rf flag
      * - Separate -r and -f flags
      *
-     * @param string[] $arguments rm command arguments
+     * @param  string[]  $arguments  rm command arguments
      * @return array{valid: bool, errors?: string[]} Validation result
      */
     private function validateRmArguments(array $arguments): array
@@ -278,7 +278,7 @@ class ShellGuard
      * Blocks:
      * - Force push (push --force)
      *
-     * @param string[] $arguments git command arguments
+     * @param  string[]  $arguments  git command arguments
      * @return array{valid: bool, errors?: string[]} Validation result
      */
     private function validateGitArguments(array $arguments): array
@@ -295,7 +295,7 @@ class ShellGuard
      *
      * Reconstructs command from validated binary and arguments.
      *
-     * @param array{binary: string, arguments: string[]} $parsed Parsed command components
+     * @param  array{binary: string, arguments: string[]}  $parsed  Parsed command components
      * @return string Sanitized command string
      */
     private function sanitizeCommand(array $parsed): string

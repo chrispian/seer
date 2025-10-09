@@ -49,12 +49,12 @@ class FilesystemGuard
      * 5. Risk assessment (may require approval)
      * 6. File size check (write operations only)
      *
-     * @param string $path Filesystem path to validate (e.g., '/var/log/app.log', '~/config.json')
-     * @param string $operation Operation type ('read', 'write', 'delete', etc.)
-     * @param array<string, mixed> $context Validation context:
-     *        - 'size' (int): File size for write operations
-     *        - 'max_size' (int): Override default MAX_FILE_SIZE (10MB)
-     *        - Additional risk scoring context
+     * @param  string  $path  Filesystem path to validate (e.g., '/var/log/app.log', '~/config.json')
+     * @param  string  $operation  Operation type ('read', 'write', 'delete', etc.)
+     * @param  array<string, mixed>  $context  Validation context:
+     *                                         - 'size' (int): File size for write operations
+     *                                         - 'max_size' (int): Override default MAX_FILE_SIZE (10MB)
+     *                                         - Additional risk scoring context
      * @return array{
      *     allowed: bool,
      *     normalized_path: string|null,
@@ -153,7 +153,7 @@ class FilesystemGuard
      * - Resolve symlinks and relative paths (if exists)
      * - Manual normalization for non-existent paths
      *
-     * @param string $path Raw filesystem path
+     * @param  string  $path  Raw filesystem path
      * @return array{
      *     valid: bool,
      *     path: string,
@@ -189,7 +189,7 @@ class FilesystemGuard
      * - Remove empty segments and current directory (.)
      * - Resolve parent directory references (..)
      *
-     * @param string $path Path to normalize
+     * @param  string  $path  Path to normalize
      * @return string Normalized absolute path
      */
     private function manualNormalize(string $path): string
@@ -220,8 +220,8 @@ class FilesystemGuard
      *
      * Logs warnings for traversal attempts.
      *
-     * @param string $normalized Normalized path (for logging)
-     * @param string $original Original path input
+     * @param  string  $normalized  Normalized path (for logging)
+     * @param  string  $original  Original path input
      * @return array{safe: bool, reason?: string} Safety result
      */
     private function detectPathTraversal(string $normalized, string $original): array
@@ -244,8 +244,8 @@ class FilesystemGuard
      *
      * Ensures symlink target is allowed for read operations via policy registry.
      *
-     * @param string $symlinkPath Original symlink path (unused, reserved for future validation)
-     * @param string $targetPath Symlink target path
+     * @param  string  $symlinkPath  Original symlink path (unused, reserved for future validation)
+     * @param  string  $targetPath  Symlink target path
      * @return array{safe: bool, reason?: string} Safety result
      */
     private function validateSymlink(string $symlinkPath, string $targetPath): array

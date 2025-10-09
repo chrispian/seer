@@ -45,9 +45,9 @@ class DryRunSimulator
      * 3. Change prediction (what files/resources would be affected)
      * 4. Execution decision (would auto-approve or require approval)
      *
-     * @param string $toolId Tool identifier (e.g., 'fs.write', 'shell.exec')
-     * @param array<string, mixed> $parameters Tool parameters (sanitized for sensitive values)
-     * @param array<string, mixed> $context Simulation context (user info, etc.)
+     * @param  string  $toolId  Tool identifier (e.g., 'fs.write', 'shell.exec')
+     * @param  array<string, mixed>  $parameters  Tool parameters (sanitized for sensitive values)
+     * @param  array<string, mixed>  $context  Simulation context (user info, etc.)
      * @return array{
      *     tool_id: string,
      *     parameters: array,
@@ -114,8 +114,8 @@ class DryRunSimulator
      * Evaluates command through full security pipeline and predicts
      * changes (file operations, package installs, etc.).
      *
-     * @param string $command Shell command (e.g., 'rm -rf /tmp/cache', 'npm install')
-     * @param array<string, mixed> $context Simulation context
+     * @param  string  $command  Shell command (e.g., 'rm -rf /tmp/cache', 'npm install')
+     * @param  array<string, mixed>  $context  Simulation context
      * @return array{
      *     command: string,
      *     would_execute: bool,
@@ -171,9 +171,9 @@ class DryRunSimulator
      *
      * Predicts changes based on operation type and file existence.
      *
-     * @param string $path Filesystem path
-     * @param string $operation Operation type ('read', 'write', 'delete')
-     * @param array<string, mixed> $context Simulation context (size, etc.)
+     * @param  string  $path  Filesystem path
+     * @param  string  $operation  Operation type ('read', 'write', 'delete')
+     * @param  array<string, mixed>  $context  Simulation context (size, etc.)
      * @return array{
      *     path: string,
      *     operation: string,
@@ -231,8 +231,8 @@ class DryRunSimulator
      *
      * Evaluates URL/domain policies and predicts request details.
      *
-     * @param string $url Request URL
-     * @param array<string, mixed> $context Simulation context (method, body, etc.)
+     * @param  string  $url  Request URL
+     * @param  array<string, mixed>  $context  Simulation context (method, body, etc.)
      * @return array{
      *     url: string,
      *     domain: string,
@@ -297,8 +297,8 @@ class DryRunSimulator
      * - fs.delete: File delete operations
      * - *shell*: Shell command execution
      *
-     * @param string $toolId Tool identifier
-     * @param array<string, mixed> $parameters Tool parameters
+     * @param  string  $toolId  Tool identifier
+     * @param  array<string, mixed>  $parameters  Tool parameters
      * @return array[] Predicted changes with type, target, description
      */
     private function predictChanges(string $toolId, array $parameters): array
@@ -338,8 +338,8 @@ class DryRunSimulator
      * - Known command effects (rm, mkdir, git, npm, composer)
      * - Output redirection (> file)
      *
-     * @param string $command Shell command
-     * @param array<string, mixed> $context Command context
+     * @param  string  $command  Shell command
+     * @param  array<string, mixed>  $context  Command context
      * @return array[] Predicted changes with type and description
      */
     private function predictCommandChanges(string $command, array $context): array
@@ -380,9 +380,9 @@ class DryRunSimulator
      * - delete: Remove existing file
      * - read: Read file contents (no changes)
      *
-     * @param string $path Filesystem path
-     * @param string $operation Operation type
-     * @param array<string, mixed> $context Operation context (size, etc.)
+     * @param  string  $path  Filesystem path
+     * @param  string  $operation  Operation type
+     * @param  array<string, mixed>  $context  Operation context (size, etc.)
      * @return array[] Predicted changes with type, target, description, size info
      */
     private function predictFileChanges(string $path, string $operation, array $context): array
@@ -432,8 +432,8 @@ class DryRunSimulator
      * - Network request details (URL, method)
      * - Data uploads (POST/PUT with body)
      *
-     * @param string $url Request URL
-     * @param array<string, mixed> $context Request context (method, has_body, body_size)
+     * @param  string  $url  Request URL
+     * @param  array<string, mixed>  $context  Request context (method, has_body, body_size)
      * @return array[] Predicted changes with type and description
      */
     private function predictNetworkChanges(string $url, array $context): array
@@ -464,7 +464,7 @@ class DryRunSimulator
      *
      * Redacts keys: password, secret, token, api_key, private_key, apiKey
      *
-     * @param array<string, mixed> $parameters Raw parameters
+     * @param  array<string, mixed>  $parameters  Raw parameters
      * @return array<string, mixed> Sanitized parameters with ***REDACTED*** for sensitive values
      */
     private function sanitizeParameters(array $parameters): array

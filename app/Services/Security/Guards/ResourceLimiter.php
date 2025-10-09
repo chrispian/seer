@@ -59,17 +59,18 @@ class ResourceLimiter
      * Fallback value to ensure commands don't run unlimited.
      */
     private const DEFAULT_MEMORY_BYTES = 128 * 1024 * 1024;
+
     /**
      * Execute command with resource limits enforced.
      *
      * Wraps command with ulimit and executes via Symfony Process.
      * Output is truncated to 50KB to prevent memory issues.
      *
-     * @param string $command Shell command to execute
-     * @param array<string, mixed> $limits Resource limits:
-     *        - 'timeout' (int): Execution timeout in seconds (default: 30)
-     *        - 'memory' (string): Memory limit (e.g., '128M', '1G', default: '128M')
-     * @param string|null $workdir Working directory (null = current directory)
+     * @param  string  $command  Shell command to execute
+     * @param  array<string, mixed>  $limits  Resource limits:
+     *                                        - 'timeout' (int): Execution timeout in seconds (default: 30)
+     *                                        - 'memory' (string): Memory limit (e.g., '128M', '1G', default: '128M')
+     * @param  string|null  $workdir  Working directory (null = current directory)
      * @return array{
      *     exit_code: int,
      *     stdout: string,
@@ -112,8 +113,8 @@ class ResourceLimiter
      * - macOS: ulimit -t 60 (CPU time only)
      * - Linux: ulimit -t 60 -v {memory_kb} (CPU time + virtual memory)
      *
-     * @param string $command Command to wrap
-     * @param string $memoryLimit Memory limit (e.g., '128M', '1G')
+     * @param  string  $command  Command to wrap
+     * @param  string  $memoryLimit  Memory limit (e.g., '128M', '1G')
      * @return string Wrapped command with ulimit prefix
      */
     private function wrapWithLimits(string $command, string $memoryLimit): string
@@ -139,7 +140,7 @@ class ResourceLimiter
      * - Megabytes: '256M' -> 268435456
      * - Gigabytes: '1G' -> 1073741824
      *
-     * @param string $limit Memory limit string
+     * @param  string  $limit  Memory limit string
      * @return int Memory limit in bytes (default: 128MB if parse fails)
      */
     private function parseMemoryLimit(string $limit): int

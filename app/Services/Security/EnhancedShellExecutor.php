@@ -59,11 +59,11 @@ class EnhancedShellExecutor
      * 4. Execute with limits (ResourceLimiter)
      * 5. Update audit log with results
      *
-     * @param string $command Shell command to execute
-     * @param array<string, mixed> $options Execution options:
-     *        - 'context' (array): Validation context (approved, user_id)
-     *        - 'timeout' (int): Timeout override (capped by default limits)
-     *        - 'workdir' (string): Working directory
+     * @param  string  $command  Shell command to execute
+     * @param  array<string, mixed>  $options  Execution options:
+     *                                         - 'context' (array): Validation context (approved, user_id)
+     *                                         - 'timeout' (int): Timeout override (capped by default limits)
+     *                                         - 'workdir' (string): Working directory
      * @return array{
      *     success: bool,
      *     exit_code: int,
@@ -178,8 +178,8 @@ class EnhancedShellExecutor
      *
      * Returns validation result and resource limits without executing.
      *
-     * @param string $command Shell command to validate
-     * @param array<string, mixed> $options Validation options (see execute)
+     * @param  string  $command  Shell command to validate
+     * @param  array<string, mixed>  $options  Validation options (see execute)
      * @return array{
      *     would_execute: bool,
      *     validation: array,

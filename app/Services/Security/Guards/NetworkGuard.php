@@ -54,13 +54,13 @@ class NetworkGuard
      * 5. Risk assessment (method, body, headers)
      * 6. Request size validation (1MB limit)
      *
-     * @param string $url Request URL (e.g., 'https://api.example.com/data')
-     * @param array<string, mixed> $options Request options:
-     *        - 'method' (string): HTTP method (GET, POST, PUT, DELETE, PATCH)
-     *        - 'headers' (array): Request headers
-     *        - 'body' (string): Raw request body
-     *        - 'json' (array): JSON request body
-     *        - 'allow_http' (bool): Allow HTTP in local environment
+     * @param  string  $url  Request URL (e.g., 'https://api.example.com/data')
+     * @param  array<string, mixed>  $options  Request options:
+     *                                         - 'method' (string): HTTP method (GET, POST, PUT, DELETE, PATCH)
+     *                                         - 'headers' (array): Request headers
+     *                                         - 'body' (string): Raw request body
+     *                                         - 'json' (array): JSON request body
+     *                                         - 'allow_http' (bool): Allow HTTP in local environment
      * @return array{
      *     allowed: bool,
      *     parsed_url: array|null,
@@ -162,8 +162,8 @@ class NetworkGuard
      * - SSL verification enforced
      * - Response size limits (10MB, truncates if exceeded)
      *
-     * @param string $url Request URL
-     * @param array<string, mixed> $options Request options (see validateRequest)
+     * @param  string  $url  Request URL
+     * @param  array<string, mixed>  $options  Request options (see validateRequest)
      * @return array{
      *     success: bool,
      *     blocked?: bool,
@@ -265,7 +265,7 @@ class NetworkGuard
      * - path: defaults to '/'
      * - query: optional
      *
-     * @param string $url URL to parse
+     * @param  string  $url  URL to parse
      * @return array{valid: bool, scheme?: string, host?: string, port?: int|null, path?: string, query?: string|null, error?: string}
      */
     private function parseUrl(string $url): array
@@ -299,7 +299,7 @@ class NetworkGuard
      *
      * Uses PHP's FILTER_FLAG_NO_PRIV_RANGE and FILTER_FLAG_NO_RES_RANGE.
      *
-     * @param array{host: string} $parsed Parsed URL components
+     * @param  array{host: string}  $parsed  Parsed URL components
      * @return array{safe: bool, reason?: string} Safety result
      *
      * Example - Localhost blocked:
@@ -353,8 +353,8 @@ class NetworkGuard
      * - HTTPS (always)
      * - HTTP in local environment if 'allow_http' option set
      *
-     * @param string $scheme URL scheme ('http' or 'https')
-     * @param array<string, mixed> $options Request options (see validateRequest)
+     * @param  string  $scheme  URL scheme ('http' or 'https')
+     * @param  array<string, mixed>  $options  Request options (see validateRequest)
      * @return bool True if secure
      */
     private function isSecureScheme(string $scheme, array $options): bool
@@ -377,8 +377,8 @@ class NetworkGuard
      * NOTE: This method appears to be unused in NetworkGuard context.
      * Likely copied from FilesystemGuard. Consider removing.
      *
-     * @param string $symlinkPath Original symlink path
-     * @param string $targetPath Symlink target path
+     * @param  string  $symlinkPath  Original symlink path
+     * @param  string  $targetPath  Symlink target path
      * @return array{safe: bool, reason?: string} Safety result
      */
     private function validateSymlink(string $symlinkPath, string $targetPath): array
@@ -402,8 +402,8 @@ class NetworkGuard
      * NOTE: This method appears to be unused in NetworkGuard context.
      * Likely copied from FilesystemGuard. Consider removing.
      *
-     * @param string $normalized Normalized path
-     * @param string $original Original path input
+     * @param  string  $normalized  Normalized path
+     * @param  string  $original  Original path input
      * @return array{safe: bool, reason?: string} Safety result
      */
     private function detectPathTraversal(string $normalized, string $original): array
