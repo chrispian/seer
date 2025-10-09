@@ -18,6 +18,23 @@ class ApprovalManager
      */
     public function createApprovalRequest(array $operation, string $conversationId, ?string $messageId = null): ?ApprovalRequest
     {
+        // 0. Auto-timeout any existing pending approvals in this conversation
+        $oldPending = ApprovalRequest::where('conversation_id', $conversationId)
+            ->where('status', 'pending')
+            ->get();
+        
+        if ($oldPending->isNotEmpty()) {
+            $count = $oldPending->count();
+            foreach ($oldPending as $old) {
+                $old->update(['status' => 'timeout']);
+            }
+            
+            Log::info('Auto-timed out old pending approvals', [
+                'conversation_id' => $conversationId,
+                'count' => $count,
+            ]);
+        }
+
         // 1. Determine operation type
         $operationType = $operation['type'] ?? 'tool_call';
         
