@@ -85,18 +85,42 @@ class RiskScorer
     ];
 
     /**
+     * Risk score threshold for low-risk operations (auto-approved).
+     * Operations scoring 0-25 are considered safe and auto-approved.
+     */
+    public const LOW_RISK_THRESHOLD = 0;
+
+    /**
+     * Risk score threshold for requiring user approval.
+     * Operations scoring 26+ require explicit user approval.
+     */
+    public const APPROVAL_THRESHOLD = 26;
+
+    /**
+     * Risk score threshold for high-risk operations.
+     * Operations scoring 51-75 are considered high risk.
+     */
+    public const HIGH_RISK_THRESHOLD = 51;
+
+    /**
+     * Risk score threshold for critical operations.
+     * Operations scoring 76-100 require approval with justification.
+     */
+    public const CRITICAL_RISK_THRESHOLD = 76;
+
+    /**
      * Risk score thresholds that determine required approval actions.
      * 
      * Thresholds are evaluated in order - the highest matching threshold
-     * determines the action. Operations scoring >= 26 require user approval.
+     * determines the action. Operations scoring >= APPROVAL_THRESHOLD require user approval.
      * 
      * @var array<int, string>
      */
     private const THRESHOLDS = [
-        0 => 'auto_approve',           // 0-25: Low risk
-        26 => 'require_approval',       // 26+: Require approval
-        51 => 'require_approval',      // 51-75: High risk
-        76 => 'require_approval_with_justification', // 76-100: Critical
+        self::LOW_RISK_THRESHOLD => 'auto_approve',
+        self::APPROVAL_THRESHOLD => 'require_approval',
+        self::HIGH_RISK_THRESHOLD => 'require_approval',
+        self::CRITICAL_RISK_THRESHOLD => 'require_approval_with_justification',
     ];
 
     /**
@@ -186,7 +210,7 @@ class RiskScorer
             'level' => $this->getRiskLevel($score),
             'action' => $this->getThresholdAction($score),
             'factors' => $factors,
-            'requires_approval' => $score >= 26,
+            'requires_approval' => $score >= self::APPROVAL_THRESHOLD,
         ];
     }
 
@@ -285,7 +309,7 @@ class RiskScorer
             'level' => $this->getRiskLevel($score),
             'action' => $this->getThresholdAction($score),
             'factors' => $factors,
-            'requires_approval' => $score >= 26,
+            'requires_approval' => $score >= self::APPROVAL_THRESHOLD,
         ];
     }
 
@@ -382,7 +406,7 @@ class RiskScorer
             'level' => $this->getRiskLevel($score),
             'action' => $this->getThresholdAction($score),
             'factors' => $factors,
-            'requires_approval' => $score >= 26,
+            'requires_approval' => $score >= self::APPROVAL_THRESHOLD,
         ];
     }
 
@@ -477,7 +501,7 @@ class RiskScorer
             'level' => $this->getRiskLevel($score),
             'action' => $this->getThresholdAction($score),
             'factors' => $factors,
-            'requires_approval' => $score >= 26,
+            'requires_approval' => $score >= self::APPROVAL_THRESHOLD,
         ];
     }
 
@@ -533,7 +557,7 @@ class RiskScorer
             'action' => $this->getThresholdAction($avgScore),
             'factors' => $allFactors,
             'operation_count' => count($operations),
-            'requires_approval' => $avgScore >= 26,
+            'requires_approval' => $avgScore >= self::APPROVAL_THRESHOLD,
         ];
     }
 

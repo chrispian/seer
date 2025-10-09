@@ -66,14 +66,14 @@ use Illuminate\Support\Facades\Log;
 class ApprovalManager
 {
     /**
-     * Create a new approval manager instance.
-     * 
-     * @param DryRunSimulator $simulator For simulating operations before execution
-     * @param RiskScorer $scorer For calculating operation risk scores
+     * Average reading speed in words per minute.
+     * Used to calculate estimated read time for approval content.
      */
+    private const AVERAGE_READING_SPEED_WPM = 200;
+
     public function __construct(
-        private DryRunSimulator $simulator,
-        private RiskScorer $scorer
+        private RiskScorer $riskScorer,
+        private DryRunSimulator $simulator
     ) {}
 
     /**
@@ -620,7 +620,7 @@ class ApprovalManager
             'word_count' => $wordCount,
             'char_count' => $charCount,
             'line_count' => $lineCount,
-            'read_time_minutes' => max(1, ceil($wordCount / 200)), // Avg reading speed
+            'read_time_minutes' => max(1, ceil($wordCount / self::AVERAGE_READING_SPEED_WPM)),
         ];
     }
 }

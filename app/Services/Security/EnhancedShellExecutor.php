@@ -33,6 +33,17 @@ use Illuminate\Support\Facades\Log;
  */
 class EnhancedShellExecutor
 {
+    /**
+     * Maximum output length to store in audit log (10KB).
+     * Prevents database bloat from large command outputs.
+     */
+    private const MAX_AUDIT_OUTPUT_LENGTH = 10000;
+
+    /**
+     * Milliseconds per second conversion factor.
+     */
+    private const MS_PER_SECOND = 1000;
+
     public function __construct(
         private ShellGuard $shellGuard,
         private ResourceLimiter $resourceLimiter
@@ -120,14 +131,14 @@ class EnhancedShellExecutor
             );
 
             // 5. Update audit log
-            $executionTime = (int) ((microtime(true) - $startTime) * 1000);
+            $executionTime = (int) ((microtime(true) - $startTime) * self::MS_PER_SECOND);
 
             if ($auditLog) {
                 $auditLog->update([
                     'status' => $result['success'] ? 'completed' : 'failed',
                     'exit_code' => $result['exit_code'],
-                    'output' => substr($result['stdout'], 0, 10000),
-                    'error_output' => substr($result['stderr'], 0, 10000),
+                    'output' => substr($result['stdout'], 0, self::MAX_AUDIT_OUTPUT_LENGTH),
+                    'error_output' => substr($result['stderr'], 0, self::MAX_AUDIT_OUTPUT_LENGTH),
                     'execution_time_ms' => $executionTime,
                     'completed_at' => now(),
                 ]);

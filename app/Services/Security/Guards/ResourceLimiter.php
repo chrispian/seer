@@ -31,6 +31,35 @@ use Symfony\Component\Process\Process;
 class ResourceLimiter
 {
     /**
+     * Default execution timeout in seconds.
+     * Commands exceeding this limit will be terminated.
+     */
+    private const DEFAULT_TIMEOUT = 30;
+
+    /**
+     * Default memory limit for command execution.
+     * Prevents runaway processes from consuming excessive memory.
+     */
+    private const DEFAULT_MEMORY = '128M';
+
+    /**
+     * Maximum output length for stdout/stderr in bytes (50KB).
+     * Output beyond this limit is truncated to prevent memory issues.
+     */
+    private const MAX_OUTPUT_LENGTH = 50000;
+
+    /**
+     * CPU time limit in seconds for ulimit wrapper.
+     * Hard limit on CPU time regardless of wall-clock timeout.
+     */
+    private const ULIMIT_CPU_TIME = 60;
+
+    /**
+     * Default memory limit in bytes when parsing fails (128MB).
+     * Fallback value to ensure commands don't run unlimited.
+     */
+    private const DEFAULT_MEMORY_BYTES = 128 * 1024 * 1024;
+    /**
      * Execute command with resource limits enforced.
      *
      * Wraps command with ulimit and executes via Symfony Process.
@@ -56,8 +85,8 @@ class ResourceLimiter
      */
     public function executeWithLimits(string $command, array $limits, ?string $workdir = null): array
     {
-        $timeout = $limits['timeout'] ?? 30;
-        $memory = $limits['memory'] ?? '128M';
+        $timeout = $limits['timeout'] ?? self::DEFAULT_TIMEOUT;
+        $memory = $limits['memory'] ?? self::DEFAULT_MEMORY;
 
         $limitedCommand = $this->wrapWithLimits($command, $memory);
 
@@ -69,8 +98,8 @@ class ResourceLimiter
 
         return [
             'exit_code' => $process->getExitCode(),
-            'stdout' => substr($process->getOutput(), 0, 50000),
-            'stderr' => substr($process->getErrorOutput(), 0, 50000),
+            'stdout' => substr($process->getOutput(), 0, self::MAX_OUTPUT_LENGTH),
+            'stderr' => substr($process->getErrorOutput(), 0, self::MAX_OUTPUT_LENGTH),
             'success' => $process->isSuccessful(),
             'execution_time_ms' => $executionTime,
             'memory_limit' => $memory,
@@ -94,10 +123,10 @@ class ResourceLimiter
         if (PHP_OS_FAMILY === 'Darwin') {
             // macOS doesn't support all ulimit options reliably
             // Just use CPU time limit and let command run
-            return "ulimit -t 60 2>/dev/null; {$command}";
+            return 'ulimit -t '.self::ULIMIT_CPU_TIME." 2>/dev/null; {$command}";
         } else {
             // Linux supports virtual memory limit
-            return "ulimit -t 60 -v {$memoryKb} 2>/dev/null && {$command}";
+            return 'ulimit -t '.self::ULIMIT_CPU_TIME." -v {$memoryKb} 2>/dev/null && {$command}";
         }
     }
 
@@ -129,6 +158,6 @@ class ResourceLimiter
             };
         }
 
-        return 128 * 1024 * 1024;
+        return self::DEFAULT_MEMORY_BYTES;
     }
 }
