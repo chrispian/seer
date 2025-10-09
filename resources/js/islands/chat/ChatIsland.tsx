@@ -637,6 +637,13 @@ export default function ChatIsland() {
   }
 
   const handleApprovalApprove = async (approvalId: string) => {
+    // Prevent multiple clicks
+    const approval = messages.find(m => m.approvalRequest?.id === approvalId)?.approvalRequest
+    if (!approval || approval.status !== 'pending') {
+      console.log('Approval already processed or not found')
+      return
+    }
+
     try {
       const response = await fetch(`/api/approvals/${approvalId}/approve`, {
         method: 'POST',
@@ -649,24 +656,13 @@ export default function ChatIsland() {
       if (!response.ok) {
         const errorData = await response.json()
         console.error('Approve failed:', errorData)
-        
-        // If already processed, just update UI
-        if (errorData.status && errorData.status !== 'pending') {
-          setMessages(msgs => msgs.map(m =>
-            m.approvalRequest?.id === approvalId
-              ? { ...m, approvalRequest: { ...m.approvalRequest, status: errorData.status, approvedAt: new Date().toISOString() } }
-              : m
-          ))
-          return
-        }
-        
-        throw new Error('Failed to approve request')
+        return
       }
 
       const data = await response.json()
 
       // Update message with approved status and add execution result
-      setMessages(msgs => msgs.map(m => {
+      const updatedMessages = messages.map(m => {
         if (m.approvalRequest?.id === approvalId) {
           let updatedMd = m.md + '\n\n✓ Approved by user at ' + new Date().toLocaleTimeString()
           
@@ -682,7 +678,10 @@ export default function ChatIsland() {
           }
         }
         return m
-      }))
+      })
+      
+      setMessages(updatedMessages)
+      saveMessagesToSession(updatedMessages)
 
       console.log('Approval granted and executed:', data)
       
