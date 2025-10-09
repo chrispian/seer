@@ -286,6 +286,11 @@ export default function ChatIsland() {
 
   // Load messages from current session (loaded via React Query)
   useEffect(() => {
+    // Don't reload messages while sending to prevent overwriting approval state
+    if (isSending) {
+      return
+    }
+
     if (sessionDetailsQuery.data?.session?.messages) {
       console.log(`DEBUG: Loading messages for session ${sessionDetailsQuery.data.session.id}`)
       console.log(`DEBUG: Raw messages count: ${sessionDetailsQuery.data.session.messages.length}`)
@@ -293,17 +298,20 @@ export default function ChatIsland() {
         id: m.id,
         type: m.type,
         fragment_id: m.fragment_id,
+        has_approval: !!m.approval_request,
+        approval_status: m.approval_request?.status,
         message_preview: (m.message || '').substring(0, 50) + '...'
       })))
 
       const sessionMessages: ChatMessage[] = sessionDetailsQuery.data.session.messages.map((msg: any, index: number) => {
         // Create unique React key by combining session ID, message type, and original ID
         const messageKey = `session-${sessionDetailsQuery.data.session.id}-${msg.type}-${msg.id || index}`
-        console.log(`DEBUG: Creating message with key: ${messageKey}, type: ${msg.type}`)
+        console.log(`DEBUG: Creating message with key: ${messageKey}, type: ${msg.type}, hasApproval: ${!!msg.approval_request}`)
         
         // Auto-timeout any pending approval requests (they're stale from previous session)
         let approvalRequest = msg.approval_request
         if (approvalRequest && approvalRequest.status === 'pending') {
+          console.log('Auto-timing out stale pending approval:', approvalRequest.id)
           approvalRequest = { ...approvalRequest, status: 'timeout' }
         }
         
@@ -322,7 +330,7 @@ export default function ChatIsland() {
       // Session exists but has no messages or messages haven't loaded yet
       setMessages([])
     }
-  }, [sessionDetailsQuery.data, currentSession, sessionDetailsQuery.isLoading])
+  }, [sessionDetailsQuery.data, currentSession, sessionDetailsQuery.isLoading, isSending])
 
   // Cleanup active streams when session changes
   useEffect(() => {
