@@ -8,14 +8,14 @@ class AgentListCommand extends BaseCommand
     {
         // Get agents from the orchestration system
         $agents = $this->getAgents();
-        
+
         return [
             'type' => 'agent-profile',
             'component' => 'AgentProfileListModal',
-            'data' => $agents
+            'data' => $agents,
         ];
     }
-    
+
     private function getAgents(): array
     {
         // Use AgentProfile model (same as AgentsListTool)
@@ -24,12 +24,12 @@ class AgentListCommand extends BaseCommand
                 ->orderBy('name')
                 ->limit(50)
                 ->get();
-                
+
             return $agents->map(function ($agent) {
                 // TODO: Add real assignment counts when assignment system is available
                 $activeAssignments = 0;
                 $totalAssignments = 0;
-                
+
                 return [
                     'id' => $agent->id,
                     'name' => $agent->name,
@@ -49,26 +49,26 @@ class AgentListCommand extends BaseCommand
                 ];
             })->all();
         }
-        
+
         // Fallback: Return empty list if model doesn't exist
         return [];
     }
-    
+
     public static function getName(): string
     {
         return 'Agent List';
     }
-    
+
     public static function getDescription(): string
     {
         return 'List all agents with their status and capabilities';
     }
-    
+
     public static function getUsage(): string
     {
         return '/agents';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Orchestration';

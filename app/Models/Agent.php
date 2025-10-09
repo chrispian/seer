@@ -45,8 +45,8 @@ class Agent extends Model
     protected function avatarUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
     {
         return \Illuminate\Database\Eloquent\Casts\Attribute::make(
-            get: fn () => $this->avatar_path 
-                ? asset('storage/' . $this->avatar_path) 
+            get: fn () => $this->avatar_path
+                ? asset('storage/'.$this->avatar_path)
                 : asset('/interface/avatars/default/avatar-1.png')
         );
     }

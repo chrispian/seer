@@ -3,9 +3,7 @@
 namespace App\Services\Telemetry;
 
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class LLMPerformanceAnalyzer
 {
@@ -178,14 +176,14 @@ class LLMPerformanceAnalyzer
             $insights[] = [
                 'type' => 'response_time',
                 'severity' => 'warning',
-                'message' => "Response time is " . round($responseTimeDiff / 1000, 1) . "s slower than benchmark",
+                'message' => 'Response time is '.round($responseTimeDiff / 1000, 1).'s slower than benchmark',
                 'recommendation' => 'Consider using a faster model or optimizing prompts',
             ];
         } elseif ($responseTimeDiff < -500) { // More than 0.5 seconds faster
             $insights[] = [
                 'type' => 'response_time',
                 'severity' => 'positive',
-                'message' => "Response time is " . round(abs($responseTimeDiff) / 1000, 1) . "s faster than benchmark",
+                'message' => 'Response time is '.round(abs($responseTimeDiff) / 1000, 1).'s faster than benchmark',
                 'recommendation' => 'Good performance maintained',
             ];
         }
@@ -196,7 +194,7 @@ class LLMPerformanceAnalyzer
             $insights[] = [
                 'type' => 'throughput',
                 'severity' => 'warning',
-                'message' => "Token throughput is " . abs($tokenRateDiff) . " tokens/s slower than benchmark",
+                'message' => 'Token throughput is '.abs($tokenRateDiff).' tokens/s slower than benchmark',
                 'recommendation' => 'Consider model optimization or provider switching',
             ];
         }
@@ -242,7 +240,7 @@ class LLMPerformanceAnalyzer
             $issues[] = [
                 'type' => 'reliability',
                 'severity' => 'error',
-                'message' => "Error rate above threshold: " . (100 - $metrics['success_rate']) . "%",
+                'message' => 'Error rate above threshold: '.(100 - $metrics['success_rate']).'%',
             ];
         }
 
@@ -254,7 +252,9 @@ class LLMPerformanceAnalyzer
      */
     protected function calculateEfficiencyScore(float $responseTime, int $totalTokens): float
     {
-        if ($responseTime <= 0 || $totalTokens <= 0) return 0;
+        if ($responseTime <= 0 || $totalTokens <= 0) {
+            return 0;
+        }
 
         // Efficiency = tokens per second (higher is better)
         $tokensPerSecond = ($totalTokens / $responseTime) * 1000;
@@ -422,9 +422,15 @@ class LLMPerformanceAnalyzer
         }
 
         // Guess provider based on model name
-        if (str_starts_with($model, 'gpt-')) return 'openai';
-        if (str_starts_with($model, 'claude-')) return 'anthropic';
-        if (str_contains($model, 'llama')) return 'ollama';
+        if (str_starts_with($model, 'gpt-')) {
+            return 'openai';
+        }
+        if (str_starts_with($model, 'claude-')) {
+            return 'anthropic';
+        }
+        if (str_contains($model, 'llama')) {
+            return 'ollama';
+        }
 
         return 'unknown';
     }

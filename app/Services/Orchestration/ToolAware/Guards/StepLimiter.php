@@ -11,7 +11,6 @@ class StepLimiter
     /**
      * Enforce maximum step limit on tool plan
      *
-     * @param ToolPlan $plan
      * @return ToolPlan Limited plan
      */
     public function limit(ToolPlan $plan): ToolPlan
@@ -44,6 +43,7 @@ class StepLimiter
     public function isWithinLimit(ToolPlan $plan): bool
     {
         $maxSteps = Config::get('fragments.tool_aware_turn.limits.max_steps_per_turn', 10);
+
         return $plan->stepCount() <= $maxSteps;
     }
 }

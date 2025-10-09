@@ -13,7 +13,9 @@ use Laravel\Mcp\Server\Tool;
 class TaskAssignTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_tasks_assign';
+
     protected string $title = 'Assign orchestration task';
+
     protected string $description = 'Create an assignment linking a work item to an agent and update delegation status.';
 
     public function schema(JsonSchema $schema): array

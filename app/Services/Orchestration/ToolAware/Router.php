@@ -12,8 +12,8 @@ class Router implements RouterInterface
 {
     public function decide(ContextBundle $context): RouterDecision
     {
-        $promptTemplate = file_get_contents(__DIR__ . '/Prompts/router_decision.txt');
-        
+        $promptTemplate = file_get_contents(__DIR__.'/Prompts/router_decision.txt');
+
         $prompt = str_replace(
             ['{conversation_summary}', '{user_message}'],
             [$context->conversation_summary, $context->user_message],
@@ -26,7 +26,7 @@ class Router implements RouterInterface
         try {
             $response = $this->callLLM($prompt, $model);
             $decision = $this->parseResponse($response);
-            
+
             Log::info('Router decision made', [
                 'needs_tools' => $decision->needs_tools,
                 'goal' => $decision->high_level_goal,
@@ -35,19 +35,19 @@ class Router implements RouterInterface
             return $decision;
 
         } catch (\JsonException $e) {
-            if (!$retryOnFailure) {
-                throw new \RuntimeException('Router LLM returned invalid JSON: ' . $e->getMessage());
+            if (! $retryOnFailure) {
+                throw new \RuntimeException('Router LLM returned invalid JSON: '.$e->getMessage());
             }
 
             Log::warning('Router returned invalid JSON, retrying with explicit instruction');
 
             // Retry with explicit JSON-only instruction
-            $retryPrompt = $prompt . "\n\nIMPORTANT: Respond with ONLY valid JSON, no additional text or formatting.";
-            
+            $retryPrompt = $prompt."\n\nIMPORTANT: Respond with ONLY valid JSON, no additional text or formatting.";
+
             try {
                 $response = $this->callLLM($retryPrompt, $model);
                 $decision = $this->parseResponse($response);
-                
+
                 Log::info('Router decision made on retry', [
                     'needs_tools' => $decision->needs_tools,
                     'goal' => $decision->high_level_goal,
@@ -56,7 +56,7 @@ class Router implements RouterInterface
                 return $decision;
 
             } catch (\JsonException $retryError) {
-                throw new \RuntimeException('Router LLM returned invalid JSON after retry: ' . $retryError->getMessage());
+                throw new \RuntimeException('Router LLM returned invalid JSON after retry: '.$retryError->getMessage());
             }
         }
     }
@@ -64,7 +64,7 @@ class Router implements RouterInterface
     protected function callLLM(string $prompt, string $model): string
     {
         $provider = Config::get('fragments.models.default_provider', 'openai');
-        
+
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 
         $systemMessage = 'You are a routing agent that responds only with valid JSON.';
@@ -92,7 +92,7 @@ class Router implements RouterInterface
         $data = json_decode($cleaned, true, 512, JSON_THROW_ON_ERROR);
 
         // Validate required fields
-        if (!isset($data['needs_tools']) || !is_bool($data['needs_tools'])) {
+        if (! isset($data['needs_tools']) || ! is_bool($data['needs_tools'])) {
             throw new \JsonException('Missing or invalid needs_tools field');
         }
 

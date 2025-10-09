@@ -174,6 +174,6 @@ class ToolDefinitionsSeeder extends Seeder
             );
         }
 
-        $this->command->info('Seeded ' . count($tools) . ' tool definitions');
+        $this->command->info('Seeded '.count($tools).' tool definitions');
     }
 }

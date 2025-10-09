@@ -21,7 +21,7 @@ return new class extends Migration
 
             // Add index for delegation status queries
             $table->index('delegation_status', 'work_items_delegation_status_idx');
-            
+
             // Add composite index for assignee queries (if not exists)
             $table->index(['assignee_type', 'assignee_id'], 'work_items_assignee_idx');
         });
@@ -34,10 +34,10 @@ return new class extends Migration
             $table->dropIndex('work_items_assignee_idx');
             $table->dropColumn([
                 'delegation_status',
-                'delegation_context', 
+                'delegation_context',
                 'delegation_history',
                 'estimated_hours',
-                'actual_hours'
+                'actual_hours',
             ]);
         });
     }

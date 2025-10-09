@@ -3,8 +3,8 @@
 use App\Enums\AgentStatus;
 use App\Models\AgentProfile;
 use App\Models\TaskAssignment;
-use App\Models\WorkItem;
 use App\Models\User;
+use App\Models\WorkItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -20,7 +20,7 @@ test('agent profile creation and relationships', function () {
         'constraints' => ['no_production_access'],
         'tools' => ['composer', 'artisan'],
         'metadata' => ['version' => '1.0'],
-        'status' => 'active'
+        'status' => 'active',
     ]);
 
     expect($agent->id)->not->toBeNull();
@@ -35,7 +35,7 @@ test('work item orchestration fields', function () {
         'slug' => 'test-agent',
         'type' => 'backend-engineer',
         'mode' => 'implementation',
-        'status' => 'active'
+        'status' => 'active',
     ]);
 
     $workItem = WorkItem::create([
@@ -47,7 +47,7 @@ test('work item orchestration fields', function () {
         'delegation_context' => ['priority' => 'high'],
         'delegation_history' => [['action' => 'assigned', 'timestamp' => now()->toISOString()]],
         'estimated_hours' => 2.5,
-        'actual_hours' => 1.75
+        'actual_hours' => 1.75,
     ]);
 
     expect($workItem->delegation_status)->toBe('assigned');
@@ -60,7 +60,7 @@ test('task assignment creation and relationships', function () {
     $user = User::create([
         'name' => 'Test User',
         'email' => 'test@example.com',
-        'password' => bcrypt('password')
+        'password' => bcrypt('password'),
     ]);
 
     $agent = AgentProfile::create([
@@ -68,12 +68,12 @@ test('task assignment creation and relationships', function () {
         'slug' => 'test-agent',
         'type' => 'backend-engineer',
         'mode' => 'implementation',
-        'status' => 'active'
+        'status' => 'active',
     ]);
 
     $workItem = WorkItem::create([
         'type' => 'task',
-        'status' => 'todo'
+        'status' => 'todo',
     ]);
 
     $assignment = TaskAssignment::create([
@@ -83,7 +83,7 @@ test('task assignment creation and relationships', function () {
         'assigned_at' => now(),
         'status' => 'assigned',
         'notes' => 'Test assignment',
-        'context' => ['priority' => 'medium']
+        'context' => ['priority' => 'medium'],
     ]);
 
     expect($assignment->work_item_id)->toBe($workItem->id);
@@ -104,19 +104,19 @@ test('agent profile relationships', function () {
         'slug' => 'test-agent',
         'type' => 'backend-engineer',
         'mode' => 'implementation',
-        'status' => 'active'
+        'status' => 'active',
     ]);
 
     $workItem = WorkItem::create([
         'type' => 'task',
-        'status' => 'todo'
+        'status' => 'todo',
     ]);
 
     $assignment = TaskAssignment::create([
         'work_item_id' => $workItem->id,
         'agent_id' => $agent->id,
         'assigned_at' => now(),
-        'status' => 'assigned'
+        'status' => 'assigned',
     ]);
 
     // Test that agent has assignments
@@ -134,12 +134,12 @@ test('work item relationships', function () {
         'slug' => 'test-agent',
         'type' => 'backend-engineer',
         'mode' => 'implementation',
-        'status' => 'active'
+        'status' => 'active',
     ]);
 
     $parentItem = WorkItem::create([
         'type' => 'epic',
-        'status' => 'todo'
+        'status' => 'todo',
     ]);
 
     $childItem = WorkItem::create([
@@ -147,14 +147,14 @@ test('work item relationships', function () {
         'parent_id' => $parentItem->id,
         'status' => 'todo',
         'assignee_type' => 'agent',
-        'assignee_id' => $agent->id
+        'assignee_id' => $agent->id,
     ]);
 
     $assignment = TaskAssignment::create([
         'work_item_id' => $childItem->id,
         'agent_id' => $agent->id,
         'assigned_at' => now(),
-        'status' => 'assigned'
+        'status' => 'assigned',
     ]);
 
     // Test parent-child relationships
@@ -175,7 +175,7 @@ test('scopes work correctly', function () {
         'slug' => 'active-agent',
         'type' => 'backend-engineer',
         'mode' => 'implementation',
-        'status' => 'active'
+        'status' => 'active',
     ]);
 
     $inactiveAgent = AgentProfile::create([
@@ -183,7 +183,7 @@ test('scopes work correctly', function () {
         'slug' => 'inactive-agent',
         'type' => 'frontend-engineer',
         'mode' => 'implementation',
-        'status' => 'inactive'
+        'status' => 'inactive',
     ]);
 
     // Test agent scopes
@@ -195,7 +195,7 @@ test('scopes work correctly', function () {
         'status' => 'todo',
         'assignee_type' => 'agent',
         'assignee_id' => $activeAgent->id,
-        'delegation_status' => 'unassigned'
+        'delegation_status' => 'unassigned',
     ]);
 
     // Test work item scopes

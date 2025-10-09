@@ -5,7 +5,7 @@ use App\Services\Obsidian\ObsidianMarkdownParser;
 test('parses markdown with valid YAML front matter', function () {
     $parser = app(ObsidianMarkdownParser::class);
 
-    $content = <<<MD
+    $content = <<<'MD'
 ---
 title: My Note
 tags: [tag1, tag2]
@@ -26,7 +26,7 @@ MD;
 test('extracts title from filename when no front matter title', function () {
     $parser = app(ObsidianMarkdownParser::class);
 
-    $content = <<<MD
+    $content = <<<'MD'
 # My Heading
 Content here
 MD;
@@ -39,7 +39,7 @@ MD;
 test('extracts title from H1 when no front matter title or filename', function () {
     $parser = app(ObsidianMarkdownParser::class);
 
-    $content = <<<MD
+    $content = <<<'MD'
 # My Heading
 Content here
 MD;
@@ -52,7 +52,7 @@ MD;
 test('handles markdown without front matter', function () {
     $parser = app(ObsidianMarkdownParser::class);
 
-    $content = <<<MD
+    $content = <<<'MD'
 # Simple Note
 Just some content
 MD;
@@ -67,7 +67,7 @@ MD;
 test('handles malformed YAML gracefully', function () {
     $parser = app(ObsidianMarkdownParser::class);
 
-    $content = <<<MD
+    $content = <<<'MD'
 ---
 title: Valid
 bad yaml: [unclosed
@@ -84,7 +84,7 @@ MD;
 test('strips wikilinks from body', function () {
     $parser = app(ObsidianMarkdownParser::class);
 
-    $content = <<<MD
+    $content = <<<'MD'
 # Note
 Link to [[another note]] here
 And [[yet another]]
@@ -99,7 +99,7 @@ MD;
 test('extracts tags from front matter as array', function () {
     $parser = app(ObsidianMarkdownParser::class);
 
-    $content = <<<MD
+    $content = <<<'MD'
 ---
 tags:
   - work
@@ -116,7 +116,7 @@ MD;
 test('extracts tags from front matter as comma-separated string', function () {
     $parser = app(ObsidianMarkdownParser::class);
 
-    $content = <<<MD
+    $content = <<<'MD'
 ---
 tags: work, project, idea
 ---
@@ -142,7 +142,7 @@ test('handles empty files', function () {
 test('prefers front matter title over filename', function () {
     $parser = app(ObsidianMarkdownParser::class);
 
-    $content = <<<MD
+    $content = <<<'MD'
 ---
 title: Front Matter Title
 ---

@@ -10,6 +10,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 class ToolCrateMcp extends Command
 {
     protected $signature = 'tool-crate:mcp';
+
     protected $description = 'Laravel Tool Crate MCP Server';
 
     public function handle(): int

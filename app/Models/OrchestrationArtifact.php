@@ -55,6 +55,7 @@ class OrchestrationArtifact extends Model
         return Attribute::make(
             get: function () {
                 $store = app(ContentStore::class);
+
                 return $store->get($this->hash);
             }
         );
@@ -66,12 +67,12 @@ class OrchestrationArtifact extends Model
             get: function () {
                 $bytes = $this->size_bytes;
                 $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-                
+
                 for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
                     $bytes /= 1024;
                 }
-                
-                return round($bytes, 2) . ' ' . $units[$i];
+
+                return round($bytes, 2).' '.$units[$i];
             }
         );
     }

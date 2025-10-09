@@ -77,7 +77,7 @@ class ModelSelectionService
             'selection_source' => $selectedModel['source'],
             'available_selections_count' => count($selections),
             'model_available' => $isAvailable,
-            'used_fallback' => !$isAvailable,
+            'used_fallback' => ! $isAvailable,
             'selection_time_ms' => round($selectionTime * 1000, 2),
             'availability_check_time_ms' => round($availabilityCheckTime * 1000, 2),
             'total_time_ms' => round($totalTime * 1000, 2),
@@ -371,6 +371,7 @@ class ModelSelectionService
         if (empty($selections)) {
             $fallback = $this->getFallbackModel();
             $this->logSelectionStrategy('empty_selections', $selections, $fallback, $startTime);
+
             return $fallback;
         }
 
@@ -405,7 +406,7 @@ class ModelSelectionService
         }
 
         // If no selection is available, use fallback
-        if (!$selectedModel) {
+        if (! $selectedModel) {
             $selectedModel = $this->getFallbackModel();
             $selectedModel['source'] = 'fallback_after_failures';
         }
@@ -449,6 +450,7 @@ class ModelSelectionService
 
         if (! $configExists) {
             $this->logAvailabilityCheck($provider, $model, false, $availabilityChecks, $startTime);
+
             return false;
         }
 
@@ -459,6 +461,7 @@ class ModelSelectionService
 
         if (! $dbEnabled) {
             $this->logAvailabilityCheck($provider, $model, false, $availabilityChecks, $startTime);
+
             return false;
         }
 
@@ -470,13 +473,14 @@ class ModelSelectionService
             $hasCredentials = true;
         } elseif ($provider === 'ollama') {
             // For Ollama, check if base URL is configured instead of credentials
-            $hasCredentials = !empty(config('services.ollama.base'));
+            $hasCredentials = ! empty(config('services.ollama.base'));
         }
 
         $availabilityChecks['has_credentials'] = $hasCredentials;
 
         if (! $hasCredentials) {
             $this->logAvailabilityCheck($provider, $model, false, $availabilityChecks, $startTime);
+
             return false;
         }
 
@@ -519,10 +523,18 @@ class ModelSelectionService
      */
     protected function determineFailureReason(array $checks): string
     {
-        if (!$checks['config_exists']) return 'provider_not_configured';
-        if (!$checks['db_enabled']) return 'provider_disabled';
-        if (!$checks['has_credentials']) return 'no_credentials';
-        if (!$checks['model_exists']) return 'model_not_found';
+        if (! $checks['config_exists']) {
+            return 'provider_not_configured';
+        }
+        if (! $checks['db_enabled']) {
+            return 'provider_disabled';
+        }
+        if (! $checks['has_credentials']) {
+            return 'no_credentials';
+        }
+        if (! $checks['model_exists']) {
+            return 'model_not_found';
+        }
 
         return 'unknown';
     }

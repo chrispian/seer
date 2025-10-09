@@ -286,6 +286,11 @@ export default function ChatIsland() {
 
   // Load messages from current session (loaded via React Query)
   useEffect(() => {
+    // Don't reload messages while sending to prevent overwriting approval state
+    if (isSending) {
+      return
+    }
+
     if (sessionDetailsQuery.data?.session?.messages) {
       console.log(`DEBUG: Loading messages for session ${sessionDetailsQuery.data.session.id}`)
       console.log(`DEBUG: Raw messages count: ${sessionDetailsQuery.data.session.messages.length}`)
@@ -293,13 +298,16 @@ export default function ChatIsland() {
         id: m.id,
         type: m.type,
         fragment_id: m.fragment_id,
+        has_approval: !!m.approval_request,
+        approval_status: m.approval_request?.status,
         message_preview: (m.message || '').substring(0, 50) + '...'
       })))
 
       const sessionMessages: ChatMessage[] = sessionDetailsQuery.data.session.messages.map((msg: any, index: number) => {
         // Create unique React key by combining session ID, message type, and original ID
         const messageKey = `session-${sessionDetailsQuery.data.session.id}-${msg.type}-${msg.id || index}`
-        console.log(`DEBUG: Creating message with key: ${messageKey}, type: ${msg.type}`)
+        console.log(`DEBUG: Creating message with key: ${messageKey}, type: ${msg.type}, hasApproval: ${!!msg.approval_request}`)
+        
         return {
           id: messageKey,
           role: msg.type === 'user' ? 'user' : 'assistant',
@@ -307,6 +315,8 @@ export default function ChatIsland() {
           messageId: msg.id,
           fragmentId: msg.fragment_id,
           isBookmarked: msg.is_bookmarked,
+          approvalRequest: msg.approval_request, // Restore approval data from session
+          executionResult: msg.execution_result, // Restore execution result from session
         }
       })
       setMessages(sessionMessages)
@@ -314,7 +324,7 @@ export default function ChatIsland() {
       // Session exists but has no messages or messages haven't loaded yet
       setMessages([])
     }
-  }, [sessionDetailsQuery.data, currentSession, sessionDetailsQuery.isLoading])
+  }, [sessionDetailsQuery.data, currentSession, sessionDetailsQuery.isLoading, isSending])
 
   // Cleanup active streams when session changes
   useEffect(() => {
@@ -337,6 +347,8 @@ export default function ChatIsland() {
         message: msg.md,
         fragment_id: msg.fragmentId,
         is_bookmarked: msg.isBookmarked,
+        approval_request: msg.approvalRequest, // Preserve approval data
+        execution_result: msg.executionResult, // Preserve execution result
         created_at: new Date().toISOString(),
       }))
 
@@ -355,6 +367,35 @@ export default function ChatIsland() {
         console.error('No chat session selected. Please select or create a chat session first.')
       }
       return
+    }
+
+    // Auto-cancel ANY pending approval requests in this conversation
+    const hasPendingApprovals = messages.some(m => m.approvalRequest?.status === 'pending')
+    if (hasPendingApprovals) {
+      console.log('Auto-canceling all pending approval requests')
+      
+      // Cancel on backend
+      const pendingIds = messages
+        .filter(m => m.approvalRequest?.status === 'pending')
+        .map(m => m.approvalRequest!.id)
+      
+      pendingIds.forEach(async (id) => {
+        try {
+          await fetch(`/api/approvals/${id}/timeout`, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrf },
+          })
+        } catch (e) {
+          console.log('Failed to timeout approval:', id)
+        }
+      })
+      
+      // Update UI immediately
+      setMessages(msgs => msgs.map(m =>
+        m.approvalRequest?.status === 'pending'
+          ? { ...m, approvalRequest: { ...m.approvalRequest, status: 'timeout' } }
+          : m
+      ))
     }
 
     // Close any existing stream before starting a new one
@@ -416,13 +457,32 @@ export default function ChatIsland() {
       }
 
       const responseData = await resp.json()
-      const { message_id, skip_stream, assistant_message } = responseData
+      const { message_id, skip_stream, assistant_message, requires_approval, approval_request } = responseData
 
       // Update user message with server message ID
       const messagesWithMessageId = updatedMessages.map(msg =>
         msg.id === userId ? { ...msg, messageId: message_id } : msg
       )
       setMessages(messagesWithMessageId)
+
+      // If requires approval, show approval UI
+      if (requires_approval && approval_request) {
+        console.log('Approval required - creating approval message', approval_request)
+        const assistantId = uuid(`assistant-${streamSessionId}`)
+        const approvalMessage: ChatMessage = {
+          id: assistantId,
+          role: 'assistant' as const,
+          md: responseData.message || 'This operation requires your approval.',
+          messageId: message_id,
+          approvalRequest: approval_request,
+        }
+        console.log('Approval message created:', approvalMessage)
+        const finalMessages = [...messagesWithMessageId, approvalMessage]
+        setMessages(finalMessages)
+        setSending(false)
+        saveMessagesToSession(finalMessages)
+        return
+      }
 
       // If skip_stream is true (e.g., for exec-tool), display message directly
       if (skip_stream && assistant_message) {
@@ -586,6 +646,89 @@ export default function ChatIsland() {
     saveMessagesToSession(updatedMessages)
   }
 
+  const handleApprovalApprove = async (approvalId: string) => {
+    // Prevent multiple clicks
+    const approval = messages.find(m => m.approvalRequest?.id === approvalId)?.approvalRequest
+    if (!approval || approval.status !== 'pending') {
+      console.log('Approval already processed or not found')
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/approvals/${approvalId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrf,
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Approve failed:', errorData)
+        return
+      }
+
+      const data = await response.json()
+      
+      console.log('Approval response received:', data)
+      console.log('Execution result:', data.execution_result)
+
+      // Update message with approved status and add execution result
+      const updatedMessages = messages.map(m => {
+        if (m.approvalRequest?.id === approvalId) {
+          console.log('Updating message:', m.id, 'with execution result:', data.execution_result)
+          // Don't modify markdown - execution result will be added separately
+          // Just update the approval status
+          return {
+            ...m,
+            approvalRequest: { ...m.approvalRequest, status: 'approved' as const, approvedAt: new Date().toISOString() },
+            executionResult: data.execution_result, // Store execution separately
+          }
+        }
+        return m
+      })
+      
+      console.log('Setting messages with updated data, count:', updatedMessages.length)
+      setMessages(updatedMessages)
+      saveMessagesToSession(updatedMessages)
+
+      console.log('Approval granted and executed:', data)
+      
+    } catch (error) {
+      console.error('Failed to approve:', error)
+    }
+  }
+
+  const handleApprovalReject = async (approvalId: string) => {
+    try {
+      const response = await fetch(`/api/approvals/${approvalId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrf,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to reject request')
+      }
+
+      const data = await response.json()
+
+      // Update message with rejected status
+      setMessages(msgs => msgs.map(m =>
+        m.approvalRequest?.id === approvalId
+          ? { ...m, approvalRequest: { ...m.approvalRequest, status: 'rejected', rejectedAt: new Date().toISOString() } }
+          : m
+      ))
+
+      console.log('Approval rejected:', data)
+    } catch (error) {
+      console.error('Failed to reject:', error)
+    }
+  }
+
   const handleCommand = async (command: string) => {
     console.log('Executing command:', command)
     setLastCommand(command)
@@ -699,6 +842,8 @@ export default function ChatIsland() {
           messages={messages}
           onMessageDelete={handleMessageDelete}
           onMessageBookmarkToggle={handleMessageBookmarkToggle}
+          onApprovalApprove={handleApprovalApprove}
+          onApprovalReject={handleApprovalReject}
         />
       </div>
 

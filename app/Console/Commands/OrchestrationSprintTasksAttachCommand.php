@@ -24,6 +24,7 @@ class OrchestrationSprintTasksAttachCommand extends Command
 
         if (empty($tasks)) {
             $this->error('At least one task must be provided.');
+
             return self::FAILURE;
         }
 
@@ -38,17 +39,18 @@ class OrchestrationSprintTasksAttachCommand extends Command
 
             if ($this->option('json')) {
                 $this->line(json_encode($result, JSON_PRETTY_PRINT));
+
                 return self::SUCCESS;
             }
 
             $sprintInfo = $result['sprint'];
-            $this->info(sprintf('Attached %d task(s) to sprint: %s', 
-                count($tasks), 
+            $this->info(sprintf('Attached %d task(s) to sprint: %s',
+                count($tasks),
                 $sprintInfo['code'] ?? $sprintInfo['id']
             ));
 
             // Display attached tasks
-            if (!empty($result['tasks'])) {
+            if (! empty($result['tasks'])) {
                 $this->comment('Attached Tasks:');
                 $taskRows = [];
                 foreach ($result['tasks'] as $task) {
@@ -84,7 +86,7 @@ class OrchestrationSprintTasksAttachCommand extends Command
                     'error' => $e->getMessage(),
                 ], JSON_PRETTY_PRINT));
             } else {
-                $this->error('Failed to attach tasks to sprint: ' . $e->getMessage());
+                $this->error('Failed to attach tasks to sprint: '.$e->getMessage());
             }
 
             return self::FAILURE;

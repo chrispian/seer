@@ -7,37 +7,37 @@ class Redactor
     protected array $patterns = [
         // Email addresses
         '/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/',
-        
+
         // API keys (long alphanumeric strings)
         '/\b[A-Z0-9]{20,}\b/',
-        
+
         // OpenAI keys
         '/sk-[a-zA-Z0-9]{20,}/',
-        
+
         // Anthropic keys
         '/sk-ant-[a-zA-Z0-9-]+/',
-        
+
         // Bearer tokens
         '/Bearer\s+[a-zA-Z0-9._-]+/',
-        
+
         // Authorization headers
         '/Authorization:\s*[^\s]+/',
-        
+
         // AWS keys
         '/AKIA[0-9A-Z]{16}/',
-        
+
         // Generic secrets
         '/password["\s:=]+[^\s"]+/i',
         '/api[_-]?key["\s:=]+[^\s"]+/i',
         '/secret["\s:=]+[^\s"]+/i',
         '/token["\s:=]+[^\s"]+/i',
-        
+
         // Credit card numbers (basic pattern)
         '/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/',
-        
+
         // SSN
         '/\b\d{3}-\d{2}-\d{4}\b/',
-        
+
         // Phone numbers
         '/\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/',
     ];
@@ -97,6 +97,7 @@ class Redactor
             foreach ($keysToRedact as $sensitiveKey) {
                 if (stripos($key, $sensitiveKey) !== false) {
                     $data[$key] = $this->replacement;
+
                     continue 2;
                 }
             }
@@ -122,6 +123,7 @@ class Redactor
         if (is_array($data)) {
             $data = $this->redactKeys($data);
             $data = $this->redactArray($data);
+
             return $data;
         }
 

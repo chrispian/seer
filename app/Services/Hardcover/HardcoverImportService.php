@@ -7,7 +7,6 @@ use App\Models\Source;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\DatabaseManager;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -101,6 +100,7 @@ class HardcoverImportService
                     $book = $userBook['book'] ?? null;
                     if (! $book || ! isset($book['id'])) {
                         $stats['books_skipped']++;
+
                         continue;
                     }
 
@@ -133,6 +133,7 @@ class HardcoverImportService
 
                     if ($dryRun) {
                         $stats['books_imported']++;
+
                         continue;
                     }
 

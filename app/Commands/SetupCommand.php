@@ -11,9 +11,9 @@ class SetupCommand extends BaseCommand
             'component' => null,
             'data' => [
                 'action' => 'navigate',
-                'url' => '/setup/welcome'
+                'url' => '/setup/welcome',
             ],
-            'message' => 'Opening Setup Wizard...'
+            'message' => 'Opening Setup Wizard...',
         ];
     }
 

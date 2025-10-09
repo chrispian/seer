@@ -32,7 +32,7 @@ return new class extends Migration
 
             // Foreign key constraints
             $table->foreign('work_item_id')->references('id')->on('work_items')->onDelete('set null');
-            
+
             // Composite indexes for performance
             $table->index(['log_timestamp', 'source_type']);
             $table->index(['session_id', 'log_timestamp']);

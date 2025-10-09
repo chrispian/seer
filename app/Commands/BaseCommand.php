@@ -8,7 +8,7 @@ abstract class BaseCommand
      * Handle the command execution
      */
     abstract public function handle(): array;
-    
+
     /**
      * Get help information for this command
      */
@@ -21,7 +21,7 @@ abstract class BaseCommand
             'category' => static::getCategory(),
         ];
     }
-    
+
     /**
      * Get command name (override in subclasses)
      */
@@ -29,7 +29,7 @@ abstract class BaseCommand
     {
         return 'Unknown Command';
     }
-    
+
     /**
      * Get command description (override in subclasses)
      */
@@ -37,7 +37,7 @@ abstract class BaseCommand
     {
         return 'No description available';
     }
-    
+
     /**
      * Get command usage (override in subclasses)
      */
@@ -45,7 +45,7 @@ abstract class BaseCommand
     {
         return '/command';
     }
-    
+
     /**
      * Get command category (override in subclasses)
      */

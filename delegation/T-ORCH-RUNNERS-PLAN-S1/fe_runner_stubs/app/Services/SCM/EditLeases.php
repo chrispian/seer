@@ -12,7 +12,10 @@ class EditLeases
     {
         $key = "lease:file:{$path}";
         $ok = Redis::setnx($key, getmypid());
-        if ($ok) Redis::expire($key, $ttl);
+        if ($ok) {
+            Redis::expire($key, $ttl);
+        }
+
         return $ok;
     }
 }

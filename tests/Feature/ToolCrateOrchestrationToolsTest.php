@@ -5,28 +5,27 @@ use App\Enums\AgentStatus;
 use App\Enums\AgentType;
 use App\Models\AgentProfile;
 use App\Models\Sprint;
-use App\Models\WorkItem;
 use App\Models\TaskAssignment;
-use App\Services\DelegationMigrationService;
-use App\Services\TaskOrchestrationService;
+use App\Models\WorkItem;
 use App\Services\AgentOrchestrationService;
 use App\Services\SprintOrchestrationService;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
+use App\Services\TaskOrchestrationService;
 use HollisLabs\ToolCrate\Tools\Orchestration\AgentDetailTool;
 use HollisLabs\ToolCrate\Tools\Orchestration\AgentSaveTool;
-use HollisLabs\ToolCrate\Tools\Orchestration\AgentStatusTool;
 use HollisLabs\ToolCrate\Tools\Orchestration\AgentsListTool;
-use HollisLabs\ToolCrate\Tools\Orchestration\SprintsListTool;
+use HollisLabs\ToolCrate\Tools\Orchestration\AgentStatusTool;
 use HollisLabs\ToolCrate\Tools\Orchestration\SprintDetailTool;
 use HollisLabs\ToolCrate\Tools\Orchestration\SprintSaveTool;
+use HollisLabs\ToolCrate\Tools\Orchestration\SprintsListTool;
 use HollisLabs\ToolCrate\Tools\Orchestration\SprintStatusTool;
 use HollisLabs\ToolCrate\Tools\Orchestration\SprintTasksAttachTool;
 use HollisLabs\ToolCrate\Tools\Orchestration\TaskAssignTool;
 use HollisLabs\ToolCrate\Tools\Orchestration\TaskDetailTool;
-use HollisLabs\ToolCrate\Tools\Orchestration\TaskStatusTool;
 use HollisLabs\ToolCrate\Tools\Orchestration\TasksListTool;
+use HollisLabs\ToolCrate\Tools\Orchestration\TaskStatusTool;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Laravel\Mcp\Request;
 
 uses(RefreshDatabase::class);
@@ -45,7 +44,7 @@ function createSampleAgent(string $name = 'Temp Agent'): AgentProfile
 {
     return AgentProfile::create([
         'name' => $name,
-        'slug' => Str::slug($name) . '-' . Str::random(6),
+        'slug' => Str::slug($name).'-'.Str::random(6),
         'type' => AgentType::BackendEngineer->value,
         'mode' => AgentMode::Implementation->value,
         'status' => AgentStatus::Active->value,
@@ -66,7 +65,7 @@ beforeEach(function () {
         'title' => 'Test Sprint',
         'description' => 'Test sprint for orchestration tools',
         'status' => 'active',
-        'metadata' => ['test' => true]
+        'metadata' => ['test' => true],
     ]);
 
     $workItem = WorkItem::create([
@@ -77,9 +76,9 @@ beforeEach(function () {
         'priority' => 'medium',
         'metadata' => [
             'task_code' => 'TEST-TASK-001',
-            'sprint_code' => 'SPRINT-TEST'
+            'sprint_code' => 'SPRINT-TEST',
         ],
-        'estimated_hours' => 4.0
+        'estimated_hours' => 4.0,
     ]);
 
     AgentProfile::create([
@@ -92,7 +91,7 @@ beforeEach(function () {
 });
 
 test('agents list tool returns filtered agent summaries', function () {
-    $tool = new AgentsListTool();
+    $tool = new AgentsListTool;
 
     $response = $tool->handle(new Request([
         'status' => ['active'],
@@ -108,7 +107,7 @@ test('agents list tool returns filtered agent summaries', function () {
 });
 
 test('agent detail tool returns profile snapshot', function () {
-    $tool = new AgentDetailTool();
+    $tool = new AgentDetailTool;
 
     $response = $tool->handle(new Request([
         'agent' => sampleAgentSlug(),
@@ -122,7 +121,7 @@ test('agent detail tool returns profile snapshot', function () {
 });
 
 test('agent save tool upserts profile data', function () {
-    $tool = new AgentSaveTool();
+    $tool = new AgentSaveTool;
 
     $response = $tool->handle(new Request([
         'name' => 'Orchestration Ops Agent',
@@ -144,7 +143,7 @@ test('agent save tool upserts profile data', function () {
 test('agent status tool toggles state', function () {
     $agent = createSampleAgent('Lifecycle Agent');
 
-    $tool = new AgentStatusTool();
+    $tool = new AgentStatusTool;
 
     $response = $tool->handle(new Request([
         'agent' => $agent->slug,
@@ -160,7 +159,7 @@ test('agent status tool toggles state', function () {
 });
 
 test('sprints list tool includes progress stats and optional tasks', function () {
-    $tool = new SprintsListTool();
+    $tool = new SprintsListTool;
 
     $response = $tool->handle(new Request([
         'code' => ['SPRINT-62'],
@@ -179,7 +178,7 @@ test('sprints list tool includes progress stats and optional tasks', function ()
 });
 
 test('tasks list tool filters by sprint and delegation status', function () {
-    $tool = new TasksListTool();
+    $tool = new TasksListTool;
 
     $response = $tool->handle(new Request([
         'sprint' => ['SPRINT-62'],
@@ -200,7 +199,7 @@ test('task assign tool creates assignment and updates delegation status', functi
     $taskCode = sampleTaskCode();
     $agentSlug = sampleAgentSlug();
 
-    $tool = new TaskAssignTool();
+    $tool = new TaskAssignTool;
 
     $response = $tool->handle(new Request([
         'task' => $taskCode,
@@ -225,12 +224,12 @@ test('task status tool transitions delegation state and assignment status', func
     $taskCode = sampleTaskCode();
     $agentSlug = sampleAgentSlug();
 
-    (new TaskAssignTool())->handle(new Request([
+    (new TaskAssignTool)->handle(new Request([
         'task' => $taskCode,
         'agent' => $agentSlug,
     ]));
 
-    $tool = new TaskStatusTool();
+    $tool = new TaskStatusTool;
     $response = $tool->handle(new Request([
         'task' => $taskCode,
         'status' => 'in_progress',
@@ -248,19 +247,19 @@ test('task detail tool returns delegation history and assignments', function () 
     $taskCode = sampleTaskCode();
     $agentSlug = sampleAgentSlug();
 
-    (new TaskAssignTool())->handle(new Request([
+    (new TaskAssignTool)->handle(new Request([
         'task' => $taskCode,
         'agent' => $agentSlug,
         'status' => 'assigned',
     ]));
 
-    (new TaskStatusTool())->handle(new Request([
+    (new TaskStatusTool)->handle(new Request([
         'task' => $taskCode,
         'status' => 'in_progress',
         'note' => 'Kick-off',
     ]));
 
-    $tool = new TaskDetailTool();
+    $tool = new TaskDetailTool;
     $response = $tool->handle(new Request([
         'task' => $taskCode,
         'assignments_limit' => 5,
@@ -275,7 +274,7 @@ test('task detail tool returns delegation history and assignments', function () 
 });
 
 test('sprint detail tool returns sprint snapshot', function () {
-    $tool = new SprintDetailTool();
+    $tool = new SprintDetailTool;
 
     $response = $tool->handle(new Request([
         'sprint' => 'SPRINT-62',
@@ -291,7 +290,7 @@ test('sprint detail tool returns sprint snapshot', function () {
 });
 
 test('sprint save tool upserts metadata', function () {
-    $tool = new SprintSaveTool();
+    $tool = new SprintSaveTool;
 
     $response = $tool->handle(new Request([
         'code' => 'SPRINT-90',
@@ -312,12 +311,12 @@ test('sprint save tool upserts metadata', function () {
 });
 
 test('sprint status tool updates status meta and appends note', function () {
-    (new SprintSaveTool())->handle(new Request([
+    (new SprintSaveTool)->handle(new Request([
         'code' => 'SPRINT-91',
         'title' => 'Sprint Ninety One',
     ]));
 
-    $tool = new SprintStatusTool();
+    $tool = new SprintStatusTool;
     $response = $tool->handle(new Request([
         'sprint' => 'SPRINT-91',
         'status' => 'In Progress',
@@ -331,12 +330,12 @@ test('sprint status tool updates status meta and appends note', function () {
 });
 
 test('sprint attach tasks tool associates work items', function () {
-    (new SprintSaveTool())->handle(new Request([
+    (new SprintSaveTool)->handle(new Request([
         'code' => 'SPRINT-92',
         'title' => 'Sprint Ninety Two',
     ]));
 
-    $attach = new SprintTasksAttachTool();
+    $attach = new SprintTasksAttachTool;
     $taskCode = sampleTaskCode();
 
     $response = $attach->handle(new Request([

@@ -13,7 +13,9 @@ use Laravel\Mcp\Server\Tool;
 class TaskSaveTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_tasks_save';
+
     protected string $title = 'Create or update task';
+
     protected string $description = 'Create a new work item or update an existing one, including metadata and delegation settings.';
 
     public function schema(JsonSchema $schema): array

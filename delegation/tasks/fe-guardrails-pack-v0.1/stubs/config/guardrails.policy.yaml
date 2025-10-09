@@ -1,0 +1,35 @@
+# config/guardrails.policy.yaml
+tools:
+  allowed:
+    - "filesystem.read"
+    - "filesystem.write"
+    - "http.fetch"
+    - "shell.exec"   # gated by LimitedShell spec below
+
+commands:
+  _env_allow: ["LANG"]
+  "/usr/bin/git":
+    fixed_flags: ["-c", "safe.bareRepository=true"]
+  "/bin/ls": {}
+  "/usr/bin/grep": {}
+
+paths:
+  allow_ro:
+    - "~/Library/Application Support/FragmentsEngine/agents/*/inbox"
+  allow_rw:
+    - "~/Library/Application Support/FragmentsEngine/agents/*/workspace"
+  deny:
+    - "/etc/**"
+    - "/usr/**"
+
+network:
+  domains_allow:
+    - "api.github.com"
+    - "raw.githubusercontent.com"
+  ports_allow:
+    - 80
+    - 443
+risk:
+  thresholds:
+    approve_required: 50
+    deny: 90

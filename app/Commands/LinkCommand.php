@@ -16,7 +16,7 @@ class LinkCommand extends BaseCommand
                 'type' => 'error',
                 'component' => null,
                 'data' => null,
-                'message' => 'Please provide a link to save.'
+                'message' => 'Please provide a link to save.',
             ];
         }
 
@@ -26,16 +26,16 @@ class LinkCommand extends BaseCommand
             'message' => $content,
             'metadata' => [
                 'command' => 'link',
-                'created_via' => 'slash_command'
+                'created_via' => 'slash_command',
             ],
-            'tags' => ['link']
+            'tags' => ['link'],
         ]);
 
         return [
             'type' => 'success',
             'component' => null,
             'data' => null,
-            'message' => '✅ Link created successfully'
+            'message' => '✅ Link created successfully',
         ];
     }
 

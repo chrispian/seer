@@ -13,7 +13,9 @@ use Laravel\Mcp\Server\Tool;
 class SprintSaveTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_sprints_save';
+
     protected string $title = 'Create or update sprint';
+
     protected string $description = 'Create a new sprint or update an existing one, including dates and metadata.';
 
     public function schema(JsonSchema $schema): array

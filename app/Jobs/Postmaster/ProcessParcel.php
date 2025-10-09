@@ -2,8 +2,8 @@
 
 namespace App\Jobs\Postmaster;
 
-use App\Models\OrchestrationArtifact;
 use App\Models\Message;
+use App\Models\OrchestrationArtifact;
 use App\Models\WorkItem;
 use App\Services\Orchestration\Artifacts\ContentStore;
 use App\Services\Orchestration\Security\SecretRedactor;
@@ -13,16 +13,17 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class ProcessParcel implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public int $timeout = 300;
 
     protected array $parcel;
+
     protected string $taskId;
 
     public function __construct(array $parcel, string $taskId)
@@ -40,7 +41,7 @@ class ProcessParcel implements ShouldQueue
         ]);
 
         $task = WorkItem::findOrFail($this->taskId);
-        
+
         $rewrittenEnvelope = $this->parcel;
         $artifacts = [];
         $manifest = [
@@ -52,7 +53,7 @@ class ProcessParcel implements ShouldQueue
         if (isset($this->parcel['attachments']) && is_array($this->parcel['attachments'])) {
             foreach ($this->parcel['attachments'] as $key => $attachment) {
                 $artifact = $this->processAttachment($contentStore, $task, $key, $attachment);
-                
+
                 if ($artifact) {
                     $artifacts[] = $artifact;
                     $manifest['artifacts'][] = [
@@ -78,7 +79,7 @@ class ProcessParcel implements ShouldQueue
             foreach ($this->parcel['inline_content'] as $key => $content) {
                 if (is_string($content) && strlen($content) > (5 * 1024 * 1024)) {
                     $artifact = $this->processInlineContent($contentStore, $task, $key, $content);
-                    
+
                     if ($artifact) {
                         $artifacts[] = $artifact;
                         $manifest['artifacts'][] = [
@@ -100,7 +101,7 @@ class ProcessParcel implements ShouldQueue
 
         $manifestContent = json_encode($manifest, JSON_PRETTY_PRINT);
         $manifestHash = $contentStore->put($manifestContent);
-        
+
         $manifestArtifact = OrchestrationArtifact::create([
             'task_id' => $task->id,
             'hash' => $manifestHash,
@@ -143,14 +144,14 @@ class ProcessParcel implements ShouldQueue
 
     protected function processAttachment(ContentStore $contentStore, WorkItem $task, string $key, array $attachment): ?OrchestrationArtifact
     {
-        if (!isset($attachment['content'])) {
+        if (! isset($attachment['content'])) {
             return null;
         }
 
         $content = $attachment['content'];
         $redactor = app(SecretRedactor::class);
         $content = $redactor->redact($content);
-        
+
         $filename = $attachment['filename'] ?? "attachment-{$key}";
         $mimeType = $attachment['mime_type'] ?? 'application/octet-stream';
 
@@ -178,7 +179,7 @@ class ProcessParcel implements ShouldQueue
     {
         $redactor = app(SecretRedactor::class);
         $content = $redactor->redact($content);
-        
+
         $hash = $contentStore->put($content, [
             'source' => 'inline_content',
             'key' => $key,

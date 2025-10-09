@@ -11,9 +11,6 @@ class PermissionGate
     /**
      * Filter tool plan by user/agent permissions
      *
-     * @param ToolPlan $plan
-     * @param int|null $userId
-     * @param string|null $agentId
      * @return ToolPlan Filtered plan
      */
     public function filter(ToolPlan $plan, ?int $userId = null, ?string $agentId = null): ToolPlan
@@ -23,6 +20,7 @@ class PermissionGate
         if (empty($allowedTools)) {
             // No restrictions - allow all enabled tools
             Log::debug('No permission restrictions, allowing all tools');
+
             return $plan;
         }
 
@@ -32,7 +30,7 @@ class PermissionGate
         foreach ($plan->plan_steps as $step) {
             $toolId = $step['tool_id'] ?? null;
 
-            if (!$toolId) {
+            if (! $toolId) {
                 continue;
             }
 
@@ -48,7 +46,7 @@ class PermissionGate
             }
         }
 
-        if (!empty($blockedTools)) {
+        if (! empty($blockedTools)) {
             Log::info('Tools blocked by permissions', [
                 'blocked_count' => count($blockedTools),
                 'blocked_tools' => $blockedTools,
@@ -58,7 +56,7 @@ class PermissionGate
 
         // Update plan with filtered steps
         $plan->plan_steps = $filteredSteps;
-        
+
         // Update selected_tool_ids to match filtered steps
         $plan->selected_tool_ids = array_unique(
             array_column($filteredSteps, 'tool_id')
@@ -96,7 +94,7 @@ class PermissionGate
         foreach ($allowedTools as $pattern) {
             if (str_ends_with($pattern, '.*')) {
                 $prefix = substr($pattern, 0, -2);
-                if (str_starts_with($toolId, $prefix . '.')) {
+                if (str_starts_with($toolId, $prefix.'.')) {
                     return true;
                 }
             }
@@ -121,7 +119,7 @@ class PermissionGate
         ];
 
         foreach ($writeTools as $writeTool) {
-            if ($toolId === $writeTool || str_starts_with($toolId, $writeTool . '.')) {
+            if ($toolId === $writeTool || str_starts_with($toolId, $writeTool.'.')) {
                 return true;
             }
         }

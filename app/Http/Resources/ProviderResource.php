@@ -31,7 +31,7 @@ class ProviderResource extends JsonResource
 
             // Extract all capabilities from models
             $allCapabilities = $models->pluck('capabilities')->flatten()->unique()->values();
-            
+
             // Calculate model counts
             $totalModels = $models->count();
             $enabledModels = $models->where('enabled', true)->count();
@@ -88,7 +88,7 @@ class ProviderResource extends JsonResource
         // Convert models to expected format
         $models = [];
         $allCapabilities = [];
-        
+
         if (isset($capabilities['text_models'])) {
             foreach ($capabilities['text_models'] as $modelId => $modelData) {
                 $models[] = [
@@ -101,7 +101,7 @@ class ProviderResource extends JsonResource
             }
             $allCapabilities[] = 'text';
         }
-        
+
         if (isset($capabilities['embedding_models'])) {
             foreach ($capabilities['embedding_models'] as $modelId => $modelData) {
                 $models[] = [

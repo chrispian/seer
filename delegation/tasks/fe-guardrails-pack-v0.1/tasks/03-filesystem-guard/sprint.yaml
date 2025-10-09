@@ -1,0 +1,26 @@
+version: 0.1
+sprint: Filesystem Guard
+objectives:
+  - Constrain file IO to per-agent workspaces + explicit allowlists.
+  - Provide VFS-like API wrappers to enforce policy.
+backlog:
+  - id: FG-1
+    title: "Workspace Layout + Paths"
+    type: chore
+    desc: Standardize agent workspace root and temp dirs under app support folder.
+  - id: FG-2
+    title: "Path Allowlist Engine"
+    type: feature
+    desc: Enforce deny-by-default with normalized paths; prevent path traversal.
+  - id: FG-3
+    title: "open_basedir for PHP"
+    type: feature
+    desc: Configure PHP open_basedir confinement for web/CLI processes.
+  - id: FG-4
+    title: "FileOps Facade"
+    type: feature
+    desc: Centralized API replacing direct file_* calls; performs policy checks + emits audit events.
+definition_of_done:
+  - Access outside allowlist blocked with actionable error.
+  - Relative + symlink traversal tests pass.
+  - Audit entries on write/delete/rename.

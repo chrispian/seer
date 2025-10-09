@@ -156,7 +156,7 @@ class CommandRunner
                 // Pass condition template as-is to let ConditionStep handle evaluation
                 $rendered[$key] = $value;
             }
-            // Special handling for transform steps - don't pre-render template 
+            // Special handling for transform steps - don't pre-render template
             elseif ($stepType === 'transform' && $key === 'template' && is_string($value)) {
                 // Pass template as-is to let TransformStep handle rendering with updated context
                 $rendered[$key] = $value;

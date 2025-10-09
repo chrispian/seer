@@ -17,7 +17,9 @@ class AgentsListTool extends Tool implements SummarizesTool
     use NormalisesFilters;
 
     protected string $name = 'orchestration_agents_list';
+
     protected string $title = 'List orchestration agents';
+
     protected string $description = 'Return orchestration agent profiles with optional filters and summaries.';
 
     public function schema(JsonSchema $schema): array
@@ -53,7 +55,7 @@ class AgentsListTool extends Tool implements SummarizesTool
         }
 
         if ($request->get('search')) {
-            $term = '%' . trim((string) $request->get('search')) . '%';
+            $term = '%'.trim((string) $request->get('search')).'%';
             $query->where(function (Builder $inner) use ($term) {
                 $inner->where('name', 'like', $term)
                     ->orWhere('slug', 'like', $term);

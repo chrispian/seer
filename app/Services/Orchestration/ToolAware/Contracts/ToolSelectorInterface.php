@@ -10,9 +10,9 @@ interface ToolSelectorInterface
     /**
      * Select minimal set of tools to achieve the goal
      *
-     * @param string $goal High-level goal from router
-     * @param ContextBundle $context Conversation context
-     * @return ToolPlan
+     * @param  string  $goal  High-level goal from router
+     * @param  ContextBundle  $context  Conversation context
+     *
      * @throws \RuntimeException on LLM failure or validation errors
      */
     public function selectTools(string $goal, ContextBundle $context): ToolPlan;

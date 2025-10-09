@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\File;
 beforeEach(function () {
     $this->user = User::factory()->create();
     $this->testVaultPath = storage_path('testing/obsidian-vault');
-    
+
     if (File::exists($this->testVaultPath)) {
         File::deleteDirectory($this->testVaultPath);
     }
@@ -21,7 +21,7 @@ afterEach(function () {
 });
 
 test('imports obsidian notes with filename as title', function () {
-    File::put($this->testVaultPath.'/My Note.md', <<<MD
+    File::put($this->testVaultPath.'/My Note.md', <<<'MD'
 # Heading in File
 This is the content of my note.
 MD
@@ -51,7 +51,7 @@ MD
 });
 
 test('front matter title overrides filename', function () {
-    File::put($this->testVaultPath.'/filename.md', <<<MD
+    File::put($this->testVaultPath.'/filename.md', <<<'MD'
 ---
 title: Front Matter Title
 ---
@@ -80,7 +80,7 @@ MD
 
 test('upserts by obsidian path - same file updates existing fragment', function () {
     $filePath = $this->testVaultPath.'/Test Note.md';
-    
+
     File::put($filePath, 'Original content');
 
     $this->user->update([
@@ -97,7 +97,7 @@ test('upserts by obsidian path - same file updates existing fragment', function 
     $this->artisan('obsidian:sync');
 
     expect(Fragment::where('source_key', 'obsidian')->count())->toBe(1);
-    
+
     $firstFragment = Fragment::where('source_key', 'obsidian')->first();
     expect($firstFragment->title)->toBe('Test Note')
         ->and($firstFragment->metadata['obsidian_path'])->toBe('Test Note.md');
@@ -109,7 +109,7 @@ test('upserts by obsidian path - same file updates existing fragment', function 
     $this->artisan('obsidian:sync');
 
     expect(Fragment::where('source_key', 'obsidian')->count())->toBe(1);
-    
+
     $secondFragment = Fragment::where('source_key', 'obsidian')->first();
     expect($secondFragment->id)->toBe($firstFragment->id)
         ->and($secondFragment->title)->toBe('Test Note');
@@ -117,7 +117,7 @@ test('upserts by obsidian path - same file updates existing fragment', function 
 
 test('creates folder tags', function () {
     File::makeDirectory($this->testVaultPath.'/Daily Notes', 0755, true);
-    File::put($this->testVaultPath.'/Daily Notes/2025-01-06.md', <<<MD
+    File::put($this->testVaultPath.'/Daily Notes/2025-01-06.md', <<<'MD'
 Today's note
 MD
     );
@@ -180,10 +180,10 @@ test('imports multiple files', function () {
     $this->artisan('obsidian:sync');
 
     expect(Fragment::where('source_key', 'obsidian')->count())->toBe(3);
-    
+
     $titles = Fragment::where('source_key', 'obsidian')
         ->get()
-        ->map(fn($f) => $f->title)
+        ->map(fn ($f) => $f->title)
         ->sort()
         ->values()
         ->all();
@@ -192,7 +192,7 @@ test('imports multiple files', function () {
 });
 
 test('parses front matter tags', function () {
-    File::put($this->testVaultPath.'/Tagged Note.md', <<<MD
+    File::put($this->testVaultPath.'/Tagged Note.md', <<<'MD'
 ---
 tags: [work, urgent, project]
 ---

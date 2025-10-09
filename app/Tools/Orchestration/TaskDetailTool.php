@@ -12,7 +12,9 @@ use Laravel\Mcp\Server\Tool;
 class TaskDetailTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_tasks_detail';
+
     protected string $title = 'Show orchestration task detail';
+
     protected string $description = 'Return delegation-aware details for a work item, including assignments and history.';
 
     public function schema(JsonSchema $schema): array

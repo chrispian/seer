@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\ToolDefinition;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Config;
 use Symfony\Component\Process\Process;
 
 class SyncMcpTools extends Command
@@ -16,20 +15,22 @@ class SyncMcpTools extends Command
     public function handle()
     {
         $mcpConfigPath = base_path('.mcp.json');
-        if (!file_exists($mcpConfigPath)) {
+        if (! file_exists($mcpConfigPath)) {
             $this->error('.mcp.json not found');
+
             return 1;
         }
 
         $mcpJson = json_decode(file_get_contents($mcpConfigPath), true);
         $mcpServers = $mcpJson['mcpServers'] ?? [];
-        
+
         $specificServer = $this->option('server');
         $force = $this->option('force');
 
         if ($specificServer) {
-            if (!isset($mcpServers[$specificServer])) {
+            if (! isset($mcpServers[$specificServer])) {
                 $this->error("MCP server '{$specificServer}' not found in .mcp.json");
+
                 return 1;
             }
             $mcpServers = [$specificServer => $mcpServers[$specificServer]];
@@ -37,6 +38,7 @@ class SyncMcpTools extends Command
 
         if (empty($mcpServers)) {
             $this->warn('No MCP servers configured in .mcp.json');
+
             return 0;
         }
 
@@ -48,14 +50,15 @@ class SyncMcpTools extends Command
 
             try {
                 $tools = $this->getMcpToolsList($serverName, $serverConfig);
-                
+
                 foreach ($tools as $tool) {
                     $slug = "mcp.{$serverName}.{$tool['name']}";
-                    
+
                     $existing = ToolDefinition::where('slug', $slug)->first();
-                    if ($existing && $existing->overridden && !$force) {
+                    if ($existing && $existing->overridden && ! $force) {
                         $this->line("  - Skipping {$slug} (manually overridden)");
                         $totalSkipped++;
+
                         continue;
                     }
 
@@ -88,7 +91,7 @@ class SyncMcpTools extends Command
                         'synced_at' => now(),
                     ];
 
-                    if (!$existing || !$existing->overridden || $force) {
+                    if (! $existing || ! $existing->overridden || $force) {
                         ToolDefinition::updateOrCreate(
                             ['slug' => $slug],
                             $definition
@@ -104,6 +107,7 @@ class SyncMcpTools extends Command
         }
 
         $this->info("\nSync complete: {$totalSynced} synced, {$totalSkipped} skipped");
+
         return 0;
     }
 
@@ -121,17 +125,17 @@ class SyncMcpTools extends Command
 
         $process = new Process(array_merge([$command], $args), base_path());
 
-        $process->setInput(json_encode($request) . "\n");
+        $process->setInput(json_encode($request)."\n");
         $process->setTimeout(10);
         $process->run();
 
-        if (!$process->isSuccessful()) {
-            throw new \RuntimeException("Failed to call MCP server: " . $process->getErrorOutput());
+        if (! $process->isSuccessful()) {
+            throw new \RuntimeException('Failed to call MCP server: '.$process->getErrorOutput());
         }
 
         $output = trim($process->getOutput());
         $lines = explode("\n", $output);
-        
+
         foreach ($lines as $line) {
             $line = trim($line);
             if (empty($line)) {
@@ -154,7 +158,7 @@ class SyncMcpTools extends Command
             return "Use the {$tool['name']} tool";
         }
 
-        return "Use when: " . strtolower($description);
+        return 'Use when: '.strtolower($description);
     }
 
     protected function generateSyntax(array $tool): string
@@ -170,11 +174,11 @@ class SyncMcpTools extends Command
             if ($isRequired) {
                 $params[] = $paramName;
             } else {
-                $params[] = "{$paramName}=" . ($default !== null ? json_encode($default) : '...');
+                $params[] = "{$paramName}=".($default !== null ? json_encode($default) : '...');
             }
         }
 
-        return $tool['name'] . '(' . implode(', ', $params) . ')';
+        return $tool['name'].'('.implode(', ', $params).')';
     }
 
     protected function generateExamples(array $tool, string $serverName): array
@@ -195,4 +199,3 @@ class SyncMcpTools extends Command
         ];
     }
 }
-

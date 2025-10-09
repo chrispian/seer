@@ -16,12 +16,12 @@ class RemindCommand extends BaseCommand
                 'type' => 'error',
                 'component' => null,
                 'data' => null,
-                'message' => 'Please provide reminder text.'
+                'message' => 'Please provide reminder text.',
             ];
         }
 
         // Extract title (first 40 chars)
-        $title = 'Reminder: ' . mb_substr($content, 0, 40);
+        $title = 'Reminder: '.mb_substr($content, 0, 40);
         if (mb_strlen($content) > 40) {
             $title .= '...';
         }
@@ -38,16 +38,16 @@ class RemindCommand extends BaseCommand
                 'type' => 'reminder',
                 'created_at' => now()->toISOString(),
                 'reminded_at' => now()->toISOString(),
-                'status' => 'active'
+                'status' => 'active',
             ],
-            'tags' => ['reminder', 'scheduled']
+            'tags' => ['reminder', 'scheduled'],
         ]);
 
         return [
             'type' => 'success',
             'component' => null,
             'data' => null,
-            'message' => "⏰ Reminder: {$content}"
+            'message' => "⏰ Reminder: {$content}",
         ];
     }
 

@@ -66,7 +66,7 @@ class AIModel extends Model
      */
     public function getFullIdentifier(): string
     {
-        return $this->provider->provider . '/' . $this->model_id;
+        return $this->provider->provider.'/'.$this->model_id;
     }
 
     /**
@@ -75,6 +75,7 @@ class AIModel extends Model
     public function supportsCapability(string $capability): bool
     {
         $capabilities = $this->capabilities ?? [];
+
         return in_array($capability, $capabilities);
     }
 

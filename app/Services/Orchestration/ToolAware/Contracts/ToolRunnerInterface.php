@@ -9,9 +9,6 @@ interface ToolRunnerInterface
 {
     /**
      * Execute tool plan and collect results
-     *
-     * @param ToolPlan $plan
-     * @return ExecutionTrace
      */
     public function execute(ToolPlan $plan): ExecutionTrace;
 }

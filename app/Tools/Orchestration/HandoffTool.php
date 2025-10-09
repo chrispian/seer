@@ -15,7 +15,9 @@ use Laravel\Mcp\Server\Tool;
 class HandoffTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_handoff';
+
     protected string $title = 'Handoff work to another agent';
+
     protected string $description = 'Create a handoff request message to transfer work to another agent.';
 
     public function schema(JsonSchema $schema): array
@@ -33,7 +35,7 @@ class HandoffTool extends Tool implements SummarizesTool
     {
         $fromAgent = $this->resolveAgent((string) $request->get('from_agent_id'));
         $toAgent = $this->resolveAgent((string) $request->get('to_agent_id'));
-        
+
         $task = null;
         if ($request->get('task_id')) {
             $task = $this->resolveTask((string) $request->get('task_id'));

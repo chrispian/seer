@@ -3,7 +3,6 @@
 namespace App\Services\Orchestration\ToolAware\Contracts;
 
 use App\Services\Orchestration\ToolAware\DTOs\ContextBundle;
-use App\Services\Orchestration\ToolAware\DTOs\ExecutionTrace;
 use App\Services\Orchestration\ToolAware\DTOs\OutcomeSummary;
 
 interface ComposerInterface
@@ -11,9 +10,8 @@ interface ComposerInterface
     /**
      * Compose final user-facing reply
      *
-     * @param ContextBundle $context
-     * @param OutcomeSummary|null $summary Null if no tools were used
-     * @param string|null $correlationId Null if no tools were used
+     * @param  OutcomeSummary|null  $summary  Null if no tools were used
+     * @param  string|null  $correlationId  Null if no tools were used
      * @return string Final markdown reply
      */
     public function compose(

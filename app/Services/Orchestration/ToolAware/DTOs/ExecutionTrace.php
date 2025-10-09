@@ -29,6 +29,7 @@ final class ExecutionTrace
                 return true;
             }
         }
+
         return false;
     }
 
@@ -43,6 +44,7 @@ final class ExecutionTrace
                 ];
             }
         }
+
         return $errors;
     }
 
@@ -50,7 +52,7 @@ final class ExecutionTrace
     {
         return [
             'correlation_id' => $this->correlation_id,
-            'steps' => array_map(fn($step) => $step->toArray(), $this->steps),
+            'steps' => array_map(fn ($step) => $step->toArray(), $this->steps),
             'total_elapsed_ms' => $this->total_elapsed_ms,
             'step_count' => count($this->steps),
             'has_errors' => $this->hasErrors(),

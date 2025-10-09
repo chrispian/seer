@@ -14,26 +14,26 @@ class SearchCommand extends BaseCommand
     public function handle(): array
     {
         $results = $this->getSearchResults();
-        
+
         return [
             'type' => 'fragment',
             'component' => 'FragmentListModal',
-            'data' => $results
+            'data' => $results,
         ];
     }
-    
+
     private function getSearchResults(): array
     {
         if (class_exists(\App\Models\Fragment::class)) {
             $fragmentQuery = \App\Models\Fragment::query()->with('category');
-            
-            if (!empty($this->query)) {
+
+            if (! empty($this->query)) {
                 $fragmentQuery->where(function ($q) {
-                    $q->where('message', 'like', '%' . $this->query . '%')
-                      ->orWhere('title', 'like', '%' . $this->query . '%');
+                    $q->where('message', 'like', '%'.$this->query.'%')
+                        ->orWhere('title', 'like', '%'.$this->query.'%');
                 });
             }
-            
+
             $fragments = $fragmentQuery
                 ->latest()
                 ->limit(200)
@@ -42,7 +42,7 @@ class SearchCommand extends BaseCommand
                     // Sanitize strings to ensure valid UTF-8
                     $message = mb_convert_encoding($fragment->message ?? '', 'UTF-8', 'UTF-8');
                     $title = mb_convert_encoding($fragment->title ?? '', 'UTF-8', 'UTF-8');
-                    
+
                     // Clean metadata - remove any non-UTF-8 safe values
                     $metadata = $fragment->metadata ?? [];
                     if (is_array($metadata)) {
@@ -52,7 +52,7 @@ class SearchCommand extends BaseCommand
                             }
                         });
                     }
-                    
+
                     return [
                         'id' => $fragment->id,
                         'title' => $title,
@@ -67,28 +67,28 @@ class SearchCommand extends BaseCommand
                     ];
                 })
                 ->all();
-                
+
             return $fragments;
         }
-        
+
         return [];
     }
-    
+
     public static function getName(): string
     {
         return 'Search';
     }
-    
+
     public static function getDescription(): string
     {
         return 'Search through fragments and content';
     }
-    
+
     public static function getUsage(): string
     {
         return '/search [query]';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Navigation';

@@ -21,14 +21,15 @@ class ImportTaskContentCommand extends Command
         $force = $this->option('force');
         $basePath = base_path($this->option('path'));
 
-        if (!File::isDirectory($basePath)) {
+        if (! File::isDirectory($basePath)) {
             $this->error("Delegation path not found: {$basePath}");
+
             return self::FAILURE;
         }
 
         $this->info('Starting task content import...');
-        $this->info('Dry run: ' . ($dryRun ? 'YES' : 'NO'));
-        $this->info('Force overwrite: ' . ($force ? 'YES' : 'NO'));
+        $this->info('Dry run: '.($dryRun ? 'YES' : 'NO'));
+        $this->info('Force overwrite: '.($force ? 'YES' : 'NO'));
         $this->newLine();
 
         $stats = [
@@ -50,23 +51,23 @@ class ImportTaskContentCommand extends Command
         foreach ($tasks as $task) {
             $stats['processed']++;
             $sourcePathRaw = $task->metadata['source_path'];
-            
+
             // Try multiple possible locations
             $possiblePaths = [
                 base_path($sourcePathRaw),
-                base_path('delegation/imported/' . basename($sourcePathRaw)),
-                base_path('delegation/archived/' . basename($sourcePathRaw)),
-                base_path('delegation/backlog/' . basename($sourcePathRaw)),
+                base_path('delegation/imported/'.basename($sourcePathRaw)),
+                base_path('delegation/archived/'.basename($sourcePathRaw)),
+                base_path('delegation/backlog/'.basename($sourcePathRaw)),
             ];
-            
+
             // If source_path contains a sprint folder, try imported/archived locations
             if (preg_match('/sprint-(\d+)/', $sourcePathRaw, $matches)) {
-                $sprintFolder = 'sprint-' . $matches[1];
+                $sprintFolder = 'sprint-'.$matches[1];
                 $taskFolder = basename($sourcePathRaw);
                 $possiblePaths[] = base_path("delegation/imported/{$sprintFolder}/{$taskFolder}");
                 $possiblePaths[] = base_path("delegation/archived/{$sprintFolder}/{$taskFolder}");
             }
-            
+
             $sourcePath = null;
             foreach ($possiblePaths as $path) {
                 if (File::isDirectory($path)) {
@@ -75,9 +76,10 @@ class ImportTaskContentCommand extends Command
                 }
             }
 
-            if (!$sourcePath) {
+            if (! $sourcePath) {
                 $stats['missing_files']++;
                 $progressBar->advance();
+
                 continue;
             }
 
@@ -91,29 +93,29 @@ class ImportTaskContentCommand extends Command
             ];
 
             foreach ($contentMap as $field => $filename) {
-                $filePath = $sourcePath . '/' . $filename;
+                $filePath = $sourcePath.'/'.$filename;
 
-                if (!File::exists($filePath)) {
+                if (! File::exists($filePath)) {
                     continue;
                 }
 
                 // Skip if content exists and not forcing
-                if (!empty($task->{$field}) && !$force) {
+                if (! empty($task->{$field}) && ! $force) {
                     continue;
                 }
 
                 $content = File::get($filePath);
 
-                if (!$dryRun) {
+                if (! $dryRun) {
                     $task->{$field} = $content;
                     $updated = true;
                 }
             }
 
-            if ($updated && !$dryRun) {
+            if ($updated && ! $dryRun) {
                 $task->save();
                 $stats['updated']++;
-            } elseif (!$updated) {
+            } elseif (! $updated) {
                 $stats['skipped']++;
             }
 

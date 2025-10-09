@@ -16,7 +16,7 @@ class NoteCommand extends BaseCommand
                 'type' => 'error',
                 'component' => null,
                 'data' => null,
-                'message' => 'Please provide content for the note.'
+                'message' => 'Please provide content for the note.',
             ];
         }
 
@@ -35,16 +35,16 @@ class NoteCommand extends BaseCommand
                 'command' => 'note',
                 'created_via' => 'slash_command',
                 'type' => 'note',
-                'created_at' => now()->toISOString()
+                'created_at' => now()->toISOString(),
             ],
-            'tags' => ['note', 'document']
+            'tags' => ['note', 'document'],
         ]);
 
         return [
             'type' => 'success',
             'component' => null,
             'data' => null,
-            'message' => '✅ Note created successfully'
+            'message' => '✅ Note created successfully',
         ];
     }
 

@@ -5,8 +5,11 @@ namespace App\Services\Orchestration\ToolAware\DTOs;
 final class ContextBundle
 {
     public string $conversation_summary;
+
     public string $user_message;
+
     public array $agent_prefs = [];
+
     public array $tool_registry_preview = [];
 
     public function __construct(

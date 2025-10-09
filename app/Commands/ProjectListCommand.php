@@ -8,14 +8,14 @@ class ProjectListCommand extends BaseCommand
     {
         // Get projects
         $projects = $this->getProjects();
-        
+
         return [
             'type' => 'project',
             'component' => 'ProjectListModal',
-            'data' => $projects
+            'data' => $projects,
         ];
     }
-    
+
     private function getProjects(): array
     {
         if (class_exists(\App\Models\Project::class)) {
@@ -41,28 +41,28 @@ class ProjectListCommand extends BaseCommand
                     ];
                 })
                 ->all();
-                
+
             return $projects;
         }
-        
+
         return [];
     }
-    
+
     public static function getName(): string
     {
         return 'Project List';
     }
-    
+
     public static function getDescription(): string
     {
         return 'List all projects in the system';
     }
-    
+
     public static function getUsage(): string
     {
         return '/project';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Navigation';

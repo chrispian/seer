@@ -15,9 +15,9 @@ class OrchestrationArtifactFactory extends Factory
     {
         $content = $this->faker->text(200);
         $hash = hash('sha256', $content);
-        $filename = $this->faker->word() . '.txt';
-        $store = new ContentStore();
-        
+        $filename = $this->faker->word().'.txt';
+        $store = new ContentStore;
+
         $store->put($content);
 
         return [

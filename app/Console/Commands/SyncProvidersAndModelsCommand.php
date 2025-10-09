@@ -33,13 +33,13 @@ class SyncProvidersAndModelsCommand extends Command
             $this->info('Sync job has been queued.');
         } else {
             try {
-                (new SyncProvidersAndModels())->handle();
+                (new SyncProvidersAndModels)->handle();
                 $this->info('✅ Sync completed successfully!');
-                
+
                 // Show stats
                 $providerCount = \App\Models\Provider::count();
                 $modelCount = \App\Models\AIModel::count();
-                
+
                 $this->table(
                     ['Type', 'Count'],
                     [
@@ -47,9 +47,10 @@ class SyncProvidersAndModelsCommand extends Command
                         ['Models', $modelCount],
                     ]
                 );
-                
+
             } catch (\Exception $e) {
-                $this->error('❌ Sync failed: ' . $e->getMessage());
+                $this->error('❌ Sync failed: '.$e->getMessage());
+
                 return Command::FAILURE;
             }
         }

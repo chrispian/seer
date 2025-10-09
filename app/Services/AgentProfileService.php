@@ -35,26 +35,26 @@ class AgentProfileService
     {
         $query = AgentProfile::query()->orderBy('name');
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $statuses = $this->normaliseMultiple($filters['status'], AgentStatus::class);
             $query->whereIn('status', $statuses);
         }
 
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $types = $this->normaliseMultiple($filters['type'], AgentType::class);
             $query->whereIn('type', $types);
         }
 
-        if (!empty($filters['mode'])) {
+        if (! empty($filters['mode'])) {
             $modes = $this->normaliseMultiple($filters['mode'], AgentMode::class);
             $query->whereIn('mode', $modes);
         }
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->search($filters['search']);
         }
 
-        if (!empty($filters['limit'])) {
+        if (! empty($filters['limit'])) {
             $query->limit((int) $filters['limit']);
         }
 
@@ -237,7 +237,7 @@ class AgentProfileService
 
         if (array_key_exists('type', $filtered)) {
             $filtered['type'] = $this->normaliseValue($filtered['type'], AgentType::class);
-        } elseif (!$profile) {
+        } elseif (! $profile) {
             throw new \InvalidArgumentException('Agent type is required.');
         } else {
             $filtered['type'] = $profile->type->value;
@@ -247,7 +247,7 @@ class AgentProfileService
             $filtered['mode'] = $this->normaliseValue($filtered['mode'], AgentMode::class);
         }
 
-        if (empty($filtered['mode'] ?? null) && !empty($filtered['type'])) {
+        if (empty($filtered['mode'] ?? null) && ! empty($filtered['type'])) {
             $type = AgentType::tryFrom($filtered['type']);
             if ($type) {
                 $filtered['mode'] = $type->defaultMode()->value;
@@ -296,7 +296,7 @@ class AgentProfileService
                 ->where('slug', $candidate)
                 ->exists()
         ) {
-            $candidate = $base . '-' . $suffix;
+            $candidate = $base.'-'.$suffix;
             $suffix++;
         }
 
@@ -319,7 +319,7 @@ class AgentProfileService
     }
 
     /**
-     * @param class-string $enum
+     * @param  class-string  $enum
      */
     private function normaliseValue(mixed $value, string $enum): string
     {
@@ -346,7 +346,7 @@ class AgentProfileService
     }
 
     /**
-     * @param class-string $enum
+     * @param  class-string  $enum
      */
     private function normaliseMultiple(mixed $values, string $enum): array
     {

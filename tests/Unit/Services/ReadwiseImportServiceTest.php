@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Fragment;
-use App\Models\Source;
 use App\Models\User;
 use App\Services\Readwise\ReadwiseImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;

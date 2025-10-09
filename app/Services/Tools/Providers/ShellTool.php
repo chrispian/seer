@@ -96,21 +96,20 @@ class ShellTool implements Tool
     protected function requiresUserConfirmation(string $cmd): bool
     {
         $confirmationPatterns = [
-            // Database operations that modify data
-            '/php artisan migrate/',
-            '/artisan migrate/',
-            '/php artisan db:/',
-            '/artisan db:/',
-            '/composer.*install/',
-            '/composer.*update/',
-            '/npm.*install/',
-            '/npm.*update/',
-            '/yarn.*add/',
-            '/git.*push/',
-            '/git.*pull/',
-            '/rm.*-rf/',
-            '/mysql/',
-            '/psql/',
+            '/php artisan migrate/i',
+            '/artisan migrate/i',
+            '/php artisan db:/i',
+            '/artisan db:/i',
+            '/composer.*install/i',
+            '/composer.*update/i',
+            '/npm.*install/i',
+            '/npm.*update/i',
+            '/yarn.*add/i',
+            '/git.*push/i',
+            '/git.*pull/i',
+            '/rm.*-rf/i',
+            '/mysql/i',
+            '/psql/i',
         ];
 
         foreach ($confirmationPatterns as $pattern) {
@@ -128,27 +127,22 @@ class ShellTool implements Tool
     protected function checkForDestructiveOperations(string $cmd): void
     {
         $destructivePatterns = [
-            // Laravel artisan commands
-            '/php artisan migrate:fresh/',
-            '/php artisan db:wipe/',
-            '/php artisan migrate:reset/',
-            '/php artisan migrate:rollback/',
-            '/artisan migrate:fresh/',
-            '/artisan db:wipe/',
-            '/artisan migrate:reset/',
-            '/artisan migrate:rollback/',
-
-            // Raw SQL destructive operations
-            '/DROP DATABASE/',
-            '/DROP TABLE/',
-            '/TRUNCATE TABLE/',
-            '/DELETE FROM.*WHERE.*=.*1.*=.*1/', // Attempt to catch DELETE without WHERE
-
-            // MySQL/PostgreSQL specific
-            '/mysql.*-e.*DROP/',
-            '/psql.*-c.*DROP/',
-            '/mysql.*-e.*TRUNCATE/',
-            '/psql.*-c.*TRUNCATE/',
+            '/php artisan migrate:fresh/i',
+            '/php artisan db:wipe/i',
+            '/php artisan migrate:reset/i',
+            '/php artisan migrate:rollback/i',
+            '/artisan migrate:fresh/i',
+            '/artisan db:wipe/i',
+            '/artisan migrate:reset/i',
+            '/artisan migrate:rollback/i',
+            '/DROP DATABASE/i',
+            '/DROP TABLE/i',
+            '/TRUNCATE TABLE/i',
+            '/DELETE FROM.*WHERE.*=.*1.*=.*1/i',
+            '/mysql.*-e.*DROP/i',
+            '/psql.*-c.*DROP/i',
+            '/mysql.*-e.*TRUNCATE/i',
+            '/psql.*-c.*TRUNCATE/i',
         ];
 
         foreach ($destructivePatterns as $pattern) {

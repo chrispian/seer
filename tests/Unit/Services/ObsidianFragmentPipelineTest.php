@@ -5,7 +5,7 @@ use App\DTOs\ParsedObsidianNote;
 use App\Services\Obsidian\ObsidianFragmentPipeline;
 
 beforeEach(function () {
-    $this->pipeline = new ObsidianFragmentPipeline();
+    $this->pipeline = new ObsidianFragmentPipeline;
 });
 
 describe('Type Inference - Front Matter Override', function () {
@@ -319,7 +319,7 @@ describe('Type Inference - Content Pattern Matching', function () {
     it('infers task type from checked checkbox', function () {
         $parsed = new ParsedObsidianNote(
             title: 'Test Note',
-            body: "- [x] Completed task",
+            body: '- [x] Completed task',
             frontMatter: [],
             tags: []
         );

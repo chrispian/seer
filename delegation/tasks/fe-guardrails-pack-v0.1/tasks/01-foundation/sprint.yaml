@@ -1,0 +1,43 @@
+version: 0.1
+sprint: Guardrails Foundation
+objectives:
+  - Establish centralized guardrails pipeline around tool calls.
+  - Introduce allowlists/denylists at command, argument, path, and network layers.
+  - Provide dry-run mode and risk scoring with human-in-the-loop approval hook.
+requirements:
+  - NativePHP app; avoid Docker by default.
+  - Cross-platform (macOS, Linux). Windows: best-effort later.
+  - Keep third-party deps optional (Firejail/bwrap only if present).
+backlog:
+  - id: GF-1
+    title: "ToolCallMiddleware"
+    type: feature
+    desc: Laravel/NativePHP middleware wrapping every tool call with preflight checks, policy evaluation, and post-call audit.
+    acceptance:
+      - All tool calls traverse middleware.
+      - Policy decisions recorded with reason codes.
+  - id: GF-2
+    title: "PolicyRegistry + PolicySpec v1"
+    type: feature
+    desc: Central registry (code + config) for allow/deny rules covering tools, commands, args, paths, domains.
+    acceptance:
+      - Single source of truth in config.
+      - Hot-reload without restart.
+  - id: GF-3
+    title: "Risk Scoring + Approval Hook"
+    type: feature
+    desc: Score intention + scope (e.g., writes outside workspace, network egress, sudo) and require approval above threshold.
+    acceptance:
+      - Configurable thresholds.
+      - Dry-run payload shown for approval.
+  - id: GF-4
+    title: "Audit Log + Replay"
+    type: feature
+    desc: Structured logs (JSONL) with event ids, hashes, diffs and minimal PII; replayable for review.
+    acceptance:
+      - Tamper-evident hashing of entries.
+      - Log viewer scaffold route.
+definition_of_done:
+  - Coverage: >=80% unit on policy engine core.
+  - CLI smoke tests pass on macOS + Linux.
+  - Docs: quickstart + policy examples.

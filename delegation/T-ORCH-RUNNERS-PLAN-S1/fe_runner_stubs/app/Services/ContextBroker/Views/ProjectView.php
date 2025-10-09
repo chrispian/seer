@@ -9,6 +9,6 @@ class ProjectView
     public function compute(array $params = []): array
     {
         // TODO
-        return ['modules'=>[], 'services'=>[], 'tests'=>[]];
+        return ['modules' => [], 'services' => [], 'tests' => []];
     }
 }

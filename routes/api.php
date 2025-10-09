@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AnalyzeFragmentController;
+use App\Http\Controllers\Api\ApprovalController;
 use App\Http\Controllers\Api\CredentialController;
 use App\Http\Controllers\Api\ModelController as ApiModelController;
 use App\Http\Controllers\Api\ProviderController;
@@ -183,11 +184,11 @@ Route::prefix('orchestration')->group(function () {
     Route::get('/agents/{agentId}/inbox', [\App\Http\Controllers\Orchestration\MessagingController::class, 'listAgentInbox']);
     Route::post('/messages/{messageId}/read', [\App\Http\Controllers\Orchestration\MessagingController::class, 'markAsRead']);
     Route::post('/projects/{projectId}/broadcast', [\App\Http\Controllers\Orchestration\MessagingController::class, 'broadcast']);
-    
+
     Route::post('/tasks/{taskId}/artifacts', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'createArtifact']);
     Route::get('/tasks/{taskId}/artifacts', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'listTaskArtifacts']);
     Route::get('/artifacts/{artifactId}/download', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'downloadArtifact']);
-    
+
     Route::get('/tasks/{taskId}/activities', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'index']);
     Route::post('/tasks/{taskId}/activities', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'store']);
     Route::get('/tasks/{taskId}/activities/summary', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'summary']);
@@ -212,4 +213,22 @@ Route::prefix('agents')->group(function () {
     Route::put('/{id}', [\App\Http\Controllers\Api\AgentController::class, 'update']);
     Route::post('/{id}/avatar', [\App\Http\Controllers\Api\AgentController::class, 'uploadAvatar']);
     Route::delete('/{id}', [\App\Http\Controllers\Api\AgentController::class, 'destroy']);
+});
+
+// Approval endpoints (web middleware for session auth)
+Route::middleware(['web'])->prefix('approvals')->group(function () {
+    Route::post('/{id}/approve', [ApprovalController::class, 'approve']);
+    Route::post('/{id}/reject', [ApprovalController::class, 'reject']);
+    Route::get('/{id}', [ApprovalController::class, 'show']);
+    Route::get('/pending', [ApprovalController::class, 'pending']);
+});
+
+// Timeout endpoint for auto-canceling
+Route::middleware(['web'])->post('/approvals/{id}/timeout', function ($id) {
+    $approval = \App\Models\ApprovalRequest::find($id);
+    if ($approval && $approval->status === 'pending') {
+        $approval->update(['status' => 'timeout']);
+    }
+
+    return response()->json(['success' => true]);
 });

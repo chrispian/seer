@@ -26,8 +26,8 @@ class ToolAwarePipeline
     /**
      * Execute the full tool-aware turn pipeline
      *
-     * @param int|null $sessionId Chat session ID
-     * @param string $userMessage User's message
+     * @param  int|null  $sessionId  Chat session ID
+     * @param  string  $userMessage  User's message
      * @return array ['message' => string, 'correlation_id' => string|null, 'used_tools' => bool, 'metadata' => array]
      */
     public function execute(?int $sessionId, string $userMessage): array
@@ -44,7 +44,7 @@ class ToolAwarePipeline
         try {
             // Step 1: Assemble context
             $context = $this->contextBroker->assemble($sessionId, $userMessage);
-            
+
             Log::debug('Context assembled', [
                 'pipeline_id' => $pipelineId,
                 'summary_length' => strlen($context->conversation_summary),
@@ -62,11 +62,11 @@ class ToolAwarePipeline
             ]);
 
             // If no tools needed, compose direct response
-            if (!$decision->needs_tools) {
+            if (! $decision->needs_tools) {
                 $message = $this->composer->compose($context, null, null);
 
                 $totalTime = (microtime(true) - $startTime) * 1000;
-                
+
                 Log::info('Pipeline completed (no tools)', [
                     'pipeline_id' => $pipelineId,
                     'total_time_ms' => round($totalTime, 2),
@@ -87,7 +87,7 @@ class ToolAwarePipeline
             // Step 3: Select tools
             $plan = $this->toolSelector->selectTools($decision->high_level_goal, $context);
 
-            if (!$plan->hasSteps()) {
+            if (! $plan->hasSteps()) {
                 Log::warning('Tool plan has no steps', [
                     'pipeline_id' => $pipelineId,
                     'inputs_needed' => $plan->inputs_needed,
@@ -213,7 +213,7 @@ class ToolAwarePipeline
 
             // Step 1: Assemble context
             $context = $this->contextBroker->assemble($sessionId, $userMessage);
-            
+
             yield [
                 'type' => 'context_assembled',
                 'summary_length' => strlen($context->conversation_summary),
@@ -231,7 +231,7 @@ class ToolAwarePipeline
             ];
 
             // If no tools needed, compose direct response
-            if (!$decision->needs_tools) {
+            if (! $decision->needs_tools) {
                 $message = $this->composer->compose($context, null, null);
 
                 yield [
@@ -241,6 +241,7 @@ class ToolAwarePipeline
                 ];
 
                 yield ['type' => 'done'];
+
                 return;
             }
 
@@ -253,7 +254,7 @@ class ToolAwarePipeline
                 'step_count' => $plan->stepCount(),
             ];
 
-            if (!$plan->hasSteps()) {
+            if (! $plan->hasSteps()) {
                 $message = $this->composer->compose($context, null, null);
 
                 yield [
@@ -263,6 +264,7 @@ class ToolAwarePipeline
                 ];
 
                 yield ['type' => 'done'];
+
                 return;
             }
 
@@ -282,13 +284,13 @@ class ToolAwarePipeline
                         ));
                     }
                 }
-                
+
                 yield $event;
             }
 
             // Step 5: Summarize outcome
             yield ['type' => 'summarizing'];
-            
+
             $summary = $this->summarizer->summarize($trace);
 
             yield [
@@ -298,7 +300,7 @@ class ToolAwarePipeline
 
             // Step 6: Compose final response
             yield ['type' => 'composing'];
-            
+
             $message = $this->composer->compose($context, $summary, $trace->correlation_id);
 
             $totalTime = (microtime(true) - $startTime) * 1000;
@@ -344,7 +346,7 @@ class ToolAwarePipeline
     ): void {
         $auditEnabled = Config::get('fragments.tool_aware_turn.features.audit_enabled', true);
 
-        if (!$auditEnabled) {
+        if (! $auditEnabled) {
             return;
         }
 
@@ -389,7 +391,7 @@ class ToolAwarePipeline
         ];
 
         $jsonData = json_encode($data);
-        
+
         foreach ($sensitivePatterns as $pattern) {
             $jsonData = preg_replace($pattern, '[REDACTED]', $jsonData);
         }

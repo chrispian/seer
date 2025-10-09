@@ -23,7 +23,7 @@ beforeEach(function () {
 });
 
 it('creates an agent profile with defaults and inferred mode', function () {
-    $service = new AgentProfileService();
+    $service = new AgentProfileService;
 
     $agent = $service->create([
         'name' => 'Alice Backend Engineer',
@@ -46,7 +46,7 @@ it('updates an agent profile and normalises list data', function () {
         'mode' => AgentMode::Implementation->value,
     ]);
 
-    $service = new AgentProfileService();
+    $service = new AgentProfileService;
 
     $updated = $service->update($agent, [
         'description' => 'Primary Laravel backend agent.',
@@ -71,7 +71,7 @@ it('preserves existing slug when updating without providing one', function () {
         'slug' => 'custom-agent-slug',
     ]);
 
-    $service = new AgentProfileService();
+    $service = new AgentProfileService;
 
     $updated = $service->update($agent, [
         'description' => 'Updated description only.',
@@ -97,7 +97,7 @@ it('lists agent profiles with filters applied', function () {
         'mode' => AgentMode::Coordination->value,
     ]);
 
-    $service = new AgentProfileService();
+    $service = new AgentProfileService;
 
     $activeOnly = $service->list(['status' => AgentStatus::Active]);
     expect($activeOnly->pluck('id'))
@@ -115,7 +115,7 @@ it('lists agent profiles with filters applied', function () {
 });
 
 it('ensures slug uniqueness when creating agents with duplicate names', function () {
-    $service = new AgentProfileService();
+    $service = new AgentProfileService;
 
     $first = $service->create([
         'name' => 'Duplicate Name Agent',
@@ -132,7 +132,7 @@ it('ensures slug uniqueness when creating agents with duplicate names', function
 });
 
 it('returns catalog definitions for types, modes, and statuses', function () {
-    $service = new AgentProfileService();
+    $service = new AgentProfileService;
 
     $types = $service->availableTypes();
     $modes = $service->availableModes();

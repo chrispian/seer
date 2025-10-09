@@ -14,7 +14,9 @@ class QuantumRunner
     {
         $leaseKey = "lease:{$taskId}:{$runId}";
         $got = Redis::setnx($leaseKey, getmypid());
-        if (!$got) return;
+        if (! $got) {
+            return;
+        }
         Redis::expire($leaseKey, 120);
 
         $start = microtime(true);

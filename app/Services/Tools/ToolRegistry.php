@@ -223,6 +223,7 @@ class ToolRegistry
     {
         if ($slug === 'shell') {
             $cmd = $args['cmd'] ?? '';
+
             return str_contains($cmd, 'migrate:fresh') ||
                    str_contains($cmd, 'db:wipe') ||
                    str_contains($cmd, 'DROP') ||
@@ -242,6 +243,7 @@ class ToolRegistry
             // For shell commands, show only the first part
             $cmd = $args['cmd'];
             $parts = explode(' ', $cmd, 3);
+
             return count($parts) >= 2 ? $parts[0].' '.$parts[1] : $parts[0];
         }
 

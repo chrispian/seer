@@ -27,9 +27,9 @@ class MakeCommandClass extends Command
     public function handle()
     {
         $name = $this->argument('name');
-        $className = Str::studly($name) . 'Command';
+        $className = Str::studly($name).'Command';
         $slug = Str::kebab($name);
-        
+
         // Get or prompt for required information
         $type = $this->option('type') ?: $this->ask('Command type (orchestration, system, general)', 'general');
         $component = $this->option('component') ?: $this->ask('Frontend component (optional, press Enter to skip)');
@@ -37,8 +37,8 @@ class MakeCommandClass extends Command
         $description = $this->option('description') ?: $this->ask('Description', "Execute {$slug} command");
 
         // Ensure usage starts with /
-        if (!str_starts_with($usage, '/')) {
-            $usage = '/' . $usage;
+        if (! str_starts_with($usage, '/')) {
+            $usage = '/'.$usage;
         }
 
         // Generate the command class
@@ -55,9 +55,10 @@ class MakeCommandClass extends Command
 
         // Write the file
         $path = app_path("Commands/{$className}.php");
-        
+
         if ($this->files->exists($path)) {
             $this->error("Command class {$className} already exists!");
+
             return 1;
         }
 
@@ -70,7 +71,7 @@ class MakeCommandClass extends Command
         $this->info("File: {$path}");
         $this->info("Slug: {$slug}");
         $this->info("Usage: {$usage}");
-        
+
         if ($component && $component !== 'UniversalCommandModal') {
             $this->warn("Remember to create the {$component} component if it doesn't exist!");
         }
@@ -137,6 +138,7 @@ STUB;
         foreach ($variables as $key => $value) {
             $stub = str_replace("{{{$key}}}", $value, $stub);
         }
+
         return $stub;
     }
 
@@ -147,7 +149,7 @@ STUB;
 
         // Add import
         $importLine = "use App\\Commands\\{$className};";
-        if (!str_contains($content, $importLine)) {
+        if (! str_contains($content, $importLine)) {
             $content = str_replace(
                 'use App\Commands\SprintListCommand;',
                 "use App\\Commands\\{$className};\nuse App\Commands\SprintListCommand;",
@@ -164,6 +166,6 @@ STUB;
         );
 
         $this->files->put($registryPath, $content);
-        $this->info("Updated CommandRegistry with new command mapping.");
+        $this->info('Updated CommandRegistry with new command mapping.');
     }
 }

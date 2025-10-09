@@ -8,14 +8,14 @@ class RoutingCommand extends BaseCommand
     {
         // Routing information command
         $routes = $this->getRoutingInfo();
-        
+
         return [
             'type' => 'routing',
             'component' => 'RoutingInfoModal',
-            'data' => $routes
+            'data' => $routes,
         ];
     }
-    
+
     private function getRoutingInfo(): array
     {
         // Return basic routing information
@@ -23,7 +23,7 @@ class RoutingCommand extends BaseCommand
             'current_context' => [
                 'vault' => 'Current Vault',
                 'project' => 'Current Project',
-                'session' => 'Current Session'
+                'session' => 'Current Session',
             ],
             'available_routes' => [
                 '/help' => 'Show command help',
@@ -34,28 +34,28 @@ class RoutingCommand extends BaseCommand
                 '/bookmark' => 'List bookmarks',
                 '/search' => 'Search content',
                 '/recall' => 'Recall fragments',
-                '/clear' => 'Clear chat'
+                '/clear' => 'Clear chat',
             ],
             'routing_status' => 'active',
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ];
     }
-    
+
     public static function getName(): string
     {
         return 'Routing Info';
     }
-    
+
     public static function getDescription(): string
     {
         return 'Display routing and navigation information';
     }
-    
+
     public static function getUsage(): string
     {
         return '/routing';
     }
-    
+
     public static function getCategory(): string
     {
         return 'System';

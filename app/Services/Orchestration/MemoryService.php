@@ -13,12 +13,13 @@ class MemoryService
     ];
 
     protected const EPHEMERAL_PREFIX = 'mem:task:{task_id}:scratch:';
+
     protected const EPHEMERAL_TTL = 86400; // 24 hours
 
     public function setDurable(string $taskId, string $key, $value): bool
     {
         $cacheKey = $this->resolveDurableKey($taskId, $key);
-        
+
         return Cache::forever($cacheKey, [
             'value' => $value,
             'stored_at' => now()->toIso8601String(),
@@ -54,8 +55,8 @@ class MemoryService
     {
         $registryKey = "mem:task:{$taskId}:scratch:_registry";
         $keys = Cache::get($registryKey, []);
-        
-        if (!in_array($key, $keys, true)) {
+
+        if (! in_array($key, $keys, true)) {
             $keys[] = $key;
             Cache::put($registryKey, $keys, self::EPHEMERAL_TTL);
         }
@@ -107,7 +108,7 @@ class MemoryService
         foreach ($ephemeralKeys as $fullKey) {
             $shortKey = str_replace($this->resolveEphemeralKey($taskId, ''), '', $fullKey);
             $data = Cache::get($fullKey);
-            
+
             if ($data) {
                 $compacted[$shortKey] = $data['value'];
             }
@@ -119,13 +120,13 @@ class MemoryService
     public function compactToPostop(string $taskId): bool
     {
         $ephemeralData = $this->compactEphemeral($taskId);
-        
+
         if (empty($ephemeralData)) {
             return true;
         }
 
         $currentPostop = $this->getPostop($taskId, []);
-        
+
         $merged = array_merge(
             is_array($currentPostop) ? $currentPostop : [],
             [
@@ -167,7 +168,7 @@ class MemoryService
         $keys = Cache::get($registryKey, []);
 
         return array_map(
-            fn($key) => $this->resolveEphemeralKey($taskId, $key),
+            fn ($key) => $this->resolveEphemeralKey($taskId, $key),
             $keys
         );
     }

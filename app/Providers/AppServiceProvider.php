@@ -3,10 +3,10 @@
 namespace App\Providers;
 
 use App\Servers\OrchestrationServer;
+use HollisLabs\ToolCrate\Servers\ToolCrateServer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use HollisLabs\ToolCrate\Servers\ToolCrateServer;
 use Laravel\Mcp\Facades\Mcp;
 
 class AppServiceProvider extends ServiceProvider

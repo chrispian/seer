@@ -38,7 +38,7 @@ class TemplateEngine
 
         // Process for loops with context (they need access to arrays)
         $processedTemplate = $this->processForLoops($processedTemplate, $context);
-        
+
         // Then process variables with context
         return preg_replace_callback(
             '/\{\{\s*([^}]+)\s*\}\}/',
@@ -70,7 +70,7 @@ class TemplateEngine
     {
         // Note: For loops are processed later with actual context, not here
         // This method only processes control structures that don't need context (if/else)
-        
+
         // Handle nested if blocks by processing from inside out
         // Guard against infinite loops by tracking replacements
         $maxIterations = 100; // Reasonable limit for nested depth
@@ -124,14 +124,14 @@ class TemplateEngine
                 $variable = trim($matches[1]);
                 $arrayPath = trim($matches[2]);
                 $loopTemplate = $matches[3];
-                
+
                 // Get the array from context
                 $array = $this->getValue($arrayPath, $context);
-                
-                if (!is_array($array)) {
+
+                if (! is_array($array)) {
                     return ''; // If not an array, return empty
                 }
-                
+
                 $output = '';
                 foreach ($array as $index => $item) {
                     // Create loop context with the current item
@@ -143,9 +143,9 @@ class TemplateEngine
                             'first' => $index === 0,
                             'last' => $index === count($array) - 1,
                             'length' => count($array),
-                        ]
+                        ],
                     ]);
-                    
+
                     // Render the loop template with the loop context
                     $renderedItem = preg_replace_callback(
                         '/\{\{\s*([^}]+)\s*\}\}/',
@@ -154,10 +154,10 @@ class TemplateEngine
                         },
                         $loopTemplate
                     );
-                    
+
                     $output .= $renderedItem;
                 }
-                
+
                 return $output;
             },
             $template

@@ -18,7 +18,7 @@ class ToolRunner implements ToolRunnerInterface
 
     public function execute(ToolPlan $plan): ExecutionTrace
     {
-        $trace = new ExecutionTrace();
+        $trace = new ExecutionTrace;
         $maxSteps = Config::get('fragments.tool_aware_turn.limits.max_steps_per_turn', 10);
 
         Log::info('Starting tool execution', [
@@ -39,8 +39,9 @@ class ToolRunner implements ToolRunnerInterface
             $toolId = $step['tool_id'] ?? null;
             $args = $step['args'] ?? [];
 
-            if (!$toolId) {
+            if (! $toolId) {
                 Log::error('Tool step missing tool_id', ['step' => $step]);
+
                 continue;
             }
 
@@ -62,7 +63,7 @@ class ToolRunner implements ToolRunnerInterface
 
     public function executeStreaming(ToolPlan $plan): \Generator
     {
-        $trace = new ExecutionTrace();
+        $trace = new ExecutionTrace;
         $maxSteps = Config::get('fragments.tool_aware_turn.limits.max_steps_per_turn', 10);
 
         Log::info('Starting streaming tool execution', [
@@ -83,8 +84,9 @@ class ToolRunner implements ToolRunnerInterface
             $toolId = $step['tool_id'] ?? null;
             $args = $step['args'] ?? [];
 
-            if (!$toolId) {
+            if (! $toolId) {
                 Log::error('Tool step missing tool_id', ['step' => $step]);
+
                 continue;
             }
 
@@ -120,13 +122,13 @@ class ToolRunner implements ToolRunnerInterface
         $startTime = microtime(true);
 
         try {
-            if (!$this->toolRegistry->exists($toolId)) {
+            if (! $this->toolRegistry->exists($toolId)) {
                 throw new \RuntimeException("Tool not found: {$toolId}");
             }
 
             $tool = $this->toolRegistry->get($toolId);
 
-            if (!$tool->isEnabled()) {
+            if (! $tool->isEnabled()) {
                 throw new \RuntimeException("Tool is disabled: {$toolId}");
             }
 

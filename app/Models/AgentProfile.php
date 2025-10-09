@@ -51,7 +51,7 @@ class AgentProfile extends Model
                 $profile->slug = static::generateUniqueSlug($profile->name);
             }
 
-            if (empty($profile->mode) && !empty($profile->type)) {
+            if (empty($profile->mode) && ! empty($profile->type)) {
                 $profile->mode = static::resolveType($profile->type)?->defaultMode();
             }
 
@@ -145,7 +145,7 @@ class AgentProfile extends Model
      */
     public function scopeSearch($query, string $term)
     {
-        $like = '%' . $term . '%';
+        $like = '%'.$term.'%';
 
         return $query->where(function ($inner) use ($like) {
             $inner->where('name', 'like', $like)
@@ -163,7 +163,7 @@ class AgentProfile extends Model
             ->when($ignoreId, fn ($query) => $query->whereKeyNot($ignoreId))
             ->where('slug', $slug)
             ->exists()) {
-            $slug = $base . '-' . $suffix;
+            $slug = $base.'-'.$suffix;
             $suffix++;
         }
 

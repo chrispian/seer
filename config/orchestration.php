@@ -2,12 +2,12 @@
 
 return [
     'enabled_tools' => [
-        'orchestration_agents_list'  => true,
+        'orchestration_agents_list' => true,
         'orchestration_agents_detail' => true,
         'orchestration_agents_save' => true,
         'orchestration_agents_status' => true,
-        'orchestration_tasks_list'   => true,
-        'orchestration_tasks_save'   => true,
+        'orchestration_tasks_list' => true,
+        'orchestration_tasks_save' => true,
         'orchestration_sprints_list' => true,
         'orchestration_tasks_detail' => true,
         'orchestration_tasks_assign' => true,

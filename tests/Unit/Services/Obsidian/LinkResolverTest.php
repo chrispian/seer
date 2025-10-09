@@ -104,7 +104,7 @@ it('is case-insensitive when matching filenames', function () {
 
     expect($result['resolved'])->toHaveCount(3);
     expect($result['orphans'])->toHaveCount(0);
-    
+
     foreach ($result['resolved'] as $link) {
         expect($link['target_fragment_id'])->toBe($fragment->id);
     }

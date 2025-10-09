@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Fragment Type Registry
- * 
+ *
  * Central registry for all fragment types. Stores configuration,
  * UI settings, and management flags. Source of truth for type system.
- * 
+ *
  * No YAML - pure DB + PHP classes approach.
  */
 class FragmentTypeRegistry extends Model
@@ -98,7 +98,7 @@ class FragmentTypeRegistry extends Model
      */
     public function canBeDisabled(): bool
     {
-        return !$this->is_system;
+        return ! $this->is_system;
     }
 
     /**
@@ -106,7 +106,7 @@ class FragmentTypeRegistry extends Model
      */
     public function canBeDeleted(): bool
     {
-        return !$this->is_system;
+        return ! $this->is_system;
     }
 
     /**
@@ -138,7 +138,7 @@ class FragmentTypeRegistry extends Model
      */
     public function getConfigInstance(): ?object
     {
-        if (!$this->config_class || !class_exists($this->config_class)) {
+        if (! $this->config_class || ! class_exists($this->config_class)) {
             return null;
         }
 

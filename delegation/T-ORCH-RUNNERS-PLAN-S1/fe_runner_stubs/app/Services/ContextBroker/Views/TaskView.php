@@ -9,6 +9,6 @@ class TaskView
     public function compute(array $params = []): array
     {
         // TODO
-        return ['spec'=>[], 'acceptance'=>[], 'deps'=>[]];
+        return ['spec' => [], 'acceptance' => [], 'deps' => []];
     }
 }

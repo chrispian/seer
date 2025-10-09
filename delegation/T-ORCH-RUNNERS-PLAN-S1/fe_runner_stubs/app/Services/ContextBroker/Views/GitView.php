@@ -9,6 +9,6 @@ class GitView
     public function compute(array $params = []): array
     {
         // TODO
-        return ['branch'=>null, 'dirty'=>[], 'recent_commits'=>[]];
+        return ['branch' => null, 'dirty' => [], 'recent_commits' => []];
     }
 }

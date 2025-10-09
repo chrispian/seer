@@ -46,16 +46,16 @@ test('orchestration agent status command updates agent status', function () {
     // First get an agent to test with
     Artisan::call('orchestration:agents', ['--json' => true, '--limit' => 1]);
     $agentsPayload = json_decode(Artisan::output(), true);
-    
+
     expect($agentsPayload['data'])->not->toBeEmpty();
     $agent = $agentsPayload['data'][0];
     $agentSlug = $agent['slug'];
-    
+
     // Update the agent status
     Artisan::call('orchestration:agent:status', [
         'agent' => $agentSlug,
         'status' => 'inactive',
-        '--json' => true
+        '--json' => true,
     ]);
 
     $output = Artisan::output();
@@ -73,11 +73,11 @@ test('orchestration agent status command handles invalid status', function () {
     // First get an agent to test with
     Artisan::call('orchestration:agents', ['--json' => true, '--limit' => 1]);
     $agentsPayload = json_decode(Artisan::output(), true);
-    
+
     expect($agentsPayload['data'])->not->toBeEmpty();
     $agent = $agentsPayload['data'][0];
     $agentSlug = $agent['slug'];
-    
+
     // Try to set an invalid status
     $exitCode = Artisan::call('orchestration:agent:status', [
         'agent' => $agentSlug,
@@ -92,26 +92,26 @@ test('orchestration sprint tasks attach command attaches tasks to sprint', funct
     // Get a sprint to test with
     Artisan::call('orchestration:sprints', ['--json' => true, '--limit' => 1]);
     $sprintsPayload = json_decode(Artisan::output(), true);
-    
+
     expect($sprintsPayload['data'])->not->toBeEmpty();
     $sprint = $sprintsPayload['data'][0];
     $sprintCode = $sprint['code'];
-    
+
     // Get some tasks to attach
     Artisan::call('orchestration:tasks', ['--json' => true, '--limit' => 2]);
     $tasksPayload = json_decode(Artisan::output(), true);
-    
+
     expect($tasksPayload['data'])->not->toBeEmpty();
     $taskCodes = array_slice(array_column($tasksPayload['data'], 'task_code'), 0, 2);
-    
+
     // Attach tasks to sprint
     $command = [
         'sprint' => $sprintCode,
         'task' => $taskCodes,
         '--json' => true,
-        '--include-tasks' => true
+        '--include-tasks' => true,
     ];
-    
+
     Artisan::call('orchestration:sprint:tasks:attach', $command);
 
     $output = Artisan::output();
@@ -128,15 +128,15 @@ test('orchestration sprint tasks attach command handles no tasks provided', func
     // Get a sprint to test with
     Artisan::call('orchestration:sprints', ['--json' => true, '--limit' => 1]);
     $sprintsPayload = json_decode(Artisan::output(), true);
-    
+
     expect($sprintsPayload['data'])->not->toBeEmpty();
     $sprint = $sprintsPayload['data'][0];
     $sprintCode = $sprint['code'];
-    
+
     // Try to attach with no tasks
     $exitCode = Artisan::call('orchestration:sprint:tasks:attach', [
         'sprint' => $sprintCode,
-        'task' => []
+        'task' => [],
     ]);
 
     expect($exitCode)->toBe(1); // Failure exit code

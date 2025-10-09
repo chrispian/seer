@@ -12,7 +12,9 @@ use Laravel\Mcp\Server\Tool;
 class MessageAckTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_message_ack';
+
     protected string $title = 'Acknowledge/mark message as read';
+
     protected string $description = 'Mark a message as read by setting read_at timestamp.';
 
     public function schema(JsonSchema $schema): array
@@ -25,7 +27,7 @@ class MessageAckTool extends Tool implements SummarizesTool
     public function handle(Request $request): Response
     {
         $messageId = (string) $request->get('message_id');
-        
+
         $message = Message::findOrFail($messageId);
 
         if ($message->isRead()) {

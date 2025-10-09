@@ -12,7 +12,9 @@ use Laravel\Mcp\Server\Tool;
 class AgentStatusTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_agents_status';
+
     protected string $title = 'Update agent status';
+
     protected string $description = 'Set an agent profile to active, inactive, or archived.';
 
     public function schema(JsonSchema $schema): array

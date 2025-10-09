@@ -1,11 +1,11 @@
 <?php
 
 use App\Services\Orchestration\ToolAware\DTOs\ContextBundle;
+use App\Services\Orchestration\ToolAware\DTOs\ExecutionTrace;
+use App\Services\Orchestration\ToolAware\DTOs\OutcomeSummary;
 use App\Services\Orchestration\ToolAware\DTOs\RouterDecision;
 use App\Services\Orchestration\ToolAware\DTOs\ToolPlan;
 use App\Services\Orchestration\ToolAware\DTOs\ToolResult;
-use App\Services\Orchestration\ToolAware\DTOs\ExecutionTrace;
-use App\Services\Orchestration\ToolAware\DTOs\OutcomeSummary;
 
 it('context bundle constructs correctly', function () {
     $bundle = new ContextBundle(
@@ -60,7 +60,7 @@ it('tool plan has helper methods', function () {
 });
 
 it('execution trace tracks errors', function () {
-    $trace = new ExecutionTrace();
+    $trace = new ExecutionTrace;
 
     $success = new ToolResult('tool1', [], ['data' => 'ok'], null, 100, true);
     $error = new ToolResult('tool2', [], null, 'Failed', 50, false);
@@ -74,8 +74,8 @@ it('execution trace tracks errors', function () {
 });
 
 it('execution trace generates correlation id', function () {
-    $trace1 = new ExecutionTrace();
-    $trace2 = new ExecutionTrace();
+    $trace1 = new ExecutionTrace;
+    $trace2 = new ExecutionTrace;
 
     expect($trace1->correlation_id)->not->toBe($trace2->correlation_id);
     expect($trace1->correlation_id)->toMatch('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/');

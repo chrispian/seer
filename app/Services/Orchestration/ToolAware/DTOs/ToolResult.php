@@ -5,10 +5,15 @@ namespace App\Services\Orchestration\ToolAware\DTOs;
 final class ToolResult
 {
     public string $tool_id;
+
     public array $args;
+
     public mixed $result = null;
+
     public ?string $error = null;
+
     public float $elapsed_ms = 0.0;
+
     public bool $success = false;
 
     public function __construct(

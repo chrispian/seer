@@ -1,0 +1,20 @@
+version: 0.1
+sprint: CI & Validation
+objectives:
+  - Enforce guardrail tests in CI and local pre-commit hooks.
+backlog:
+  - id: CV-1
+    title: "Policy Test Matrix"
+    type: feature
+    desc: Table-driven tests for commands, args, paths, and domains.
+  - id: CV-2
+    title: "Golden Diff Fixtures"
+    type: chore
+    desc: Sample before/after file states for approval previews.
+  - id: CV-3
+    title: "Pre-commit Hook"
+    type: chore
+    desc: Runs fast policy tests + static scan of command allowlists.
+definition_of_done:
+  - CI green on macOS/Linux runners.
+  - Regressions block merge.

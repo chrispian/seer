@@ -349,7 +349,7 @@ return [
 
     'tool_aware_turn' => [
         'enabled' => env('TOOL_AWARE_TURN_ENABLED', false),
-        
+
         'limits' => [
             'max_steps_per_turn' => env('TOOL_AWARE_MAX_STEPS', 10),
             'timeout_seconds' => env('TOOL_AWARE_TIMEOUT', 60),

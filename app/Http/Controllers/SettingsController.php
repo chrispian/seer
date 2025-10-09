@@ -242,7 +242,7 @@ class SettingsController extends Controller
 
         if (array_key_exists('obsidian_vault_path', $validated)) {
             $path = $validated['obsidian_vault_path'];
-            
+
             if ($path && ! is_dir($path)) {
                 return response()->json([
                     'success' => false,

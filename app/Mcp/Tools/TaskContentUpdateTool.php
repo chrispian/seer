@@ -18,7 +18,7 @@ class TaskContentUpdateTool implements Tool
 
             $validFields = ['agent_content', 'plan_content', 'context_content', 'todo_content', 'summary_content'];
             if (! in_array($field, $validFields)) {
-                return "Invalid field. Must be one of: " . implode(', ', $validFields);
+                return 'Invalid field. Must be one of: '.implode(', ', $validFields);
             }
 
             $contentService = app(TaskContentService::class);
@@ -29,8 +29,8 @@ class TaskContentUpdateTool implements Tool
             $isArtifact = $contentService->isArtifactReference($task->fresh()->{$field} ?? '');
 
             $output = "✓ Updated {$field} for task {$taskCode}\n";
-            $output .= "Content size: " . number_format($contentSize) . " bytes\n";
-            
+            $output .= 'Content size: '.number_format($contentSize)." bytes\n";
+
             if ($isArtifact) {
                 $output .= "⚠ Content too large, stored as artifact\n";
             } else {

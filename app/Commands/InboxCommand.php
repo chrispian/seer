@@ -10,14 +10,14 @@ class InboxCommand extends BaseCommand
     public function handle(): array
     {
         $results = $this->getInboxFragments();
-        
+
         return [
             'type' => 'fragment',
             'component' => 'FragmentListModal',
-            'data' => $results
+            'data' => $results,
         ];
     }
-    
+
     private function getInboxFragments(): array
     {
         $fragments = Fragment::query()
@@ -45,25 +45,25 @@ class InboxCommand extends BaseCommand
                 ];
             })
             ->all();
-            
+
         return $fragments;
     }
-    
+
     public static function getName(): string
     {
         return 'Inbox';
     }
-    
+
     public static function getDescription(): string
     {
         return 'View fragments marked for inbox review';
     }
-    
+
     public static function getUsage(): string
     {
         return '/inbox';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Communication';

@@ -99,12 +99,13 @@ class ConditionStep extends Step
             // This is a template condition, extract the expression and evaluate it
             if (preg_match('/\{\{\s*(.+?)\s*\}\}/', $condition, $matches)) {
                 $expression = trim($matches[1]);
+
                 return $this->evaluateTemplateCondition($expression, $context);
             } else {
                 throw new \InvalidArgumentException('Invalid template condition format: '.$condition);
             }
         }
-        
+
         // This is a direct condition string
         $renderedCondition = $condition;
 
@@ -231,7 +232,7 @@ class ConditionStep extends Step
                 // Pass condition template as-is to let ConditionStep handle evaluation
                 $rendered[$key] = $value;
             }
-            // Special handling for transform steps - don't pre-render template 
+            // Special handling for transform steps - don't pre-render template
             elseif ($stepType === 'transform' && $key === 'template' && is_string($value)) {
                 // Pass template as-is to let TransformStep handle rendering with updated context
                 $rendered[$key] = $value;

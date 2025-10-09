@@ -2,8 +2,13 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('audit:cleanup --no-interaction')
+    ->weekly()
+    ->sundays()
+    ->at('02:00')
+    ->description('Clean up audit logs older than retention period');
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
