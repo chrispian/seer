@@ -618,6 +618,19 @@ export default function ChatIsland() {
       })
 
       if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Approve failed:', errorData)
+        
+        // If already processed, just update UI
+        if (errorData.status && errorData.status !== 'pending') {
+          setMessages(msgs => msgs.map(m =>
+            m.approvalRequest?.id === approvalId
+              ? { ...m, approvalRequest: { ...m.approvalRequest, status: errorData.status, approvedAt: new Date().toISOString() } }
+              : m
+          ))
+          return
+        }
+        
         throw new Error('Failed to approve request')
       }
 
@@ -626,11 +639,18 @@ export default function ChatIsland() {
       // Update message with approved status
       setMessages(msgs => msgs.map(m =>
         m.approvalRequest?.id === approvalId
-          ? { ...m, approvalRequest: { ...m.approvalRequest, status: 'approved', approvedAt: new Date().toISOString() } }
+          ? { 
+              ...m, 
+              approvalRequest: { ...m.approvalRequest, status: 'approved', approvedAt: new Date().toISOString() },
+              md: m.md + '\n\n✓ Approved by user at ' + new Date().toLocaleTimeString()
+            }
           : m
       ))
 
       console.log('Approval granted:', data)
+      
+      // TODO: Trigger command execution here
+      
     } catch (error) {
       console.error('Failed to approve:', error)
     }
