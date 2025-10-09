@@ -6,8 +6,8 @@ import { CheckIcon, XIcon, AlertTriangleIcon } from 'lucide-react'
 interface ApprovalButtonProps {
   requestId: string
   riskScore: number
-  riskLevel: 'low' | 'medium' | 'high' | 'critical'
-  riskFactors: string[]
+  riskLevel?: 'low' | 'medium' | 'high' | 'critical'
+  riskFactors?: string[]
   onApprove: () => void
   onReject: () => void
   isApproved?: boolean
@@ -19,8 +19,8 @@ interface ApprovalButtonProps {
 export function ApprovalButton({
   requestId,
   riskScore,
-  riskLevel,
-  riskFactors,
+  riskLevel = 'medium',
+  riskFactors = [],
   onApprove,
   onReject,
   isApproved,
