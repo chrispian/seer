@@ -337,6 +337,7 @@ export default function ChatIsland() {
         message: msg.md,
         fragment_id: msg.fragmentId,
         is_bookmarked: msg.isBookmarked,
+        approval_request: msg.approvalRequest, // Preserve approval data
         created_at: new Date().toISOString(),
       }))
 
