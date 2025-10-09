@@ -199,19 +199,31 @@ class PolicyRegistry
             return true;
         }
 
-        // Wildcard matching for domain/tool patterns (e.g., "*.github.com", "fs.*")
-        if (str_contains($pattern, '*')) {
-            $regex = '/^' . str_replace(['.', '*'], ['\\.', '.*'], $pattern) . '$/';
-            if (preg_match($regex, $subject)) {
-                return true;
-            }
-        }
-
         // Path prefix matching (e.g., "/workspace/*" matches "/workspace/file.txt")
         if (str_ends_with($pattern, '/*')) {
             $prefix = rtrim($pattern, '/*');
             if (str_starts_with($subject, $prefix)) {
                 return true;
+            }
+        }
+
+        // Wildcard matching for domain/tool patterns (e.g., "*.github.com", "fs.*")
+        if (str_contains($pattern, '*')) {
+            // Escape special regex characters, then replace escaped * with .*
+            $escaped = preg_quote($pattern, '/');
+            $regex = '/^' . str_replace('\\*', '.*', $escaped) . '$/i';
+            try {
+                if (preg_match($regex, $subject)) {
+                    return true;
+                }
+            } catch (\Exception $e) {
+                Log::error('Pattern matching failed', [
+                    'pattern' => $pattern,
+                    'subject' => $subject,
+                    'regex' => $regex,
+                    'error' => $e->getMessage(),
+                ]);
+                return false;
             }
         }
 
