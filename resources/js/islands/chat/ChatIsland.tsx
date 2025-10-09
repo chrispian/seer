@@ -316,6 +316,7 @@ export default function ChatIsland() {
           fragmentId: msg.fragment_id,
           isBookmarked: msg.is_bookmarked,
           approvalRequest: msg.approval_request, // Restore approval data from session
+          executionResult: msg.execution_result, // Restore execution result from session
         }
       })
       setMessages(sessionMessages)
@@ -347,6 +348,7 @@ export default function ChatIsland() {
         fragment_id: msg.fragmentId,
         is_bookmarked: msg.isBookmarked,
         approval_request: msg.approvalRequest, // Preserve approval data
+        execution_result: msg.executionResult, // Preserve execution result
         created_at: new Date().toISOString(),
       }))
 
@@ -668,10 +670,14 @@ export default function ChatIsland() {
       }
 
       const data = await response.json()
+      
+      console.log('Approval response received:', data)
+      console.log('Execution result:', data.execution_result)
 
       // Update message with approved status and add execution result
       const updatedMessages = messages.map(m => {
         if (m.approvalRequest?.id === approvalId) {
+          console.log('Updating message:', m.id, 'with execution result:', data.execution_result)
           // Don't modify markdown - execution result will be added separately
           // Just update the approval status
           return {
@@ -683,6 +689,7 @@ export default function ChatIsland() {
         return m
       })
       
+      console.log('Setting messages with updated data, count:', updatedMessages.length)
       setMessages(updatedMessages)
       saveMessagesToSession(updatedMessages)
 

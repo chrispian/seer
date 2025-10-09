@@ -51,6 +51,13 @@ class ApprovalController extends Controller
     {
         $details = $approval->operation_details;
 
+        \Log::info('Executing approved operation', [
+            'approval_id' => $approval->id,
+            'operation_type' => $approval->operation_type,
+            'command' => $details['command'] ?? 'N/A',
+            'details' => $details,
+        ]);
+
         try {
             if ($approval->operation_type === 'command') {
                 $executor = app(\App\Services\Security\EnhancedShellExecutor::class);
@@ -58,7 +65,17 @@ class ApprovalController extends Controller
                 // Pass approved flag to bypass approval check in guards
                 $context = array_merge($details['context'] ?? [], ['approved' => true]);
                 
+                \Log::info('About to execute command', [
+                    'command' => $details['command'],
+                    'context' => $context,
+                ]);
+                
                 $result = $executor->execute($details['command'], ['context' => $context]);
+                
+                \Log::info('Command executed', [
+                    'success' => $result['success'],
+                    'output_length' => strlen($result['stdout'] ?? ''),
+                ]);
                 
                 return [
                     'executed' => true,
@@ -74,6 +91,7 @@ class ApprovalController extends Controller
             \Log::error('Failed to execute approved operation', [
                 'approval_id' => $approval->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return [

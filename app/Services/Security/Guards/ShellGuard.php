@@ -24,19 +24,22 @@ class ShellGuard
             'warnings' => [],
         ];
 
-        $policyDecision = $this->policyRegistry->isCommandAllowed($command);
-        $validation['policy_decision'] = $policyDecision;
+        // Skip approval check if already approved (via context flag)
+        $alreadyApproved = $context['approved'] ?? false;
+        
+        // If already approved, skip policy check (user explicitly approved)
+        if (!$alreadyApproved) {
+            $policyDecision = $this->policyRegistry->isCommandAllowed($command);
+            $validation['policy_decision'] = $policyDecision;
 
-        if (!$policyDecision['allowed']) {
-            $validation['violations'][] = $policyDecision['reason'];
-            return $validation;
+            if (!$policyDecision['allowed']) {
+                $validation['violations'][] = $policyDecision['reason'];
+                return $validation;
+            }
         }
 
         $risk = $this->riskScorer->scoreCommand($command, $context);
         $validation['risk_assessment'] = $risk;
-
-        // Skip approval check if already approved (via context flag)
-        $alreadyApproved = $context['approved'] ?? false;
         
         if ($risk['requires_approval'] && !$alreadyApproved) {
             $validation['violations'][] = "Command requires approval (risk: {$risk['score']})";

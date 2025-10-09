@@ -194,16 +194,24 @@ export function ChatTranscript({
                 })()}
                 
                 {/* Execution Result (after approval box) */}
-                {message.executionResult?.executed && (
-                  <div className="mt-3">
-                    <div className="prose prose-sm max-w-none text-foreground">
-                      <p><strong>Execution Result:</strong></p>
-                      <pre className="bg-muted p-2 rounded-sm overflow-x-auto">
-                        <code>{message.executionResult.output || message.executionResult.error}</code>
-                      </pre>
+                {(() => {
+                  console.log('Checking execution result:', {
+                    hasExecutionResult: !!message.executionResult,
+                    executed: message.executionResult?.executed,
+                    output: message.executionResult?.output?.substring(0, 50),
+                    fullMessage: message
+                  })
+                  return message.executionResult?.executed && (
+                    <div className="mt-3">
+                      <div className="prose prose-sm max-w-none text-foreground">
+                        <p><strong>Execution Result:</strong></p>
+                        <pre className="bg-muted p-2 rounded-sm overflow-x-auto">
+                          <code>{message.executionResult.output || message.executionResult.error}</code>
+                        </pre>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )
+                })()}
               </div>
             </div>
           </div>
