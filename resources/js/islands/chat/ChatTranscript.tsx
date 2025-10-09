@@ -207,7 +207,7 @@ export function ChatTranscript({
               </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
 
       {/* Fragment Preview Modal */}
