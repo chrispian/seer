@@ -1,0 +1,23 @@
+version: 0.1
+sprint: Optional OS-level Sandbox
+objectives:
+  - Provide opt-in OS sandboxes when available; no hard dependency.
+backlog:
+  - id: OS-1
+    title: "Firejail Profiles (Linux)"
+    type: chore
+    desc: Profiles for fe-agent user/tool classes (read-only home, no net, private tmp). Use if installed.
+  - id: OS-2
+    title: "Bubblewrap Templates (Linux)"
+    type: chore
+    desc: bwrap command templates for per-invocation namespaces when installed.
+  - id: OS-3
+    title: "macOS pfctl Anchor"
+    type: chore
+    desc: Outbound filter rules per user + uninstall script.
+notes:
+  - macOS sandbox-exec is deprecated; avoid relying on it.
+  - Entitlements-based App Sandbox is non-trivial for PHP; treat as future option.
+definition_of_done:
+  - Scripts no-op gracefully when missing.
+  - Docs outline risks/benefits and detection logic.

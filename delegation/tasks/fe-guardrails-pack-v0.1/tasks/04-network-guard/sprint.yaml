@@ -1,0 +1,21 @@
+version: 0.1
+sprint: Network Guard
+objectives:
+  - Gate outbound network usage to known domains/ports and per-tool policies.
+backlog:
+  - id: NG-1
+    title: "HttpClient Wrapper"
+    type: feature
+    desc: Wrapper around Guzzle/Native client enforcing egress allowlist + rate/byte caps.
+  - id: NG-2
+    title: "CLI Egress Policies"
+    type: feature
+    desc: Deny networked CLI tools unless explicitly allowed.
+  - id: NG-3
+    title: "Optional OS-level Egress"
+    type: chore
+    desc: macOS pfctl anchor & Linux iptables owner match templates for fe-agent user; optional install scripts.
+definition_of_done:
+  - Denied egress yields clear policy error.
+  - Per-tool domain scopes enforced in tests.
+  - Example pfctl/iptables scripts included.

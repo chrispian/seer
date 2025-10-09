@@ -1,0 +1,25 @@
+version: 0.1
+sprint: Limited Shell
+objectives:
+  - Provide a constrained command runner for agent tools with argument validation, timeouts, and resource limits.
+backlog:
+  - id: LS-1
+    title: "Command Spec DSL"
+    type: feature
+    desc: Describe allowed binaries, fixed flags, and argument schemas; deny everything else.
+  - id: LS-2
+    title: "LimitedShell Runner"
+    type: feature
+    desc: PHP proc_open wrapper with: cwd chroot-like confinement (working dir), setrlimit (CPU/mem), env scrubbing, timeouts, output size caps.
+  - id: LS-3
+    title: "Unprivileged User Option"
+    type: chore
+    desc: Optional setup to run shell under a dedicated low-priv user (e.g., fe-agent) when present.
+  - id: LS-4
+    title: "Command Approval for Mutations"
+    type: feature
+    desc: Risk-aware preflight; require approval for write/delete outside whitelisted dirs.
+definition_of_done:
+  - Attempted execution of non-whitelisted commands fails with reason code.
+  - Timeout + output caps enforced.
+  - Unit & e2e tests with fixtures.

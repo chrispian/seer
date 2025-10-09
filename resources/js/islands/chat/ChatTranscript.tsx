@@ -4,6 +4,26 @@ import remarkGfm from 'remark-gfm'
 
 import { MessageActions } from './MessageActions'
 import { UserAvatar } from '@/components/UserAvatar'
+import { ApprovalButton } from '@/components/ApprovalButton'
+import { FragmentPreviewModal } from '@/components/FragmentPreviewModal'
+
+export interface ApprovalRequest {
+  id: string
+  operationType: string
+  operationSummary: string
+  riskScore: number
+  riskLevel: 'low' | 'medium' | 'high' | 'critical'
+  riskFactors: string[]
+  status: 'pending' | 'approved' | 'rejected' | 'timeout'
+  approvedAt?: string
+  rejectedAt?: string
+  useModal: boolean
+  fragmentId?: string
+  fragmentTitle?: string
+  fragmentContent?: string
+  wordCount?: number
+  readTimeMinutes?: number
+}
 
 export interface ChatMessage {
   id: string // Client-side UUID for React keys
@@ -12,12 +32,15 @@ export interface ChatMessage {
   isBookmarked?: boolean
   messageId?: string // Server-side message ID from API
   fragmentId?: string // Server-side fragment ID if message becomes a fragment
+  approvalRequest?: ApprovalRequest // For operations requiring approval
 }
 
 interface ChatTranscriptProps {
   messages: ChatMessage[]
   onMessageDelete?: (messageId: string) => void
   onMessageBookmarkToggle?: (messageId: string, bookmarked: boolean, fragmentId?: string) => void
+  onApprovalApprove?: (approvalId: string) => void
+  onApprovalReject?: (approvalId: string) => void
   className?: string
 }
 
@@ -25,9 +48,20 @@ export function ChatTranscript({
   messages,
   onMessageDelete,
   onMessageBookmarkToggle,
+  onApprovalApprove,
+  onApprovalReject,
   className = ""
 }: ChatTranscriptProps) {
   const scrollerRef = React.useRef<HTMLDivElement>(null)
+  const [previewModal, setPreviewModal] = React.useState<{
+    isOpen: boolean
+    fragmentId?: string
+    title?: string
+    content?: string
+    wordCount?: number
+    readTimeMinutes?: number
+    approvalId?: string
+  }>({ isOpen: false })
 
   // Auto-scroll when messages change
   React.useEffect(() => {
@@ -134,11 +168,63 @@ export function ChatTranscript({
                 >
                   {message.md}
                 </ReactMarkdown>
+
+                {/* Approval Request UI */}
+                {message.approvalRequest && (
+                  <div className="mt-3">
+                    <ApprovalButton
+                      requestId={message.approvalRequest.id}
+                      riskScore={message.approvalRequest.riskScore}
+                      riskLevel={message.approvalRequest.riskLevel}
+                      riskFactors={message.approvalRequest.riskFactors}
+                      isApproved={message.approvalRequest.status === 'approved'}
+                      isRejected={message.approvalRequest.status === 'rejected'}
+                      approvedAt={message.approvalRequest.approvedAt}
+                      rejectedAt={message.approvalRequest.rejectedAt}
+                      onApprove={async () => {
+                        if (message.approvalRequest?.useModal && message.approvalRequest.fragmentId) {
+                          // Open modal for review first
+                          const fragment = await fetch(`/api/fragments/${message.approvalRequest.fragmentId}`).then(r => r.json())
+                          setPreviewModal({
+                            isOpen: true,
+                            fragmentId: message.approvalRequest.fragmentId,
+                            title: message.approvalRequest.fragmentTitle || 'Preview',
+                            content: fragment.message || message.approvalRequest.fragmentContent || '',
+                            wordCount: message.approvalRequest.wordCount,
+                            readTimeMinutes: message.approvalRequest.readTimeMinutes,
+                            approvalId: message.approvalRequest.id,
+                          })
+                        } else {
+                          // Inline approval - approve directly
+                          onApprovalApprove?.(message.approvalRequest!.id)
+                        }
+                      }}
+                      onReject={() => onApprovalReject?.(message.approvalRequest!.id)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Fragment Preview Modal */}
+      <FragmentPreviewModal
+        isOpen={previewModal.isOpen}
+        onClose={() => setPreviewModal({ isOpen: false })}
+        fragmentId={previewModal.fragmentId || ''}
+        title={previewModal.title || ''}
+        content={previewModal.content || ''}
+        wordCount={previewModal.wordCount || 0}
+        readTimeMinutes={previewModal.readTimeMinutes || 0}
+        onApprove={previewModal.approvalId ? async () => {
+          onApprovalApprove?.(previewModal.approvalId!)
+        } : undefined}
+        onReject={previewModal.approvalId ? async () => {
+          onApprovalReject?.(previewModal.approvalId!)
+        } : undefined}
+      />
     </div>
   )
 }

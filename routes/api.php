@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AnalyzeFragmentController;
+use App\Http\Controllers\Api\ApprovalController;
 use App\Http\Controllers\Api\CredentialController;
 use App\Http\Controllers\Api\ModelController as ApiModelController;
 use App\Http\Controllers\Api\ProviderController;
@@ -212,4 +213,12 @@ Route::prefix('agents')->group(function () {
     Route::put('/{id}', [\App\Http\Controllers\Api\AgentController::class, 'update']);
     Route::post('/{id}/avatar', [\App\Http\Controllers\Api\AgentController::class, 'uploadAvatar']);
     Route::delete('/{id}', [\App\Http\Controllers\Api\AgentController::class, 'destroy']);
+});
+
+// Approval endpoints
+Route::prefix('approvals')->group(function () {
+    Route::post('/{id}/approve', [ApprovalController::class, 'approve']);
+    Route::post('/{id}/reject', [ApprovalController::class, 'reject']);
+    Route::get('/{id}', [ApprovalController::class, 'show']);
+    Route::get('/pending', [ApprovalController::class, 'pending']);
 });

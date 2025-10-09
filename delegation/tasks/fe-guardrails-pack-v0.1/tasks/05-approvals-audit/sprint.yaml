@@ -1,0 +1,21 @@
+version: 0.1
+sprint: Approvals & Audit
+objectives:
+  - Human-in-the-loop approvals for high-risk actions; tamper-evident audit.
+backlog:
+  - id: AA-1
+    title: "Approval UI Hooks"
+    type: feature
+    desc: Events + endpoints so UI can render diffs, commands, and risk notes; approve/deny.
+  - id: AA-2
+    title: "JSONL Audit + Hash Chain"
+    type: feature
+    desc: Append-only JSONL with SHA-256 rolling hash to detect tampering.
+  - id: AA-3
+    title: "Redaction Rules"
+    type: feature
+    desc: Secrets redaction in logs + structured secret vault references only.
+definition_of_done:
+  - Approvals recorded with actor + timestamp + reason.
+  - Hash chain verification CLI provided.
+  - Secret material never written in clear.

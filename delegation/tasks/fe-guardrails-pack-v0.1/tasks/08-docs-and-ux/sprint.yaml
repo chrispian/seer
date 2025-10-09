@@ -1,0 +1,19 @@
+version: 0.1
+sprint: Docs & UX
+objectives:
+  - Make policies easy to reason about and override safely.
+backlog:
+  - id: DU-1
+    title: "Policy Cookbook"
+    type: docs
+    desc: Common recipes (add a tool, allow a domain, add a path) with pitfalls.
+  - id: DU-2
+    title: "Risk Labels & Copy"
+    type: docs
+    desc: UX copy for approval prompts; consistent severity scales.
+  - id: DU-3
+    title: "Operator Runbook"
+    type: docs
+    desc: How to investigate logs, verify hash chains, and roll back changes with diffs.
+definition_of_done:
+  - Docs published in app help and repo.
