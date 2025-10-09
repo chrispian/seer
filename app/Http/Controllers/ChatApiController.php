@@ -433,6 +433,8 @@ class ChatApiController extends Controller
                     ]);
 
                     $approvalData = $approvalManager->formatForChat($approvalRequest);
+                    
+                    $approvalMessage = "⚠️ This command requires your approval.\n\n**Command:** `{$command}`\n\n**Risk:** {$risk['level']} ({$risk['score']}/100)";
 
                     return response()->json([
                         'message_id' => $messageId,
@@ -440,7 +442,9 @@ class ChatApiController extends Controller
                         'user_fragment_id' => $userFragmentId,
                         'requires_approval' => true,
                         'approval_request' => $approvalData['approval_request'],
-                        'message' => "⚠️ This command requires your approval.\n\n**Command:** `{$command}`\n\n**Risk:** {$risk['level']} ({$risk['score']}/100)",
+                        'message' => $approvalMessage,
+                        'skip_stream' => true,
+                        'assistant_message' => $approvalMessage,
                     ]);
                 }
             }
