@@ -172,6 +172,7 @@ export function ChatTranscript({
                 {/* Approval Request UI */}
                 {message.approvalRequest && (
                   <div className="mt-3">
+                    {console.log('Rendering ApprovalButton with data:', message.approvalRequest)}
                     <ApprovalButton
                       requestId={message.approvalRequest.id}
                       riskScore={message.approvalRequest.riskScore}
