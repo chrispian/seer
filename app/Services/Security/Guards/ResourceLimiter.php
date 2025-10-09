@@ -32,12 +32,15 @@ class ResourceLimiter
 
     private function wrapWithLimits(string $command, string $memoryLimit): string
     {
-        $memoryKb = $this->parseMemoryLimit($memoryLimit) / 1024;
+        $memoryKb = (int)($this->parseMemoryLimit($memoryLimit) / 1024);
         
         if (PHP_OS_FAMILY === 'Darwin') {
-            return "ulimit -t 60 -m {$memoryKb} && {$command}";
+            // macOS doesn't support all ulimit options reliably
+            // Just use CPU time limit and let command run
+            return "ulimit -t 60 2>/dev/null; {$command}";
         } else {
-            return "ulimit -t 60 -v {$memoryKb} && {$command}";
+            // Linux supports virtual memory limit
+            return "ulimit -t 60 -v {$memoryKb} 2>/dev/null && {$command}";
         }
     }
 
