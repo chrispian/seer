@@ -215,8 +215,8 @@ Route::prefix('agents')->group(function () {
     Route::delete('/{id}', [\App\Http\Controllers\Api\AgentController::class, 'destroy']);
 });
 
-// Approval endpoints
-Route::prefix('approvals')->group(function () {
+// Approval endpoints (web middleware for session auth)
+Route::middleware(['web'])->prefix('approvals')->group(function () {
     Route::post('/{id}/approve', [ApprovalController::class, 'approve']);
     Route::post('/{id}/reject', [ApprovalController::class, 'reject']);
     Route::get('/{id}', [ApprovalController::class, 'show']);
