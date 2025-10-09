@@ -35,7 +35,10 @@ class ShellGuard
         $risk = $this->riskScorer->scoreCommand($command, $context);
         $validation['risk_assessment'] = $risk;
 
-        if ($risk['requires_approval']) {
+        // Skip approval check if already approved (via context flag)
+        $alreadyApproved = $context['approved'] ?? false;
+        
+        if ($risk['requires_approval'] && !$alreadyApproved) {
             $validation['violations'][] = "Command requires approval (risk: {$risk['score']})";
             return $validation;
         }

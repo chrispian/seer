@@ -54,13 +54,18 @@ class ApprovalController extends Controller
         try {
             if ($approval->operation_type === 'command') {
                 $executor = app(\App\Services\Security\EnhancedShellExecutor::class);
-                $result = $executor->execute($details['command'], $details['context'] ?? []);
+                
+                // Pass approved flag to bypass approval check in guards
+                $context = array_merge($details['context'] ?? [], ['approved' => true]);
+                
+                $result = $executor->execute($details['command'], ['context' => $context]);
                 
                 return [
                     'executed' => true,
                     'success' => $result['success'],
                     'output' => $result['stdout'] ?? '',
                     'error' => $result['stderr'] ?? '',
+                    'exit_code' => $result['exit_code'] ?? null,
                 ];
             }
 
