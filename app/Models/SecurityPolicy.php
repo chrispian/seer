@@ -53,9 +53,16 @@ class SecurityPolicy extends Model
 
     public static function clearPolicyCache(): void
     {
+        // Clear main cache keys
         Cache::forget('security:policies:all');
         Cache::forget('security:policies:by_type');
         Cache::forget('security:policies:by_category');
+        
+        // Clear all type-specific cache keys (e.g., security:policies:type:command, security:policies:type:path, etc.)
+        $types = ['command', 'path', 'tool', 'domain'];
+        foreach ($types as $type) {
+            Cache::forget("security:policies:type:{$type}");
+        }
     }
 
     public function getRiskWeight(): int

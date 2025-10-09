@@ -84,7 +84,7 @@ class RiskScorer
             'level' => $this->getRiskLevel($score),
             'action' => $this->getThresholdAction($score),
             'factors' => $factors,
-            'requires_approval' => $score >= 51,
+            'requires_approval' => $score >= 26,
         ];
     }
 

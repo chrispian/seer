@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('audit:cleanup --no-interaction')
