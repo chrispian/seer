@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Services\Security\ApprovalManager;
 use App\Services\Security\DryRunSimulator;
 use App\Services\Security\EnhancedShellExecutor;
+use App\Services\Security\Guards\FilesystemGuard;
+use App\Services\Security\Guards\NetworkGuard;
 use App\Services\Security\Guards\ResourceLimiter;
 use App\Services\Security\Guards\ShellGuard;
 use App\Services\Security\PolicyRegistry;
@@ -20,6 +22,8 @@ class SecurityServiceProvider extends ServiceProvider
         $this->app->singleton(DryRunSimulator::class);
         $this->app->singleton(ApprovalManager::class);
         $this->app->singleton(ShellGuard::class);
+        $this->app->singleton(FilesystemGuard::class);
+        $this->app->singleton(NetworkGuard::class);
         $this->app->singleton(ResourceLimiter::class);
         $this->app->singleton(EnhancedShellExecutor::class);
     }
