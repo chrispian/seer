@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm'
 
 import { MessageActions } from './MessageActions'
 import { UserAvatar } from '@/components/UserAvatar'
-import { ApprovalButton } from '@/components/ApprovalButton'
+import { ApprovalButton } from '@/components/security/ApprovalButton'
 import { FragmentPreviewModal } from '@/components/FragmentPreviewModal'
 
 export interface ApprovalRequest {

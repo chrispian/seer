@@ -64,7 +64,7 @@ export function ApprovalButton({
         </span>
       </div>
 
-      {riskFactors.length > 0 && (
+      {riskFactors && riskFactors.length > 0 && (
         <ul className="text-sm text-muted-foreground space-y-0.5 ml-6">
           {riskFactors.slice(0, 3).map((factor, i) => (
             <li key={i}>• {factor}</li>

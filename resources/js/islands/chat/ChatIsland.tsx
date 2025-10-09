@@ -426,6 +426,7 @@ export default function ChatIsland() {
 
       // If requires approval, show approval UI
       if (requires_approval && approval_request) {
+        console.log('Approval required - creating approval message', approval_request)
         const assistantId = uuid(`assistant-${streamSessionId}`)
         const approvalMessage: ChatMessage = {
           id: assistantId,
@@ -434,6 +435,7 @@ export default function ChatIsland() {
           messageId: message_id,
           approvalRequest: approval_request,
         }
+        console.log('Approval message created:', approvalMessage)
         const finalMessages = [...messagesWithMessageId, approvalMessage]
         setMessages(finalMessages)
         setSending(false)
