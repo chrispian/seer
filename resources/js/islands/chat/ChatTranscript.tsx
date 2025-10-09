@@ -33,6 +33,7 @@ export interface ChatMessage {
   messageId?: string // Server-side message ID from API
   fragmentId?: string // Server-side fragment ID if message becomes a fragment
   approvalRequest?: ApprovalRequest // For operations requiring approval
+  executionResult?: any // Execution result when approval is granted
 }
 
 interface ChatTranscriptProps {
@@ -169,9 +170,9 @@ export function ChatTranscript({
                   {message.md}
                 </ReactMarkdown>
                 
-                {/* Approval Request UI - Render BEFORE any execution results in markdown */}
+                {/* Approval Status Box (for approved/rejected) */}
                 {message.approvalRequest && message.approvalRequest.status !== 'pending' && (
-                  <div className="mt-3 mb-3">
+                  <div className="mt-3">
                     <ApprovalButtonSimple
                       requestId={message.approvalRequest.id}
                       riskScore={message.approvalRequest.riskScore}
@@ -184,7 +185,19 @@ export function ChatTranscript({
                   </div>
                 )}
                 
-                {/* Pending approval buttons at bottom */}
+                {/* Execution Result (after approval box) */}
+                {message.executionResult?.executed && (
+                  <div className="mt-3">
+                    <div className="prose prose-sm max-w-none text-foreground">
+                      <p><strong>Execution Result:</strong></p>
+                      <pre className="bg-muted p-2 rounded-sm overflow-x-auto">
+                        <code>{message.executionResult.output || message.executionResult.error}</code>
+                      </pre>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Pending approval buttons */}
                 {message.approvalRequest && message.approvalRequest.status === 'pending' && (
                   <div className="mt-3">
                     <ApprovalButtonSimple

@@ -300,6 +300,13 @@ export default function ChatIsland() {
         // Create unique React key by combining session ID, message type, and original ID
         const messageKey = `session-${sessionDetailsQuery.data.session.id}-${msg.type}-${msg.id || index}`
         console.log(`DEBUG: Creating message with key: ${messageKey}, type: ${msg.type}`)
+        
+        // Auto-timeout any pending approval requests (they're stale from previous session)
+        let approvalRequest = msg.approval_request
+        if (approvalRequest && approvalRequest.status === 'pending') {
+          approvalRequest = { ...approvalRequest, status: 'timeout' }
+        }
+        
         return {
           id: messageKey,
           role: msg.type === 'user' ? 'user' : 'assistant',
@@ -307,7 +314,7 @@ export default function ChatIsland() {
           messageId: msg.id,
           fragmentId: msg.fragment_id,
           isBookmarked: msg.is_bookmarked,
-          approvalRequest: msg.approval_request, // Restore approval data from session
+          approvalRequest: approvalRequest, // Restore approval data from session
         }
       })
       setMessages(sessionMessages)
@@ -664,18 +671,12 @@ export default function ChatIsland() {
       // Update message with approved status and add execution result
       const updatedMessages = messages.map(m => {
         if (m.approvalRequest?.id === approvalId) {
-          let updatedMd = m.md
-          
-          // Prepend execution result BEFORE the original message (so it appears before green box)
-          if (data.execution_result?.executed) {
-            const executionBlock = '**Execution Result:**\n```\n' + (data.execution_result.output || data.execution_result.error) + '\n```\n\n'
-            updatedMd = executionBlock + m.md
-          }
-          
+          // Don't modify markdown - execution result will be added separately
+          // Just update the approval status
           return {
             ...m,
             approvalRequest: { ...m.approvalRequest, status: 'approved' as const, approvedAt: new Date().toISOString() },
-            md: updatedMd
+            executionResult: data.execution_result, // Store execution separately
           }
         }
         return m
