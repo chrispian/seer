@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -107,9 +108,16 @@ export function AgentProfileMiniCard({
       </div>
 
       <div className="space-y-3 mt-2">
-        <div>
-          <h3 className="font-semibold text-lg truncate pr-12">{agent.name}</h3>
-          <p className="text-xs text-muted-foreground truncate">{agent.slug}</p>
+        <div className="flex items-start gap-3">
+          <Avatar className="w-12 h-12 border-2 border-background shadow-sm flex-shrink-0">
+            <AvatarFallback className="text-lg font-semibold">
+              {agent.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-lg truncate pr-12">{agent.name}</h3>
+            <p className="text-xs text-muted-foreground truncate">{agent.slug}</p>
+          </div>
         </div>
 
         <div className="flex gap-2 flex-wrap">
