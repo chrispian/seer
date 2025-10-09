@@ -50,7 +50,7 @@ class ChatApiController extends Controller
             CorrelationContext::addContext('session_id', $sessionId);
         }
 
-        // Check for pending approval responses (before other processing)
+        // Auto-timeout old pending approvals and check for pending approval responses
         if (!str_starts_with(trim($data['content']), ':')) {
             $approvalManager = app(\App\Services\Security\ApprovalManager::class);
             $pendingApprovals = $approvalManager->getPendingForConversation($conversationId);
@@ -84,6 +84,16 @@ class ChatApiController extends Controller
                             'approval_id' => $approval->id,
                         ]);
                     }
+                } else {
+                    // User sent a message without approval/rejection intent - timeout old approvals
+                    foreach ($pendingApprovals as $pendingApproval) {
+                        $pendingApproval->update(['status' => 'timeout']);
+                    }
+                    
+                    \Log::info('Auto-timed out pending approvals', [
+                        'count' => $pendingApprovals->count(),
+                        'conversation_id' => $conversationId,
+                    ]);
                 }
             }
         }

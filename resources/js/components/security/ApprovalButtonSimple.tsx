@@ -17,6 +17,11 @@ export function ApprovalButtonSimple({ requestId, riskScore, status, approvedAt,
     )
   }
 
+  if (status === 'timeout') {
+    // Hide timed-out approvals
+    return null
+  }
+
   return (
     <div style={{ padding: '10px', border: '2px solid orange', margin: '10px 0' }}>
       <div>Approval Request ID: {requestId}</div>
