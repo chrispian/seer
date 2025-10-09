@@ -221,22 +221,23 @@ class ApprovalManager
 
         return [
             'approval_request' => [
-                'id' => $request->id,
-                'operation_type' => $request->operation_type,
-                'operation_summary' => $request->operation_summary,
-                'risk_score' => $request->risk_score,
-                'risk_level' => $request->risk_level,
-                'risk_factors' => $request->risk_factors,
+                'id' => (string)$request->id,
+                'operationType' => $request->operation_type,
+                'operationSummary' => $request->operation_summary,
+                'riskScore' => $request->risk_score,
+                'riskLevel' => $request->risk_level,
+                'riskFactors' => $request->risk_factors,
                 'status' => $request->status,
-                'approved_at' => $request->approved_at?->toIso8601String(),
-                'rejected_at' => $request->status === 'rejected' ? $request->approved_at?->toIso8601String() : null,
+                'approvedAt' => $request->approved_at?->toIso8601String(),
+                'rejectedAt' => $request->status === 'rejected' ? $request->approved_at?->toIso8601String() : null,
                 
                 // Modal preview data
-                'use_modal' => $contentSize['use_modal'],
-                'fragment_id' => $request->fragment_id,
-                'fragment_title' => $request->fragment?->title,
-                'word_count' => $contentSize['word_count'],
-                'read_time_minutes' => $contentSize['read_time_minutes'],
+                'useModal' => $contentSize['use_modal'],
+                'fragmentId' => $request->fragment_id,
+                'fragmentTitle' => $request->fragment?->title,
+                'fragmentContent' => $request->fragment?->message,
+                'wordCount' => $contentSize['word_count'],
+                'readTimeMinutes' => $contentSize['read_time_minutes'],
             ],
         ];
     }
