@@ -359,10 +359,28 @@ export default function ChatIsland() {
       return
     }
 
-    // Auto-cancel any pending approval requests
-    const pendingApprovals = messages.filter(m => m.approvalRequest?.status === 'pending')
-    if (pendingApprovals.length > 0) {
-      console.log('Auto-canceling pending approvals:', pendingApprovals.length)
+    // Auto-cancel ANY pending approval requests in this conversation
+    const hasPendingApprovals = messages.some(m => m.approvalRequest?.status === 'pending')
+    if (hasPendingApprovals) {
+      console.log('Auto-canceling all pending approval requests')
+      
+      // Cancel on backend
+      const pendingIds = messages
+        .filter(m => m.approvalRequest?.status === 'pending')
+        .map(m => m.approvalRequest!.id)
+      
+      pendingIds.forEach(async (id) => {
+        try {
+          await fetch(`/api/approvals/${id}/timeout`, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrf },
+          })
+        } catch (e) {
+          console.log('Failed to timeout approval:', id)
+        }
+      })
+      
+      // Update UI immediately
       setMessages(msgs => msgs.map(m =>
         m.approvalRequest?.status === 'pending'
           ? { ...m, approvalRequest: { ...m.approvalRequest, status: 'timeout' } }

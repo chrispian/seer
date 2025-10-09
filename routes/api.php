@@ -222,3 +222,12 @@ Route::middleware(['web'])->prefix('approvals')->group(function () {
     Route::get('/{id}', [ApprovalController::class, 'show']);
     Route::get('/pending', [ApprovalController::class, 'pending']);
 });
+
+// Timeout endpoint for auto-canceling
+Route::middleware(['web'])->post('/approvals/{id}/timeout', function($id) {
+    $approval = \App\Models\ApprovalRequest::find($id);
+    if ($approval && $approval->status === 'pending') {
+        $approval->update(['status' => 'timeout']);
+    }
+    return response()->json(['success' => true]);
+});

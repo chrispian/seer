@@ -456,7 +456,15 @@ class ChatApiController extends Controller
             ]);
 
             // If high risk, create approval request and return pending state
-            if ($risk['requires_approval']) {
+            // BUT: Check if this approval was already granted (via API or natural language)
+            $existingApproval = \App\Models\ApprovalRequest::where('conversation_id', $conversationId)
+                ->where('operation_type', 'command')
+                ->whereJsonContains('operation_details->command', $command)
+                ->where('status', 'approved')
+                ->latest()
+                ->first();
+
+            if ($risk['requires_approval'] && !$existingApproval) {
                 $approvalRequest = $approvalManager->createApprovalRequest([
                     'type' => 'command',
                     'command' => $command,
@@ -485,6 +493,11 @@ class ChatApiController extends Controller
                         'assistant_message' => $approvalMessage,
                     ]);
                 }
+            } elseif ($existingApproval) {
+                \Log::info('Using existing approval for command', [
+                    'approval_id' => $existingApproval->id,
+                    'command' => $command,
+                ]);
             }
 
             \Log::info('Calling ShellTool via registry', [
