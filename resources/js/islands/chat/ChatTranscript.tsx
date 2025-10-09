@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm'
 
 import { MessageActions } from './MessageActions'
 import { UserAvatar } from '@/components/UserAvatar'
-import { ApprovalButton } from '@/components/security/ApprovalButton'
+import { ApprovalButtonSimple } from '@/components/security/ApprovalButtonSimple'
 import { FragmentPreviewModal } from '@/components/FragmentPreviewModal'
 
 export interface ApprovalRequest {
@@ -172,34 +172,10 @@ export function ChatTranscript({
                 {/* Approval Request UI */}
                 {message.approvalRequest && (
                   <div className="mt-3">
-                    {console.log('Rendering ApprovalButton with data:', message.approvalRequest)}
-                    <ApprovalButton
+                    <ApprovalButtonSimple
                       requestId={message.approvalRequest.id}
                       riskScore={message.approvalRequest.riskScore}
-                      riskLevel={message.approvalRequest.riskLevel}
-                      riskFactors={message.approvalRequest.riskFactors}
-                      isApproved={message.approvalRequest.status === 'approved'}
-                      isRejected={message.approvalRequest.status === 'rejected'}
-                      approvedAt={message.approvalRequest.approvedAt}
-                      rejectedAt={message.approvalRequest.rejectedAt}
-                      onApprove={async () => {
-                        if (message.approvalRequest?.useModal && message.approvalRequest.fragmentId) {
-                          // Open modal for review first
-                          const fragment = await fetch(`/api/fragments/${message.approvalRequest.fragmentId}`).then(r => r.json())
-                          setPreviewModal({
-                            isOpen: true,
-                            fragmentId: message.approvalRequest.fragmentId,
-                            title: message.approvalRequest.fragmentTitle || 'Preview',
-                            content: fragment.message || message.approvalRequest.fragmentContent || '',
-                            wordCount: message.approvalRequest.wordCount,
-                            readTimeMinutes: message.approvalRequest.readTimeMinutes,
-                            approvalId: message.approvalRequest.id,
-                          })
-                        } else {
-                          // Inline approval - approve directly
-                          onApprovalApprove?.(message.approvalRequest!.id)
-                        }
-                      }}
+                      onApprove={() => onApprovalApprove?.(message.approvalRequest!.id)}
                       onReject={() => onApprovalReject?.(message.approvalRequest!.id)}
                     />
                   </div>
@@ -207,7 +183,7 @@ export function ChatTranscript({
               </div>
             </div>
           </div>
-        )})}
+        ))}
       </div>
 
       {/* Fragment Preview Modal */}
