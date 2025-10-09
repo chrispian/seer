@@ -308,13 +308,6 @@ export default function ChatIsland() {
         const messageKey = `session-${sessionDetailsQuery.data.session.id}-${msg.type}-${msg.id || index}`
         console.log(`DEBUG: Creating message with key: ${messageKey}, type: ${msg.type}, hasApproval: ${!!msg.approval_request}`)
         
-        // Auto-timeout any pending approval requests (they're stale from previous session)
-        let approvalRequest = msg.approval_request
-        if (approvalRequest && approvalRequest.status === 'pending') {
-          console.log('Auto-timing out stale pending approval:', approvalRequest.id)
-          approvalRequest = { ...approvalRequest, status: 'timeout' }
-        }
-        
         return {
           id: messageKey,
           role: msg.type === 'user' ? 'user' : 'assistant',
@@ -322,7 +315,7 @@ export default function ChatIsland() {
           messageId: msg.id,
           fragmentId: msg.fragment_id,
           isBookmarked: msg.is_bookmarked,
-          approvalRequest: approvalRequest, // Restore approval data from session
+          approvalRequest: msg.approval_request, // Restore approval data from session
         }
       })
       setMessages(sessionMessages)

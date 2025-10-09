@@ -170,20 +170,28 @@ export function ChatTranscript({
                   {message.md}
                 </ReactMarkdown>
                 
-                {/* Approval Status Box (for approved/rejected) */}
-                {message.approvalRequest && message.approvalRequest.status !== 'pending' && (
-                  <div className="mt-3">
-                    <ApprovalButtonSimple
-                      requestId={message.approvalRequest.id}
-                      riskScore={message.approvalRequest.riskScore}
-                      status={message.approvalRequest.status}
-                      approvedAt={message.approvalRequest.approvedAt}
-                      rejectedAt={message.approvalRequest.rejectedAt}
-                      onApprove={() => onApprovalApprove?.(message.approvalRequest!.id)}
-                      onReject={() => onApprovalReject?.(message.approvalRequest!.id)}
-                    />
-                  </div>
-                )}
+                {/* Approval Buttons - Show for all statuses */}
+                {message.approvalRequest && (() => {
+                  console.log('Rendering approval request:', {
+                    id: message.approvalRequest.id,
+                    riskScore: message.approvalRequest.riskScore,
+                    status: message.approvalRequest.status,
+                    fullObject: message.approvalRequest
+                  })
+                  return (
+                    <div className="mt-3">
+                      <ApprovalButtonSimple
+                        requestId={message.approvalRequest.id}
+                        riskScore={message.approvalRequest.riskScore}
+                        status={message.approvalRequest.status}
+                        approvedAt={message.approvalRequest.approvedAt}
+                        rejectedAt={message.approvalRequest.rejectedAt}
+                        onApprove={() => onApprovalApprove?.(message.approvalRequest!.id)}
+                        onReject={() => onApprovalReject?.(message.approvalRequest!.id)}
+                      />
+                    </div>
+                  )
+                })()}
                 
                 {/* Execution Result (after approval box) */}
                 {message.executionResult?.executed && (
@@ -194,21 +202,6 @@ export function ChatTranscript({
                         <code>{message.executionResult.output || message.executionResult.error}</code>
                       </pre>
                     </div>
-                  </div>
-                )}
-                
-                {/* Pending approval buttons */}
-                {message.approvalRequest && message.approvalRequest.status === 'pending' && (
-                  <div className="mt-3">
-                    <ApprovalButtonSimple
-                      requestId={message.approvalRequest.id}
-                      riskScore={message.approvalRequest.riskScore}
-                      status={message.approvalRequest.status}
-                      approvedAt={message.approvalRequest.approvedAt}
-                      rejectedAt={message.approvalRequest.rejectedAt}
-                      onApprove={() => onApprovalApprove?.(message.approvalRequest!.id)}
-                      onReject={() => onApprovalReject?.(message.approvalRequest!.id)}
-                    />
                   </div>
                 )}
               </div>

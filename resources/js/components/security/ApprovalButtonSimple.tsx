@@ -1,7 +1,20 @@
 import React from 'react'
 
-export function ApprovalButtonSimple({ requestId, riskScore, status, approvedAt, rejectedAt, onApprove, onReject }: any) {
-  if (status === 'approved') {
+interface ApprovalButtonSimpleProps {
+  requestId: string
+  riskScore: number
+  status: string
+  approvedAt?: string
+  rejectedAt?: string
+  onApprove: () => void
+  onReject: () => void
+}
+
+export function ApprovalButtonSimple({ requestId, riskScore, status, approvedAt, rejectedAt, onApprove, onReject }: ApprovalButtonSimpleProps) {
+  // Debug logging
+  console.log('ApprovalButtonSimple render:', { requestId, riskScore, status, approvedAt, rejectedAt })
+
+  if (status === 'approved' && approvedAt) {
     return (
       <div style={{ padding: '10px', border: '2px solid green', margin: '10px 0', background: '#f0fdf4' }}>
         <div>✓ Approved by user at {new Date(approvedAt).toLocaleTimeString()}</div>
@@ -9,7 +22,7 @@ export function ApprovalButtonSimple({ requestId, riskScore, status, approvedAt,
     )
   }
 
-  if (status === 'rejected') {
+  if (status === 'rejected' && rejectedAt) {
     return (
       <div style={{ padding: '10px', border: '2px solid red', margin: '10px 0', background: '#fef2f2' }}>
         <div>✗ Rejected by user at {new Date(rejectedAt).toLocaleTimeString()}</div>
