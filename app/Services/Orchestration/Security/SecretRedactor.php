@@ -7,21 +7,22 @@ use Illuminate\Support\Facades\Log;
 class SecretRedactor
 {
     protected array $patterns;
+
     protected bool $enabled;
 
     public function __construct()
     {
         $this->enabled = config('orchestration.secret_redaction.enabled', true);
-        
+
         $builtInPatterns = config('orchestration.secret_redaction.patterns', []);
         $customPatterns = config('orchestration.secret_redaction.custom_patterns', []);
-        
+
         $this->patterns = array_merge($builtInPatterns, $customPatterns);
     }
 
     public function redact(string $content): string
     {
-        if (!$this->enabled) {
+        if (! $this->enabled) {
             return $content;
         }
 
@@ -51,7 +52,7 @@ class SecretRedactor
 
     public function redactArray(array $data): array
     {
-        if (!$this->enabled) {
+        if (! $this->enabled) {
             return $data;
         }
 
@@ -83,7 +84,7 @@ class SecretRedactor
                     $findings[] = [
                         'type' => $type,
                         'pattern' => $pattern,
-                        'preview' => substr($match, 0, 20) . '...',
+                        'preview' => substr($match, 0, 20).'...',
                     ];
                 }
             }
@@ -108,23 +109,23 @@ class SecretRedactor
         if (str_contains($match, 'AWS_ACCESS')) {
             return 'AWS_ACCESS_KEY';
         }
-        
+
         if (str_contains($match, 'AWS_SECRET')) {
             return 'AWS_SECRET_KEY';
         }
-        
+
         if (str_contains($match, 'APP_KEY')) {
             return 'APP_KEY';
         }
-        
+
         if (str_starts_with($match, 'Bearer ')) {
             return 'BEARER_TOKEN';
         }
-        
+
         if (str_contains($match, 'OPENAI')) {
             return 'OPENAI_API_KEY';
         }
-        
+
         if (str_contains($match, 'ANTHROPIC')) {
             return 'ANTHROPIC_API_KEY';
         }
@@ -139,7 +140,7 @@ class SecretRedactor
 
     public function addPattern(string $pattern): void
     {
-        if (!in_array($pattern, $this->patterns, true)) {
+        if (! in_array($pattern, $this->patterns, true)) {
             $this->patterns[] = $pattern;
         }
     }

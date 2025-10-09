@@ -13,7 +13,9 @@ use Laravel\Mcp\Server\Tool;
 class MessagesCheckTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_messages_check';
+
     protected string $title = 'Check agent inbox messages';
+
     protected string $description = 'Check inbox messages for an agent, optionally filtering by status (unread/all).';
 
     public function schema(JsonSchema $schema): array
@@ -42,7 +44,7 @@ class MessagesCheckTool extends Tool implements SummarizesTool
         $messages = $query->orderByDesc('created_at')
             ->limit($limit)
             ->get()
-            ->map(fn($msg) => [
+            ->map(fn ($msg) => [
                 'id' => $msg->id,
                 'stream' => $msg->stream,
                 'type' => $msg->type,

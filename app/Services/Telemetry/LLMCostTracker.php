@@ -2,16 +2,15 @@
 
 namespace App\Services\Telemetry;
 
-use App\Models\Provider;
 use App\Models\AICredential;
-use App\Models\Project;
+use App\Models\Provider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class LLMCostTracker
 {
     protected array $costRates;
+
     protected array $budgetLimits;
 
     public function __construct()
@@ -79,18 +78,19 @@ class LLMCostTracker
         $modelRates = $this->costRates[$model] ?? null;
 
         // Fall back to provider defaults if model not found
-        if (!$modelRates) {
+        if (! $modelRates) {
             $providerDefaults = $this->costRates[$provider]['default'] ?? null;
             if ($providerDefaults) {
                 $modelRates = $providerDefaults;
             }
         }
 
-        if (!$modelRates) {
+        if (! $modelRates) {
             Log::warning('No cost rates found for model', [
                 'provider' => $provider,
                 'model' => $model,
             ]);
+
             return 0.0;
         }
 
@@ -203,6 +203,7 @@ class LLMCostTracker
     protected function calculateCostPerToken(float $cost, int $tokensPrompt, int $tokensCompletion): float
     {
         $totalTokens = $tokensPrompt + $tokensCompletion;
+
         return $totalTokens > 0 ? round($cost / $totalTokens, 8) : 0;
     }
 
@@ -211,8 +212,11 @@ class LLMCostTracker
      */
     protected function calculateEfficiencyScore(float $cost, int $tokensPrompt, int $tokensCompletion): int
     {
-        if ($cost <= 0) return 0;
+        if ($cost <= 0) {
+            return 0;
+        }
         $totalTokens = $tokensPrompt + $tokensCompletion;
+
         return (int) ($totalTokens / $cost);
     }
 
@@ -230,7 +234,8 @@ class LLMCostTracker
     protected function getHistoricalAverageCost(string $provider, string $model): float
     {
         $cacheKey = "llm_cost_avg_{$provider}_{$model}";
-        return Cache::remember($cacheKey, 3600, function () use ($provider, $model) {
+
+        return Cache::remember($cacheKey, 3600, function () {
             // This would typically query telemetry logs or a cost analytics table
             // For now, return a placeholder
             return 0.0001; // $0.0001 per token average
@@ -246,10 +251,10 @@ class LLMCostTracker
 
         // Check if cheaper alternatives exist
         $cheaperModels = $this->findCheaperAlternatives($provider, $model, $cost, $totalTokens);
-        if (!empty($cheaperModels)) {
+        if (! empty($cheaperModels)) {
             $suggestions[] = [
                 'type' => 'model_switch',
-                'message' => "Consider switching to cheaper models: " . implode(', ', $cheaperModels),
+                'message' => 'Consider switching to cheaper models: '.implode(', ', $cheaperModels),
                 'potential_savings' => 'up to 50%',
             ];
         }
@@ -276,7 +281,7 @@ class LLMCostTracker
         $currentCostPerToken = $currentCost / max(1, $totalTokens);
 
         foreach ($this->costRates as $altModel => $rates) {
-            if (str_starts_with($altModel, $provider . '/') || !str_contains($altModel, '/')) {
+            if (str_starts_with($altModel, $provider.'/') || ! str_contains($altModel, '/')) {
                 $altCost = $this->calculateCost($provider, $altModel, $totalTokens, 0);
                 $altCostPerToken = $altCost / max(1, $totalTokens);
 

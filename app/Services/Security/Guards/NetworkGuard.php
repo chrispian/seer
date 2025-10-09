@@ -10,8 +10,9 @@ use Illuminate\Support\Facades\Log;
 class NetworkGuard
 {
     private const MAX_REQUEST_SIZE = 1 * 1024 * 1024; // 1MB
+
     private const MAX_RESPONSE_SIZE = 10 * 1024 * 1024; // 10MB
-    
+
     public function __construct(
         private PolicyRegistry $policyRegistry,
         private RiskScorer $riskScorer
@@ -33,8 +34,9 @@ class NetworkGuard
 
         // 1. Parse URL
         $parsed = $this->parseUrl($url);
-        if (!$parsed['valid']) {
+        if (! $parsed['valid']) {
             $validation['violations'][] = $parsed['error'];
+
             return $validation;
         }
 
@@ -42,8 +44,9 @@ class NetworkGuard
 
         // 2. Check for SSRF (private IPs)
         $ssrfCheck = $this->detectSSRF($parsed);
-        if (!$ssrfCheck['safe']) {
+        if (! $ssrfCheck['safe']) {
             $validation['violations'][] = $ssrfCheck['reason'];
+
             return $validation;
         }
 
@@ -51,13 +54,14 @@ class NetworkGuard
         $policyDecision = $this->policyRegistry->isDomainAllowed($parsed['host']);
         $validation['policy_decision'] = $policyDecision;
 
-        if (!$policyDecision['allowed']) {
+        if (! $policyDecision['allowed']) {
             $validation['violations'][] = $policyDecision['reason'];
+
             return $validation;
         }
 
         // 4. Enforce HTTPS for sensitive operations
-        if (!$this->isSecureScheme($parsed['scheme'], $options)) {
+        if (! $this->isSecureScheme($parsed['scheme'], $options)) {
             $validation['warnings'][] = 'Using non-HTTPS connection';
         }
 
@@ -73,6 +77,7 @@ class NetworkGuard
 
         if ($risk['requires_approval']) {
             $validation['violations'][] = "Request requires approval (risk: {$risk['score']})";
+
             return $validation;
         }
 
@@ -80,12 +85,14 @@ class NetworkGuard
         if (isset($options['body'])) {
             $bodySize = strlen($options['body']);
             if ($bodySize > self::MAX_REQUEST_SIZE) {
-                $validation['violations'][] = "Request body exceeds limit: {$bodySize} > " . self::MAX_REQUEST_SIZE;
+                $validation['violations'][] = "Request body exceeds limit: {$bodySize} > ".self::MAX_REQUEST_SIZE;
+
                 return $validation;
             }
         }
 
         $validation['allowed'] = true;
+
         return $validation;
     }
 
@@ -96,7 +103,7 @@ class NetworkGuard
     {
         $validation = $this->validateRequest($url, $options);
 
-        if (!$validation['allowed']) {
+        if (! $validation['allowed']) {
             return [
                 'success' => false,
                 'blocked' => true,
@@ -108,7 +115,7 @@ class NetworkGuard
         try {
             $method = strtoupper($options['method'] ?? 'GET');
             $timeout = min($options['timeout'] ?? 30, 60); // Max 60s
-            
+
             // Build HTTP client with limits
             $http = Http::timeout($timeout)
                 ->withOptions([
@@ -122,7 +129,7 @@ class NetworkGuard
             }
 
             // Execute request
-            $response = match($method) {
+            $response = match ($method) {
                 'GET' => $http->get($url),
                 'POST' => $http->post($url, $options['json'] ?? $options['body'] ?? []),
                 'PUT' => $http->put($url, $options['json'] ?? $options['body'] ?? []),
@@ -171,7 +178,7 @@ class NetworkGuard
     {
         $parsed = parse_url($url);
 
-        if ($parsed === false || !isset($parsed['host'])) {
+        if ($parsed === false || ! isset($parsed['host'])) {
             return [
                 'valid' => false,
                 'error' => 'Invalid URL format',
@@ -207,7 +214,7 @@ class NetworkGuard
         // Check if it's an IP address
         if (filter_var($host, FILTER_VALIDATE_IP)) {
             // Check for private IP ranges
-            if (!filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            if (! filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
                 return [
                     'safe' => false,
                     'reason' => 'Private IP address blocked (SSRF prevention)',
@@ -216,7 +223,7 @@ class NetworkGuard
         } else {
             // Resolve domain to IP and check
             $ip = gethostbyname($host);
-            if ($ip !== $host && !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            if ($ip !== $host && ! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
                 return [
                     'safe' => false,
                     'reason' => "Domain resolves to private IP (SSRF prevention): {$ip}",
@@ -252,7 +259,7 @@ class NetworkGuard
         // Ensure symlink doesn't escape allowed directories
         $targetPolicy = $this->policyRegistry->isPathAllowed($targetPath, 'read');
 
-        if (!$targetPolicy['allowed']) {
+        if (! $targetPolicy['allowed']) {
             return [
                 'safe' => false,
                 'reason' => "Symlink target outside allowed paths: {$targetPath}",
@@ -276,7 +283,7 @@ class NetworkGuard
 
             // Check if normalized path is allowed
             $policy = $this->policyRegistry->isPathAllowed($normalized, 'read');
-            if (!$policy['allowed']) {
+            if (! $policy['allowed']) {
                 return [
                     'safe' => false,
                     'reason' => 'Path traversal to restricted directory',

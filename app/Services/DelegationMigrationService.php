@@ -7,16 +7,13 @@ use App\Models\Sprint;
 use App\Models\SprintItem;
 use App\Models\WorkItem;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class DelegationMigrationService
 {
-    public function __construct(private readonly AgentProfileService $agentProfiles)
-    {
-    }
+    public function __construct(private readonly AgentProfileService $agentProfiles) {}
 
     /**
      * Import delegation sprint/task data into the orchestration database.
@@ -106,6 +103,7 @@ class DelegationMigrationService
             if ($trimmed === '') {
                 $collectingMeta = false;
                 $collectingList = false;
+
                 continue;
             }
 
@@ -135,6 +133,7 @@ class DelegationMigrationService
                     'notes' => [],
                 ];
                 $collectingMeta = true;
+
                 continue;
             }
 
@@ -144,6 +143,7 @@ class DelegationMigrationService
 
             if (Str::startsWith($trimmed, '| Task ID |')) {
                 $headers = $this->parseTableHeaders($trimmed);
+
                 continue;
             }
 
@@ -179,6 +179,7 @@ class DelegationMigrationService
 
             if ($collectingList && Str::startsWith($trimmed, '- ')) {
                 $currentSection['notes'][] = Str::after($trimmed, '- ');
+
                 continue;
             }
 
@@ -214,6 +215,7 @@ class DelegationMigrationService
 
             if (! $type) {
                 $summary['skipped']++;
+
                 continue;
             }
 
@@ -231,6 +233,7 @@ class DelegationMigrationService
 
             if ($dryRun) {
                 $summary[$existing ? 'updated' : 'created']++;
+
                 continue;
             }
 
@@ -382,7 +385,7 @@ class DelegationMigrationService
         $created = false;
 
         if (! $model) {
-            $model = new WorkItem();
+            $model = new WorkItem;
             $model->type = 'task';
             $model->tags = ['delegation'];
             $created = true;

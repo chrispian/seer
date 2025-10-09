@@ -7,7 +7,6 @@ use App\Models\CommandRegistry as CommandRegistryModel;
 use App\Models\Fragment;
 use App\Services\CommandRegistry;
 use App\Services\Commands\DSL\CommandRunner;
-use App\Services\Telemetry\CommandTelemetry;
 use Illuminate\Http\Request;
 
 class CommandController extends Controller
@@ -64,9 +63,9 @@ class CommandController extends Controller
                 // Pass raw arguments string to command constructor
                 $command = new $commandClass($rawArguments);
                 $result = $command->handle();
-                
+
                 $executionTime = round((microtime(true) - $startTime) * 1000, 2);
-                
+
                 // Format response to match expected frontend structure
                 $response = [
                     'success' => true,
@@ -83,10 +82,10 @@ class CommandController extends Controller
                     'shouldShowErrorToast' => false,
                     'execution_time' => $executionTime,
                 ];
-                
+
                 // Log command execution
                 $this->logCommandExecution($commandName, $commandText, $arguments, $response, $executionTime, true);
-                
+
                 return response()->json($response);
             }
 

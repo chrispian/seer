@@ -8,12 +8,13 @@ use Illuminate\Support\Facades\DB;
 class SyncMigrationsCommand extends Command
 {
     protected $signature = 'migrations:sync {--dry-run : Show what would be done without doing it}';
+
     protected $description = 'Sync migrations table with actual database state';
 
     public function handle()
     {
         $dryRun = $this->option('dry-run');
-        
+
         if ($dryRun) {
             $this->info('🔍 DRY RUN MODE - No changes will be made');
         }
@@ -34,7 +35,7 @@ class SyncMigrationsCommand extends Command
             '20251004151940_create_work_items_tables',
             '20251004151941_create_sprints_tables',
             '20251004151942_create_agent_memory_tables',
-            
+
             // Additional migrations from restore
             '2025_09_20_160611_add_toast_preferences_to_users_table',
             '2025_09_20_175034_add_model_metadata_to_fragments_table',
@@ -64,7 +65,7 @@ class SyncMigrationsCommand extends Command
             '2025_10_05_133709_add_new_columns_to_providers_table',
             '2025_10_05_180528_create_agent_profiles_table',
             '2025_10_05_180542_enhance_work_items_for_orchestration',
-            
+
             // Already synced
             '2025_01_06_000001_seed_obsidian_source',
             '2025_10_05_180555_create_task_assignments_table',
@@ -88,7 +89,7 @@ class SyncMigrationsCommand extends Command
             '2025_10_09_031557_create_tool_definitions_table',
         ];
 
-        $this->info("\n📋 Migrations to mark as run: " . count($missingMigrations));
+        $this->info("\n📋 Migrations to mark as run: ".count($missingMigrations));
 
         $marked = 0;
         $skipped = 0;
@@ -102,13 +103,14 @@ class SyncMigrationsCommand extends Command
             if ($exists) {
                 $this->line("  ⏭️  Skip: {$migration} (already marked)");
                 $skipped++;
+
                 continue;
             }
 
-            if (!$dryRun) {
+            if (! $dryRun) {
                 DB::table('migrations')->insert([
                     'migration' => $migration,
-                    'batch' => $nextBatch
+                    'batch' => $nextBatch,
                 ]);
                 $this->info("  ✅ Marked: {$migration}");
                 $marked++;
@@ -120,11 +122,11 @@ class SyncMigrationsCommand extends Command
 
         $this->newLine();
         if ($dryRun) {
-            $this->info("🔍 Dry run complete.");
+            $this->info('🔍 Dry run complete.');
             $this->info("Would mark {$marked} migrations, skip {$skipped} already marked.");
-            $this->info("Run without --dry-run to apply changes.");
+            $this->info('Run without --dry-run to apply changes.');
         } else {
-            $this->info("✅ Migration sync complete!");
+            $this->info('✅ Migration sync complete!');
             $this->info("Marked {$marked} migrations, skipped {$skipped} already marked.");
             $this->info("You can now run 'php artisan migrate' for any future migrations.");
         }

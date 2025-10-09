@@ -30,12 +30,12 @@ class ContextBroker implements ContextBrokerInterface
 
     protected function buildConversationSummary(?int $sessionId): string
     {
-        if (!$sessionId) {
+        if (! $sessionId) {
             return '';
         }
 
         $session = ChatSession::find($sessionId);
-        if (!$session) {
+        if (! $session) {
             return '';
         }
 
@@ -45,22 +45,22 @@ class ContextBroker implements ContextBrokerInterface
         }
 
         $maxLength = Config::get('fragments.tool_aware_turn.context.max_summary_length', 600);
-        
+
         // Take last N messages for context
         $recentMessages = array_slice($messages, -5);
-        
+
         $summary = '';
         foreach ($recentMessages as $msg) {
             $role = $msg['type'] ?? $msg['role'] ?? 'unknown';
             $content = $msg['message'] ?? $msg['md'] ?? '';
-            
+
             if (empty($content)) {
                 continue;
             }
 
             // Truncate long messages
             if (strlen($content) > 200) {
-                $content = substr($content, 0, 200) . '...';
+                $content = substr($content, 0, 200).'...';
             }
 
             $summary .= "{$role}: {$content}\n";
@@ -81,12 +81,12 @@ class ContextBroker implements ContextBrokerInterface
 
     protected function extractAgentPreferences(?int $sessionId): array
     {
-        if (!$sessionId) {
+        if (! $sessionId) {
             return [];
         }
 
         $session = ChatSession::find($sessionId);
-        if (!$session) {
+        if (! $session) {
             return [];
         }
 
@@ -99,21 +99,21 @@ class ContextBroker implements ContextBrokerInterface
     protected function previewRelevantTools(string $userMessage): array
     {
         $previewCount = Config::get('fragments.tool_aware_turn.context.tool_preview_count', 5);
-        
+
         // Get all available tools
         $allTools = $this->toolRegistry->all();
-        
+
         // For MVP, return first N tools as preview
         // TODO: In future, use embeddings or keyword matching to find most relevant tools
         $preview = [];
         $count = 0;
-        
+
         foreach ($allTools as $slug => $tool) {
             if ($count >= $previewCount) {
                 break;
             }
 
-            if (!$tool->isEnabled()) {
+            if (! $tool->isEnabled()) {
                 continue;
             }
 
@@ -122,7 +122,7 @@ class ContextBroker implements ContextBrokerInterface
                 'capabilities' => $tool->capabilities(),
                 'schema' => $tool->getConfigSchema(),
             ];
-            
+
             $count++;
         }
 

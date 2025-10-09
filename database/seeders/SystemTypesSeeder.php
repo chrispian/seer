@@ -9,7 +9,7 @@ class SystemTypesSeeder extends Seeder
 {
     /**
      * Seed system fragment types
-     * 
+     *
      * System types cannot be disabled or deleted.
      * Hidden types don't appear in admin UI.
      */
@@ -62,7 +62,7 @@ class SystemTypesSeeder extends Seeder
                 'schema_hash' => hash('sha256', 'system'),
                 'capabilities' => ['system_generated'],
             ],
-            
+
             // User-facing types (visible in admin)
             [
                 'slug' => 'bookmark',
@@ -145,7 +145,7 @@ class SystemTypesSeeder extends Seeder
                 $type
             );
         }
-        
-        $this->command->info('✅ Seeded ' . count($systemTypes) . ' system types');
+
+        $this->command->info('✅ Seeded '.count($systemTypes).' system types');
     }
 }

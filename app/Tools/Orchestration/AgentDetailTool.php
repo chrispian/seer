@@ -12,7 +12,9 @@ use Laravel\Mcp\Server\Tool;
 class AgentDetailTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_agents_detail';
+
     protected string $title = 'Show orchestration agent detail';
+
     protected string $description = 'Return agent profile, stats, and recent assignments.';
 
     public function schema(JsonSchema $schema): array

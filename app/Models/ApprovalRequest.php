@@ -60,6 +60,6 @@ class ApprovalRequest extends Model
 
     public function isPending(): bool
     {
-        return $this->status === 'pending' && !$this->isTimedOut();
+        return $this->status === 'pending' && ! $this->isTimedOut();
     }
 }

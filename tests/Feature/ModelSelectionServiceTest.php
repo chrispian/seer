@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\AICredential;
 use App\Models\Project;
 use App\Models\Provider;
 use App\Models\Vault;

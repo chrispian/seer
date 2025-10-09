@@ -13,31 +13,31 @@ return new class extends Migration
             $table->uuid('task_id');
             $table->uuid('agent_id')->nullable();
             $table->bigInteger('user_id')->nullable();
-            
+
             $table->string('activity_type', 50);
             $table->string('action', 100);
-            
+
             $table->text('description')->nullable();
             $table->jsonb('changes')->nullable();
             $table->jsonb('metadata')->nullable();
-            
+
             $table->timestamp('created_at');
-            
+
             $table->foreign('task_id')
                 ->references('id')
                 ->on('work_items')
                 ->onDelete('cascade');
-            
+
             $table->foreign('agent_id')
                 ->references('id')
                 ->on('agent_profiles')
                 ->onDelete('set null');
-            
+
             $table->foreign('user_id')
                 ->references('id')
                 ->on('users')
                 ->onDelete('set null');
-            
+
             $table->index(['task_id', 'created_at']);
             $table->index(['activity_type', 'created_at']);
             $table->index(['agent_id', 'created_at']);

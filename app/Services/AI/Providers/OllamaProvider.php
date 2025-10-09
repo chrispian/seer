@@ -161,6 +161,7 @@ class OllamaProvider extends AbstractAIProvider
     protected function getEndpointUrl(): string
     {
         $baseUrl = rtrim($this->getConfigValue('base') ?? 'http://127.0.0.1:11434', '/');
+
         return "{$baseUrl}/api/generate";
     }
 
@@ -170,6 +171,7 @@ class OllamaProvider extends AbstractAIProvider
     protected function getEmbeddingEndpointUrl(): string
     {
         $baseUrl = rtrim($this->getConfigValue('base') ?? 'http://127.0.0.1:11434', '/');
+
         return "{$baseUrl}/api/embeddings";
     }
 

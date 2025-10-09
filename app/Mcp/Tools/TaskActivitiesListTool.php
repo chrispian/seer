@@ -57,12 +57,12 @@ class TaskActivitiesListTool implements Tool
 
         if ($activity->changes) {
             $output .= "**Changes**:\n";
-            $output .= "```json\n" . json_encode($activity->changes, JSON_PRETTY_PRINT) . "\n```\n";
+            $output .= "```json\n".json_encode($activity->changes, JSON_PRETTY_PRINT)."\n```\n";
         }
 
         if ($activity->metadata) {
             $output .= "**Metadata**:\n";
-            $output .= "```json\n" . json_encode($activity->metadata, JSON_PRETTY_PRINT) . "\n```\n";
+            $output .= "```json\n".json_encode($activity->metadata, JSON_PRETTY_PRINT)."\n```\n";
         }
 
         $output .= "\n---\n\n";

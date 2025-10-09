@@ -26,10 +26,10 @@ class ArtifactsController extends Controller
         ]);
 
         $task = WorkItem::findOrFail($taskId);
-        
+
         $content = $validated['content'];
         $hash = $this->contentStore->put($content, $validated['metadata'] ?? []);
-        
+
         $artifact = OrchestrationArtifact::create([
             'task_id' => $task->id,
             'hash' => $hash,
@@ -59,13 +59,13 @@ class ArtifactsController extends Controller
     public function listTaskArtifacts(string $taskId): JsonResponse
     {
         $task = WorkItem::findOrFail($taskId);
-        
+
         $artifacts = OrchestrationArtifact::byTask($task->id)
             ->orderByDesc('created_at')
             ->get();
 
         return response()->json([
-            'data' => $artifacts->map(fn($artifact) => [
+            'data' => $artifacts->map(fn ($artifact) => [
                 'id' => $artifact->id,
                 'hash' => $artifact->hash,
                 'filename' => $artifact->filename,
@@ -87,9 +87,9 @@ class ArtifactsController extends Controller
     public function downloadArtifact(string $artifactId): StreamedResponse
     {
         $artifact = OrchestrationArtifact::findOrFail($artifactId);
-        
+
         $content = $artifact->content;
-        
+
         if ($content === null) {
             abort(404, 'Artifact content not found in storage');
         }

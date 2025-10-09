@@ -12,25 +12,25 @@ class ClearCommand extends BaseCommand
             'component' => null,
             'data' => null,
             'message' => 'Chat cleared successfully. The conversation history has been reset.',
-            'shouldResetChat' => true
+            'shouldResetChat' => true,
         ];
     }
-    
+
     public static function getName(): string
     {
         return 'Clear Chat';
     }
-    
+
     public static function getDescription(): string
     {
         return 'Clear the current chat conversation history';
     }
-    
+
     public static function getUsage(): string
     {
         return '/clear';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Utility';

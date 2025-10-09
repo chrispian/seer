@@ -8,14 +8,14 @@ class BacklogListCommand extends BaseCommand
     {
         // Get backlog tasks (status = 'backlog')
         $tasks = $this->getBacklogTasks();
-        
+
         return [
             'type' => 'backlog',
             'component' => 'BacklogListModal',
-            'data' => $tasks
+            'data' => $tasks,
         ];
     }
-    
+
     private function getBacklogTasks(): array
     {
         if (class_exists(\App\Models\WorkItem::class)) {
@@ -26,9 +26,10 @@ class BacklogListCommand extends BaseCommand
                 ->orderBy('created_at', 'desc')
                 ->limit(50)
                 ->get();
-                
+
             return $tasks->map(function ($task) {
                 $metadata = $task->metadata ?? [];
+
                 return [
                     'id' => $task->id,
                     'task_code' => $metadata['task_code'] ?? $task->id,
@@ -44,11 +45,11 @@ class BacklogListCommand extends BaseCommand
                     'estimated_hours' => $task->estimated_hours,
                     'tags' => $task->tags ?? [],
                     'has_content' => [
-                        'agent' => !empty($task->agent_content),
-                        'plan' => !empty($task->plan_content),
-                        'context' => !empty($task->context_content),
-                        'todo' => !empty($task->todo_content),
-                        'summary' => !empty($task->summary_content),
+                        'agent' => ! empty($task->agent_content),
+                        'plan' => ! empty($task->plan_content),
+                        'context' => ! empty($task->context_content),
+                        'todo' => ! empty($task->todo_content),
+                        'summary' => ! empty($task->summary_content),
                     ],
                     'created_at' => $task->created_at?->toISOString(),
                     'updated_at' => $task->updated_at?->toISOString(),
@@ -56,25 +57,25 @@ class BacklogListCommand extends BaseCommand
                 ];
             })->all();
         }
-        
+
         return [];
     }
-    
+
     public static function getName(): string
     {
         return 'Backlog List';
     }
-    
+
     public static function getDescription(): string
     {
         return 'List all backlog items for future planning';
     }
-    
+
     public static function getUsage(): string
     {
         return '/backlog-list';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Orchestration';

@@ -8,14 +8,14 @@ class SessionListCommand extends BaseCommand
     {
         // Get chat sessions
         $sessions = $this->getChatSessions();
-        
+
         return [
             'type' => 'session',
             'component' => 'SessionListModal',
-            'data' => $sessions
+            'data' => $sessions,
         ];
     }
-    
+
     private function getChatSessions(): array
     {
         if (class_exists(\App\Models\ChatSession::class)) {
@@ -43,28 +43,28 @@ class SessionListCommand extends BaseCommand
                     ];
                 })
                 ->all();
-                
+
             return $sessions;
         }
-        
+
         return [];
     }
-    
+
     public static function getName(): string
     {
         return 'Session List';
     }
-    
+
     public static function getDescription(): string
     {
         return 'List all chat sessions with activity info';
     }
-    
+
     public static function getUsage(): string
     {
         return '/session';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Navigation';

@@ -4,8 +4,8 @@ namespace App\Mcp\Tools;
 
 use App\Models\TaskActivity;
 use App\Models\WorkItem;
-use HollisLabs\ToolCrate\Contracts\Tool;
 use EchoLabs\ToolCrate\Tool as ToolCrate;
+use HollisLabs\ToolCrate\Contracts\Tool;
 
 class TaskActivitiesLogTool implements Tool
 {
@@ -22,7 +22,7 @@ class TaskActivitiesLogTool implements Tool
 
             $validTypes = ['note', 'error'];
             if (! in_array($activityType, $validTypes)) {
-                return "Invalid activity type. Must be one of: " . implode(', ', $validTypes);
+                return 'Invalid activity type. Must be one of: '.implode(', ', $validTypes);
             }
 
             $activity = TaskActivity::create([
@@ -36,9 +36,9 @@ class TaskActivitiesLogTool implements Tool
             $taskCode = $task->metadata['task_code'] ?? $task->id;
 
             return "✓ Activity logged for task {$taskCode}\n"
-                . "Type: {$activityType}\n"
-                . "Description: {$description}\n"
-                . "Time: {$activity->created_at->format('Y-m-d H:i:s')}";
+                ."Type: {$activityType}\n"
+                ."Description: {$description}\n"
+                ."Time: {$activity->created_at->format('Y-m-d H:i:s')}";
         } catch (\Exception $e) {
             return "Error logging activity: {$e->getMessage()}";
         }

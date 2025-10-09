@@ -15,7 +15,7 @@ class WorkItemFactory extends Factory
             'type' => 'task',
             'status' => 'todo',
             'metadata' => [
-                'task_code' => 'T-TEST-' . $this->faker->randomNumber(3),
+                'task_code' => 'T-TEST-'.$this->faker->randomNumber(3),
                 'task_name' => $this->faker->sentence(),
             ],
         ];

@@ -21,7 +21,7 @@ class LimitedShell
         $cmd = array_merge([$bin], $spec['fixed_flags'] ?? [], $this->validateArgs($spec, $args));
 
         $process = new Process($cmd, $cwd, $env, null, $this->timeoutSeconds);
-        $process->setPty(False);
+        $process->setPty(false);
         $process->start();
 
         $out = '';
@@ -36,8 +36,8 @@ class LimitedShell
             usleep(50_000);
         }
 
-        if (!$process->isSuccessful()) {
-            throw new \RuntimeException('Command failed: ' . $process->getErrorOutput());
+        if (! $process->isSuccessful()) {
+            throw new \RuntimeException('Command failed: '.$process->getErrorOutput());
         }
 
         return ['stdout' => $out, 'stderr' => $err, 'exit' => $process->getExitCode()];
@@ -46,7 +46,10 @@ class LimitedShell
     private function validateSpec(string $bin, array $args): array
     {
         $spec = $this->commandSpec[$bin] ?? null;
-        if (!$spec) throw new \InvalidArgumentException('Command not allowed');
+        if (! $spec) {
+            throw new \InvalidArgumentException('Command not allowed');
+        }
+
         // TODO: add per-arg schema validation and deny unknown flags.
         return $spec;
     }
@@ -63,8 +66,11 @@ class LimitedShell
         $safe = [];
         $allow = $this->commandSpec['_env_allow'] ?? ['LANG'];
         foreach ($allow as $k) {
-            if (isset($env[$k])) $safe[$k] = $env[$k];
+            if (isset($env[$k])) {
+                $safe[$k] = $env[$k];
+            }
         }
+
         return $safe;
     }
 }

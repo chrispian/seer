@@ -13,7 +13,9 @@ use Laravel\Mcp\Server\Tool;
 class AgentSaveTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_agents_save';
+
     protected string $title = 'Create or update agent profile';
+
     protected string $description = 'Upsert an agent profile including capabilities, tools, and status.';
 
     public function schema(JsonSchema $schema): array

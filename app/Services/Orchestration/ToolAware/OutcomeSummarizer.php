@@ -12,9 +12,9 @@ class OutcomeSummarizer
     public function summarize(ExecutionTrace $trace): OutcomeSummary
     {
         $redactedResults = $this->redactResults($trace);
-        
-        $promptTemplate = file_get_contents(__DIR__ . '/Prompts/outcome_summary.txt');
-        
+
+        $promptTemplate = file_get_contents(__DIR__.'/Prompts/outcome_summary.txt');
+
         $prompt = str_replace(
             '{results}',
             json_encode($redactedResults, JSON_PRETTY_PRINT),
@@ -51,9 +51,9 @@ class OutcomeSummarizer
     protected function redactResults(ExecutionTrace $trace): array
     {
         $redactEnabled = Config::get('fragments.tool_aware_turn.features.redact_logs', true);
-        
-        if (!$redactEnabled) {
-            return array_map(fn($step) => $step->toArray(), $trace->steps);
+
+        if (! $redactEnabled) {
+            return array_map(fn ($step) => $step->toArray(), $trace->steps);
         }
 
         // Redact sensitive patterns
@@ -67,7 +67,7 @@ class OutcomeSummarizer
         $redacted = [];
         foreach ($trace->steps as $step) {
             $stepArray = $step->toArray();
-            
+
             // Redact result field
             if (isset($stepArray['result'])) {
                 $resultJson = json_encode($stepArray['result']);
@@ -106,7 +106,7 @@ class OutcomeSummarizer
     protected function callLLM(string $prompt, string $model): string
     {
         $provider = Config::get('fragments.models.default_provider', 'openai');
-        
+
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 
         $systemMessage = 'You are a summarization agent that responds only with valid JSON.';

@@ -144,11 +144,13 @@ class OrchestrationSprintsCommand extends Command
 
             if (preg_match('/^\d+$/', $code)) {
                 $normalised[] = 'SPRINT-'.str_pad($code, 2, '0', STR_PAD_LEFT);
+
                 continue;
             }
 
             if (preg_match('/^(?:sprint-)?(\d+)$/i', $code, $matches)) {
                 $normalised[] = 'SPRINT-'.str_pad($matches[1], 2, '0', STR_PAD_LEFT);
+
                 continue;
             }
 

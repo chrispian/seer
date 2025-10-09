@@ -28,12 +28,14 @@ class CleanupAuditLogs extends Command
 
         if ($dryRun) {
             $this->warn('DRY RUN - No records will be deleted');
+
             return self::SUCCESS;
         }
 
         if ($commandLogsCount > 0 || $activityLogsCount > 0) {
             if (! $this->confirm('Do you want to proceed with deletion?', true)) {
                 $this->info('Cleanup cancelled');
+
                 return self::SUCCESS;
             }
 

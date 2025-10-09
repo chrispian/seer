@@ -8,14 +8,14 @@ class ChannelsCommand extends BaseCommand
     {
         // Get available channels/communication options
         $channels = $this->getChannels();
-        
+
         return [
             'type' => 'channel',
             'component' => 'ChannelListModal',
-            'data' => $channels
+            'data' => $channels,
         ];
     }
-    
+
     private function getChannels(): array
     {
         // For now, return sample channels
@@ -47,25 +47,25 @@ class ChannelsCommand extends BaseCommand
                 'member_count' => 0,
                 'is_active' => true,
                 'created_at' => now()->toISOString(),
-            ]
+            ],
         ];
     }
-    
+
     public static function getName(): string
     {
         return 'Channels List';
     }
-    
+
     public static function getDescription(): string
     {
         return 'List all available communication channels';
     }
-    
+
     public static function getUsage(): string
     {
         return '/channels';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Communication';

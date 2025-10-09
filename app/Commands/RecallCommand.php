@@ -8,14 +8,14 @@ class RecallCommand extends BaseCommand
     {
         // Get recent fragments for recall
         $fragments = $this->getRecentFragments();
-        
+
         return [
             'type' => 'fragment',
             'component' => 'FragmentListModal',
-            'data' => $fragments
+            'data' => $fragments,
         ];
     }
-    
+
     private function getRecentFragments(): array
     {
         if (class_exists(\App\Models\Fragment::class)) {
@@ -39,28 +39,28 @@ class RecallCommand extends BaseCommand
                     ];
                 })
                 ->all();
-                
+
             return $fragments;
         }
-        
+
         return [];
     }
-    
+
     public static function getName(): string
     {
         return 'Recall';
     }
-    
+
     public static function getDescription(): string
     {
         return 'Recall and list recent fragments for review';
     }
-    
+
     public static function getUsage(): string
     {
         return '/recall';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Navigation';

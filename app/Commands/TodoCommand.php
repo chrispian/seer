@@ -8,17 +8,17 @@ class TodoCommand extends BaseCommand
     {
         // Get todo items from fragments or dedicated todo system
         $fragments = $this->getTodos();
-        
+
         return [
             'type' => 'todo',
             'component' => 'TodoManagementModal',
             'data' => $fragments,
             'panelData' => [
-                'fragments' => $fragments  // useTodoData expects this format
-            ]
+                'fragments' => $fragments,  // useTodoData expects this format
+            ],
         ];
     }
-    
+
     private function getTodos(): array
     {
         if (class_exists(\App\Models\Fragment::class)) {
@@ -44,28 +44,28 @@ class TodoCommand extends BaseCommand
                     ];
                 })
                 ->all();
-                
+
             return $fragments;
         }
-        
+
         return [];
     }
-    
+
     public static function getName(): string
     {
         return 'Todo Manager';
     }
-    
+
     public static function getDescription(): string
     {
         return 'Manage todo items and task lists';
     }
-    
+
     public static function getUsage(): string
     {
         return '/todo';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Productivity';

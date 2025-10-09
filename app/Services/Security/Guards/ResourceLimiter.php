@@ -2,7 +2,6 @@
 
 namespace App\Services\Security\Guards;
 
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
 
 class ResourceLimiter
@@ -11,14 +10,14 @@ class ResourceLimiter
     {
         $timeout = $limits['timeout'] ?? 30;
         $memory = $limits['memory'] ?? '128M';
-        
+
         $limitedCommand = $this->wrapWithLimits($command, $memory);
-        
+
         $process = Process::fromShellCommandline($limitedCommand, $workdir, null, null, $timeout);
-        
+
         $startTime = microtime(true);
         $process->run();
-        $executionTime = (int)((microtime(true) - $startTime) * 1000);
+        $executionTime = (int) ((microtime(true) - $startTime) * 1000);
 
         return [
             'exit_code' => $process->getExitCode(),
@@ -32,8 +31,8 @@ class ResourceLimiter
 
     private function wrapWithLimits(string $command, string $memoryLimit): string
     {
-        $memoryKb = (int)($this->parseMemoryLimit($memoryLimit) / 1024);
-        
+        $memoryKb = (int) ($this->parseMemoryLimit($memoryLimit) / 1024);
+
         if (PHP_OS_FAMILY === 'Darwin') {
             // macOS doesn't support all ulimit options reliably
             // Just use CPU time limit and let command run
@@ -47,12 +46,12 @@ class ResourceLimiter
     private function parseMemoryLimit(string $limit): int
     {
         $limit = strtoupper(trim($limit));
-        
+
         if (preg_match('/^(\d+)([KMG]?)$/', $limit, $matches)) {
-            $value = (int)$matches[1];
+            $value = (int) $matches[1];
             $unit = $matches[2] ?? '';
-            
-            return match($unit) {
+
+            return match ($unit) {
                 'K' => $value * 1024,
                 'M' => $value * 1024 * 1024,
                 'G' => $value * 1024 * 1024 * 1024,

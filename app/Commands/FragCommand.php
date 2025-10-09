@@ -8,14 +8,14 @@ class FragCommand extends BaseCommand
     {
         // Get recent fragments (similar to recall but with different focus)
         $fragments = $this->getFragments();
-        
+
         return [
             'type' => 'fragment',
             'component' => 'FragmentListModal',
-            'data' => $fragments
+            'data' => $fragments,
         ];
     }
-    
+
     private function getFragments(): array
     {
         if (class_exists(\App\Models\Fragment::class)) {
@@ -39,28 +39,28 @@ class FragCommand extends BaseCommand
                     ];
                 })
                 ->all();
-                
+
             return $fragments;
         }
-        
+
         return [];
     }
-    
+
     public static function getName(): string
     {
         return 'Fragment Manager';
     }
-    
+
     public static function getDescription(): string
     {
         return 'Manage and browse fragments in the system';
     }
-    
+
     public static function getUsage(): string
     {
         return '/frag';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Content';

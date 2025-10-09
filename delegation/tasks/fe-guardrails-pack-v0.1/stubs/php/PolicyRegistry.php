@@ -16,7 +16,7 @@ class PolicyRegistry
         return [
             'action' => 'allow',
             'risk' => 0,
-            'reason' => 'default-allow-by-config'
+            'reason' => 'default-allow-by-config',
         ];
     }
 }

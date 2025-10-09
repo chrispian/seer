@@ -18,9 +18,9 @@ class ToolSelector implements ToolSelectorInterface
     public function selectTools(string $goal, ContextBundle $context): ToolPlan
     {
         $toolsSlice = $this->getToolsSliceForGoal($goal);
-        
-        $promptTemplate = file_get_contents(__DIR__ . '/Prompts/tool_candidates.txt');
-        
+
+        $promptTemplate = file_get_contents(__DIR__.'/Prompts/tool_candidates.txt');
+
         $prompt = str_replace(
             ['{high_level_goal}', '{tools}'],
             [$goal, json_encode($toolsSlice, JSON_PRETTY_PRINT)],
@@ -33,7 +33,7 @@ class ToolSelector implements ToolSelectorInterface
         try {
             $response = $this->callLLM($prompt, $model);
             $plan = $this->parseResponse($response);
-            
+
             // Apply permission filtering and arg resolution
             $plan = $this->filterByPermissions($plan);
             $plan = $this->fillMissingArgs($plan, $context);
@@ -46,18 +46,18 @@ class ToolSelector implements ToolSelectorInterface
             return $plan;
 
         } catch (\JsonException $e) {
-            if (!$retryOnFailure) {
-                throw new \RuntimeException('Tool selector LLM returned invalid JSON: ' . $e->getMessage());
+            if (! $retryOnFailure) {
+                throw new \RuntimeException('Tool selector LLM returned invalid JSON: '.$e->getMessage());
             }
 
             Log::warning('Tool selector returned invalid JSON, retrying');
 
-            $retryPrompt = $prompt . "\n\nIMPORTANT: Respond with ONLY valid JSON, no additional text.";
-            
+            $retryPrompt = $prompt."\n\nIMPORTANT: Respond with ONLY valid JSON, no additional text.";
+
             try {
                 $response = $this->callLLM($retryPrompt, $model);
                 $plan = $this->parseResponse($response);
-                
+
                 $plan = $this->filterByPermissions($plan);
                 $plan = $this->fillMissingArgs($plan, $context);
 
@@ -69,7 +69,7 @@ class ToolSelector implements ToolSelectorInterface
                 return $plan;
 
             } catch (\JsonException $retryError) {
-                throw new \RuntimeException('Tool selector returned invalid JSON after retry: ' . $retryError->getMessage());
+                throw new \RuntimeException('Tool selector returned invalid JSON after retry: '.$retryError->getMessage());
             }
         }
     }
@@ -79,7 +79,7 @@ class ToolSelector implements ToolSelectorInterface
         $this->checkAndRefreshMcpCache();
 
         $toolDefinitions = \App\Models\ToolDefinition::enabled()->get();
-        
+
         $slice = [];
         foreach ($toolDefinitions as $toolDef) {
             $slice[] = $toolDef->toPromptFormat();
@@ -93,8 +93,8 @@ class ToolSelector implements ToolSelectorInterface
     protected function checkAndRefreshMcpCache(): void
     {
         $autoRefresh = Config::get('fragments.tool_aware_turn.cache.auto_refresh', true);
-        
-        if (!$autoRefresh) {
+
+        if (! $autoRefresh) {
             return;
         }
 
@@ -105,14 +105,14 @@ class ToolSelector implements ToolSelectorInterface
             ->whereNotNull('synced_at')
             ->min('synced_at');
 
-        if (!$oldestSync || $oldestSync < $staleThreshold) {
+        if (! $oldestSync || $oldestSync < $staleThreshold) {
             Log::info('MCP cache is stale, dispatching refresh job', [
                 'oldest_sync' => $oldestSync,
                 'threshold' => $staleThreshold,
                 'ttl_hours' => $ttlHours,
             ]);
 
-            dispatch(new \App\Jobs\RefreshMcpToolsJob())->onQueue('low');
+            dispatch(new \App\Jobs\RefreshMcpToolsJob)->onQueue('low');
         }
     }
 
@@ -120,9 +120,9 @@ class ToolSelector implements ToolSelectorInterface
     {
         // TODO: Implement actual permission checking against user/agent allow-list
         // For MVP, accept all tools that are enabled
-        
+
         $allowedTools = Config::get('fragments.tools.allowed', []);
-        
+
         if (empty($allowedTools)) {
             // No restrictions if allow list is empty
             return $plan;
@@ -138,6 +138,7 @@ class ToolSelector implements ToolSelectorInterface
         }
 
         $plan->plan_steps = $filteredSteps;
+
         return $plan;
     }
 
@@ -151,7 +152,7 @@ class ToolSelector implements ToolSelectorInterface
     protected function callLLM(string $prompt, string $model): string
     {
         $provider = Config::get('fragments.models.default_provider', 'openai');
-        
+
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 
         $systemMessage = 'You are a tool selection agent that responds only with valid JSON.';

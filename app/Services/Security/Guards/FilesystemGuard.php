@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 class FilesystemGuard
 {
     private const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB default
-    
+
     public function __construct(
         private PolicyRegistry $policyRegistry,
         private RiskScorer $riskScorer
@@ -27,23 +27,26 @@ class FilesystemGuard
         ];
 
         $normalized = $this->normalizePath($path);
-        if (!$normalized['valid']) {
+        if (! $normalized['valid']) {
             $validation['violations'][] = $normalized['error'];
+
             return $validation;
         }
 
         $validation['normalized_path'] = $normalized['path'];
 
         $traversalCheck = $this->detectPathTraversal($normalized['real_path'], $path);
-        if (!$traversalCheck['safe']) {
+        if (! $traversalCheck['safe']) {
             $validation['violations'][] = $traversalCheck['reason'];
+
             return $validation;
         }
 
         if ($normalized['is_symlink']) {
             $symlinkCheck = $this->validateSymlink($normalized['path'], $normalized['real_path']);
-            if (!$symlinkCheck['safe']) {
+            if (! $symlinkCheck['safe']) {
                 $validation['violations'][] = $symlinkCheck['reason'];
+
                 return $validation;
             }
             $validation['warnings'][] = 'Path is a symlink';
@@ -52,8 +55,9 @@ class FilesystemGuard
         $policyDecision = $this->policyRegistry->isPathAllowed($normalized['real_path'], $operation);
         $validation['policy_decision'] = $policyDecision;
 
-        if (!$policyDecision['allowed']) {
+        if (! $policyDecision['allowed']) {
             $validation['violations'][] = $policyDecision['reason'];
+
             return $validation;
         }
 
@@ -62,18 +66,21 @@ class FilesystemGuard
 
         if ($risk['requires_approval']) {
             $validation['violations'][] = "Operation requires approval (risk: {$risk['score']})";
+
             return $validation;
         }
 
         if ($operation === 'write' && isset($context['size'])) {
             $maxSize = $context['max_size'] ?? self::MAX_FILE_SIZE;
             if ($context['size'] > $maxSize) {
-                $validation['violations'][] = "File size exceeds limit";
+                $validation['violations'][] = 'File size exceeds limit';
+
                 return $validation;
             }
         }
 
         $validation['allowed'] = true;
+
         return $validation;
     }
 
@@ -103,7 +110,9 @@ class FilesystemGuard
         $normalized = [];
 
         foreach ($parts as $part) {
-            if ($part === '' || $part === '.') continue;
+            if ($part === '' || $part === '.') {
+                continue;
+            }
             if ($part === '..') {
                 array_pop($normalized);
             } else {
@@ -111,13 +120,14 @@ class FilesystemGuard
             }
         }
 
-        return '/' . implode('/', $normalized);
+        return '/'.implode('/', $normalized);
     }
 
     private function detectPathTraversal(string $normalized, string $original): array
     {
         if (str_contains($original, '../') || str_contains($original, '..\\')) {
             Log::warning('Path traversal attempt', ['original' => $original, 'normalized' => $normalized]);
+
             return ['safe' => false, 'reason' => 'Path traversal patterns (..) not allowed'];
         }
 
@@ -131,8 +141,8 @@ class FilesystemGuard
     private function validateSymlink(string $symlinkPath, string $targetPath): array
     {
         $targetPolicy = $this->policyRegistry->isPathAllowed($targetPath, 'read');
-        
-        if (!$targetPolicy['allowed']) {
+
+        if (! $targetPolicy['allowed']) {
             return ['safe' => false, 'reason' => "Symlink target not allowed: {$targetPath}"];
         }
 

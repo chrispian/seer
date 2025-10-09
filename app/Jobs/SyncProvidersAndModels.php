@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\Provider;
 use App\Models\AIModel;
+use App\Models\Provider;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
@@ -48,14 +48,14 @@ class SyncProvidersAndModels implements ShouldQueue
      */
     private function syncProviders(): void
     {
-        $response = Http::timeout(60)->get(self::MODELS_API_URL . '.json');
-        
-        if (!$response->successful()) {
+        $response = Http::timeout(60)->get(self::MODELS_API_URL.'.json');
+
+        if (! $response->successful()) {
             throw new \Exception('Failed to fetch data from models.dev API');
         }
 
         $allData = $response->json();
-        
+
         foreach ($allData as $providerId => $providerData) {
             $provider = Provider::updateOrCreate(
                 ['provider' => $providerId],
@@ -82,31 +82,32 @@ class SyncProvidersAndModels implements ShouldQueue
      */
     private function syncModels(): void
     {
-        $response = Http::timeout(60)->get(self::MODELS_API_URL . '.json');
-        
-        if (!$response->successful()) {
+        $response = Http::timeout(60)->get(self::MODELS_API_URL.'.json');
+
+        if (! $response->successful()) {
             throw new \Exception('Failed to fetch data from models.dev API');
         }
 
         $allData = $response->json();
-        
+
         foreach ($allData as $providerId => $providerData) {
             $provider = Provider::where('provider', $providerId)->first();
-            
-            if (!$provider) {
+
+            if (! $provider) {
                 Log::warning('Provider not found for models', [
-                    'provider' => $providerId
+                    'provider' => $providerId,
                 ]);
+
                 continue;
             }
 
             $models = $providerData['models'] ?? [];
-            
+
             foreach ($models as $modelId => $modelData) {
                 $model = AIModel::updateOrCreate(
                     [
                         'provider_id' => $provider->id,
-                        'model_id' => $modelId
+                        'model_id' => $modelId,
                     ],
                     [
                         'name' => $modelData['name'] ?? $modelId,
@@ -131,7 +132,7 @@ class SyncProvidersAndModels implements ShouldQueue
 
                 Log::debug('Synced model', [
                     'model' => $model->model_id,
-                    'provider' => $provider->provider
+                    'provider' => $provider->provider,
                 ]);
             }
         }
@@ -202,7 +203,7 @@ class SyncProvidersAndModels implements ShouldQueue
     private function parsePricing(array $modelData): array
     {
         $cost = $modelData['cost'] ?? [];
-        
+
         return [
             'input_cost_per_million' => $cost['input'] ?? null,
             'output_cost_per_million' => $cost['output'] ?? null,
@@ -219,7 +220,7 @@ class SyncProvidersAndModels implements ShouldQueue
     private function parseLimits(array $modelData): array
     {
         $limit = $modelData['limit'] ?? [];
-        
+
         return [
             'context_length' => $limit['context'] ?? null,
             'max_output' => $limit['output'] ?? null,

@@ -27,13 +27,13 @@ class RefreshMcpToolsJob implements ShouldQueue
         try {
             $command = 'tools:sync-mcp';
             $params = [];
-            
+
             if ($this->server) {
                 $params['--server'] = $this->server;
             }
 
             Artisan::call($command, $params);
-            
+
             $output = Artisan::output();
 
             Log::info('MCP tools refresh completed', [

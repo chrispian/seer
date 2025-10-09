@@ -14,7 +14,9 @@ use Laravel\Mcp\Server\Tool;
 class ArtifactsPullTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_artifacts_pull';
+
     protected string $title = 'Pull task artifacts';
+
     protected string $description = 'List artifacts for a task, optionally including content.';
 
     public function schema(JsonSchema $schema): array

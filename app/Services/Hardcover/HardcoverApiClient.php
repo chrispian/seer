@@ -15,7 +15,6 @@ class HardcoverApiClient
      * Get the current user's ID.
      *
      * @param  string  $token  Bearer token (plain text)
-     * @return int
      *
      * @throws \RuntimeException
      */
@@ -62,7 +61,6 @@ class HardcoverApiClient
      * @param  int  $userId  User ID from getUserId()
      * @param  int  $limit  Number of books per page
      * @param  int  $offset  Offset for pagination
-     * @return array
      *
      * @throws \RuntimeException
      */

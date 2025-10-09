@@ -17,9 +17,9 @@ class ProviderManagementService
         return Provider::with(['models' => function ($query) {
             $query->orderBy('enabled', 'desc')->orderBy('priority', 'desc');
         }, 'credentials'])
-        ->orderBy('priority', 'desc')
-        ->orderBy('provider')
-        ->get();
+            ->orderBy('priority', 'desc')
+            ->orderBy('provider')
+            ->get();
     }
 
     /**
@@ -29,21 +29,21 @@ class ProviderManagementService
     {
         // Try to find provider by ID first, then by name or provider field
         $provider = null;
-        
+
         // If identifier is numeric, try to find by ID
         if (is_numeric($identifier)) {
             $provider = Provider::with(['models', 'credentials'])->find($identifier);
         }
-        
+
         // If not found, try by name or provider field
-        if (!$provider) {
+        if (! $provider) {
             $provider = Provider::with(['models', 'credentials'])
                 ->where('name', $identifier)
                 ->orWhere('provider', $identifier)
                 ->first();
         }
 
-        if (!$provider) {
+        if (! $provider) {
             return null;
         }
 
@@ -78,14 +78,14 @@ class ProviderManagementService
         if (is_numeric($providerIdentifier)) {
             $provider = Provider::find($providerIdentifier);
         }
-        
-        if (!$provider) {
+
+        if (! $provider) {
             $provider = Provider::where('name', $providerIdentifier)
                 ->orWhere('provider', $providerIdentifier)
                 ->first();
         }
 
-        if (!$provider) {
+        if (! $provider) {
             throw new \Exception("Provider '{$providerIdentifier}' not found");
         }
 
@@ -119,18 +119,18 @@ class ProviderManagementService
         if (is_numeric($providerIdentifier)) {
             $provider = Provider::find($providerIdentifier);
         }
-        
-        if (!$provider) {
+
+        if (! $provider) {
             $provider = Provider::where('name', $providerIdentifier)
                 ->orWhere('provider', $providerIdentifier)
                 ->first();
         }
 
-        if (!$provider) {
+        if (! $provider) {
             throw new \Exception("Provider '{$providerIdentifier}' not found");
         }
 
-        $newState = !$provider->enabled;
+        $newState = ! $provider->enabled;
         $provider->update(['enabled' => $newState]);
 
         Log::info('Provider toggled', [
@@ -153,11 +153,11 @@ class ProviderManagementService
                 ->orWhere('name', $provider)
                 ->orWhere('id', $provider)
                 ->first();
-            
-            if (!$providerModel) {
+
+            if (! $providerModel) {
                 throw new \InvalidArgumentException("Provider '{$provider}' not found");
             }
-            
+
             $providersToSync = [$providerModel];
         } else {
             $providersToSync = Provider::all();

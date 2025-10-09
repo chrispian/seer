@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::table('work_items', function (Blueprint $table) {
             // Add foreign key for parent_id (self-referencing)
             $table->foreign('parent_id', 'work_items_parent_id_foreign')
-                  ->references('id')->on('work_items')
-                  ->onDelete('set null');
+                ->references('id')->on('work_items')
+                ->onDelete('set null');
 
             // Note: project_id foreign key not added due to type mismatch
             // work_items.project_id is uuid, but projects.id is bigint

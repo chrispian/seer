@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Services\Telemetry\LLMCostTracker;
 use App\Services\Telemetry\LLMPerformanceAnalyzer;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 
 class LLMAnalyticsCommand extends Command
 {
@@ -29,13 +28,14 @@ class LLMAnalyticsCommand extends Command
     protected $description = 'Generate LLM cost and performance analytics reports';
 
     protected LLMCostTracker $costTracker;
+
     protected LLMPerformanceAnalyzer $performanceAnalyzer;
 
     public function __construct()
     {
         parent::__construct();
-        $this->costTracker = new LLMCostTracker();
-        $this->performanceAnalyzer = new LLMPerformanceAnalyzer();
+        $this->costTracker = new LLMCostTracker;
+        $this->performanceAnalyzer = new LLMPerformanceAnalyzer;
     }
 
     /**
@@ -49,7 +49,7 @@ class LLMAnalyticsCommand extends Command
         $model = $this->option('model');
         $format = $this->option('format');
 
-        $this->info("Generating LLM Analytics Report");
+        $this->info('Generating LLM Analytics Report');
         $this->info("Type: {$type}, Period: {$period}, Format: {$format}");
         $this->newLine();
 
@@ -88,6 +88,7 @@ class LLMAnalyticsCommand extends Command
                 'summary' => $costSummary,
                 'trends' => $costTrends,
             ]);
+
             return;
         }
 
@@ -106,14 +107,14 @@ class LLMAnalyticsCommand extends Command
                     $p['provider'],
                     number_format($p['total_cost'], 4),
                     $p['budget_limit'] ? number_format($p['budget_limit'], 2) : 'No limit',
-                    $p['usage_percentage'] ? number_format($p['usage_percentage'], 1) . '%' : 'N/A',
+                    $p['usage_percentage'] ? number_format($p['usage_percentage'], 1).'%' : 'N/A',
                     $status,
                 ];
             }, $costSummary['providers'])
         );
 
         $this->newLine();
-        $this->info("💡 Cost Optimization Suggestions:");
+        $this->info('💡 Cost Optimization Suggestions:');
         $this->displayOptimizationSuggestions();
     }
 
@@ -133,6 +134,7 @@ class LLMAnalyticsCommand extends Command
                 'summary' => $performanceSummary,
                 'trends' => $performanceTrends,
             ]);
+
             return;
         }
 
@@ -140,27 +142,27 @@ class LLMAnalyticsCommand extends Command
         $this->table(
             ['Metric', 'Value'],
             [
-                ['Average Response Time', number_format($performanceSummary['avg_response_time_ms']) . ' ms'],
+                ['Average Response Time', number_format($performanceSummary['avg_response_time_ms']).' ms'],
                 ['Average Tokens/Second', number_format($performanceSummary['avg_tokens_per_second'], 1)],
-                ['Success Rate', number_format($performanceSummary['success_rate_percent'], 1) . '%'],
+                ['Success Rate', number_format($performanceSummary['success_rate_percent'], 1).'%'],
                 ['Total Requests', number_format($performanceSummary['total_requests'])],
-                ['Performance Score', number_format($performanceSummary['performance_score'], 1) . '/100'],
+                ['Performance Score', number_format($performanceSummary['performance_score'], 1).'/100'],
             ]
         );
 
         $this->newLine();
-        $this->info("🏆 Top Performing Models:");
+        $this->info('🏆 Top Performing Models:');
         $this->table(
             ['Model', 'Score'],
-            array_map(fn($m) => [$m['model'], $m['score']], $performanceSummary['top_performing_models'])
+            array_map(fn ($m) => [$m['model'], $m['score']], $performanceSummary['top_performing_models'])
         );
 
-        if (!empty($performanceSummary['underperforming_models'])) {
+        if (! empty($performanceSummary['underperforming_models'])) {
             $this->newLine();
-            $this->info("⚠️ Underperforming Models:");
+            $this->info('⚠️ Underperforming Models:');
             $this->table(
                 ['Model', 'Score'],
-                array_map(fn($m) => [$m['model'], $m['score']], $performanceSummary['underperforming_models'])
+                array_map(fn ($m) => [$m['model'], $m['score']], $performanceSummary['underperforming_models'])
             );
         }
     }
@@ -177,20 +179,21 @@ class LLMAnalyticsCommand extends Command
 
         if ($format === 'json') {
             $this->outputJson($usagePatterns);
+
             return;
         }
 
-        $this->info("Peak Usage Hours: " . implode(', ', $usagePatterns['peak_usage_hours']));
+        $this->info('Peak Usage Hours: '.implode(', ', $usagePatterns['peak_usage_hours']));
 
         $this->newLine();
-        $this->info("Most Used Models:");
+        $this->info('Most Used Models:');
         $this->table(
             ['Model', 'Usage %'],
-            array_map(fn($model, $usage) => [$model, $usage . '%'], array_keys($usagePatterns['most_used_models']), $usagePatterns['most_used_models'])
+            array_map(fn ($model, $usage) => [$model, $usage.'%'], array_keys($usagePatterns['most_used_models']), $usagePatterns['most_used_models'])
         );
 
         $this->newLine();
-        $this->info("🎯 Optimization Opportunities:");
+        $this->info('🎯 Optimization Opportunities:');
         $this->table(
             ['Type', 'Description', 'Potential Savings ($)', 'Confidence'],
             array_map(function ($opp) {
@@ -204,7 +207,7 @@ class LLMAnalyticsCommand extends Command
         );
 
         $this->newLine();
-        $this->info("💡 Performance Recommendations:");
+        $this->info('💡 Performance Recommendations:');
         foreach ($usagePatterns['performance_recommendations'] as $rec) {
             $this->line("• {$rec}");
         }
@@ -226,36 +229,37 @@ class LLMAnalyticsCommand extends Command
                 'cost_summary' => $costSummary,
                 'performance_summary' => $performanceSummary,
             ]);
+
             return;
         }
 
         // Cost Overview
-        $this->info("💰 Cost Overview:");
+        $this->info('💰 Cost Overview:');
         $this->table(
             ['Metric', 'Value'],
             [
-                ['Total Cost', '$' . number_format($costSummary['total_cost'], 2)],
+                ['Total Cost', '$'.number_format($costSummary['total_cost'], 2)],
                 ['Provider Count', count($costSummary['providers'])],
-                ['Avg Cost per Provider', '$' . number_format($costSummary['total_cost'] / max(1, count($costSummary['providers'])), 2)],
+                ['Avg Cost per Provider', '$'.number_format($costSummary['total_cost'] / max(1, count($costSummary['providers'])), 2)],
             ]
         );
 
         $this->newLine();
 
         // Performance Overview
-        $this->info("⚡ Performance Overview:");
+        $this->info('⚡ Performance Overview:');
         $this->table(
             ['Metric', 'Value'],
             [
-                ['Avg Response Time', number_format($performanceSummary['avg_response_time_ms']) . ' ms'],
-                ['Avg Throughput', number_format($performanceSummary['avg_tokens_per_second'], 1) . ' tokens/s'],
-                ['Success Rate', number_format($performanceSummary['success_rate_percent'], 1) . '%'],
-                ['Performance Score', number_format($performanceSummary['performance_score'], 1) . '/100'],
+                ['Avg Response Time', number_format($performanceSummary['avg_response_time_ms']).' ms'],
+                ['Avg Throughput', number_format($performanceSummary['avg_tokens_per_second'], 1).' tokens/s'],
+                ['Success Rate', number_format($performanceSummary['success_rate_percent'], 1).'%'],
+                ['Performance Score', number_format($performanceSummary['performance_score'], 1).'/100'],
             ]
         );
 
         $this->newLine();
-        $this->info("🚨 Alerts:");
+        $this->info('🚨 Alerts:');
         $this->displayAlerts($costSummary, $performanceSummary);
     }
 
@@ -265,11 +269,11 @@ class LLMAnalyticsCommand extends Command
     protected function displayOptimizationSuggestions(): void
     {
         $suggestions = [
-            "Consider switching to GPT-4o-mini for 80% cost reduction vs GPT-4",
-            "Use model caching for repeated queries to reduce API calls",
-            "Optimize prompt lengths to reduce token consumption",
-            "Set up budget alerts to prevent cost overruns",
-            "Use batch processing for multiple similar requests",
+            'Consider switching to GPT-4o-mini for 80% cost reduction vs GPT-4',
+            'Use model caching for repeated queries to reduce API calls',
+            'Optimize prompt lengths to reduce token consumption',
+            'Set up budget alerts to prevent cost overruns',
+            'Use batch processing for multiple similar requests',
         ];
 
         foreach ($suggestions as $suggestion) {
@@ -303,7 +307,7 @@ class LLMAnalyticsCommand extends Command
         }
 
         if (empty($alerts)) {
-            $this->line("✅ No critical alerts at this time");
+            $this->line('✅ No critical alerts at this time');
         } else {
             foreach ($alerts as $alert) {
                 $this->line($alert);

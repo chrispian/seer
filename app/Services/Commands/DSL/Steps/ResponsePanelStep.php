@@ -72,7 +72,7 @@ class ResponsePanelStep extends Step
     protected function renderWithTemplates(array $with, array $context): array
     {
         $rendered = [];
-        
+
         foreach ($with as $key => $value) {
             if (is_string($value)) {
                 $rendered[$key] = $this->templateEngine->render($value, $context);
@@ -82,7 +82,7 @@ class ResponsePanelStep extends Step
                 $rendered[$key] = $value;
             }
         }
-        
+
         return $rendered;
     }
 

@@ -3,9 +3,13 @@
 namespace App\Servers;
 
 use App\Tools\Orchestration\AgentDetailTool;
-use App\Tools\Orchestration\AgentsListTool;
 use App\Tools\Orchestration\AgentSaveTool;
+use App\Tools\Orchestration\AgentsListTool;
 use App\Tools\Orchestration\AgentStatusTool;
+use App\Tools\Orchestration\ArtifactsPullTool;
+use App\Tools\Orchestration\HandoffTool;
+use App\Tools\Orchestration\MessageAckTool;
+use App\Tools\Orchestration\MessagesCheckTool;
 use App\Tools\Orchestration\SprintDetailTool;
 use App\Tools\Orchestration\SprintSaveTool;
 use App\Tools\Orchestration\SprintsListTool;
@@ -13,20 +17,18 @@ use App\Tools\Orchestration\SprintStatusTool;
 use App\Tools\Orchestration\SprintTasksAttachTool;
 use App\Tools\Orchestration\TaskAssignTool;
 use App\Tools\Orchestration\TaskDetailTool;
-use App\Tools\Orchestration\TasksListTool;
 use App\Tools\Orchestration\TaskSaveTool;
+use App\Tools\Orchestration\TasksListTool;
 use App\Tools\Orchestration\TaskStatusTool;
-use App\Tools\Orchestration\MessagesCheckTool;
-use App\Tools\Orchestration\MessageAckTool;
-use App\Tools\Orchestration\ArtifactsPullTool;
-use App\Tools\Orchestration\HandoffTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Contracts\Transport;
 
 class OrchestrationServer extends Server
 {
     protected string $name = 'Fragments Engine Orchestration';
+
     protected string $version = '1.0.0';
+
     protected string $instructions = 'Fragments Engine orchestration system for managing sprints, tasks, and agents.';
 
     protected array $tools = [
@@ -59,7 +61,8 @@ class OrchestrationServer extends Server
     {
         $this->tools = collect($this->tools)->filter(function ($toolClass) {
             $toolName = $this->getToolConfigKey($toolClass);
-            return config('orchestration.enabled_tools.' . $toolName, true);
+
+            return config('orchestration.enabled_tools.'.$toolName, true);
         })->values()->all();
     }
 

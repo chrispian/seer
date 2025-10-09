@@ -16,7 +16,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Fragment extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $guarded = [];
 

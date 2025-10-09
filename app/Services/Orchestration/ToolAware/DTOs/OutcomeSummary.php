@@ -5,8 +5,11 @@ namespace App\Services\Orchestration\ToolAware\DTOs;
 final class OutcomeSummary
 {
     public string $short_summary;
+
     public array $key_facts = [];
+
     public array $links = [];
+
     public float $confidence = 0.0;
 
     public function __construct(

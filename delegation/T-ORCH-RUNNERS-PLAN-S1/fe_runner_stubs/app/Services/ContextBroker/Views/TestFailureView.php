@@ -9,6 +9,6 @@ class TestFailureView
     public function compute(array $params = []): array
     {
         // TODO
-        return ['failures'=>[], 'logs'=>[]];
+        return ['failures' => [], 'logs' => []];
     }
 }

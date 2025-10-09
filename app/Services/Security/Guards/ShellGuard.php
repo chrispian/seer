@@ -4,7 +4,6 @@ namespace App\Services\Security\Guards;
 
 use App\Services\Security\PolicyRegistry;
 use App\Services\Security\RiskScorer;
-use Illuminate\Support\Facades\Log;
 
 class ShellGuard
 {
@@ -26,41 +25,46 @@ class ShellGuard
 
         // Skip approval check if already approved (via context flag)
         $alreadyApproved = $context['approved'] ?? false;
-        
+
         // If already approved, skip policy check (user explicitly approved)
-        if (!$alreadyApproved) {
+        if (! $alreadyApproved) {
             $policyDecision = $this->policyRegistry->isCommandAllowed($command);
             $validation['policy_decision'] = $policyDecision;
 
-            if (!$policyDecision['allowed']) {
+            if (! $policyDecision['allowed']) {
                 $validation['violations'][] = $policyDecision['reason'];
+
                 return $validation;
             }
         }
 
         $risk = $this->riskScorer->scoreCommand($command, $context);
         $validation['risk_assessment'] = $risk;
-        
-        if ($risk['requires_approval'] && !$alreadyApproved) {
+
+        if ($risk['requires_approval'] && ! $alreadyApproved) {
             $validation['violations'][] = "Command requires approval (risk: {$risk['score']})";
+
             return $validation;
         }
 
         $injectionCheck = $this->detectInjectionAttempt($command);
-        if (!$injectionCheck['safe']) {
+        if (! $injectionCheck['safe']) {
             $validation['violations'][] = $injectionCheck['reason'];
+
             return $validation;
         }
 
         $parsed = $this->parseCommand($command);
-        if (!$parsed['valid']) {
+        if (! $parsed['valid']) {
             $validation['violations'][] = $parsed['error'];
+
             return $validation;
         }
 
         $argValidation = $this->validateArguments($parsed['binary'], $parsed['arguments']);
-        if (!$argValidation['valid']) {
+        if (! $argValidation['valid']) {
             $validation['violations'] = array_merge($validation['violations'], $argValidation['errors']);
+
             return $validation;
         }
 
@@ -68,7 +72,7 @@ class ShellGuard
         $validation['sanitized_command'] = $sanitized;
         $validation['allowed'] = true;
 
-        if (!empty($argValidation['warnings'])) {
+        if (! empty($argValidation['warnings'])) {
             $validation['warnings'] = $argValidation['warnings'];
         }
 
@@ -77,7 +81,7 @@ class ShellGuard
 
     public function getResourceLimits(string $binary): array
     {
-        return match($binary) {
+        return match ($binary) {
             'npm', 'composer' => ['timeout' => 300, 'memory' => '1G'],
             'git' => ['timeout' => 120, 'memory' => '512M'],
             'php' => ['timeout' => 60, 'memory' => '256M'],
@@ -88,7 +92,7 @@ class ShellGuard
     private function detectInjectionAttempt(string $command): array
     {
         $safePipeTargets = ['grep', 'awk', 'sed', 'sort', 'uniq', 'head', 'tail', 'wc'];
-        
+
         if (preg_match('/\|\s*(\w+)/', $command, $matches)) {
             if (in_array($matches[1], $safePipeTargets)) {
                 return ['safe' => true];
@@ -113,6 +117,7 @@ class ShellGuard
     private function parseCommand(string $command): array
     {
         $parts = preg_split('/\s+/', trim($command));
+
         return empty($parts) ? ['valid' => false, 'error' => 'Empty command'] : [
             'valid' => true,
             'binary' => $parts[0],
@@ -122,7 +127,7 @@ class ShellGuard
 
     private function validateArguments(string $binary, array $arguments): array
     {
-        return match($binary) {
+        return match ($binary) {
             'rm' => $this->validateRmArguments($arguments),
             'git' => $this->validateGitArguments($arguments),
             default => ['valid' => true],
@@ -135,6 +140,7 @@ class ShellGuard
         if ($hasRf) {
             return ['valid' => false, 'errors' => ['rm -rf is blocked']];
         }
+
         return ['valid' => true];
     }
 
@@ -143,11 +149,12 @@ class ShellGuard
         if (str_contains(implode(' ', $arguments), 'push --force')) {
             return ['valid' => false, 'errors' => ['git push --force is blocked']];
         }
+
         return ['valid' => true];
     }
 
     private function sanitizeCommand(array $parsed): string
     {
-        return $parsed['binary'] . ' ' . implode(' ', $parsed['arguments']);
+        return $parsed['binary'].' '.implode(' ', $parsed['arguments']);
     }
 }

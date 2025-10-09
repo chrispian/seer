@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 beforeEach(function () {
     $this->agent = AgentProfile::factory()->create();
     $this->task = WorkItem::factory()->create();
-    
+
     Storage::fake('local');
 });
 
@@ -38,15 +38,15 @@ test('full postmaster workflow processes parcel', function () {
     ];
 
     Queue::fake();
-    
+
     ProcessParcel::dispatch($parcel, $this->task->id);
-    
+
     Queue::assertPushed(ProcessParcel::class);
 });
 
 test('process parcel creates message and artifacts', function () {
     $content = 'Secret content: AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE';
-    
+
     $parcel = [
         'to_agent_id' => $this->agent->id,
         'task_id' => $this->task->id,
@@ -84,7 +84,7 @@ test('process parcel creates message and artifacts', function () {
         ->and($artifact->mime_type)->toBe('text/plain');
 
     expect($message->envelope['attachments']['config']['fe_uri'])->toStartWith('fe://artifacts/by-task/');
-    
+
     $artifactContent = $artifact->content;
     expect($artifactContent)->toContain('[REDACTED:AWS_ACCESS_KEY]')
         ->and($artifactContent)->not->toContain('AKIAIOSFODNN7EXAMPLE');
@@ -110,10 +110,10 @@ test('postmaster workflow handles multiple artifacts', function () {
     ProcessParcel::dispatchSync($parcel, $this->task->id);
 
     expect(OrchestrationArtifact::count())->toBe(4);
-    
+
     $message = Message::first();
     expect($message->envelope['attachments'])->toHaveCount(3);
-    
+
     foreach ($message->envelope['attachments'] as $key => $artifactRef) {
         expect($artifactRef)->toHaveKey('fe_uri')
             ->and($artifactRef)->toHaveKey('hash')
@@ -139,7 +139,7 @@ test('agent can retrieve messages and artifacts', function () {
     ProcessParcel::dispatchSync($parcel, $this->task->id);
 
     $response = $this->getJson("/api/orchestration/agents/{$this->agent->id}/inbox");
-    
+
     $response->assertStatus(200)
         ->assertJsonPath('meta.unread_count', 1);
 
@@ -151,7 +151,7 @@ test('agent can retrieve messages and artifacts', function () {
 
     $artifact = OrchestrationArtifact::first();
     $downloadResponse = $this->get("/api/orchestration/artifacts/{$artifact->id}/download");
-    
+
     $downloadResponse->assertStatus(200)
         ->assertHeader('X-Artifact-Hash', $artifact->hash);
 });
@@ -172,7 +172,7 @@ test('message read workflow', function () {
     expect($message->isUnread())->toBeTrue();
 
     $response = $this->postJson("/api/orchestration/messages/{$message->id}/read");
-    
+
     $response->assertStatus(200)
         ->assertJsonPath('success', true);
 

@@ -6,10 +6,10 @@ use App\Models\FragmentTypeRegistry;
 
 /**
  * Base List Command
- * 
+ *
  * Provides standardized list command functionality that reads
  * configuration from the fragment_type_registry database table.
- * 
+ *
  * Eliminates boilerplate by handling:
  * - Type registry lookup
  * - Component routing
@@ -29,7 +29,7 @@ abstract class BaseListCommand extends BaseCommand
     protected function getData(FragmentTypeRegistry $typeConfig): array
     {
         $limit = $typeConfig->pagination_default ?? 50;
-        
+
         $fragments = \App\Models\Fragment::where('type', $typeConfig->slug)
             ->orderBy('created_at', 'desc')
             ->limit($limit)
@@ -56,7 +56,7 @@ abstract class BaseListCommand extends BaseCommand
     {
         $typeConfig = FragmentTypeRegistry::findBySlug($this->getTypeSlug());
 
-        if (!$typeConfig) {
+        if (! $typeConfig) {
             return [
                 'type' => 'error',
                 'component' => 'ErrorModal',
@@ -66,7 +66,7 @@ abstract class BaseListCommand extends BaseCommand
             ];
         }
 
-        if (!$typeConfig->is_enabled) {
+        if (! $typeConfig->is_enabled) {
             return [
                 'type' => 'error',
                 'component' => 'ErrorModal',

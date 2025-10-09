@@ -11,7 +11,7 @@ class SprintListCommand extends BaseCommand
         $sprints = Sprint::query()
             ->orderBy('code')
             ->get();
-            
+
         // Transform data to match SprintListModal expectations
         $sprintData = $sprints->map(function ($sprint) {
             return [
@@ -30,29 +30,29 @@ class SprintListCommand extends BaseCommand
                 'meta' => $sprint->meta ?? [],
             ];
         })->all();
-        
+
         return [
             'type' => 'sprint',
             'component' => 'SprintListModal',
-            'data' => $sprintData
+            'data' => $sprintData,
         ];
     }
-    
+
     public static function getName(): string
     {
         return 'Sprint List';
     }
-    
+
     public static function getDescription(): string
     {
         return 'List all sprints with progress tracking';
     }
-    
+
     public static function getUsage(): string
     {
         return '/sprints';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Orchestration';

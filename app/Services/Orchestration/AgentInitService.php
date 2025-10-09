@@ -4,7 +4,6 @@ namespace App\Services\Orchestration;
 
 use App\Models\AgentProfile;
 use App\Models\WorkItem;
-use App\Services\Orchestration\MemoryService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -39,7 +38,7 @@ class AgentInitService
         $this->initHealthcheck($result);
 
         // Step 4: Plan Confirm
-        if (!empty($contextPack)) {
+        if (! empty($contextPack)) {
             $this->initPlanConfirm($taskId, $contextPack, $result);
         }
 
@@ -100,7 +99,7 @@ class AgentInitService
         $result->addCheck('init.load_profile', true, 'Agent profile and settings loaded', [
             'agent_type' => $agent->type?->value,
             'tools_count' => count($agent->tools ?? []),
-            'has_constraints' => !empty($agent->constraints),
+            'has_constraints' => ! empty($agent->constraints),
         ]);
 
         $result->profile = $profile;
@@ -118,7 +117,7 @@ class AgentInitService
             $checks['artifacts_disk'] = true;
         } catch (\Exception $e) {
             $checks['artifacts_disk'] = false;
-            $result->addWarning('Artifacts disk not accessible: ' . $e->getMessage());
+            $result->addWarning('Artifacts disk not accessible: '.$e->getMessage());
         }
 
         // Check cache (for memory)
@@ -127,7 +126,7 @@ class AgentInitService
             $checks['cache'] = true;
         } catch (\Exception $e) {
             $checks['cache'] = false;
-            $result->addWarning('Cache not accessible: ' . $e->getMessage());
+            $result->addWarning('Cache not accessible: '.$e->getMessage());
         }
 
         // Check database
@@ -136,12 +135,12 @@ class AgentInitService
             $checks['database'] = true;
         } catch (\Exception $e) {
             $checks['database'] = false;
-            $result->addWarning('Database not accessible: ' . $e->getMessage());
+            $result->addWarning('Database not accessible: '.$e->getMessage());
         }
 
-        $allPassed = !in_array(false, $checks, true);
+        $allPassed = ! in_array(false, $checks, true);
 
-        $result->addCheck('init.healthcheck', $allPassed, 
+        $result->addCheck('init.healthcheck', $allPassed,
             $allPassed ? 'All systems healthy' : 'Some systems unhealthy',
             $checks
         );
@@ -151,15 +150,16 @@ class AgentInitService
     {
         $existingPlan = $this->memory->getDurable($taskId, 'intent_plan');
 
-        if (!$existingPlan) {
+        if (! $existingPlan) {
             $result->addCheck('init.plan_confirm', true, 'No existing plan, accepting context pack', [
                 'context_pack_type' => $contextPack['type'] ?? 'unknown',
             ]);
-            
+
             // Store context pack as initial plan
             $this->memory->setDurable($taskId, 'intent_plan', $contextPack);
-            
+
             $result->plan = $contextPack;
+
             return;
         }
 
@@ -172,7 +172,7 @@ class AgentInitService
             $result->addCheck('init.plan_confirm', true, 'Plan delta detected', [
                 'changes' => count($delta),
             ]);
-            $result->addWarning('Context pack differs from existing plan. Delta: ' . json_encode($delta));
+            $result->addWarning('Context pack differs from existing plan. Delta: '.json_encode($delta));
         }
 
         $result->plan = $contextPack;
@@ -184,7 +184,7 @@ class AgentInitService
         $delta = [];
 
         foreach ($incoming as $key => $value) {
-            if (!isset($existing[$key])) {
+            if (! isset($existing[$key])) {
                 $delta[$key] = ['added' => $value];
             } elseif ($existing[$key] !== $value) {
                 $delta[$key] = ['old' => $existing[$key], 'new' => $value];
@@ -192,7 +192,7 @@ class AgentInitService
         }
 
         foreach ($existing as $key => $value) {
-            if (!isset($incoming[$key])) {
+            if (! isset($incoming[$key])) {
                 $delta[$key] = ['removed' => $value];
             }
         }
@@ -204,15 +204,25 @@ class AgentInitService
 class InitPhaseResult
 {
     public AgentProfile $agent;
+
     public WorkItem $task;
+
     public array $checks = [];
+
     public array $warnings = [];
+
     public ?array $memory = null;
+
     public ?array $profile = null;
+
     public ?array $settings = null;
+
     public ?array $plan = null;
+
     public ?array $planDelta = null;
+
     public bool $completed = false;
+
     public ?string $completedAt = null;
 
     public function __construct(AgentProfile $agent, WorkItem $task)
@@ -248,12 +258,12 @@ class InitPhaseResult
 
     public function getPassedCount(): int
     {
-        return count(array_filter($this->checks, fn($c) => $c['passed']));
+        return count(array_filter($this->checks, fn ($c) => $c['passed']));
     }
 
     public function getFailedCount(): int
     {
-        return count(array_filter($this->checks, fn($c) => !$c['passed']));
+        return count(array_filter($this->checks, fn ($c) => ! $c['passed']));
     }
 
     public function getWarnings(): array

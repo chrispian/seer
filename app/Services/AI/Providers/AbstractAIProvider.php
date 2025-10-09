@@ -238,6 +238,7 @@ abstract class AbstractAIProvider implements AIProviderInterface
             foreach ($request['messages'] as $message) {
                 $content .= $message['content'] ?? '';
             }
+
             return $content;
         }
 
@@ -299,7 +300,7 @@ abstract class AbstractAIProvider implements AIProviderInterface
      */
     protected function calculateCost(array $usage, ?string $model): ?float
     {
-        if (empty($usage) || !$model) {
+        if (empty($usage) || ! $model) {
             return null;
         }
 
@@ -308,13 +309,13 @@ abstract class AbstractAIProvider implements AIProviderInterface
 
         // Try to find model-specific rates, fall back to provider defaults
         $modelRates = $costRates[$model] ?? null;
-        if (!$modelRates) {
+        if (! $modelRates) {
             // Extract provider from model name (e.g., 'gpt-4' -> 'openai')
             $provider = $this->getName();
             $modelRates = $costRates[$provider]['default'] ?? null;
         }
 
-        if (!$modelRates) {
+        if (! $modelRates) {
             return null;
         }
 

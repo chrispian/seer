@@ -26,7 +26,7 @@ class TaskContentService
         ?int $userId = null
     ): void {
         $validFields = ['agent_content', 'plan_content', 'context_content', 'todo_content', 'summary_content'];
-        
+
         if (! in_array($field, $validFields)) {
             throw new \InvalidArgumentException("Invalid content field: {$field}");
         }
@@ -36,9 +36,9 @@ class TaskContentService
 
         if ($contentSize > $this->maxInlineSizeBytes) {
             $artifact = $this->storeAsArtifact($task, $field, $content);
-            
+
             $task->{$field} = "fe://{$artifact->fe_uri}";
-            
+
             TaskActivity::logArtifact(
                 taskId: $task->id,
                 artifactId: $artifact->id,
@@ -50,7 +50,7 @@ class TaskContentService
             );
         } else {
             $task->{$field} = $content;
-            
+
             TaskActivity::logContentUpdate(
                 taskId: $task->id,
                 field: $field,
@@ -72,7 +72,7 @@ class TaskContentService
     {
         $hash = $this->contentStore->put($content);
         $filename = "{$field}.txt";
-        
+
         $artifact = OrchestrationArtifact::create([
             'task_id' => $task->id,
             'hash' => $hash,
@@ -93,7 +93,7 @@ class TaskContentService
     public function getContent(WorkItem $task, string $field): ?string
     {
         $validFields = ['agent_content', 'plan_content', 'context_content', 'todo_content', 'summary_content'];
-        
+
         if (! in_array($field, $validFields)) {
             throw new \InvalidArgumentException("Invalid content field: {$field}");
         }
@@ -124,14 +124,14 @@ class TaskContentService
     public function getContentSize(WorkItem $task, string $field): int
     {
         $content = $this->getContent($task, $field);
-        
+
         return $content ? strlen($content) : 0;
     }
 
     public function migrateToArtifactIfNeeded(WorkItem $task, string $field): bool
     {
         $content = $task->{$field};
-        
+
         if (! $content || $this->isArtifactReference($content)) {
             return false;
         }
@@ -140,6 +140,7 @@ class TaskContentService
 
         if ($contentSize > $this->maxInlineSizeBytes) {
             $this->updateContent($task, $field, $content);
+
             return true;
         }
 

@@ -12,7 +12,9 @@ use Laravel\Mcp\Server\Tool;
 class SprintDetailTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_sprints_detail';
+
     protected string $title = 'Show orchestration sprint detail';
+
     protected string $description = 'Return sprint metadata, stats, and recent tasks with delegation context.';
 
     public function schema(JsonSchema $schema): array

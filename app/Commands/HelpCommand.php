@@ -10,7 +10,7 @@ class HelpCommand extends BaseCommand
     {
         // Get namespace filter from command arguments if any
         $namespace = $this->getNamespaceFilter();
-        
+
         if ($namespace) {
             $commands = CommandRegistry::getCommandsByCategory($namespace);
             if (empty($commands)) {
@@ -18,14 +18,14 @@ class HelpCommand extends BaseCommand
                     'type' => 'help',
                     'component' => null,
                     'data' => null,
-                    'message' => "**Invalid namespace: {$namespace}**\n\nAvailable namespaces: " . 
-                                implode(', ', $this->getAvailableNamespaces())
+                    'message' => "**Invalid namespace: {$namespace}**\n\nAvailable namespaces: ".
+                                implode(', ', $this->getAvailableNamespaces()),
                 ];
             }
         } else {
             $commands = CommandRegistry::getAllCommandsWithHelp();
         }
-        
+
         return [
             'type' => 'help',
             'component' => 'HelpModal',
@@ -34,10 +34,10 @@ class HelpCommand extends BaseCommand
                 'categories' => $this->groupByCategory($commands),
                 'namespace' => $namespace,
                 'markdown_help' => $this->generateMarkdownHelp($commands, $namespace),
-            ]
+            ],
         ];
     }
-    
+
     private function groupByCategory(array $commands): array
     {
         $categories = [];
@@ -45,81 +45,83 @@ class HelpCommand extends BaseCommand
             $category = $command['category'] ?? 'General';
             $categories[$category][] = $command;
         }
+
         return $categories;
     }
-    
+
     private function getNamespaceFilter(): ?string
     {
         // TODO: Extract from command context/arguments
         // For now, return null to show all commands
         return null;
     }
-    
+
     private function getAvailableNamespaces(): array
     {
         $commands = CommandRegistry::getAllCommandsWithHelp();
         $namespaces = array_unique(array_column($commands, 'category'));
         sort($namespaces);
+
         return $namespaces;
     }
-    
+
     private function generateMarkdownHelp(array $commands, ?string $namespace): string
     {
-        $title = $namespace ? "# {$namespace} Commands" : "# Available Commands";
+        $title = $namespace ? "# {$namespace} Commands" : '# Available Commands';
         $help = "{$title}\n\n";
-        
+
         $categories = $this->groupByCategory($commands);
-        
+
         foreach ($categories as $category => $categoryCommands) {
-            if (!$namespace) {
+            if (! $namespace) {
                 $help .= "## {$category}\n\n";
             }
-            
+
             foreach ($categoryCommands as $command) {
                 $help .= "### `{$command['usage']}`";
-                
+
                 // Add aliases if they exist
-                if (!empty($command['aliases'])) {
+                if (! empty($command['aliases'])) {
                     $aliasesStr = implode('`, `/', $command['aliases']);
                     $help .= " (aliases: `/{$aliasesStr}`)";
                 }
-                
+
                 $help .= "\n";
                 $help .= "{$command['description']}\n\n";
-                
+
                 // Add example if this is a commonly used command
                 if (in_array($command['slug'], ['search', 'tasks', 'help'])) {
                     $help .= "**Example:** `{$command['usage']}`\n\n";
                 }
             }
         }
-        
-        if (!$namespace) {
+
+        if (! $namespace) {
             $help .= "---\n\n";
             $help .= "**Tips:**\n";
             $help .= "- Use `/help {category}` to see commands for a specific category\n";
             $help .= "- Most commands work with additional arguments\n";
             $help .= "- Try `/tasks`, `/agents`, or `/sprints` to get started\n\n";
         }
-        
+
         return $help;
     }
-    
+
     public static function getName(): string
     {
         return 'Help System';
     }
-    
+
     public static function getDescription(): string
     {
         return 'Show help for all available commands';
     }
-    
+
     public static function getUsage(): string
     {
         return '/help';
     }
-    
+
     public static function getCategory(): string
     {
         return 'System';

@@ -22,13 +22,13 @@ class ApprovalManager
         $oldPending = ApprovalRequest::where('conversation_id', $conversationId)
             ->where('status', 'pending')
             ->get();
-        
+
         if ($oldPending->isNotEmpty()) {
             $count = $oldPending->count();
             foreach ($oldPending as $old) {
                 $old->update(['status' => 'timeout']);
             }
-            
+
             Log::info('Auto-timed out old pending approvals', [
                 'conversation_id' => $conversationId,
                 'count' => $count,
@@ -37,26 +37,27 @@ class ApprovalManager
 
         // 1. Determine operation type
         $operationType = $operation['type'] ?? 'tool_call';
-        
+
         // 2. Run dry-run simulation
         $dryRun = $this->runDryRun($operationType, $operation);
-        
+
         // 3. Calculate risk
         $risk = $this->calculateRisk($operationType, $operation);
-        
+
         // 4. Check if approval needed
         if ($risk['action'] === 'auto_approve') {
             Log::info('Operation auto-approved', [
                 'type' => $operationType,
                 'risk_score' => $risk['score'],
             ]);
+
             return null; // No approval needed
         }
-        
+
         // 5. Determine if should use modal (based on content size)
         $contentSize = $this->calculateContentSize($operation);
         $fragmentId = null;
-        
+
         if ($contentSize['use_modal']) {
             // Store as fragment
             $fragment = Fragment::create([
@@ -76,13 +77,13 @@ class ApprovalManager
                 ],
             ]);
             $fragmentId = $fragment->id;
-            
+
             Log::info('Created fragment for approval request', [
                 'fragment_id' => $fragmentId,
                 'word_count' => $contentSize['word_count'],
             ]);
         }
-        
+
         // 6. Create approval request
         $approvalRequest = ApprovalRequest::create([
             'operation_type' => $operationType,
@@ -98,14 +99,14 @@ class ApprovalManager
             'message_id' => $messageId,
             'timeout_at' => now()->addMinutes(config('security.approval.timeout_minutes', 5)),
         ]);
-        
+
         Log::info('Approval request created', [
             'approval_id' => $approvalRequest->id,
             'risk_score' => $risk['score'],
             'risk_level' => $risk['level'],
             'use_modal' => $contentSize['use_modal'],
         ]);
-        
+
         return $approvalRequest;
     }
 
@@ -118,7 +119,7 @@ class ApprovalManager
         string $method = 'button_click',
         ?string $message = null
     ): void {
-        if (!$request->isPending()) {
+        if (! $request->isPending()) {
             throw new \RuntimeException("Cannot approve request in status: {$request->status}");
         }
 
@@ -158,7 +159,7 @@ class ApprovalManager
         string $method = 'button_click',
         ?string $message = null
     ): void {
-        if (!$request->isPending()) {
+        if (! $request->isPending()) {
             throw new \RuntimeException("Cannot reject request in status: {$request->status}");
         }
 
@@ -238,7 +239,7 @@ class ApprovalManager
 
         return [
             'approval_request' => [
-                'id' => (string)$request->id,
+                'id' => (string) $request->id,
                 'operationType' => $request->operation_type,
                 'operationSummary' => $request->operation_summary,
                 'riskScore' => $request->risk_score,
@@ -247,7 +248,7 @@ class ApprovalManager
                 'status' => $request->status,
                 'approvedAt' => $request->approved_at?->toIso8601String(),
                 'rejectedAt' => $request->status === 'rejected' ? $request->approved_at?->toIso8601String() : null,
-                
+
                 // Modal preview data
                 'useModal' => $contentSize['use_modal'],
                 'fragmentId' => $request->fragment_id,
@@ -264,7 +265,7 @@ class ApprovalManager
     private function runDryRun(string $type, array $operation): ?array
     {
         try {
-            return match($type) {
+            return match ($type) {
                 'command' => $this->simulator->simulateCommand(
                     $operation['command'],
                     $operation['context'] ?? []
@@ -290,6 +291,7 @@ class ApprovalManager
                 'type' => $type,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -297,7 +299,7 @@ class ApprovalManager
     private function calculateRisk(string $type, array $operation): array
     {
         try {
-            return match($type) {
+            return match ($type) {
                 'command' => $this->scorer->scoreCommand(
                     $operation['command'],
                     $operation['context'] ?? []
@@ -328,7 +330,7 @@ class ApprovalManager
                 'type' => $type,
                 'error' => $e->getMessage(),
             ]);
-            
+
             // Default to requiring approval on error
             return [
                 'score' => 75,

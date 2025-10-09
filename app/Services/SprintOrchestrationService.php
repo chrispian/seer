@@ -33,7 +33,7 @@ class SprintOrchestrationService
         }
 
         if (! $model) {
-            throw (new ModelNotFoundException())->setModel(Sprint::class, [$identifier]);
+            throw (new ModelNotFoundException)->setModel(Sprint::class, [$identifier]);
         }
 
         return $model;
@@ -157,9 +157,9 @@ class SprintOrchestrationService
         // Get tasks via sprint_items relationship AND legacy metadata approach
         $taskQuery = WorkItem::query()->where(function ($query) use ($sprint) {
             $query->where('metadata->sprint_code', $sprint->code)
-                  ->orWhereHas('sprintItems', function ($subQuery) use ($sprint) {
-                      $subQuery->where('sprint_id', $sprint->id);
-                  });
+                ->orWhereHas('sprintItems', function ($subQuery) use ($sprint) {
+                    $subQuery->where('sprint_id', $sprint->id);
+                });
         });
 
         $total = (clone $taskQuery)->count();
@@ -284,11 +284,11 @@ class SprintOrchestrationService
         }
 
         if (preg_match('/^\d+$/', $code)) {
-            return 'SPRINT-' . str_pad($code, 2, '0', STR_PAD_LEFT);
+            return 'SPRINT-'.str_pad($code, 2, '0', STR_PAD_LEFT);
         }
 
         if (preg_match('/^(?:sprint-)?(\d+)$/i', $code, $matches)) {
-            return 'SPRINT-' . str_pad($matches[1], 2, '0', STR_PAD_LEFT);
+            return 'SPRINT-'.str_pad($matches[1], 2, '0', STR_PAD_LEFT);
         }
 
         return Str::upper($code);

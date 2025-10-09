@@ -8,13 +8,14 @@ use Illuminate\Support\Facades\Log;
 class RateLimiter
 {
     protected int $maxAttemptsPerMinute = 60;
+
     protected int $maxAttemptsPerHour = 300;
 
     /**
      * Check if user/agent can make another tool call
      *
-     * @param string $identifier User ID, agent ID, or IP
-     * @param string $toolId Specific tool being called
+     * @param  string  $identifier  User ID, agent ID, or IP
+     * @param  string  $toolId  Specific tool being called
      * @return bool True if allowed
      */
     public function allow(string $identifier, string $toolId): bool
@@ -31,6 +32,7 @@ class RateLimiter
                 'count' => $minuteCount,
                 'limit' => $this->maxAttemptsPerMinute,
             ]);
+
             return false;
         }
 
@@ -42,6 +44,7 @@ class RateLimiter
                 'count' => $hourCount,
                 'limit' => $this->maxAttemptsPerHour,
             ]);
+
             return false;
         }
 
@@ -53,6 +56,7 @@ class RateLimiter
                 'tool_id' => $toolId,
                 'count' => $toolCount,
             ]);
+
             return false;
         }
 
@@ -99,7 +103,7 @@ class RateLimiter
 
         // Retry on rate limit, server errors
         $retryableCodes = [429, 500, 502, 503, 504];
-        
+
         return in_array($statusCode, $retryableCodes, true);
     }
 }

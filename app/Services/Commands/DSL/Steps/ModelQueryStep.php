@@ -247,6 +247,7 @@ class ModelQueryStep extends Step
     {
         if (! $order) {
             $query->latest();
+
             return;
         }
 
@@ -255,6 +256,7 @@ class ModelQueryStep extends Step
             foreach ($order as $orderRule) {
                 $this->applySingleOrder($query, $orderRule);
             }
+
             return;
         }
 
@@ -272,6 +274,7 @@ class ModelQueryStep extends Step
         } elseif (isset($order['sql'])) {
             // Handle raw SQL ordering
             $query->orderByRaw($order['sql']);
+
             return;
         } else {
             // Handle array format

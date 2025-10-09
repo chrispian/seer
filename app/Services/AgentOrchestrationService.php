@@ -7,15 +7,12 @@ use App\Models\AgentProfile;
 use App\Models\TaskAssignment;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class AgentOrchestrationService
 {
-    public function __construct(private readonly AgentProfileService $agents)
-    {
-    }
+    public function __construct(private readonly AgentProfileService $agents) {}
 
     public function resolveAgent(string|AgentProfile $agent): AgentProfile
     {
@@ -26,7 +23,7 @@ class AgentOrchestrationService
         $identifier = trim($agent);
 
         if ($identifier === '') {
-            throw (new ModelNotFoundException())->setModel(AgentProfile::class, [$identifier]);
+            throw (new ModelNotFoundException)->setModel(AgentProfile::class, [$identifier]);
         }
 
         if (Str::isUuid($identifier)) {
@@ -47,7 +44,7 @@ class AgentOrchestrationService
         }
 
         if (! $model) {
-            throw (new ModelNotFoundException())->setModel(AgentProfile::class, [$identifier]);
+            throw (new ModelNotFoundException)->setModel(AgentProfile::class, [$identifier]);
         }
 
         return $model;

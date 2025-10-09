@@ -2,8 +2,6 @@
 
 namespace App\Services\Telemetry;
 
-use App\Services\Telemetry\LLMCostTracker;
-use App\Services\Telemetry\LLMPerformanceAnalyzer;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -21,14 +19,14 @@ class LLMTelemetry
     {
         // Integrate cost tracking if cost data is present
         if (isset($data['cost_usd']) || isset($data['tokens_prompt']) || isset($data['tokens_completion'])) {
-            $costTracker = new LLMCostTracker();
+            $costTracker = new LLMCostTracker;
             $costAnalysis = $costTracker->trackRequestCost($data);
             $data['cost_analysis'] = $costAnalysis;
         }
 
         // Integrate performance analysis if performance data is present
         if (isset($data['response_time_ms']) || isset($data['tokens_prompt']) || isset($data['tokens_completion'])) {
-            $performanceAnalyzer = new LLMPerformanceAnalyzer();
+            $performanceAnalyzer = new LLMPerformanceAnalyzer;
             $performanceAnalysis = $performanceAnalyzer->analyzeRequestPerformance($data);
             $data['performance_analysis'] = $performanceAnalysis;
         }
@@ -70,13 +68,13 @@ class LLMTelemetry
     {
         // Integrate cost analysis if cost data is present
         if (isset($metrics['cost_usd']) || isset($metrics['tokens_prompt']) || isset($metrics['tokens_completion'])) {
-            $costTracker = new LLMCostTracker();
+            $costTracker = new LLMCostTracker;
             $costAnalysis = $costTracker->trackRequestCost($metrics);
             $metrics['cost_analysis'] = $costAnalysis;
         }
 
         // Integrate performance analysis
-        $performanceAnalyzer = new LLMPerformanceAnalyzer();
+        $performanceAnalyzer = new LLMPerformanceAnalyzer;
         $performanceAnalysis = $performanceAnalyzer->analyzeRequestPerformance($metrics);
         $metrics['performance_analysis'] = $performanceAnalysis;
 
@@ -261,9 +259,16 @@ class LLMTelemetry
     {
         $latency = $metrics['response_time_ms'] ?? 0;
 
-        if ($latency < 1000) return 'excellent';
-        if ($latency < 3000) return 'good';
-        if ($latency < 10000) return 'fair';
+        if ($latency < 1000) {
+            return 'excellent';
+        }
+        if ($latency < 3000) {
+            return 'good';
+        }
+        if ($latency < 10000) {
+            return 'fair';
+        }
+
         return 'poor';
     }
 
@@ -284,9 +289,12 @@ class LLMTelemetry
     private static function calculateUsageEfficiency(array $costData): int
     {
         $cost = $costData['cost_usd'] ?? 0;
-        if ($cost <= 0) return 0;
+        if ($cost <= 0) {
+            return 0;
+        }
 
         $totalTokens = ($costData['tokens_prompt'] ?? 0) + ($costData['tokens_completion'] ?? 0);
+
         return (int) ($totalTokens / $cost);
     }
 
@@ -346,7 +354,9 @@ class LLMTelemetry
         $totalTime = $streamingData['duration_ms'] ?? 0;
         $firstTokenTime = $streamingData['time_to_first_token_ms'] ?? 0;
 
-        if ($totalTime <= 0) return 0;
+        if ($totalTime <= 0) {
+            return 0;
+        }
 
         // Efficiency is higher when first token arrives quickly relative to total time
         return round($firstTokenTime / $totalTime, 3);
@@ -378,8 +388,13 @@ class LLMTelemetry
     {
         $score = $qualityData['quality_score'] ?? 0.5;
 
-        if ($score >= 0.9) return 'high';
-        if ($score >= 0.7) return 'medium';
+        if ($score >= 0.9) {
+            return 'high';
+        }
+        if ($score >= 0.7) {
+            return 'medium';
+        }
+
         return 'low';
     }
 

@@ -8,6 +8,7 @@ use InvalidArgumentException;
 class ContentStore
 {
     private string $disk;
+
     private string $root;
 
     public function __construct()
@@ -21,7 +22,7 @@ class ContentStore
         $hash = hash('sha256', $content);
         $path = $this->getHashPath($hash);
 
-        if (!$this->exists($hash)) {
+        if (! $this->exists($hash)) {
             Storage::disk($this->disk)->put($path, $content);
         }
 
@@ -30,13 +31,13 @@ class ContentStore
 
     public function get(string $hash): ?string
     {
-        if (!$this->isValidHash($hash)) {
+        if (! $this->isValidHash($hash)) {
             throw new InvalidArgumentException('Invalid SHA256 hash format');
         }
 
         $path = $this->getHashPath($hash);
 
-        if (!Storage::disk($this->disk)->exists($path)) {
+        if (! Storage::disk($this->disk)->exists($path)) {
             return null;
         }
 
@@ -45,7 +46,7 @@ class ContentStore
 
     public function exists(string $hash): bool
     {
-        if (!$this->isValidHash($hash)) {
+        if (! $this->isValidHash($hash)) {
             return false;
         }
 
@@ -54,7 +55,7 @@ class ContentStore
 
     public function getPath(string $hash): string
     {
-        if (!$this->isValidHash($hash)) {
+        if (! $this->isValidHash($hash)) {
             throw new InvalidArgumentException('Invalid SHA256 hash format');
         }
 
@@ -64,6 +65,7 @@ class ContentStore
     public function getHashPath(string $hash): string
     {
         $prefix = substr($hash, 0, 2);
+
         return "{$this->root}/by-hash/{$prefix}/{$hash}";
     }
 
@@ -79,12 +81,13 @@ class ContentStore
         }
 
         $prefix = substr($hash, 0, 2);
+
         return "fe://artifacts/by-hash/{$prefix}/{$hash}";
     }
 
     public function parseUri(string $uri): ?array
     {
-        if (!str_starts_with($uri, 'fe://artifacts/')) {
+        if (! str_starts_with($uri, 'fe://artifacts/')) {
             return null;
         }
 
@@ -110,7 +113,7 @@ class ContentStore
 
     public function size(string $hash): ?int
     {
-        if (!$this->exists($hash)) {
+        if (! $this->exists($hash)) {
             return null;
         }
 

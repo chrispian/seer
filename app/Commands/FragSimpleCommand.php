@@ -17,7 +17,7 @@ class FragSimpleCommand extends BaseCommand
                 'type' => 'error',
                 'component' => null,
                 'data' => null,
-                'message' => 'No valid fragment detected. Please try `/frag Your message here...`'
+                'message' => 'No valid fragment detected. Please try `/frag Your message here...`',
             ];
         }
 
@@ -28,17 +28,17 @@ class FragSimpleCommand extends BaseCommand
             'message' => $message,
             'source' => 'chat',
             'metadata' => [
-                'aside' => true
-            ]
+                'aside' => true,
+            ],
         ]);
 
         return [
             'type' => 'success',
             'component' => null,
             'data' => [
-                'fragments' => []
+                'fragments' => [],
             ],
-            'message' => 'Fragment saved'
+            'message' => 'Fragment saved',
         ];
     }
 

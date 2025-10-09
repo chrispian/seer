@@ -33,9 +33,9 @@ class SyncOllamaLocalModelsCommand extends Command
             $this->info('Sync job has been queued.');
         } else {
             try {
-                (new SyncOllamaLocalModels())->handle();
+                (new SyncOllamaLocalModels)->handle();
                 $this->info('✅ Sync completed successfully!');
-                
+
                 // Show stats
                 $provider = \App\Models\Provider::where('provider', 'ollama-local')->first();
                 if ($provider) {
@@ -47,14 +47,14 @@ class SyncOllamaLocalModelsCommand extends Command
                         ]
                     );
                 }
-                
+
             } catch (\Exception $e) {
-                $this->error('❌ Sync failed: ' . $e->getMessage());
-                
+                $this->error('❌ Sync failed: '.$e->getMessage());
+
                 if (str_contains($e->getMessage(), 'Connection refused') || str_contains($e->getMessage(), 'Connection timed out')) {
                     $this->warn('💡 Make sure Ollama is running: ollama serve');
                 }
-                
+
                 return Command::FAILURE;
             }
         }

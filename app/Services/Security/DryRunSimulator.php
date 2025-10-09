@@ -2,8 +2,6 @@
 
 namespace App\Services\Security;
 
-use Illuminate\Support\Facades\Log;
-
 class DryRunSimulator
 {
     public function __construct(
@@ -31,9 +29,10 @@ class DryRunSimulator
         $policyDecision = $this->policyRegistry->isToolAllowed($toolId);
         $simulation['policy_check'] = $policyDecision;
 
-        if (!$policyDecision['allowed']) {
+        if (! $policyDecision['allowed']) {
             $simulation['would_execute'] = false;
             $simulation['warnings'][] = "BLOCKED: {$policyDecision['reason']}";
+
             return $simulation;
         }
 
@@ -73,9 +72,10 @@ class DryRunSimulator
         $policyDecision = $this->policyRegistry->isCommandAllowed($command);
         $simulation['policy_check'] = $policyDecision;
 
-        if (!$policyDecision['allowed']) {
+        if (! $policyDecision['allowed']) {
             $simulation['would_execute'] = false;
             $simulation['warnings'][] = "BLOCKED: {$policyDecision['reason']}";
+
             return $simulation;
         }
 
@@ -116,9 +116,10 @@ class DryRunSimulator
         $policyDecision = $this->policyRegistry->isPathAllowed($path, $operation);
         $simulation['policy_check'] = $policyDecision;
 
-        if (!$policyDecision['allowed']) {
+        if (! $policyDecision['allowed']) {
             $simulation['would_execute'] = false;
             $simulation['warnings'][] = "BLOCKED: {$policyDecision['reason']}";
+
             return $simulation;
         }
 
@@ -145,7 +146,7 @@ class DryRunSimulator
     public function simulateNetworkOperation(string $url, array $context = []): array
     {
         $domain = parse_url($url, PHP_URL_HOST) ?? $url;
-        
+
         $simulation = [
             'url' => $url,
             'domain' => $domain,
@@ -161,9 +162,10 @@ class DryRunSimulator
         $policyDecision = $this->policyRegistry->isDomainAllowed($domain);
         $simulation['policy_check'] = $policyDecision;
 
-        if (!$policyDecision['allowed']) {
+        if (! $policyDecision['allowed']) {
             $simulation['would_execute'] = false;
             $simulation['warnings'][] = "BLOCKED: {$policyDecision['reason']}";
+
             return $simulation;
         }
 

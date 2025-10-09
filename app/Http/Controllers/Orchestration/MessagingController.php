@@ -5,10 +5,8 @@ namespace App\Http\Controllers\Orchestration;
 use App\Http\Controllers\Controller;
 use App\Models\AgentProfile;
 use App\Models\Message;
-use App\Models\WorkItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class MessagingController extends Controller
 {
@@ -56,7 +54,7 @@ class MessagingController extends Controller
         ]);
 
         $agent = AgentProfile::findOrFail($agentId);
-        
+
         $query = Message::query()->toAgent($agent->id);
 
         if (($validated['status'] ?? 'unread') === 'unread') {
@@ -79,7 +77,7 @@ class MessagingController extends Controller
         $messages = $query->orderByDesc('created_at')->paginate($perPage);
 
         return response()->json([
-            'data' => $messages->map(fn($msg) => [
+            'data' => $messages->map(fn ($msg) => [
                 'id' => $msg->id,
                 'stream' => $msg->stream,
                 'type' => $msg->type,
@@ -134,7 +132,7 @@ class MessagingController extends Controller
             'to_agent_ids.*' => 'uuid|exists:agent_profiles,id',
         ]);
 
-        $agents = isset($validated['to_agent_ids']) 
+        $agents = isset($validated['to_agent_ids'])
             ? AgentProfile::whereIn('id', $validated['to_agent_ids'])->get()
             : AgentProfile::where('status', 'active')->get();
 

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 class PolicyRegistry
 {
     private const CACHE_TTL = 3600; // 1 hour
+
     private const CACHE_KEY_PREFIX = 'security:policies:';
 
     /**
@@ -26,6 +27,7 @@ class PolicyRegistry
     {
         // Extract base command (first word)
         $baseCommand = explode(' ', trim($command))[0];
+
         return $this->evaluate('command', 'shell', $baseCommand);
     }
 
@@ -36,6 +38,7 @@ class PolicyRegistry
     {
         // Normalize path
         $normalizedPath = $this->normalizePath($path);
+
         return $this->evaluate('path', 'filesystem', $normalizedPath);
     }
 
@@ -52,8 +55,8 @@ class PolicyRegistry
      */
     public function getPoliciesByType(string $type): \Illuminate\Support\Collection
     {
-        $cacheKey = self::CACHE_KEY_PREFIX . "type:{$type}";
-        
+        $cacheKey = self::CACHE_KEY_PREFIX."type:{$type}";
+
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($type) {
             return SecurityPolicy::active()
                 ->byType($type)
@@ -67,8 +70,8 @@ class PolicyRegistry
      */
     public function getAllPolicies(): \Illuminate\Support\Collection
     {
-        $cacheKey = self::CACHE_KEY_PREFIX . 'all';
-        
+        $cacheKey = self::CACHE_KEY_PREFIX.'all';
+
         return Cache::remember($cacheKey, self::CACHE_TTL, function () {
             return SecurityPolicy::active()
                 ->ordered()
@@ -90,13 +93,13 @@ class PolicyRegistry
     public function getRiskWeight(string $type, string $pattern): int
     {
         $policies = $this->getPoliciesByType($type);
-        
+
         foreach ($policies as $policy) {
             if ($this->matchesPattern($pattern, $policy->pattern)) {
                 return $policy->getRiskWeight();
             }
         }
-        
+
         return 0;
     }
 
@@ -106,7 +109,7 @@ class PolicyRegistry
     public function exportToYaml(): string
     {
         $policies = $this->getAllPolicies();
-        
+
         $export = [
             'version' => '1.0',
             'updated_at' => now()->toIso8601String(),
@@ -135,7 +138,7 @@ class PolicyRegistry
     public function getStats(): array
     {
         $policies = $this->getAllPolicies();
-        
+
         return [
             'total' => $policies->count(),
             'by_type' => $policies->groupBy('policy_type')->map->count()->toArray(),
@@ -153,7 +156,7 @@ class PolicyRegistry
     private function evaluate(string $type, ?string $category, string $subject): array
     {
         $policies = $this->getPoliciesByType($type);
-        
+
         if ($category) {
             $policies = $policies->where('category', $category);
         }
@@ -171,6 +174,7 @@ class PolicyRegistry
                 ];
 
                 $this->logDecision($type, $subject, $decision);
+
                 return $decision;
             }
         }
@@ -186,6 +190,7 @@ class PolicyRegistry
         ];
 
         $this->logDecision($type, $subject, $decision);
+
         return $decision;
     }
 
@@ -211,7 +216,7 @@ class PolicyRegistry
         if (str_contains($pattern, '*')) {
             // Escape special regex characters, then replace escaped * with .*
             $escaped = preg_quote($pattern, '/');
-            $regex = '/^' . str_replace('\\*', '.*', $escaped) . '$/i';
+            $regex = '/^'.str_replace('\\*', '.*', $escaped).'$/i';
             try {
                 if (preg_match($regex, $subject)) {
                     return true;
@@ -223,6 +228,7 @@ class PolicyRegistry
                     'regex' => $regex,
                     'error' => $e->getMessage(),
                 ]);
+
                 return false;
             }
         }
@@ -255,7 +261,7 @@ class PolicyRegistry
      */
     private function logDecision(string $type, string $subject, array $decision): void
     {
-        if (!$decision['allowed']) {
+        if (! $decision['allowed']) {
             Log::warning('Security policy denial', [
                 'type' => $type,
                 'subject' => $subject,

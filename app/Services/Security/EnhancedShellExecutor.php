@@ -27,12 +27,12 @@ class EnhancedShellExecutor
             // 1. Validate command
             $validation = $this->shellGuard->validateCommand($command, $options['context'] ?? []);
 
-            if (!$validation['allowed']) {
+            if (! $validation['allowed']) {
                 return [
                     'success' => false,
                     'exit_code' => -1,
                     'stdout' => '',
-                    'stderr' => 'BLOCKED: ' . implode('; ', $validation['violations']),
+                    'stderr' => 'BLOCKED: '.implode('; ', $validation['violations']),
                     'blocked' => true,
                     'violations' => $validation['violations'],
                 ];
@@ -63,8 +63,8 @@ class EnhancedShellExecutor
             );
 
             // 5. Update audit log
-            $executionTime = (int)((microtime(true) - $startTime) * 1000);
-            
+            $executionTime = (int) ((microtime(true) - $startTime) * 1000);
+
             if ($auditLog) {
                 $auditLog->update([
                     'status' => $result['success'] ? 'completed' : 'failed',

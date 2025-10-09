@@ -67,7 +67,7 @@ class Message extends Model
     {
         return $query->where(function ($q) use ($agentId) {
             $q->where('to_agent_id', $agentId)
-              ->orWhere('from_agent_id', $agentId);
+                ->orWhere('from_agent_id', $agentId);
         });
     }
 
@@ -83,6 +83,7 @@ class Message extends Model
         }
 
         $this->read_at = now();
+
         return $this->save();
     }
 

@@ -6,7 +6,6 @@ use App\Models\CommandAuditLog;
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Activitylog\Facades\LogActivity;
 
 class CommandLoggingListener
 {
@@ -110,8 +109,9 @@ class CommandLoggingListener
                     return "--{$k}";
                 }
                 if (is_array($v)) {
-                    return "--{$k}=" . json_encode($v);
+                    return "--{$k}=".json_encode($v);
                 }
+
                 return "--{$k}={$v}";
             })
             ->values()

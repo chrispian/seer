@@ -81,7 +81,7 @@ class AgentLogImportService
     {
         // Import Desktop logs (old format)
         $this->importClaudeDesktopLogs($since, $dryRun);
-        
+
         // Import Projects logs (new format)
         $this->importClaudeProjectsLogs($since, $dryRun);
     }
@@ -125,6 +125,7 @@ class AgentLogImportService
 
         if (! File::isDirectory($projectsDir)) {
             $this->stats['errors'][] = "Claude projects directory not found: {$projectsDir}";
+
             return;
         }
 
@@ -147,7 +148,7 @@ class AgentLogImportService
         foreach (File::files($dir) as $file) {
             if ($file->getExtension() === 'jsonl') {
                 $fileModTime = Carbon::createFromTimestamp($file->getMTime());
-                if (!$sinceDate || $fileModTime->isAfter($sinceDate)) {
+                if (! $sinceDate || $fileModTime->isAfter($sinceDate)) {
                     $files->push($file->getPathname());
                 }
             }
@@ -210,6 +211,7 @@ class AgentLogImportService
 
             if ($this->hasExistingLogEntry($logEntry)) {
                 $this->stats['entries_skipped']++;
+
                 continue;
             }
 
@@ -234,6 +236,7 @@ class AgentLogImportService
 
         if (! File::isDirectory($logDir)) {
             $this->stats['errors'][] = "Codex log directory not found: {$logDir}";
+
             return;
         }
 
@@ -256,7 +259,7 @@ class AgentLogImportService
         foreach (File::files($dir) as $file) {
             if ($file->getExtension() === 'jsonl') {
                 $fileModTime = Carbon::createFromTimestamp($file->getMTime());
-                if (!$sinceDate || $fileModTime->isAfter($sinceDate)) {
+                if (! $sinceDate || $fileModTime->isAfter($sinceDate)) {
                     $files->push($file->getPathname());
                 }
             }
@@ -277,7 +280,7 @@ class AgentLogImportService
         $checksum = hash_file('sha256', $filePath);
 
         // Check if we've already imported this exact file version
-        if (!$dryRun && $this->isFileAlreadyImported($fileName, $checksum)) {
+        if (! $dryRun && $this->isFileAlreadyImported($fileName, $checksum)) {
             return;
         }
 
@@ -297,12 +300,12 @@ class AgentLogImportService
 
             $parsed = $this->parseCodexLogLine($line, $fileName);
 
-            if (!$parsed) {
+            if (! $parsed) {
                 continue;
             }
 
             // Extract session ID from first session_meta entry
-            if (!$sessionId && $parsed['type'] === 'session_meta' && isset($parsed['data']['id'])) {
+            if (! $sessionId && $parsed['type'] === 'session_meta' && isset($parsed['data']['id'])) {
                 $sessionId = $parsed['data']['id'];
             }
 
@@ -325,17 +328,18 @@ class AgentLogImportService
 
             if ($this->hasExistingLogEntry($logEntry)) {
                 $this->stats['entries_skipped']++;
+
                 continue;
             }
 
-            if (!$dryRun) {
+            if (! $dryRun) {
                 AgentLog::create($logEntry);
             }
 
             $this->stats['entries_imported']++;
         }
 
-        if (!$dryRun) {
+        if (! $dryRun) {
             $this->markFileAsImported($fileName, $checksum);
         }
     }
@@ -346,8 +350,8 @@ class AgentLogImportService
     private function parseCodexLogLine(string $line, string $fileName): ?array
     {
         $json = json_decode($line, true);
-        
-        if (!$json || !isset($json['timestamp'], $json['type'])) {
+
+        if (! $json || ! isset($json['timestamp'], $json['type'])) {
             return null;
         }
 
@@ -380,22 +384,27 @@ class AgentLogImportService
             case 'session_meta':
                 $version = $payload['cli_version'] ?? 'unknown';
                 $cwd = basename($payload['cwd'] ?? 'unknown');
+
                 return "Session started (v{$version}) in {$cwd}";
 
             case 'response_item':
                 if (isset($payload['role'])) {
                     $role = $payload['role'];
                     $contentLength = isset($payload['content']) ? count($payload['content']) : 0;
-                    return ucfirst($role) . " message ({$contentLength} content items)";
+
+                    return ucfirst($role)." message ({$contentLength} content items)";
                 }
-                return "Response item";
+
+                return 'Response item';
 
             case 'tool_use':
                 $toolName = $payload['name'] ?? 'unknown';
+
                 return "Tool used: {$toolName}";
 
             case 'tool_result':
                 $status = isset($payload['is_error']) && $payload['is_error'] ? 'error' : 'success';
+
                 return "Tool result: {$status}";
 
             default:
@@ -409,7 +418,7 @@ class AgentLogImportService
     private function extractCodexProvider(array $parsed): ?string
     {
         $data = $parsed['data'] ?? [];
-        
+
         // Look in session metadata
         if ($parsed['type'] === 'session_meta' && isset($data['payload']['originator'])) {
             return 'anthropic'; // Codex primarily uses Claude
@@ -471,7 +480,7 @@ class AgentLogImportService
         $checksum = hash_file('sha256', $filePath);
 
         // Check if we've already imported this exact file version
-        if (!$dryRun && $this->isFileAlreadyImported($fileName, $checksum)) {
+        if (! $dryRun && $this->isFileAlreadyImported($fileName, $checksum)) {
             return;
         }
 
@@ -492,15 +501,15 @@ class AgentLogImportService
 
             $parsed = $this->parseClaudeProjectLine($line, $fileName);
 
-            if (!$parsed) {
+            if (! $parsed) {
                 continue;
             }
 
             // Extract session ID and project info from first entry
-            if (!$sessionId && isset($parsed['data']['sessionId'])) {
+            if (! $sessionId && isset($parsed['data']['sessionId'])) {
                 $sessionId = $parsed['data']['sessionId'];
             }
-            if (!$projectPath && isset($parsed['data']['cwd'])) {
+            if (! $projectPath && isset($parsed['data']['cwd'])) {
                 $projectPath = basename($parsed['data']['cwd']);
             }
 
@@ -523,17 +532,18 @@ class AgentLogImportService
 
             if ($this->hasExistingLogEntry($logEntry)) {
                 $this->stats['entries_skipped']++;
+
                 continue;
             }
 
-            if (!$dryRun) {
+            if (! $dryRun) {
                 AgentLog::create($logEntry);
             }
 
             $this->stats['entries_imported']++;
         }
 
-        if (!$dryRun) {
+        if (! $dryRun) {
             $this->markFileAsImported($fileName, $checksum);
         }
     }
@@ -544,8 +554,8 @@ class AgentLogImportService
     private function parseClaudeProjectLine(string $line, string $fileName): ?array
     {
         $json = json_decode($line, true);
-        
-        if (!$json || !isset($json['timestamp'], $json['type'])) {
+
+        if (! $json || ! isset($json['timestamp'], $json['type'])) {
             return null;
         }
 
@@ -588,24 +598,27 @@ class AgentLogImportService
         switch ($type) {
             case 'user':
                 if ($json['isMeta'] ?? false) {
-                    return 'Meta message: ' . $this->summariseContent($content);
+                    return 'Meta message: '.$this->summariseContent($content);
                 }
-                
+
                 // Check for command format
                 if (str_contains($content, '<command-name>')) {
                     preg_match('/<command-name>([^<]+)<\/command-name>/', $content, $matches);
                     $commandName = $matches[1] ?? 'unknown';
+
                     return "User command: {$commandName}";
                 }
-                
-                return 'User: ' . $this->summariseContent($content);
+
+                return 'User: '.$this->summariseContent($content);
 
             case 'assistant':
                 $contentLength = mb_strlen($content, 'UTF-8');
+
                 return "Assistant response ({$contentLength} chars)";
 
             case 'tool_use':
                 $toolName = (string) ($this->getClaudeProjectMessageValue($message, 'name') ?? 'unknown');
+
                 return "Tool used: {$toolName}";
 
             case 'tool_result':
@@ -663,26 +676,31 @@ class AgentLogImportService
             foreach ($content as $segment) {
                 if (is_string($segment)) {
                     $parts[] = $segment;
+
                     continue;
                 }
 
                 if (is_array($segment)) {
                     if (array_key_exists('text', $segment)) {
                         $parts[] = (string) $segment['text'];
+
                         continue;
                     }
 
                     if (($segment['type'] ?? null) === 'code' && isset($segment['code'])) {
                         $parts[] = (string) $segment['code'];
+
                         continue;
                     }
 
                     $parts[] = json_encode($segment, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
                     continue;
                 }
 
                 if (is_bool($segment) || $segment === null) {
                     $parts[] = json_encode($segment);
+
                     continue;
                 }
 
@@ -720,7 +738,7 @@ class AgentLogImportService
             return $trimmed;
         }
 
-        return mb_substr($trimmed, 0, $limit, 'UTF-8') . '...';
+        return mb_substr($trimmed, 0, $limit, 'UTF-8').'...';
     }
 
     /**
@@ -824,6 +842,7 @@ class AgentLogImportService
 
             if ($this->hasExistingLogEntry($logEntry)) {
                 $this->stats['entries_skipped']++;
+
                 continue;
             }
 

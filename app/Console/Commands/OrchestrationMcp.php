@@ -10,6 +10,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 class OrchestrationMcp extends Command
 {
     protected $signature = 'orchestration:mcp';
+
     protected $description = 'Fragments Engine Orchestration MCP Server';
 
     public function handle(): int

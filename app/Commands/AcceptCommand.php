@@ -8,15 +8,15 @@ class AcceptCommand extends BaseCommand
     {
         $fragmentId = $this->getData()['body'] ?? $this->getData()['fragment_id'] ?? '';
 
-        $message = "Fragment ID: {$fragmentId}\n\n" .
-                  "Use API endpoint POST /api/inbox/{$fragmentId}/accept to accept this fragment.\n\n" .
-                  "Optional edits can be provided in request body.";
+        $message = "Fragment ID: {$fragmentId}\n\n".
+                  "Use API endpoint POST /api/inbox/{$fragmentId}/accept to accept this fragment.\n\n".
+                  'Optional edits can be provided in request body.';
 
         return [
             'type' => 'message',
             'component' => null,
             'data' => null,
-            'message' => $message
+            'message' => $message,
         ];
     }
 

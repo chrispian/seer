@@ -13,7 +13,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, LogsActivity, CausesActivity;
+    use CausesActivity, HasFactory, LogsActivity, Notifiable;
 
     /**
      * The attributes that aren't mass assignable.

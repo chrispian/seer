@@ -17,7 +17,7 @@ class PostmasterRun extends Command
 
         $this->info('Starting Postmaster queue worker...');
         $this->info("Queue: {$queue}");
-        $this->info("Listening for: postmaster jobs");
+        $this->info('Listening for: postmaster jobs');
         $this->newLine();
 
         $exitCode = Artisan::call('queue:work', [

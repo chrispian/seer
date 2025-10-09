@@ -2,13 +2,13 @@
 
 use App\Services\Orchestration\ToolAware\DTOs\ToolPlan;
 use App\Services\Orchestration\ToolAware\Guards\PermissionGate;
-use App\Services\Orchestration\ToolAware\Guards\StepLimiter;
 use App\Services\Orchestration\ToolAware\Guards\RateLimiter;
 use App\Services\Orchestration\ToolAware\Guards\Redactor;
+use App\Services\Orchestration\ToolAware\Guards\StepLimiter;
 
 it('permission gate filters blocked tools', function () {
     config(['fragments.tools.allowed' => ['gmail.list', 'calendar.*']]);
-    
+
     $plan = new ToolPlan(
         selected_tool_ids: ['gmail.list', 'gmail.send', 'calendar.listEvents'],
         plan_steps: [
@@ -18,7 +18,7 @@ it('permission gate filters blocked tools', function () {
         ]
     );
 
-    $gate = new PermissionGate();
+    $gate = new PermissionGate;
     $filtered = $gate->filter($plan, 1);
 
     expect($filtered->plan_steps)->toHaveCount(2);
@@ -29,7 +29,7 @@ it('permission gate filters blocked tools', function () {
 
 it('permission gate allows all when no restrictions', function () {
     config(['fragments.tools.allowed' => []]);
-    
+
     $plan = new ToolPlan(
         selected_tool_ids: ['gmail.send'],
         plan_steps: [
@@ -37,7 +37,7 @@ it('permission gate allows all when no restrictions', function () {
         ]
     );
 
-    $gate = new PermissionGate();
+    $gate = new PermissionGate;
     $filtered = $gate->filter($plan);
 
     expect($filtered->plan_steps)->toHaveCount(1);
@@ -45,7 +45,7 @@ it('permission gate allows all when no restrictions', function () {
 
 it('permission gate supports wildcard patterns', function () {
     config(['fragments.tools.allowed' => ['gmail.*']]);
-    
+
     $plan = new ToolPlan(
         selected_tool_ids: ['gmail.list', 'gmail.send', 'calendar.list'],
         plan_steps: [
@@ -55,7 +55,7 @@ it('permission gate supports wildcard patterns', function () {
         ]
     );
 
-    $gate = new PermissionGate();
+    $gate = new PermissionGate;
     $filtered = $gate->filter($plan);
 
     expect($filtered->plan_steps)->toHaveCount(2);
@@ -65,7 +65,7 @@ it('permission gate supports wildcard patterns', function () {
 
 it('step limiter truncates excessive steps', function () {
     config(['fragments.tool_aware_turn.limits.max_steps_per_turn' => 3]);
-    
+
     $plan = new ToolPlan(
         selected_tool_ids: ['tool1', 'tool2', 'tool3', 'tool4', 'tool5'],
         plan_steps: [
@@ -77,7 +77,7 @@ it('step limiter truncates excessive steps', function () {
         ]
     );
 
-    $limiter = new StepLimiter();
+    $limiter = new StepLimiter;
     $limited = $limiter->limit($plan);
 
     expect($limited->plan_steps)->toHaveCount(3);
@@ -86,7 +86,7 @@ it('step limiter truncates excessive steps', function () {
 
 it('step limiter allows plans within limit', function () {
     config(['fragments.tool_aware_turn.limits.max_steps_per_turn' => 10]);
-    
+
     $plan = new ToolPlan(
         selected_tool_ids: ['tool1', 'tool2'],
         plan_steps: [
@@ -95,7 +95,7 @@ it('step limiter allows plans within limit', function () {
         ]
     );
 
-    $limiter = new StepLimiter();
+    $limiter = new StepLimiter;
     $limited = $limiter->limit($plan);
 
     expect($limited->plan_steps)->toHaveCount(2);
@@ -103,8 +103,8 @@ it('step limiter allows plans within limit', function () {
 });
 
 it('redactor removes email addresses', function () {
-    $redactor = new Redactor();
-    
+    $redactor = new Redactor;
+
     $text = 'Contact me at john.doe@example.com or jane@test.org';
     $redacted = $redactor->redact($text);
 
@@ -114,8 +114,8 @@ it('redactor removes email addresses', function () {
 });
 
 it('redactor removes API keys', function () {
-    $redactor = new Redactor();
-    
+    $redactor = new Redactor;
+
     $text = 'API key: sk-1234567890abcdefghijklmnop';
     $redacted = $redactor->redact($text);
 
@@ -124,15 +124,15 @@ it('redactor removes API keys', function () {
 });
 
 it('redactor handles arrays recursively', function () {
-    $redactor = new Redactor();
-    
+    $redactor = new Redactor;
+
     $data = [
         'email' => 'test@example.com',
         'nested' => [
             'api_key' => 'sk-12345678901234567890',
         ],
     ];
-    
+
     $redacted = $redactor->redactArray($data);
 
     expect($redacted['email'])->not->toContain('test@example.com');
@@ -140,15 +140,15 @@ it('redactor handles arrays recursively', function () {
 });
 
 it('redactor removes sensitive keys', function () {
-    $redactor = new Redactor();
-    
+    $redactor = new Redactor;
+
     $data = [
         'username' => 'john',
         'password' => 'secret123',
         'api_key' => 'abc123',
         'public_data' => 'visible',
     ];
-    
+
     $redacted = $redactor->redactKeys($data);
 
     expect($redacted['username'])->toBe('john');
@@ -158,14 +158,14 @@ it('redactor removes sensitive keys', function () {
 });
 
 it('rate limiter allows requests within limit', function () {
-    $limiter = new RateLimiter();
-    
+    $limiter = new RateLimiter;
+
     expect($limiter->allow('user123', 'gmail.list'))->toBeTrue();
 });
 
 it('rate limiter calculates exponential backoff', function () {
-    $limiter = new RateLimiter();
-    
+    $limiter = new RateLimiter;
+
     expect($limiter->backoffTime(0))->toBe(1);
     expect($limiter->backoffTime(1))->toBe(2);
     expect($limiter->backoffTime(2))->toBe(4);
@@ -174,8 +174,8 @@ it('rate limiter calculates exponential backoff', function () {
 });
 
 it('rate limiter identifies retryable status codes', function () {
-    $limiter = new RateLimiter();
-    
+    $limiter = new RateLimiter;
+
     expect($limiter->shouldRetry(429, 1))->toBeTrue();
     expect($limiter->shouldRetry(500, 1))->toBeTrue();
     expect($limiter->shouldRetry(503, 1))->toBeTrue();

@@ -13,7 +13,9 @@ use Laravel\Mcp\Server\Tool;
 class TaskStatusTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_tasks_status';
+
     protected string $title = 'Update orchestration task status';
+
     protected string $description = 'Change delegation status for a work item and sync the active assignment.';
 
     public function schema(JsonSchema $schema): array

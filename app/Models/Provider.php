@@ -170,8 +170,6 @@ class Provider extends Model
         return $this->capabilities ?? [];
     }
 
-
-
     /**
      * Update sync timestamp for models.dev synchronization
      */

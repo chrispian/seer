@@ -18,7 +18,7 @@ class ApprovalController extends Controller
     {
         $approvalRequest = ApprovalRequest::with('fragment')->findOrFail($id);
 
-        if (!$approvalRequest->isPending()) {
+        if (! $approvalRequest->isPending()) {
             return response()->json([
                 'error' => 'Request already processed',
                 'status' => $approvalRequest->status,
@@ -61,22 +61,22 @@ class ApprovalController extends Controller
         try {
             if ($approval->operation_type === 'command') {
                 $executor = app(\App\Services\Security\EnhancedShellExecutor::class);
-                
+
                 // Pass approved flag to bypass approval check in guards
                 $context = array_merge($details['context'] ?? [], ['approved' => true]);
-                
+
                 \Log::info('About to execute command', [
                     'command' => $details['command'],
                     'context' => $context,
                 ]);
-                
+
                 $result = $executor->execute($details['command'], ['context' => $context]);
-                
+
                 \Log::info('Command executed', [
                     'success' => $result['success'],
                     'output_length' => strlen($result['stdout'] ?? ''),
                 ]);
-                
+
                 return [
                     'executed' => true,
                     'success' => $result['success'],
@@ -105,7 +105,7 @@ class ApprovalController extends Controller
     {
         $approvalRequest = ApprovalRequest::findOrFail($id);
 
-        if (!$approvalRequest->isPending()) {
+        if (! $approvalRequest->isPending()) {
             return response()->json([
                 'error' => 'Request already processed',
                 'status' => $approvalRequest->status,
@@ -152,8 +152,7 @@ class ApprovalController extends Controller
             ->get();
 
         return response()->json([
-            'approvals' => $pending->map(fn($a) => $this->approvalManager->formatForChat($a)),
+            'approvals' => $pending->map(fn ($a) => $this->approvalManager->formatForChat($a)),
         ]);
     }
 }
-

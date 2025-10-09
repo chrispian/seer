@@ -18,7 +18,9 @@ class TasksListTool extends Tool implements SummarizesTool
     use NormalisesFilters;
 
     protected string $name = 'orchestration_tasks_list';
+
     protected string $title = 'List orchestration tasks';
+
     protected string $description = 'Return work items with orchestration metadata and filters.';
 
     public function schema(JsonSchema $schema): array
@@ -61,7 +63,7 @@ class TasksListTool extends Tool implements SummarizesTool
         }
 
         if ($request->get('search')) {
-            $term = '%' . trim((string) $request->get('search')) . '%';
+            $term = '%'.trim((string) $request->get('search')).'%';
             $query->where(function (Builder $inner) use ($term) {
                 $inner->where('metadata->task_code', 'like', $term)
                     ->orWhere('metadata->task_name', 'like', $term)

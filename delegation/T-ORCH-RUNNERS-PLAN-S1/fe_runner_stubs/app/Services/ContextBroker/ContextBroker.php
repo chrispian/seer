@@ -9,6 +9,6 @@ class ContextBroker
     public function get(string $taskRunId, string $viewSignature): array
     {
         // TODO: check cache; compute on miss; pin per-run
-        return ['signature'=>$viewSignature,'data'=>[]];
+        return ['signature' => $viewSignature, 'data' => []];
     }
 }

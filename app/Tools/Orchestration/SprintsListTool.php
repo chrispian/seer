@@ -15,7 +15,9 @@ class SprintsListTool extends Tool implements SummarizesTool
     use NormalisesFilters;
 
     protected string $name = 'orchestration_sprints_list';
+
     protected string $title = 'Summarise orchestration sprints';
+
     protected string $description = 'Return sprints with progress stats and optional task details.';
 
     public function schema(JsonSchema $schema): array

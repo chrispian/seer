@@ -11,31 +11,31 @@ class CommandRegistry
     protected static array $phpCommands = [
         // Help & System
         'help' => \App\Commands\HelpCommand::class,
-        
+
         // Orchestration Commands
         'sprints' => \App\Commands\SprintListCommand::class,
         'sprint-list' => \App\Commands\SprintListCommand::class,
         'sl' => \App\Commands\SprintListCommand::class,
         'sprint-detail' => \App\Commands\SprintDetailCommand::class,
         'sd' => \App\Commands\SprintDetailCommand::class,
-        
+
         'tasks' => \App\Commands\TaskListCommand::class,
         'task-list' => \App\Commands\TaskListCommand::class,
         'tl' => \App\Commands\TaskListCommand::class,
         'task-detail' => \App\Commands\TaskDetailCommand::class,
         'td' => \App\Commands\TaskDetailCommand::class,
-        
+
         'backlog-list' => \App\Commands\BacklogListCommand::class,
         'backlog' => \App\Commands\BacklogListCommand::class,
         'bl' => \App\Commands\BacklogListCommand::class,
-        
+
         // Agent Commands - use AgentListCommand (returns AgentProfile data)
         'agents' => \App\Commands\AgentListCommand::class,
         'agent-list' => \App\Commands\AgentListCommand::class,
         'agent-profiles' => \App\Commands\AgentListCommand::class,
         'ap' => \App\Commands\AgentListCommand::class,
         'al' => \App\Commands\AgentListCommand::class,
-        
+
         // Fragment & Content Commands
         'search' => \App\Commands\SearchCommand::class,
         's' => \App\Commands\SearchCommand::class,
@@ -44,22 +44,22 @@ class CommandRegistry
         'in' => \App\Commands\InboxCommand::class,
         'frag' => \App\Commands\FragCommand::class,
         'frag-simple' => \App\Commands\FragSimpleCommand::class,
-        
+
         // Bookmark & Collections
         'bookmark' => \App\Commands\BookmarkListCommand::class,
         'bm' => \App\Commands\BookmarkListCommand::class,
-        
+
         // Session & Navigation
         'session' => \App\Commands\SessionListCommand::class,
         'sessions' => \App\Commands\SessionListCommand::class,
         'channels' => \App\Commands\ChannelsCommand::class,
-        
+
         // Todo & Notes
         'todo' => \App\Commands\TodoCommand::class,
         't' => \App\Commands\TodoCommand::class,
         'notes' => \App\Commands\NoteListCommand::class,
         'note' => \App\Commands\NoteCommand::class,
-        
+
         // Utility Commands
         'clear' => \App\Commands\ClearCommand::class,
         'join' => \App\Commands\JoinCommand::class,
@@ -70,7 +70,7 @@ class CommandRegistry
         'ctx' => \App\Commands\ContextCommand::class,
         'compose' => \App\Commands\ComposeCommand::class,
         'c' => \App\Commands\ComposeCommand::class,
-        
+
         // Vault & Project Management
         'vault' => \App\Commands\VaultListCommand::class,
         'vaults' => \App\Commands\VaultListCommand::class,
@@ -78,10 +78,10 @@ class CommandRegistry
         'project' => \App\Commands\ProjectListCommand::class,
         'projects' => \App\Commands\ProjectListCommand::class,
         'p' => \App\Commands\ProjectListCommand::class,
-        
+
         // Type Management
         'types' => \App\Commands\TypeManagementCommand::class,
-        
+
         // Additional Commands
         'accept' => \App\Commands\AcceptCommand::class,
         'approve' => \App\Commands\AcceptCommand::class,

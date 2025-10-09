@@ -25,9 +25,9 @@ class OrchestrationAgentStatusCommand extends Command
 
         // Validate status enum
         if (! AgentStatus::tryFrom(Str::lower($status))) {
-            $this->error(sprintf('Unknown agent status [%s]. Valid options: %s', 
-                $status, 
-                implode(', ', array_map(fn($case) => $case->value, AgentStatus::cases()))
+            $this->error(sprintf('Unknown agent status [%s]. Valid options: %s',
+                $status,
+                implode(', ', array_map(fn ($case) => $case->value, AgentStatus::cases()))
             ));
 
             return self::FAILURE;
@@ -35,7 +35,7 @@ class OrchestrationAgentStatusCommand extends Command
 
         try {
             $updatedAgent = $service->setStatus($agent, $status);
-            
+
             // Get detailed information for output
             $detail = $service->detail($updatedAgent, [
                 'assignments_limit' => 5,
@@ -55,7 +55,7 @@ class OrchestrationAgentStatusCommand extends Command
 
             $agentName = $detail['agent']['name'] ?? $detail['agent']['slug'] ?? 'Unknown';
             $this->info(sprintf('Agent "%s" status updated to: %s', $agentName, $status));
-            
+
             if ($note) {
                 $this->comment("Note: {$note}");
             }
@@ -69,7 +69,7 @@ class OrchestrationAgentStatusCommand extends Command
                     'error' => $e->getMessage(),
                 ], JSON_PRETTY_PRINT));
             } else {
-                $this->error('Failed to update agent status: ' . $e->getMessage());
+                $this->error('Failed to update agent status: '.$e->getMessage());
             }
 
             return self::FAILURE;

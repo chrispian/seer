@@ -8,14 +8,14 @@ class BookmarkListCommand extends BaseCommand
     {
         // Get recent bookmarks
         $bookmarks = $this->getBookmarks();
-        
+
         return [
             'type' => 'bookmark',
             'component' => 'BookmarkListModal',
-            'data' => $bookmarks
+            'data' => $bookmarks,
         ];
     }
-    
+
     private function getBookmarks(): array
     {
         if (class_exists(\App\Models\Bookmark::class)) {
@@ -26,7 +26,7 @@ class BookmarkListCommand extends BaseCommand
                 ->get()
                 ->map(function ($bookmark) {
                     $firstFragment = $bookmark->first_fragment;
-                    
+
                     return [
                         'id' => $bookmark->id,
                         'name' => $bookmark->name,
@@ -47,28 +47,28 @@ class BookmarkListCommand extends BaseCommand
                 })
                 ->values()
                 ->all();
-                
+
             return $bookmarks;
         }
-        
+
         return [];
     }
-    
+
     public static function getName(): string
     {
         return 'Bookmark List';
     }
-    
+
     public static function getDescription(): string
     {
         return 'List all bookmarks with recent activity';
     }
-    
+
     public static function getUsage(): string
     {
         return '/bookmark';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Navigation';

@@ -9,8 +9,8 @@ use App\Models\WorkItem;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class TaskOrchestrationService
@@ -37,7 +37,7 @@ class TaskOrchestrationService
     {
         $taskCode = $data['task_code'] ?? null;
 
-        if (!$taskCode) {
+        if (! $taskCode) {
             throw new InvalidArgumentException('task_code is required');
         }
 
@@ -48,52 +48,52 @@ class TaskOrchestrationService
                 ->first();
         }
 
-        if ($existing && !$upsert) {
+        if ($existing && ! $upsert) {
             throw new InvalidArgumentException("Task with code [{$taskCode}] already exists");
         }
 
-        $model = $existing ?? new WorkItem();
+        $model = $existing ?? new WorkItem;
         $model->type = $data['type'] ?? 'task';
         $model->status = $data['status'] ?? 'todo';
         $model->priority = $data['priority'] ?? 'medium';
         $model->delegation_status = $data['delegation_status'] ?? 'unassigned';
-        
+
         if (isset($data['tags'])) {
             $model->tags = is_array($data['tags']) ? $data['tags'] : [$data['tags']];
-        } elseif (!$existing) {
+        } elseif (! $existing) {
             $model->tags = ['orchestration'];
         }
 
         $metadata = $model->metadata ?? [];
         $metadata['task_code'] = $taskCode;
-        
+
         if (isset($data['task_name'])) {
             $metadata['task_name'] = $data['task_name'];
             $metadata['description'] = $data['task_name'];
         }
-        
+
         if (isset($data['description'])) {
             $metadata['description'] = $data['description'];
         }
-        
+
         if (isset($data['sprint_code'])) {
             $metadata['sprint_code'] = $data['sprint_code'];
         }
-        
+
         if (isset($data['estimate_text'])) {
             $metadata['estimate_text'] = $data['estimate_text'];
         }
-        
+
         if (isset($data['dependencies'])) {
-            $metadata['dependencies'] = is_array($data['dependencies']) 
-                ? $data['dependencies'] 
+            $metadata['dependencies'] = is_array($data['dependencies'])
+                ? $data['dependencies']
                 : [$data['dependencies']];
         }
-        
+
         if (isset($data['acceptance'])) {
             $metadata['acceptance'] = $data['acceptance'];
         }
-        
+
         $model->metadata = $metadata;
 
         if (isset($data['agent_content'])) {
@@ -127,7 +127,7 @@ class TaskOrchestrationService
         }
 
         if (! $model) {
-            throw (new ModelNotFoundException())->setModel(WorkItem::class, [$identifier]);
+            throw (new ModelNotFoundException)->setModel(WorkItem::class, [$identifier]);
         }
 
         return $model;
@@ -151,7 +151,7 @@ class TaskOrchestrationService
         }
 
         if (! $model) {
-            throw (new ModelNotFoundException())->setModel(AgentProfile::class, [$identifier]);
+            throw (new ModelNotFoundException)->setModel(AgentProfile::class, [$identifier]);
         }
 
         return $model;
@@ -285,7 +285,7 @@ class TaskOrchestrationService
             }
 
             $oldStatus = $task->delegation_status;
-            
+
             $task->delegation_history = $this->appendHistory($task, [
                 'action' => 'status_changed',
                 'status' => $delegationStatus,

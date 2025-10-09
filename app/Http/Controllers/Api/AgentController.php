@@ -123,7 +123,7 @@ class AgentController extends Controller
         $extension = $file->getClientOriginalExtension();
         $path = $file->storeAs(
             'avatars/agents',
-            $agent->id . '.' . $extension,
+            $agent->id.'.'.$extension,
             'public'
         );
 

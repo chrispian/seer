@@ -16,8 +16,7 @@ class DestructiveCommandExecuted extends Notification implements ShouldQueue
     public function __construct(
         public CommandAuditLog $log,
         public int $exitCode
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -43,11 +42,11 @@ class DestructiveCommandExecuted extends Notification implements ShouldQueue
         return (new MailMessage)
             ->level($statusColor)
             ->subject("⚠️ Destructive Command Executed: {$this->log->command_name}")
-            ->greeting("Destructive Command Alert")
+            ->greeting('Destructive Command Alert')
             ->line("A destructive command was {$status}:")
             ->line("**Command:** `{$this->log->command_signature}`")
             ->line("**User:** {$userName}")
-            ->line("**Status:** ".($this->exitCode === 0 ? '✅ Success' : '❌ Failed'))
+            ->line('**Status:** '.($this->exitCode === 0 ? '✅ Success' : '❌ Failed'))
             ->line("**Exit Code:** {$this->exitCode}")
             ->line("**Execution Time:** {$this->log->execution_time_ms}ms")
             ->line("**IP Address:** {$this->log->ip_address}")

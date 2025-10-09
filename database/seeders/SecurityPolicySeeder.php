@@ -40,7 +40,7 @@ class SecurityPolicySeeder extends Seeder
             // Allowed paths
             ['policy_type' => 'path', 'category' => 'filesystem', 'pattern' => '/workspace/*', 'action' => 'allow', 'priority' => 100, 'description' => 'Workspace directory'],
             ['policy_type' => 'path', 'category' => 'filesystem', 'pattern' => '/tmp/*', 'action' => 'allow', 'priority' => 100, 'description' => 'Temp directory'],
-            ['policy_type' => 'path', 'category' => 'filesystem', 'pattern' => base_path() . '/*', 'action' => 'allow', 'priority' => 100, 'description' => 'Application directory'],
+            ['policy_type' => 'path', 'category' => 'filesystem', 'pattern' => base_path().'/*', 'action' => 'allow', 'priority' => 100, 'description' => 'Application directory'],
 
             // Denied paths (higher priority)
             ['policy_type' => 'path', 'category' => 'filesystem', 'pattern' => '/etc/*', 'action' => 'deny', 'priority' => 50, 'description' => 'System configuration - forbidden'],
@@ -73,6 +73,6 @@ class SecurityPolicySeeder extends Seeder
             );
         }
 
-        $this->command->info('Seeded ' . count($policies) . ' security policies');
+        $this->command->info('Seeded '.count($policies).' security policies');
     }
 }

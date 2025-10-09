@@ -93,11 +93,13 @@ class ReadwiseReaderImportService
                     $documentId = Arr::get($document, 'id');
                     if (! $documentId) {
                         $stats['documents_skipped']++;
+
                         continue;
                     }
 
                     if (Arr::get($document, 'parent_id')) {
                         $stats['documents_skipped']++;
+
                         continue;
                     }
 
@@ -112,6 +114,7 @@ class ReadwiseReaderImportService
 
                     if ($dryRun) {
                         $stats['documents_imported']++;
+
                         continue;
                     }
 

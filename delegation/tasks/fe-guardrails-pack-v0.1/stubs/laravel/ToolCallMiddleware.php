@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
-use Illuminate\Http\Request;
 use App\Security\PolicyRegistry;
 use App\Services\Audit\AuditLog;
+use Closure;
+use Illuminate\Http\Request;
 
 class ToolCallMiddleware
 {
@@ -29,7 +29,7 @@ class ToolCallMiddleware
         ]);
 
         if ($decision['action'] === 'deny') {
-            abort(403, 'Policy denied: ' . $decision['reason']);
+            abort(403, 'Policy denied: '.$decision['reason']);
         }
 
         if ($decision['action'] === 'approve_required') {

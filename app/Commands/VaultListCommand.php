@@ -8,14 +8,14 @@ class VaultListCommand extends BaseCommand
     {
         // Get vaults
         $vaults = $this->getVaults();
-        
+
         return [
             'type' => 'vault',
             'component' => 'VaultListModal',
-            'data' => $vaults
+            'data' => $vaults,
         ];
     }
-    
+
     private function getVaults(): array
     {
         if (class_exists(\App\Models\Vault::class)) {
@@ -38,28 +38,28 @@ class VaultListCommand extends BaseCommand
                     ];
                 })
                 ->all();
-                
+
             return $vaults;
         }
-        
+
         return [];
     }
-    
+
     public static function getName(): string
     {
         return 'Vault List';
     }
-    
+
     public static function getDescription(): string
     {
         return 'List all vaults in the system';
     }
-    
+
     public static function getUsage(): string
     {
         return '/vault';
     }
-    
+
     public static function getCategory(): string
     {
         return 'Navigation';

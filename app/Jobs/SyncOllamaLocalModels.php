@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\Provider;
 use App\Models\AIModel;
+use App\Models\Provider;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
@@ -14,6 +14,7 @@ class SyncOllamaLocalModels implements ShouldQueue
     use Queueable;
 
     private const OLLAMA_LOCAL_API_URL = 'http://localhost:11434/api/tags';
+
     private const PROVIDER_ID = 'ollama-local';
 
     /**
@@ -71,25 +72,26 @@ class SyncOllamaLocalModels implements ShouldQueue
     private function syncLocalModels(): void
     {
         $response = Http::timeout(30)->get(self::OLLAMA_LOCAL_API_URL);
-        
-        if (!$response->successful()) {
-            throw new \Exception('Failed to fetch data from local Ollama API: ' . $response->status());
+
+        if (! $response->successful()) {
+            throw new \Exception('Failed to fetch data from local Ollama API: '.$response->status());
         }
 
         $data = $response->json();
         $models = $data['models'] ?? [];
-        
+
         $provider = Provider::where('provider', self::PROVIDER_ID)->first();
-        
-        if (!$provider) {
+
+        if (! $provider) {
             throw new \Exception('Ollama provider not found');
         }
 
         foreach ($models as $modelData) {
             $modelId = $modelData['name'] ?? $modelData['model'] ?? '';
-            
+
             if (empty($modelId)) {
                 Log::warning('Skipping model with no ID', ['data' => $modelData]);
+
                 continue;
             }
 
@@ -115,24 +117,24 @@ class SyncOllamaLocalModels implements ShouldQueue
 
             // Only set description for new models
             $existingModel = AIModel::where('provider_id', $provider->id)
-                                   ->where('model_id', $modelId)
-                                   ->first();
-            
-            if (!$existingModel) {
+                ->where('model_id', $modelId)
+                ->first();
+
+            if (! $existingModel) {
                 $updateData['description'] = $this->getModelDescription($modelData);
             }
 
             $model = AIModel::updateOrCreate(
                 [
                     'provider_id' => $provider->id,
-                    'model_id' => $modelId
+                    'model_id' => $modelId,
                 ],
                 $updateData
             );
 
             Log::debug('Synced Ollama model', [
                 'model' => $model->model_id,
-                'provider' => $provider->provider
+                'provider' => $provider->provider,
             ]);
         }
     }
@@ -144,11 +146,11 @@ class SyncOllamaLocalModels implements ShouldQueue
     {
         // Remove :latest suffix for cleaner display
         $name = str_replace(':latest', '', $modelId);
-        
+
         // Capitalize and format common model names
         $name = ucfirst($name);
         $name = str_replace('-', ' ', $name);
-        
+
         return $name;
     }
 
@@ -159,7 +161,7 @@ class SyncOllamaLocalModels implements ShouldQueue
     {
         $family = $modelData['details']['family'] ?? '';
         $parameterSize = $modelData['details']['parameter_size'] ?? '';
-        
+
         $descriptions = [
             'llama' => 'Meta\'s Llama language model',
             'qwen' => 'Alibaba\'s Qwen language model',
@@ -169,13 +171,13 @@ class SyncOllamaLocalModels implements ShouldQueue
             'deepseek' => 'DeepSeek language model',
             'codellama' => 'Meta\'s Code Llama model for code generation',
         ];
-        
+
         $baseDescription = $descriptions[$family] ?? 'Language model';
-        
+
         if ($parameterSize) {
             $baseDescription .= " ({$parameterSize})";
         }
-        
+
         return $baseDescription;
     }
 
@@ -185,30 +187,30 @@ class SyncOllamaLocalModels implements ShouldQueue
     private function parseCapabilities(array $modelData): array
     {
         $capabilities = ['text']; // All Ollama models support text
-        
+
         $family = strtolower($modelData['details']['family'] ?? '');
         $modelId = strtolower($modelData['name'] ?? $modelData['model'] ?? '');
-        
+
         // Vision models
         if (str_contains($modelId, 'vision') || str_contains($modelId, 'llava') || str_contains($modelId, 'moondream')) {
             $capabilities[] = 'vision';
         }
-        
+
         // Code models
         if (str_contains($modelId, 'code') || str_contains($modelId, 'coder') || $family === 'codellama') {
             $capabilities[] = 'code';
         }
-        
+
         // Embedding models
         if (str_contains($modelId, 'embed') || str_contains($modelId, 'embedding')) {
             $capabilities[] = 'embedding';
         }
-        
+
         // Tool use (common in newer models)
         if (str_contains($modelId, 'tool') || in_array($family, ['qwen', 'llama', 'mistral'])) {
             $capabilities[] = 'function_calling';
         }
-        
+
         return array_unique($capabilities);
     }
 

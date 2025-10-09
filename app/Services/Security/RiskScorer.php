@@ -2,8 +2,6 @@
 
 namespace App\Services\Security;
 
-use Illuminate\Support\Facades\Log;
-
 class RiskScorer
 {
     /**
@@ -52,23 +50,23 @@ class RiskScorer
         // Analyze tool type
         if (str_starts_with($toolId, 'shell')) {
             $score += self::BASE_WEIGHTS['shell_execution'];
-            $factors[] = 'Shell execution: +' . self::BASE_WEIGHTS['shell_execution'];
+            $factors[] = 'Shell execution: +'.self::BASE_WEIGHTS['shell_execution'];
         }
 
         if (str_contains($toolId, 'delete') || str_contains($toolId, 'remove')) {
             $score += self::BASE_WEIGHTS['delete_operation'];
-            $factors[] = 'Delete operation: +' . self::BASE_WEIGHTS['delete_operation'];
+            $factors[] = 'Delete operation: +'.self::BASE_WEIGHTS['delete_operation'];
         }
 
         if (str_contains($toolId, 'write') || str_contains($toolId, 'create')) {
             $score += self::BASE_WEIGHTS['write_operation'];
-            $factors[] = 'Write operation: +' . self::BASE_WEIGHTS['write_operation'];
+            $factors[] = 'Write operation: +'.self::BASE_WEIGHTS['write_operation'];
         }
 
         // Network operations
         if (str_contains($toolId, 'http') || str_contains($toolId, 'fetch') || str_contains($toolId, 'request')) {
             $score += self::BASE_WEIGHTS['network_egress'];
-            $factors[] = 'Network egress: +' . self::BASE_WEIGHTS['network_egress'];
+            $factors[] = 'Network egress: +'.self::BASE_WEIGHTS['network_egress'];
         }
 
         // Parameter analysis
@@ -108,7 +106,7 @@ class RiskScorer
 
         // Shell execution baseline
         $score += self::BASE_WEIGHTS['shell_execution'];
-        $factors[] = 'Shell execution: +' . self::BASE_WEIGHTS['shell_execution'];
+        $factors[] = 'Shell execution: +'.self::BASE_WEIGHTS['shell_execution'];
 
         // Dangerous patterns
         $dangerousPatterns = [
@@ -139,7 +137,7 @@ class RiskScorer
         if (isset($context['workdir'])) {
             $workdir = $context['workdir'];
             $decision = $this->policyRegistry->isPathAllowed($workdir);
-            if (!$decision['allowed']) {
+            if (! $decision['allowed']) {
                 $score += 20;
                 $factors[] = 'Working in restricted directory: +20';
             }
@@ -167,7 +165,7 @@ class RiskScorer
 
         // Check path policy
         $decision = $this->policyRegistry->isPathAllowed($path, $operation);
-        if (!$decision['allowed']) {
+        if (! $decision['allowed']) {
             $score += 30;
             $factors[] = 'Restricted path access: +30';
         }
@@ -183,7 +181,7 @@ class RiskScorer
         $opWeight = $operationWeights[$operation] ?? 0;
         if ($opWeight > 0) {
             $score += $opWeight;
-            $factors[] = ucfirst($operation) . " operation: +{$opWeight}";
+            $factors[] = ucfirst($operation)." operation: +{$opWeight}";
         }
 
         // Sensitive file patterns (use preg_quote for paths)
@@ -232,11 +230,11 @@ class RiskScorer
 
         // Base network risk
         $score += self::BASE_WEIGHTS['network_egress'];
-        $factors[] = 'Network egress: +' . self::BASE_WEIGHTS['network_egress'];
+        $factors[] = 'Network egress: +'.self::BASE_WEIGHTS['network_egress'];
 
         // Check domain policy
         $decision = $this->policyRegistry->isDomainAllowed($domain);
-        if (!$decision['allowed']) {
+        if (! $decision['allowed']) {
             $score += 25;
             $factors[] = 'Restricted domain: +25';
         }
@@ -244,7 +242,7 @@ class RiskScorer
         // Private IP detection (SSRF risk)
         if ($this->isPrivateIp($domain)) {
             $score += self::BASE_WEIGHTS['data_exfiltration_risk'];
-            $factors[] = 'Private IP/SSRF risk: +' . self::BASE_WEIGHTS['data_exfiltration_risk'];
+            $factors[] = 'Private IP/SSRF risk: +'.self::BASE_WEIGHTS['data_exfiltration_risk'];
         }
 
         // Request method
@@ -291,14 +289,14 @@ class RiskScorer
         foreach ($operations as $op) {
             $totalScore += $op['score'];
             $allFactors = array_merge($allFactors, $op['factors']);
-            
+
             if ($this->levelValue($op['level']) > $this->levelValue($highestLevel)) {
                 $highestLevel = $op['level'];
             }
         }
 
         // Average score
-        $avgScore = count($operations) > 0 ? (int)($totalScore / count($operations)) : 0;
+        $avgScore = count($operations) > 0 ? (int) ($totalScore / count($operations)) : 0;
 
         return [
             'score' => $avgScore,
@@ -332,7 +330,7 @@ class RiskScorer
         // Check for sudo/privileged flags
         if (isset($parameters['sudo']) || isset($parameters['privileged'])) {
             $score += self::BASE_WEIGHTS['privileged_operation'];
-            $factors[] = 'Privileged mode: +' . self::BASE_WEIGHTS['privileged_operation'];
+            $factors[] = 'Privileged mode: +'.self::BASE_WEIGHTS['privileged_operation'];
         }
 
         // Check for destructive flags
@@ -349,9 +347,16 @@ class RiskScorer
      */
     private function getRiskLevel(int $score): string
     {
-        if ($score <= 25) return 'low';
-        if ($score <= 50) return 'medium';
-        if ($score <= 75) return 'high';
+        if ($score <= 25) {
+            return 'low';
+        }
+        if ($score <= 50) {
+            return 'medium';
+        }
+        if ($score <= 75) {
+            return 'high';
+        }
+
         return 'critical';
     }
 
@@ -361,13 +366,13 @@ class RiskScorer
     private function getThresholdAction(int $score): string
     {
         $action = 'auto_approve';
-        
+
         foreach (self::THRESHOLDS as $threshold => $thresholdAction) {
             if ($score >= $threshold) {
                 $action = $thresholdAction;
             }
         }
-        
+
         return $action;
     }
 
@@ -376,7 +381,7 @@ class RiskScorer
      */
     private function levelValue(string $level): int
     {
-        return match($level) {
+        return match ($level) {
             'low' => 1,
             'medium' => 2,
             'high' => 3,
@@ -396,7 +401,7 @@ class RiskScorer
         }
 
         // Extract IP if domain is an IP address
-        if (!filter_var($domain, FILTER_VALIDATE_IP)) {
+        if (! filter_var($domain, FILTER_VALIDATE_IP)) {
             // Try to resolve domain to IP
             $ip = gethostbyname($domain);
             if ($ip === $domain) {
@@ -407,7 +412,7 @@ class RiskScorer
         }
 
         // Check private IP ranges
-        return !filter_var(
+        return ! filter_var(
             $ip,
             FILTER_VALIDATE_IP,
             FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE

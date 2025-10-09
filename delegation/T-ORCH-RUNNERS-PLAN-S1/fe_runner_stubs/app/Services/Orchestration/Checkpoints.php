@@ -9,6 +9,6 @@ class Checkpoints
     public function persist(string $taskId, string $runId, array $result): string
     {
         // TODO: write manifest + artifacts; return checkpoint URI
-        return "fe://{$taskId}/{$runId}/checkpoints/".uniqid().".json";
+        return "fe://{$taskId}/{$runId}/checkpoints/".uniqid().'.json';
     }
 }

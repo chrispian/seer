@@ -5,7 +5,6 @@ namespace App\Tools\Orchestration;
 use App\Support\Orchestration\ModelResolver;
 use App\Tools\Contracts\SummarizesTool;
 use Illuminate\JsonSchema\JsonSchema;
-use Illuminate\Support\Arr;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -13,7 +12,9 @@ use Laravel\Mcp\Server\Tool;
 class SprintTasksAttachTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_sprints_attach_tasks';
+
     protected string $title = 'Attach tasks to sprint';
+
     protected string $description = 'Associate existing work items with a sprint, updating metadata and sprint ordering.';
 
     public function schema(JsonSchema $schema): array

@@ -12,7 +12,9 @@ use Laravel\Mcp\Server\Tool;
 class SprintStatusTool extends Tool implements SummarizesTool
 {
     protected string $name = 'orchestration_sprints_status';
+
     protected string $title = 'Update sprint status';
+
     protected string $description = 'Change the status meta for a sprint and optionally append a note.';
 
     public function schema(JsonSchema $schema): array

@@ -51,30 +51,30 @@ class ChatApiController extends Controller
         }
 
         // Auto-timeout old pending approvals and check for pending approval responses
-        if (!str_starts_with(trim($data['content']), ':')) {
+        if (! str_starts_with(trim($data['content']), ':')) {
             $approvalManager = app(\App\Services\Security\ApprovalManager::class);
             $pendingApprovals = $approvalManager->getPendingForConversation($conversationId);
-            
+
             if ($pendingApprovals->isNotEmpty()) {
                 $intent = $approvalManager->detectApprovalInMessage($data['content']);
-                
+
                 if ($intent) {
                     $approval = $pendingApprovals->first();
-                    
+
                     if ($intent === 'approve') {
                         $approvalManager->approveRequest($approval, auth()->id(), 'natural_language', $data['content']);
-                        
+
                         return response()->json([
                             'message_id' => $messageId,
                             'conversation_id' => $conversationId,
                             'skip_stream' => true,
-                            'assistant_message' => "✓ Interpreting as approval. Executing command...",
+                            'assistant_message' => '✓ Interpreting as approval. Executing command...',
                             'approval_approved' => true,
                             'approval_id' => $approval->id,
                         ]);
                     } elseif ($intent === 'reject') {
                         $approvalManager->rejectRequest($approval, auth()->id(), 'natural_language', $data['content']);
-                        
+
                         return response()->json([
                             'message_id' => $messageId,
                             'conversation_id' => $conversationId,
@@ -89,7 +89,7 @@ class ChatApiController extends Controller
                     foreach ($pendingApprovals as $pendingApproval) {
                         $pendingApproval->update(['status' => 'timeout']);
                     }
-                    
+
                     \Log::info('Auto-timed out pending approvals', [
                         'count' => $pendingApprovals->count(),
                         'conversation_id' => $conversationId,
@@ -104,6 +104,7 @@ class ChatApiController extends Controller
                 'message_id' => $messageId,
                 'conversation_id' => $conversationId,
             ]);
+
             return $this->handleExecTool($data, $conversationId, $sessionId, $messageId);
         }
 
@@ -113,6 +114,7 @@ class ChatApiController extends Controller
                 'message_id' => $messageId,
                 'session_id' => $sessionId,
             ]);
+
             return $this->handleToolAwareTurn($data, $conversationId, $sessionId, $messageId);
         }
 
@@ -400,6 +402,7 @@ class ChatApiController extends Controller
 
         if (! config('fragments.tools.exec_tool.enabled', false)) {
             \Log::warning('Exec tool not enabled');
+
             return response()->json([
                 'error' => 'Exec tool is not enabled',
                 'message_id' => $messageId,
@@ -408,7 +411,7 @@ class ChatApiController extends Controller
 
         $content = trim($data['content']);
         $command = trim(substr($content, strlen(':exec-tool')));
-        
+
         if (empty($command)) {
             $command = config('fragments.tools.exec_tool.default_command', 'ls -asl');
         }
@@ -455,9 +458,9 @@ class ChatApiController extends Controller
             // Security: Check if command needs approval
             $approvalManager = app(\App\Services\Security\ApprovalManager::class);
             $riskScorer = app(\App\Services\Security\RiskScorer::class);
-            
+
             $risk = $riskScorer->scoreCommand($command, ['workdir' => $workdir]);
-            
+
             \Log::info('Command risk assessed', [
                 'command' => $command,
                 'risk_score' => $risk['score'],
@@ -474,7 +477,7 @@ class ChatApiController extends Controller
                 ->latest()
                 ->first();
 
-            if ($risk['requires_approval'] && !$existingApproval) {
+            if ($risk['requires_approval'] && ! $existingApproval) {
                 $approvalRequest = $approvalManager->createApprovalRequest([
                     'type' => 'command',
                     'command' => $command,
@@ -489,7 +492,7 @@ class ChatApiController extends Controller
                     ]);
 
                     $approvalData = $approvalManager->formatForChat($approvalRequest);
-                    
+
                     $approvalMessage = "⚠️ This command requires your approval.\n\n**Command:** `{$command}`\n\n**Risk:** {$risk['level']} ({$risk['score']}/100)";
 
                     return response()->json([
@@ -602,7 +605,7 @@ class ChatApiController extends Controller
             ]);
 
             $errorMessage = "Tool execution failed: {$e->getMessage()}";
-            
+
             $assistantFragment = $createChatFragment($errorMessage);
             $assistantFragment->update([
                 'metadata' => array_merge($assistantFragment->metadata ?? [], [
@@ -647,7 +650,7 @@ class ChatApiController extends Controller
     protected function handleToolAwareTurn(array $data, string $conversationId, ?int $sessionId, string $messageId)
     {
         $createChatFragment = app(\App\Actions\CreateChatFragment::class);
-        
+
         // Create user fragment
         $fragment = $createChatFragment($data['content']);
         $userFragmentId = $fragment->id;
@@ -704,7 +707,7 @@ class ChatApiController extends Controller
             ]);
 
             $errorMessage = "I encountered an error while processing your request: {$e->getMessage()}";
-            
+
             $assistantFragment = $createChatFragment($errorMessage);
             $assistantFragment->update([
                 'metadata' => array_merge($assistantFragment->metadata ?? [], [
@@ -755,18 +758,18 @@ class ChatApiController extends Controller
             $sessionId = $session['session_id'] ?? null;
             $conversationId = $session['conversation_id'] ?? null;
             $userFragmentId = $session['user_fragment_id'] ?? null;
-            
+
             $finalMessage = '';
             $correlationId = null;
             $usedTools = false;
 
             try {
                 $pipeline = app(\App\Services\Orchestration\ToolAware\ToolAwarePipeline::class);
-                
+
                 $userMessage = $session['messages'][0]['content'] ?? '';
-                
+
                 foreach ($pipeline->executeStreaming($sessionId, $userMessage) as $event) {
-                    echo 'data: ' . json_encode($event) . "\n\n";
+                    echo 'data: '.json_encode($event)."\n\n";
                     @ob_flush();
                     @flush();
 
@@ -778,7 +781,7 @@ class ChatApiController extends Controller
                 }
 
                 // Create assistant fragment
-                if (!empty($finalMessage)) {
+                if (! empty($finalMessage)) {
                     $assistantFragment = $createChatFragment($finalMessage);
                     $assistantFragment->update([
                         'metadata' => array_merge($assistantFragment->metadata ?? [], [
@@ -816,12 +819,12 @@ class ChatApiController extends Controller
                     'error' => $e->getMessage(),
                 ]);
 
-                echo 'data: ' . json_encode([
+                echo 'data: '.json_encode([
                     'type' => 'error',
                     'error' => 'I encountered an error while processing your request. The error has been logged.',
-                ]) . "\n\n";
-                
-                echo 'data: ' . json_encode(['type' => 'done']) . "\n\n";
+                ])."\n\n";
+
+                echo 'data: '.json_encode(['type' => 'done'])."\n\n";
                 @ob_flush();
                 @flush();
             }

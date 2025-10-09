@@ -37,6 +37,7 @@ class ImportDelegationContent extends Command
 
         if (! File::isDirectory($delegationPath)) {
             $this->error("Directory not found: {$delegationPath}");
+
             return 1;
         }
 
@@ -48,6 +49,7 @@ class ImportDelegationContent extends Command
 
         if (empty($taskDirs)) {
             $this->warn('No task directories found');
+
             return 0;
         }
 
@@ -60,7 +62,7 @@ class ImportDelegationContent extends Command
 
         foreach ($taskDirs as $taskDir) {
             $result = $this->importTaskDirectory($taskDir, $dryRun, $overwrite);
-            
+
             if ($result === 'imported') {
                 $imported++;
             } elseif ($result === 'skipped') {
@@ -87,7 +89,7 @@ class ImportDelegationContent extends Command
 
         foreach (File::directories($basePath) as $dir) {
             $dirname = basename($dir);
-            
+
             if (preg_match('/^T-[A-Z]+-\d+/', $dirname)) {
                 $directories[] = $dir;
             }
@@ -104,37 +106,41 @@ class ImportDelegationContent extends Command
     protected function importTaskDirectory(string $taskDir, bool $dryRun, bool $overwrite): string
     {
         $taskCode = basename($taskDir);
-        
+
         $this->line(sprintf('Processing: %s', $taskCode));
 
         $task = WorkItem::where('metadata->task_code', $taskCode)->first();
 
         if (! $task) {
             $this->warn("  Task not found in database: {$taskCode}");
+
             return 'skipped';
         }
 
         $hasExistingContent = $this->hasExistingContent($task);
-        
+
         if ($hasExistingContent && ! $overwrite) {
-            $this->comment("  Skipping (has content, use --overwrite to replace)");
+            $this->comment('  Skipping (has content, use --overwrite to replace)');
+
             return 'skipped';
         }
 
         $content = $this->parseTaskDirectory($taskDir);
 
         if (empty(array_filter($content))) {
-            $this->comment("  No markdown files found");
+            $this->comment('  No markdown files found');
+
             return 'skipped';
         }
 
         if ($dryRun) {
-            $this->info("  Would import:");
+            $this->info('  Would import:');
             foreach ($content as $field => $text) {
                 if ($text) {
-                    $this->line(sprintf("    - %s: %d bytes", $field, strlen($text)));
+                    $this->line(sprintf('    - %s: %d bytes', $field, strlen($text)));
                 }
             }
+
             return 'imported';
         }
 
@@ -165,10 +171,12 @@ class ImportDelegationContent extends Command
                 ]
             );
 
-            $this->info("  ✓ Imported successfully");
+            $this->info('  ✓ Imported successfully');
+
             return 'imported';
         } catch (\Exception $e) {
-            $this->error(sprintf("  ✗ Error: %s", $e->getMessage()));
+            $this->error(sprintf('  ✗ Error: %s', $e->getMessage()));
+
             return 'error';
         }
     }
@@ -191,8 +199,8 @@ class ImportDelegationContent extends Command
         ];
 
         foreach ($this->fileToFieldMap as $filename => $field) {
-            $filepath = $taskDir . '/' . $filename;
-            
+            $filepath = $taskDir.'/'.$filename;
+
             if (! File::exists($filepath)) {
                 continue;
             }
@@ -217,13 +225,13 @@ class ImportDelegationContent extends Command
             $headingLower = strtolower($heading);
 
             if (str_contains($headingLower, 'agent') || str_contains($headingLower, 'profile')) {
-                $content['agent_content'] = ($content['agent_content'] ?? '') . "\n\n## {$heading}\n\n{$text}";
+                $content['agent_content'] = ($content['agent_content'] ?? '')."\n\n## {$heading}\n\n{$text}";
             } elseif (str_contains($headingLower, 'plan') || str_contains($headingLower, 'implementation')) {
-                $content['plan_content'] = ($content['plan_content'] ?? '') . "\n\n## {$heading}\n\n{$text}";
+                $content['plan_content'] = ($content['plan_content'] ?? '')."\n\n## {$heading}\n\n{$text}";
             } elseif (str_contains($headingLower, 'context') || str_contains($headingLower, 'background')) {
-                $content['context_content'] = ($content['context_content'] ?? '') . "\n\n## {$heading}\n\n{$text}";
+                $content['context_content'] = ($content['context_content'] ?? '')."\n\n## {$heading}\n\n{$text}";
             } elseif (str_contains($headingLower, 'todo') || str_contains($headingLower, 'checklist') || str_contains($headingLower, 'acceptance')) {
-                $content['todo_content'] = ($content['todo_content'] ?? '') . "\n\n## {$heading}\n\n{$text}";
+                $content['todo_content'] = ($content['todo_content'] ?? '')."\n\n## {$heading}\n\n{$text}";
             }
         }
     }
