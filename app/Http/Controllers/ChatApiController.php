@@ -404,6 +404,47 @@ class ChatApiController extends Controller
         $timeout = config('fragments.tools.exec_tool.timeout_seconds', 20);
 
         try {
+            // Security: Check if command needs approval
+            $approvalManager = app(\App\Services\Security\ApprovalManager::class);
+            $riskScorer = app(\App\Services\Security\RiskScorer::class);
+            
+            $risk = $riskScorer->scoreCommand($command, ['workdir' => $workdir]);
+            
+            \Log::info('Command risk assessed', [
+                'command' => $command,
+                'risk_score' => $risk['score'],
+                'risk_level' => $risk['level'],
+                'requires_approval' => $risk['requires_approval'],
+            ]);
+
+            // If high risk, create approval request and return pending state
+            if ($risk['requires_approval']) {
+                $approvalRequest = $approvalManager->createApprovalRequest([
+                    'type' => 'command',
+                    'command' => $command,
+                    'summary' => "Execute: {$command}",
+                    'context' => ['workdir' => $workdir],
+                ], $conversationId, $messageId);
+
+                if ($approvalRequest) {
+                    \Log::info('Approval required for command', [
+                        'approval_id' => $approvalRequest->id,
+                        'command' => $command,
+                    ]);
+
+                    $approvalData = $approvalManager->formatForChat($approvalRequest);
+
+                    return response()->json([
+                        'message_id' => $messageId,
+                        'conversation_id' => $conversationId,
+                        'user_fragment_id' => $userFragmentId,
+                        'requires_approval' => true,
+                        'approval_request' => $approvalData['approval_request'],
+                        'message' => "⚠️ This command requires your approval.\n\n**Command:** `{$command}`\n\n**Risk:** {$risk['level']} ({$risk['score']}/100)",
+                    ]);
+                }
+            }
+
             \Log::info('Calling ShellTool via registry', [
                 'command' => $command,
                 'workdir' => $workdir,
