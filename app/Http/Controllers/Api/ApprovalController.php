@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -8,12 +10,83 @@ use App\Services\Security\ApprovalManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * API endpoints for approval request management.
+ * 
+ * Provides REST API for approving, rejecting, and querying approval requests
+ * for high-risk security operations. Integrates with ApprovalManager for
+ * business logic and executes approved operations.
+ * 
+ * Endpoints:
+ * - POST /api/approvals/{id}/approve - Approve and execute operation
+ * - POST /api/approvals/{id}/reject - Reject operation
+ * - GET /api/approvals/{id} - Get approval details
+ * - GET /api/approvals/pending - List pending approvals for user
+ * 
+ * Authentication:
+ * All endpoints require authenticated user (web middleware).
+ * 
+ * @example Frontend usage (React)
+ * ```javascript
+ * // Approve operation
+ * const response = await fetch(`/api/approvals/${approvalId}/approve`, {
+ *   method: 'POST',
+ *   headers: { 'X-CSRF-TOKEN': csrf },
+ * });
+ * const data = await response.json();
+ * // data.execution_result contains command output
+ * ```
+ * 
+ * @see ApprovalManager
+ * @see ApprovalRequest
+ * @package App\Http\Controllers\Api
+ */
 class ApprovalController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     * 
+     * @param ApprovalManager $approvalManager Service for approval workflow
+     */
     public function __construct(
         private ApprovalManager $approvalManager
     ) {}
 
+    /**
+     * Approve an approval request and execute the operation.
+     * 
+     * Approves the request, executes it with approved: true flag (bypassing
+     * security guards), and returns both approval status and execution results.
+     * 
+     * Route: POST /api/approvals/{id}/approve
+     * Auth: Required (web middleware)
+     * 
+     * @param Request $request HTTP request
+     * @param string $id Approval request ID
+     * 
+     * @return JsonResponse JSON response with approval and execution results
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "approval": {...},
+     *   "execution_result": {
+     *     "executed": true,
+     *     "success": true,
+     *     "output": "command output...",
+     *     "error": "",
+     *     "exit_code": 0
+     *   }
+     * }
+     * 
+     * @response 400 {
+     *   "error": "Request already processed",
+     *   "status": "approved"
+     * }
+     * 
+     * @response 404 {
+     *   "message": "No query results for model [ApprovalRequest] {id}"
+     * }
+     */
     public function approve(Request $request, string $id): JsonResponse
     {
         $approvalRequest = ApprovalRequest::with('fragment')->findOrFail($id);
@@ -47,6 +120,24 @@ class ApprovalController extends Controller
         }
     }
 
+    /**
+     * Execute the approved operation with security bypass flag.
+     * 
+     * Currently supports 'command' operations. The approved: true flag
+     * in context tells security guards to bypass policy checks since
+     * the user has explicitly approved the operation.
+     * 
+     * @param ApprovalRequest $approval The approved request to execute
+     * 
+     * @return array{
+     *     executed: bool,
+     *     success?: bool,
+     *     output?: string,
+     *     error?: string,
+     *     exit_code?: int,
+     *     reason?: string
+     * } Execution result with output or error details
+     */
     private function executeApprovedOperation(ApprovalRequest $approval): array
     {
         $details = $approval->operation_details;
@@ -101,6 +192,34 @@ class ApprovalController extends Controller
         }
     }
 
+    /**
+     * Reject an approval request and prevent execution.
+     * 
+     * Marks the request as rejected with optional reason. The operation
+     * will not be executed after rejection.
+     * 
+     * Route: POST /api/approvals/{id}/reject
+     * Auth: Required (web middleware)
+     * 
+     * @param Request $request HTTP request with optional 'reason' field
+     * @param string $id Approval request ID
+     * 
+     * @return JsonResponse JSON response with updated approval status
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "approval": {...}
+     * }
+     * 
+     * @response 400 {
+     *   "error": "Request already processed",
+     *   "status": "rejected"
+     * }
+     * 
+     * @response 404 {
+     *   "message": "No query results for model [ApprovalRequest] {id}"
+     * }
+     */
     public function reject(Request $request, string $id): JsonResponse
     {
         $approvalRequest = ApprovalRequest::findOrFail($id);
@@ -133,6 +252,34 @@ class ApprovalController extends Controller
         }
     }
 
+    /**
+     * Get details for a specific approval request.
+     * 
+     * Returns formatted approval data including fragment preview if available.
+     * Useful for displaying approval status after page refresh.
+     * 
+     * Route: GET /api/approvals/{id}
+     * Auth: Required (web middleware)
+     * 
+     * @param string $id Approval request ID
+     * 
+     * @return JsonResponse JSON response with approval details
+     * 
+     * @response 200 {
+     *   "approval": {
+     *     "id": "123",
+     *     "operationType": "command",
+     *     "operationSummary": "Execute: ls -la",
+     *     "riskScore": 35,
+     *     "status": "pending",
+     *     ...
+     *   }
+     * }
+     * 
+     * @response 404 {
+     *   "message": "No query results for model [ApprovalRequest] {id}"
+     * }
+     */
     public function show(string $id): JsonResponse
     {
         $approvalRequest = ApprovalRequest::with(['fragment', 'approvedBy'])->findOrFail($id);
@@ -142,6 +289,29 @@ class ApprovalController extends Controller
         ]);
     }
 
+    /**
+     * List pending approval requests for the current user.
+     * 
+     * Returns up to 50 most recent pending approvals that either belong
+     * to the current user or are unassigned. Useful for approval dashboards
+     * and notification systems.
+     * 
+     * Route: GET /api/approvals/pending
+     * Auth: Required (web middleware)
+     * 
+     * @return JsonResponse JSON response with pending approvals array
+     * 
+     * @response 200 {
+     *   "approvals": [
+     *     {
+     *       "id": "123",
+     *       "operationType": "command",
+     *       "status": "pending",
+     *       ...
+     *     }
+     *   ]
+     * }
+     */
     public function pending(): JsonResponse
     {
         $pending = ApprovalRequest::pending()
