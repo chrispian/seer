@@ -168,9 +168,24 @@ export function ChatTranscript({
                 >
                   {message.md}
                 </ReactMarkdown>
-
-                {/* Approval Request UI */}
-                {message.approvalRequest && (
+                
+                {/* Approval Request UI - Render BEFORE any execution results in markdown */}
+                {message.approvalRequest && message.approvalRequest.status !== 'pending' && (
+                  <div className="mt-3 mb-3">
+                    <ApprovalButtonSimple
+                      requestId={message.approvalRequest.id}
+                      riskScore={message.approvalRequest.riskScore}
+                      status={message.approvalRequest.status}
+                      approvedAt={message.approvalRequest.approvedAt}
+                      rejectedAt={message.approvalRequest.rejectedAt}
+                      onApprove={() => onApprovalApprove?.(message.approvalRequest!.id)}
+                      onReject={() => onApprovalReject?.(message.approvalRequest!.id)}
+                    />
+                  </div>
+                )}
+                
+                {/* Pending approval buttons at bottom */}
+                {message.approvalRequest && message.approvalRequest.status === 'pending' && (
                   <div className="mt-3">
                     <ApprovalButtonSimple
                       requestId={message.approvalRequest.id}

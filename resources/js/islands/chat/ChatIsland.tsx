@@ -664,12 +664,12 @@ export default function ChatIsland() {
       // Update message with approved status and add execution result
       const updatedMessages = messages.map(m => {
         if (m.approvalRequest?.id === approvalId) {
-          // Start with original approval message, DON'T add approved text (it's in the green box)
           let updatedMd = m.md
           
-          // Add execution result
+          // Prepend execution result BEFORE the original message (so it appears before green box)
           if (data.execution_result?.executed) {
-            updatedMd += '\n\n**Execution Result:**\n```\n' + (data.execution_result.output || data.execution_result.error) + '\n```'
+            const executionBlock = '**Execution Result:**\n```\n' + (data.execution_result.output || data.execution_result.error) + '\n```\n\n'
+            updatedMd = executionBlock + m.md
           }
           
           return {
