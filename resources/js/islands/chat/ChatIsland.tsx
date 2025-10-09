@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { ChatComposer } from './ChatComposer'
 import { ChatTranscript, ChatMessage } from './ChatTranscript'
 import { CommandResultModal } from './CommandResultModal'
@@ -8,8 +8,10 @@ import { TypeSystemModal } from '../system/TypeSystemModal'
 import { SchedulerModal } from '../system/SchedulerModal'
 import { useAppStore } from '@/stores/useAppStore'
 import { useChatSessionDetails, useUpdateChatSession } from '@/hooks/useChatSessions'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useModelSelection } from '@/hooks/useModelSelection'
+import { useUser } from '@/hooks/useUser'
+import { providersApi } from '@/lib/api/providers'
 
 const uuid = (prefix?: string) => {
   const id = crypto.randomUUID()
@@ -18,6 +20,24 @@ const uuid = (prefix?: string) => {
 
 function useCsrf() {
   return (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
+}
+
+const parseModelIdentifier = (value: string): [string, string] | null => {
+  if (!value) return null
+
+  if (value.includes('/')) {
+    const [provider, ...rest] = value.split('/')
+    if (!provider || rest.length === 0) return null
+    return [provider, rest.join('/')]
+  }
+
+  if (value.includes(':')) {
+    const [provider, ...rest] = value.split(':')
+    if (!provider || rest.length === 0) return null
+    return [provider, rest.join(':')]
+  }
+
+  return null
 }
 
 export default function ChatIsland() {
@@ -39,6 +59,34 @@ export default function ChatIsland() {
   // Use Zustand store and React Query directly
   const { currentSessionId, getCurrentSession } = useAppStore()
   const sessionDetailsQuery = useChatSessionDetails(currentSessionId)
+  const userQuery = useUser()
+  const modelsQuery = useQuery({
+    queryKey: ['models', 'available'],
+    queryFn: async () => {
+      const response = await fetch('/api/models/available')
+
+      if (!response.ok) {
+        throw new Error('Failed to load available models')
+      }
+
+      const json = await response.json()
+      return Array.isArray(json?.data) ? json.data : []
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+  const providersQuery = useQuery({
+    queryKey: ['providers', 'chat'],
+    queryFn: async () => {
+      try {
+        const providers = await providersApi.getProviders()
+        return Array.isArray(providers) ? providers : []
+      } catch (error) {
+        console.error('Failed to load providers', error)
+        return []
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  })
   const updateSessionMutation = useUpdateChatSession()
 
   // Get current session from store (includes messages if loaded)
@@ -47,13 +95,193 @@ export default function ChatIsland() {
 
   // Model selection state - use session details data which includes model info
   const sessionData = sessionDetailsQuery.data?.session
-  const currentModelValue = sessionData?.model_provider && sessionData?.model_name 
-    ? `${sessionData.model_provider}:${sessionData.model_name}` 
+  const sessionModelValue = sessionData?.model_provider && sessionData?.model_name
+    ? `${sessionData.model_provider}/${sessionData.model_name}`
     : ''
+  const userDefaultModel = userQuery.data?.user?.profile_settings?.ai?.default_model ?? ''
+  const userDefaultProvider = userQuery.data?.user?.profile_settings?.ai?.default_provider ?? ''
+
+  const availableProviders: Array<{ provider: string | number; models: Array<{ value: string; model_key?: string }> }> = useMemo(
+    () => (Array.isArray(modelsQuery.data) ? modelsQuery.data : []),
+    [modelsQuery.data],
+  )
+
+  const providerCatalog = useMemo(() => (Array.isArray(providersQuery.data) ? providersQuery.data : []), [providersQuery.data])
+
+  const modelKeyToAvailableValue = useMemo(() => {
+    const map = new Map<string, string>()
+    availableProviders.forEach((entry) => {
+      entry.models?.forEach((model) => {
+        const key = model.model_key ?? ''
+        if (key) {
+          map.set(key, model.value)
+        }
+      })
+    })
+    return map
+  }, [availableProviders])
+
+  const providerIdToFirstValue = useMemo(() => {
+    const map = new Map<string, string>()
+    availableProviders.forEach((entry) => {
+      const id = String(entry.provider)
+      if (!map.has(id)) {
+        const firstValue = entry.models?.[0]?.value
+        if (firstValue) {
+          map.set(id, firstValue)
+        }
+      }
+    })
+    return map
+  }, [availableProviders])
+
+  const modelKeyToProviderSlug = useMemo(() => {
+    const map = new Map<string, string>()
+    providerCatalog.forEach((provider: any) => {
+      const providerId = provider?.id
+      const models = Array.isArray(provider?.models) ? provider.models : []
+      models.forEach((model: any) => {
+        if (model?.id) {
+          map.set(model.id, providerId)
+        }
+      })
+    })
+    return map
+  }, [providerCatalog])
+
+  const providerSlugToFirstModelKey = useMemo(() => {
+    const map = new Map<string, string>()
+    providerCatalog.forEach((provider: any) => {
+      const providerId = provider?.id
+      if (!providerId) return
+      const models = Array.isArray(provider?.models) ? provider.models : []
+      const firstEnabled = models.find((model: any) => model?.enabled)
+      if (firstEnabled?.id) {
+        map.set(providerId, firstEnabled.id)
+      }
+    })
+    return map
+  }, [providerCatalog])
+
+  const modelValueToProviderSlug = useMemo(() => {
+    const map = new Map<string, string>()
+    availableProviders.forEach((entry) => {
+      entry.models?.forEach((model) => {
+        const slug = modelKeyToProviderSlug.get(model.model_key ?? '')
+        if (slug) {
+          map.set(model.value, slug)
+        }
+      })
+    })
+    return map
+  }, [availableProviders, modelKeyToProviderSlug])
+
+  const modelValueToModelKey = useMemo(() => {
+    const map = new Map<string, string>()
+    availableProviders.forEach((entry) => {
+      entry.models?.forEach((model) => {
+        const key = model.model_key ?? ''
+        if (key) {
+          map.set(model.value, key)
+        }
+      })
+    })
+    return map
+  }, [availableProviders])
+
+  const availableModelValues = Array.from(modelValueToModelKey.keys())
+
+  const getFirstModelForProvider = (providerIdentifier: string): string => {
+    if (!providerIdentifier) {
+      return ''
+    }
+
+    // Attempt provider slug first
+    const modelKey = providerSlugToFirstModelKey.get(providerIdentifier)
+    if (modelKey) {
+      const value = modelKeyToAvailableValue.get(modelKey)
+      if (value) {
+        return value
+      }
+    }
+
+    // Fallback to numeric provider id via available models
+    const byId = providerIdToFirstValue.get(String(providerIdentifier))
+    return byId ?? ''
+  }
+
+  const firstAvailableModel = availableModelValues[0] ?? ''
+
+  const initialModelValue = useMemo(() => {
+    const resolveFromPreference = (value: string): string => {
+      if (!value) {
+        return ''
+      }
+
+      if (availableModelValues.includes(value)) {
+        return value
+      }
+
+      const parsed = parseModelIdentifier(value)
+      const providerSlug = parsed?.[0] ?? ''
+      const modelKey = parsed?.[1] ?? ''
+
+      if (modelKey) {
+        const candidate = modelKeyToAvailableValue.get(modelKey)
+        if (candidate) {
+          return candidate
+        }
+      }
+
+      if (providerSlug) {
+        const fallback = getFirstModelForProvider(providerSlug)
+        if (fallback) {
+          return fallback
+        }
+      }
+
+      return ''
+    }
+
+    const resolvedSession = resolveFromPreference(sessionModelValue)
+    if (resolvedSession) {
+      return resolvedSession
+    }
+
+    const resolvedUserDefault = resolveFromPreference(userDefaultModel)
+    if (resolvedUserDefault) {
+      return resolvedUserDefault
+    }
+
+    const providerFallback = getFirstModelForProvider(userDefaultProvider)
+    if (providerFallback) {
+      return providerFallback
+    }
+
+    return firstAvailableModel
+  }, [availableModelValues, availableProviders, firstAvailableModel, sessionModelValue, userDefaultModel, userDefaultProvider])
   
+  const normaliseModelForApi = useMemo(() => {
+    return (value: string): string => {
+      const parsed = parseModelIdentifier(value)
+      const fallbackProvider = parsed?.[0] ?? ''
+      const fallbackModelKey = parsed?.[1] ?? ''
+
+      const providerSlug = modelValueToProviderSlug.get(value) ?? fallbackProvider
+      const modelKey = modelValueToModelKey.get(value) ?? fallbackModelKey
+
+      if (providerSlug && modelKey) {
+        return `${providerSlug}/${modelKey}`
+      }
+
+      return value
+    }
+  }, [modelValueToModelKey, modelValueToProviderSlug])
+
   const { selectedModel, updateModel } = useModelSelection({
     sessionId: currentSessionId,
-    defaultModel: currentModelValue,
+    defaultModel: initialModelValue,
+    transformModelForApi: normaliseModelForApi,
   })
 
   // Load messages from current session (loaded via React Query)
@@ -150,10 +378,26 @@ export default function ChatIsland() {
       }
       
       // Add selected model if available
-      if (selectedModel && selectedModel.includes(':')) {
-        const [provider, model] = selectedModel.split(':', 2)
-        payload.provider = provider
-        payload.model = model
+      if (selectedModel) {
+        const parsedModel = parseModelIdentifier(selectedModel)
+        if (parsedModel) {
+          let [provider, model] = parsedModel
+
+          const slugFromValue = modelValueToProviderSlug.get(selectedModel)
+          const modelKey = modelValueToModelKey.get(selectedModel)
+
+          if (slugFromValue) {
+            provider = slugFromValue
+          }
+
+          // Ensure we send model key rather than numeric id component
+          if (modelKey) {
+            model = modelKey
+          }
+
+          payload.provider = provider
+          payload.model = model
+        }
       }
       
       if (attachments && attachments.length > 0) {
@@ -172,13 +416,28 @@ export default function ChatIsland() {
       }
 
       const responseData = await resp.json()
-      const { message_id } = responseData
+      const { message_id, skip_stream, assistant_message } = responseData
 
       // Update user message with server message ID
       const messagesWithMessageId = updatedMessages.map(msg =>
         msg.id === userId ? { ...msg, messageId: message_id } : msg
       )
       setMessages(messagesWithMessageId)
+
+      // If skip_stream is true (e.g., for exec-tool), display message directly
+      if (skip_stream && assistant_message) {
+        const assistantId = uuid(`assistant-${streamSessionId}`)
+        const finalMessages = [...messagesWithMessageId, { 
+          id: assistantId, 
+          role: 'assistant' as const, 
+          md: assistant_message, 
+          messageId: message_id 
+        }]
+        setMessages(finalMessages)
+        setSending(false)
+        saveMessagesToSession(finalMessages)
+        return
+      }
 
       // 2) Stream reply
       const es = new EventSource(`/api/chat/stream/${message_id}`)
@@ -198,6 +457,69 @@ export default function ChatIsland() {
           }
 
           const data = JSON.parse(evt.data)
+          
+          // Handle tool-aware pipeline events
+          if (data.type === 'pipeline_start' || data.type === 'context_assembled') {
+            // Optional: Show status indicator
+            return
+          }
+          
+          if (data.type === 'router_decision') {
+            if (data.needs_tools) {
+              acc = `_Selecting tools for: ${data.goal}_\n\n`
+              setMessages(m => {
+                const last = m[m.length - 1]
+                if (last?.id === assistantId) {
+                  const copy = [...m]; copy[copy.length - 1] = { ...last, md: acc }; return copy
+                }
+                return [...m, { id: assistantId, role: 'assistant', md: acc, messageId: message_id }]
+              })
+            }
+            return
+          }
+          
+          if (data.type === 'tool_plan') {
+            acc += `_Executing ${data.step_count} tool(s)..._\n\n`
+            setMessages(m => {
+              const last = m[m.length - 1]
+              if (last?.id === assistantId) {
+                const copy = [...m]; copy[copy.length - 1] = { ...last, md: acc }; return copy
+              }
+              return [...m, { id: assistantId, role: 'assistant', md: acc, messageId: message_id }]
+            })
+            return
+          }
+          
+          if (data.type === 'tool_result') {
+            const status = data.result?.success ? '✓' : '✗'
+            acc += `${status} ${data.tool_id}\n`
+            setMessages(m => {
+              const last = m[m.length - 1]
+              if (last?.id === assistantId) {
+                const copy = [...m]; copy[copy.length - 1] = { ...last, md: acc }; return copy
+              }
+              return [...m, { id: assistantId, role: 'assistant', md: acc, messageId: message_id }]
+            })
+            return
+          }
+          
+          if (data.type === 'summarizing' || data.type === 'composing') {
+            return
+          }
+          
+          if (data.type === 'final_message') {
+            acc = data.message
+            setMessages(m => {
+              const last = m[m.length - 1]
+              if (last?.id === assistantId) {
+                const copy = [...m]; copy[copy.length - 1] = { ...last, md: acc }; return copy
+              }
+              return [...m, { id: assistantId, role: 'assistant', md: acc, messageId: message_id }]
+            })
+            return
+          }
+          
+          // Standard LLM streaming
           if (data.type === 'assistant_delta') {
             acc += data.content
             setMessages(m => {
@@ -274,7 +596,7 @@ export default function ChatIsland() {
       return
     }
     
-    if (command === 'types-ui' || command === 'types' || command === 'type-system' || command === 'typepacks') {
+    if (command === 'types-ui' || command === 'type-system' || command === 'typepacks') {
       setIsTypeSystemModalOpen(true)
       return
     }
@@ -429,4 +751,3 @@ export default function ChatIsland() {
       </div>
   )
 }
-

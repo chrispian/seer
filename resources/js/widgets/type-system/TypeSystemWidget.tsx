@@ -3,10 +3,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Package, 
-  Loader2, 
-  AlertCircle, 
+import {
+  Package,
+  Loader2,
+  AlertCircle,
   FileText,
   CheckCircle,
   Clock,
@@ -25,17 +25,17 @@ import { TypeBadge } from './components/TypeBadge'
 
 export function TypeSystemWidget() {
   const [showDetails, setShowDetails] = useState(false)
-  const { 
-    data: typesData, 
-    isLoading: isLoadingTypes, 
+  const {
+    data: typesData,
+    isLoading: isLoadingTypes,
     error: typesError,
     refetch: refetchTypes
   } = useTypes()
-  
-  const { 
-    data: statsData, 
-    isLoading: isLoadingStats, 
-    error: statsError 
+
+  const {
+    data: statsData,
+    isLoading: isLoadingStats,
+    error: statsError
   } = useTypeStats()
 
   const types = typesData?.data || []
@@ -157,9 +157,9 @@ export function TypeSystemWidget() {
                       <TooltipTrigger asChild>
                         <div className="flex items-center justify-between p-2 rounded hover:bg-muted/50 transition-colors">
                           <div className="flex items-center gap-2 min-w-0">
-                            <TypeBadge 
-                              type={type} 
-                              size="sm" 
+                            <TypeBadge
+                              type={type}
+                              size="sm"
                               showIcon={true}
                             />
                             <div className="flex flex-col min-w-0">
@@ -178,7 +178,7 @@ export function TypeSystemWidget() {
                               )}
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-1 flex-shrink-0">
                             {type.capabilities.length > 0 && (
                               <Badge variant="outline" className="text-xs">
@@ -221,9 +221,9 @@ export function TypeSystemWidget() {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex items-center justify-between p-1 rounded hover:bg-muted/50 transition-colors text-xs">
-                          <TypeBadge 
-                            type={type} 
-                            size="sm" 
+                          <TypeBadge
+                            type={type}
+                            size="sm"
                             showIcon={true}
                             className="max-w-[80px]"
                           />
@@ -253,7 +253,7 @@ export function TypeSystemWidget() {
                 )
               })}
             </div>
-            
+
             {types.length > 4 && (
               <div className="text-center">
                 <Button

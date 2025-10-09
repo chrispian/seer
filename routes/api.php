@@ -162,6 +162,9 @@ Route::prefix('inbox')->group(function () {
 Route::prefix('types')->group(function () {
     Route::get('/', [TypeController::class, 'index']);
     Route::get('/stats', [TypeController::class, 'stats']);
+    Route::get('/admin', [TypeController::class, 'admin']);
+    Route::post('/{slug}/toggle', [TypeController::class, 'toggle']);
+    Route::put('/{slug}/update', [TypeController::class, 'update']);
     Route::get('/{slug}', [TypeController::class, 'show']);
     Route::post('/{slug}/validate', [TypeController::class, 'validate']);
 });
@@ -184,6 +187,11 @@ Route::prefix('orchestration')->group(function () {
     Route::post('/tasks/{taskId}/artifacts', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'createArtifact']);
     Route::get('/tasks/{taskId}/artifacts', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'listTaskArtifacts']);
     Route::get('/artifacts/{artifactId}/download', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'downloadArtifact']);
+    
+    Route::get('/tasks/{taskId}/activities', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'index']);
+    Route::post('/tasks/{taskId}/activities', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'store']);
+    Route::get('/tasks/{taskId}/activities/summary', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'summary']);
+    Route::get('/tasks/{taskId}/activities/{activityId}', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'show']);
 });
 
 // Agent Profile API routes
@@ -202,5 +210,6 @@ Route::prefix('agents')->group(function () {
     Route::get('/generate-designation', [\App\Http\Controllers\Api\AgentController::class, 'generateDesignation']);
     Route::get('/{id}', [\App\Http\Controllers\Api\AgentController::class, 'show']);
     Route::put('/{id}', [\App\Http\Controllers\Api\AgentController::class, 'update']);
+    Route::post('/{id}/avatar', [\App\Http\Controllers\Api\AgentController::class, 'uploadAvatar']);
     Route::delete('/{id}', [\App\Http\Controllers\Api\AgentController::class, 'destroy']);
 });

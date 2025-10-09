@@ -1,0 +1,56 @@
+schema: fe.contextpack.v1
+version: 1
+project: P-FRAGMENTS-ENGINE
+priority: high
+policy:
+  must_do:
+  - claim.task
+  - boot.context
+  - init.phase
+  - execute
+  - checkpoint
+  - summarize
+init:
+  steps:
+  - id: init.load_profile
+    desc: Load agent profile and permissions.
+  - id: init.healthcheck
+    desc: Verify access to packs/, delegation/, docs/, bus, artifact store.
+  - id: init.resume
+    desc: Load prior notes for runners/telemetry if present and reconcile.
+how_to_run:
+  cli:
+  - fe pm:send --agent=A-fe-spec-writer --task=T-RUNNER-QUANTUM-SCHEMAS --file=./delegation/T-RUNNER-QUANTUM-SCHEMAS.yaml
+  - fe agent:check-messages
+  streams:
+  - agents.A-fe-spec-writer.inbox
+  - tasks.T-RUNNER-QUANTUM-SCHEMAS.mailbox
+task: T-CTX-VIEWS-CACHE
+agent_profile: A-fe-context
+boot:
+  brief: Implement Context Views and cache keyed by (task_run_id, view_signature)
+    with TTL/invalidation hooks.
+  repo:
+    paths:
+    - repo://fragments-engine/app/Services/ContextBroker
+    - repo://fragments-engine/app/Support/Views
+    - repo://fragments-engine/tests/Feature/ContextViewsTest.php
+plan:
+  steps:
+  - id: spec.views
+    desc: Define ProjectView, TaskView, GitView, TestFailureView; signatures and params.
+  - id: cache.readthrough
+    desc: Read-through cache (Redis) with stampede protection.
+  - id: invalidate
+    desc: Invalidate on repo events or explicit bust; preserve per-run pins.
+  - id: metrics
+    desc: Hit/miss metrics; size limits; serialization format (JSONLines).
+  - id: api
+    desc: '`GET /runs/{id}/views?view=ProjectView@sha`'
+deliverables:
+- app/Services/ContextBroker/*
+- docs/orchestration/context-views.md
+- tests/Feature/ContextViewsTest.php
+acceptance:
+- Cache reuse between sub-agents in same run verified.
+- Invalidation behaves on repo change events.

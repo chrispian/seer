@@ -20,7 +20,7 @@ class MessagesCheckTool extends Tool implements SummarizesTool
     {
         return [
             'agent_id' => $schema->string()->required()->description('Agent UUID or slug'),
-            'status' => $schema->enum(['unread', 'all'])->default('unread'),
+            'status' => $schema->string()->enum(['unread', 'all'])->default('unread'),
             'limit' => $schema->integer()->min(1)->max(50)->default(25),
         ];
     }

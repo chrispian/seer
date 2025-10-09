@@ -175,6 +175,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'llm-telemetry' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/llm-telemetry.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

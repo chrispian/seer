@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StepSpec v0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "kind"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "v0"
+    },
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "inputs": {
+      "type": "object"
+    },
+    "preconditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "emits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

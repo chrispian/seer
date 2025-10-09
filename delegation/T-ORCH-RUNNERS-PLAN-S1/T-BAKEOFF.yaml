@@ -1,0 +1,56 @@
+schema: fe.contextpack.v1
+version: 1
+project: P-FRAGMENTS-ENGINE
+priority: high
+policy:
+  must_do:
+  - claim.task
+  - boot.context
+  - init.phase
+  - execute
+  - checkpoint
+  - summarize
+init:
+  steps:
+  - id: init.load_profile
+    desc: Load agent profile and permissions.
+  - id: init.healthcheck
+    desc: Verify access to packs/, delegation/, docs/, bus, artifact store.
+  - id: init.resume
+    desc: Load prior notes for runners/telemetry if present and reconcile.
+how_to_run:
+  cli:
+  - fe pm:send --agent=A-fe-spec-writer --task=T-RUNNER-QUANTUM-SCHEMAS --file=./delegation/T-RUNNER-QUANTUM-SCHEMAS.yaml
+  - fe agent:check-messages
+  streams:
+  - agents.A-fe-spec-writer.inbox
+  - tasks.T-RUNNER-QUANTUM-SCHEMAS.mailbox
+task: T-BAKEOFF
+agent_profile: A-fe-pm
+boot:
+  brief: Run a bakeoff comparing FE Quantum Runner vs OpenHands Attached vs (optional)
+    OpenCode sidecar. Produce decision memo.
+  repo:
+    paths:
+    - repo://fragments-engine/docs/orchestration/runners/bakeoff
+plan:
+  steps:
+  - id: criteria
+    desc: 'Define eval: reliability, resume latency, shell realism, provider flexibility,
+      cost, complexity.'
+  - id: scenarios
+    desc: 'Three tasks: small edit+test; long build; interactive REPL fix.'
+  - id: instrument
+    desc: Enable identical telemetry across candidates.
+  - id: run
+    desc: Execute, collect metrics/artifacts; summarize.
+  - id: decision
+    desc: Create decision memo + rollout plan.
+deliverables:
+- docs/orchestration/runners/bakeoff/criteria.md
+- docs/orchestration/runners/bakeoff/scenarios.md
+- docs/orchestration/runners/bakeoff/results.md
+- docs/orchestration/runners/bakeoff/decision.md
+acceptance:
+- Results matrix completed with metrics and qualitative notes.
+- Decision memo recommends default + fallback rules.

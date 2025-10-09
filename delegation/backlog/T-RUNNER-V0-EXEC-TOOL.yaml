@@ -1,0 +1,102 @@
+schema: fe.contextpack.v1
+version: 1
+project: P-FRAGMENTS-ENGINE
+priority: high
+
+task: T-RUNNER-V0-EXEC-TOOL
+agent_profile: A-fe-integration
+
+policy:
+  must_do:
+    - claim.task
+    - boot.context
+    - init.phase
+    - execute
+    - checkpoint
+    - summarize
+  must_not:
+    - change.chat.behavior_without_user_consent
+  gates:
+    - name: exec_prefix_required
+      desc: Only attempt tool execution if user prompt begins with ':exec-tool'
+      match: '^:exec-tool'
+    - name: safe_defaults
+      desc: Use read-only, low-risk commands for v0; default is 'ls -asl' in sandboxed working dir
+  budgets:
+    max_llm_calls: 2
+    max_wall_time_ms: 180000
+    max_cost_usd: 0.10
+
+boot:
+  brief: >
+    Add minimal tool-call capability triggered by the ':exec-tool' prefix.
+    Execute a safe shell command (v0: 'ls -asl') and stream output back to chat
+    using the existing streaming channel. Do not modify normal chat behavior.
+  repo:
+    paths:
+      - repo://fragments-engine/app/Services/Runners/SubprocessRunner.php
+      - repo://fragments-engine/app/Services/Tools/ExecTool.php
+      - repo://fragments-engine/app/Http/Controllers/ToolStreamController.php
+      - repo://fragments-engine/routes/api.php
+      - repo://fragments-engine/config/tools.php
+
+how_to_run:
+  cli:
+    - php artisan frag:command "/task-create 'T-RUNNER-V0-EXEC-TOOL' --priority=high --estimate='1 day'"
+    - php artisan frag:command "/task-execute T-RUNNER-V0-EXEC-TOOL"
+  streams:
+    - agents.A-fe-integration.inbox
+    - tasks.T-RUNNER-V0-EXEC-TOOL.mailbox
+
+init:
+  steps:
+    - id: init.load_profile
+      desc: Load agent profile and permissions.
+    - id: init.healthcheck
+      desc: Verify access to packs/, delegation/, docs/, bus, and artifact store.
+    - id: init.resume
+      desc: Load prior runner notes/telemetry if present and reconcile.
+
+plan:
+  steps:
+    - id: detect.exec_prefix
+      desc: Detect ':exec-tool' prefix in the incoming user message; if absent, bypass this flow.
+      accept:
+        - No changes to normal chat if prefix is missing.
+    - id: route.to_exec_tool
+      desc: When prefix present, route to ExecTool with sanitized arguments, defaulting to 'ls -asl'.
+      details:
+        - Strip ':exec-tool' token and trim remainder as optional args.
+        - If no args, run 'ls -asl' in configured working dir.
+        - Disallow destructive tokens by default (>, >>, rm, sudo, &&, |).
+    - id: runner.impl
+      desc: Implement SubprocessRunner to spawn read-only shell subprocess with time/memory limits.
+      details:
+        - Use Symfony Process (timeout=20s, memory soft cap), working_dir from config.
+        - Capture stdout/stderr line-by-line.
+        - Emit SSE/WebSocket events into existing chat stream.
+    - id: stream.to_chat
+      desc: Stream output back to chat UI exactly like current LLM token streaming.
+      details:
+        - Prefix each line with 'tool: ' or similar minimal marker.
+        - Record full output as fe:// artifact; chat sees streaming summary.
+    - id: telemetry.checkpoint
+      desc: Save checkpoint with command, args, exit code, duration, bytes, artifact URI(s).
+    - id: demo.script
+      desc: Test flow by sending a chat message beginning with ':exec-tool'.
+      example:
+        - ":exec-tool ls -asl"
+
+deliverables:
+  - config/tools.php # tool registry & safe defaults (working_dir, allowlist, limits)
+  - app/Services/Tools/ExecTool.php # exec adapter, arg sanitizer, streaming hooks
+  - app/Services/Runners/SubprocessRunner.php # subprocess wrapper (Symfony Process)
+  - app/Http/Controllers/ToolStreamController.php # SSE endpoint (if not already present)
+  - routes/api.php # route to stream controller (reuses existing bus if present)
+  - docs/orchestration/runners/v0-exec-tool.md # brief operator notes
+
+acceptance:
+  - Normal chat behavior remains unchanged unless prompt begins with ':exec-tool'.
+  - When prefixed, 'ls -asl' (or supplied safe args) executes and streams output to chat in real time.
+  - Full output and metadata are saved as artifacts; chat contains a concise streamed log.
+  - Execution is bounded by time/memory and respects allowlist; unsafe tokens are blocked.

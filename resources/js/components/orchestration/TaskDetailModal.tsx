@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -11,23 +10,24 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   CheckCircle, 
-  Clock, 
-  AlertCircle, 
   User, 
-  Calendar, 
   FileText, 
   Settings,
   Eye,
   Users,
-  ArrowLeft
+  ArrowLeft,
+  Clock,
+  RefreshCw
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { TaskActivityTimeline } from './TaskActivityTimeline'
+import { TaskContentEditor } from './TaskContentEditor'
 
 interface Task {
   id: string
   task_code: string
-  task_name: string
+  task_name?: string | null
   description?: string
   status: string
   delegation_status: string
@@ -38,7 +38,8 @@ interface Task {
   tags?: string[]
   created_at: string
   updated_at: string
-  completed_at?: string
+  completed_at?: string | null
+  metadata?: Record<string, any>
 }
 
 interface Assignment {
@@ -56,6 +57,28 @@ interface TaskContent {
   summary?: string
 }
 
+interface TaskActivity {
+  id: string
+  task_id: string
+  agent_id?: string | null
+  user_id?: number | null
+  activity_type: 'status_change' | 'content_update' | 'assignment' | 'note' | 'error' | 'artifact_attached'
+  action: string
+  description: string
+  changes?: Record<string, any> | null
+  metadata?: Record<string, any> | null
+  created_at: string
+  agent?: {
+    id: string
+    name: string
+    slug?: string
+  }
+  user?: {
+    id: number
+    name: string
+  }
+}
+
 interface TaskDetailModalProps {
   isOpen: boolean
   onClose: () => void
@@ -63,9 +86,19 @@ interface TaskDetailModalProps {
   currentAssignment?: Assignment | null
   assignments?: Assignment[]
   content?: TaskContent
+  contentLoading?: boolean
+  contentError?: string | null
+  onRefreshContent?: () => void
+  onSaveContent?: (field: string, value: string) => Promise<void>
+  activities?: TaskActivity[]
+  activitiesLoading?: boolean
+  activitiesError?: string | null
+  onRefreshActivities?: () => void
+  onAddNote?: (note: string) => Promise<void>
   loading?: boolean
   error?: string | null
   onBack?: () => void
+  editMode?: boolean
 }
 
 export function TaskDetailModal({ 
@@ -75,10 +108,32 @@ export function TaskDetailModal({
   currentAssignment,
   assignments = [],
   content = {},
-  loading = false, 
-  error = null,
-  onBack
+  contentLoading = false,
+  contentError = null,
+  onRefreshContent,
+  onSaveContent,
+  activities = [],
+  activitiesLoading = false,
+  activitiesError = null,
+  onRefreshActivities,
+  onAddNote,
+  onBack,
+  editMode = false
 }: TaskDetailModalProps) {
+  if (!task) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl rounded-sm">
+          <DialogHeader>
+            <DialogTitle>Error</DialogTitle>
+          </DialogHeader>
+          <div className="p-4 text-center text-muted-foreground">
+            Task data not available
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -131,15 +186,17 @@ export function TaskDetailModal({
     }
   }
 
+  const safeContent = content || {}
+  const safeActivities = activities || []
+  
   const contentTabs = [
-    { key: 'agent', label: 'Agent Profile', icon: <User className="h-4 w-4" />, content: content.agent },
-    { key: 'plan', label: 'Plan', icon: <FileText className="h-4 w-4" />, content: content.plan },
-    { key: 'context', label: 'Context', icon: <Settings className="h-4 w-4" />, content: content.context },
-    { key: 'todo', label: 'Todo', icon: <CheckCircle className="h-4 w-4" />, content: content.todo },
-    { key: 'summary', label: 'Summary', icon: <Eye className="h-4 w-4" />, content: content.summary },
-  ].filter(tab => tab.content && tab.content.trim())
-
-  const hasAnyContent = contentTabs.length > 0
+    { key: 'activity', label: 'Activity', icon: <Clock className="h-3.5 w-3.5" />, content: null, isActivity: true },
+    { key: 'agent', label: 'Agent', icon: <User className="h-3.5 w-3.5" />, content: safeContent.agent },
+    { key: 'plan', label: 'Plan', icon: <FileText className="h-3.5 w-3.5" />, content: safeContent.plan },
+    { key: 'context', label: 'Context', icon: <Settings className="h-3.5 w-3.5" />, content: safeContent.context },
+    { key: 'todo', label: 'Todo', icon: <CheckCircle className="h-3.5 w-3.5" />, content: safeContent.todo },
+    { key: 'summary', label: 'Summary', icon: <Eye className="h-3.5 w-3.5" />, content: safeContent.summary },
+  ]
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -171,7 +228,9 @@ export function TaskDetailModal({
               <div className="space-y-3">
                 <div>
                   <span className="text-sm font-medium">Name:</span>
-                  <p className="text-sm text-muted-foreground mt-1">{task.task_name}</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {task.task_name || task.metadata?.title || task.metadata?.task_name || 'Untitled Task'}
+                  </p>
                 </div>
 
                 {task.description && (
@@ -281,42 +340,69 @@ export function TaskDetailModal({
 
           {/* Right Panel - Content */}
           <div className="lg:col-span-2">
-            {hasAnyContent ? (
-              <Tabs defaultValue={contentTabs[0]?.key} className="h-full">
-                <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${contentTabs.length}, minmax(0, 1fr))` }}>
+            <Tabs defaultValue={contentTabs[0]?.key} className="h-full flex flex-col">
+                <TabsList className="flex items-center justify-start border-b bg-muted/30 px-1 py-1 h-auto rounded-none w-full">
                   {contentTabs.map(tab => (
-                    <TabsTrigger key={tab.key} value={tab.key} className="flex items-center gap-1">
+                    <TabsTrigger 
+                      key={tab.key} 
+                      value={tab.key} 
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-sm"
+                    >
                       {tab.icon}
-                      <span className="hidden sm:inline">{tab.label}</span>
+                      <span>{tab.label}</span>
+                      {tab.isActivity && safeActivities.length > 0 && (
+                        <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-[10px] h-4">
+                          {safeActivities.length}
+                        </Badge>
+                      )}
                     </TabsTrigger>
                   ))}
+                  {onRefreshActivities && (
+                    <Button 
+                      onClick={onRefreshActivities} 
+                      variant="ghost" 
+                      size="sm"
+                      disabled={activitiesLoading}
+                      className="ml-auto h-7 px-2"
+                    >
+                      <RefreshCw className={`h-3 w-3 ${activitiesLoading ? 'animate-spin' : ''}`} />
+                    </Button>
+                  )}
                 </TabsList>
                 
                 {contentTabs.map(tab => (
-                  <TabsContent key={tab.key} value={tab.key} className="h-[calc(100%-40px)]">
-                    <ScrollArea className="h-full rounded-md border bg-muted/20 p-4">
-                      <div className="prose prose-sm max-w-none text-foreground">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {tab.content || ''}
-                        </ReactMarkdown>
+                  <TabsContent key={tab.key} value={tab.key} className="flex-1 mt-0 overflow-hidden">
+                    {tab.isActivity ? (
+                      <div className="h-full rounded-md border bg-muted/20 p-4">
+                        <TaskActivityTimeline
+                          taskId={task.id}
+                          activities={safeActivities}
+                          loading={activitiesLoading}
+                          error={activitiesError}
+                          onRefresh={onRefreshActivities}
+                          onAddNote={onAddNote}
+                        />
                       </div>
-                    </ScrollArea>
+                    ) : tab.content ? (
+                      <ScrollArea className="h-full rounded-md border bg-muted/20 p-4">
+                        <div className="prose prose-sm max-w-none text-foreground">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {tab.content}
+                          </ReactMarkdown>
+                        </div>
+                      </ScrollArea>
+                    ) : (
+                      <div className="h-full rounded-md border bg-muted/20 p-4 flex items-center justify-center">
+                        <div className="text-center text-muted-foreground">
+                          <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">No {tab.label.toLowerCase()} content yet</p>
+                          <p className="text-xs mt-1">Content can be added during task execution</p>
+                        </div>
+                      </div>
+                    )}
                   </TabsContent>
                 ))}
               </Tabs>
-            ) : (
-              <div className="h-full flex items-center justify-center bg-muted/20 rounded-lg">
-                <div className="text-center">
-                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-muted-foreground mb-2">
-                    No Content Available
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    This task doesn't have any delegation content (agent profiles, plans, etc.)
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 

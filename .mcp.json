@@ -1,25 +1,25 @@
 {
-    "mcpServers": {
-        "laravel-tool-crate": {
-            "command": "php",
-            "args": [
-                "./artisan",
-                "tool-crate:mcp"
-            ]
-        },
-        "orchestration": {
-            "command": "php",
-            "args": [
-                "./artisan",
-                "orchestration:mcp"
-            ]
-        },
-        "laravel-boost": {
-            "command": "php",
-            "args": [
-                "./artisan",
-                "boost:mcp"
-            ]
-        }
+  "mcpServers": {
+    "laravel-tool-crate": {
+      "command": "php",
+      "args": [
+        "./artisan",
+        "tool-crate:mcp"
+      ]
+    },
+    "orch": {
+      "command": "php",
+      "args": [
+        "./artisan",
+        "orchestration:mcp"
+      ]
+    },
+    "laravel-boost": {
+      "command": "php",
+      "args": [
+        "./artisan",
+        "boost:mcp"
+      ]
     }
+  }
 }

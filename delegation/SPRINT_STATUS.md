@@ -1,10 +1,50 @@
 # Fragments Engine - Sprint Status Dashboard
 
-*Last Updated: 2025-01-04 | Sprint 49 Completed | Auto-Generated from Delegation System*
+*Last Updated: 2025-10-06 | Sprint 52 Completed | Auto-Generated from Delegation System*
 
 ## 📊 Current Sprint Overview
 
-### **Recently Completed Sprint: Sprint 57 - SQLite-First Vector Store Rollout** ✅
+### **Recently Completed Sprint: Sprint 52 - Obsidian Vault Import Integration** ✅
+**Priority**: MEDIUM-HIGH | **Status**: COMPLETED | **Type**: Integration & Ingestion
+
+**Timeline**: Completed 2025-01-06 | **Actual**: 1 day (estimated 2-3 days)
+
+**Business Goals**:
+- 📝 **Obsidian Integration**: Import markdown notes from Obsidian vaults into Fragments Engine
+- 🔄 **Daily Sync**: Automated scheduled sync with smart mtime-based change detection
+- 🎯 **AI Enrichment**: Optional type inference and entity extraction
+- 🏷️ **Front Matter Support**: YAML parsing with tag and metadata mapping
+- 📁 **Folder Tags**: Automatic tag generation from folder structure
+
+### **Sprint 52 Task Status**
+
+| Task ID | Description | Status | Agent | Estimated | Actual |
+|---------|-------------|--------|-------|-----------|--------|
+| **T-OBS-01** | Seed obsidian source migration | ✅ `done` | Backend Engineer | 15min | 10min |
+| **T-OBS-02** | ObsidianMarkdownParser service | ✅ `done` | Backend Engineer | 2h | 1.5h |
+| **T-OBS-03** | ObsidianImportService with sync logic | ✅ `done` | Backend Engineer | 3h | 2h |
+| **T-OBS-04** | ObsidianSyncCommand CLI | ✅ `done` | Backend Engineer | 1h | 1h |
+| **T-OBS-05** | Ensure codex vault exists | ✅ `done` | Backend Engineer | 30min | 20min |
+| **T-OBS-06** | Update SettingsController | ✅ `done` | Backend Engineer | 1.5h | 1.5h |
+| **T-OBS-07** | Obsidian card to Settings UI | ✅ `done` | Frontend Engineer | 2h | 2h |
+| **T-OBS-08** | Test vault path API route | ✅ `done` | Backend Engineer | 30min | 20min |
+| **T-OBS-09** | Daily scheduler entry | ✅ `done` | Backend Engineer | 20min | 15min |
+| **T-OBS-10** | Deterministic pipeline | ✅ `done` | Backend Engineer | 1h | 45min |
+| **T-OBS-11** | AI enrichment pipeline | ✅ `done` | Backend Engineer | 2h | 1.5h |
+| **T-OBS-12** | Unit tests for parser | ✅ `done` | QA Engineer | 1.5h | 1h |
+| **T-OBS-13** | Feature tests for sync command | ✅ `done` | QA Engineer | 2h | 1.5h |
+| **T-OBS-14** | Integration test for workflow | ✅ `done` | QA Engineer | 1.5h | 1h |
+| **T-OBS-15** | Documentation | ✅ `done` | Technical Writer | 1h | 45min |
+
+**Progress Summary**: 15/15 tasks completed (100%) ✅ **SPRINT COMPLETED**
+
+**Key Achievements**:
+- ✅ 893-file real vault tested successfully
+- ✅ 18 tests passing (11 unit + 7 feature)
+- ✅ Complete documentation with troubleshooting guide
+- ✅ Production-ready with UI + CLI + scheduler
+
+### **Previously Completed: Sprint 57 - SQLite-First Vector Store Rollout** ✅
 **Priority**: HIGH | **Status**: COMPLETED | **Type**: Strategic Foundation
 
 **Timeline**: Completed 2025-10-05 | **Actual**: ~30 hours (2 sessions)
@@ -29,6 +69,35 @@
 
 **Progress Summary**: 6/6 tasks completed (100%) ✅ **SPRINT COMPLETED**
 
+### **Sprint 67: Obsidian Advanced Features (Option C - Phases 0-2)** 🔗
+**Priority**: HIGH | **Status**: PLANNED | **Type**: Integration Enhancement
+
+**Timeline**: Estimated 6-7 days | **Tasks**: 12
+
+**Business Goals**:
+- 🎯 **Deterministic Pipeline**: Intelligent type/tag inference from paths and front matter without AI
+- 🔗 **Internal Links**: Parse and resolve Obsidian wikilinks to create fragment relationships
+- 🔄 **Bidirectional Sync**: Two-way sync with conflict detection and resolution
+
+### **Sprint 67 Task Status**
+
+| Task ID | Description | Status | Agent | Estimated | Dependencies |
+|---------|-------------|--------|-------|-----------|--------------|
+| **T-OBS-15.5** | Create ObsidianFragmentPipeline service | `pending` | Unassigned | 4-5h | None |
+| **T-OBS-15.6** | Enhance ObsidianImportService with pipeline | `pending` | Unassigned | 2-3h | T-OBS-15.5 |
+| **T-OBS-16** | Create WikilinkParser service | `pending` | Unassigned | 3-4h | None |
+| **T-OBS-17** | Create LinkResolver service | `pending` | Unassigned | 4-5h | T-OBS-16 |
+| **T-OBS-18** | Enhance ObsidianMarkdownParser for link extraction | `pending` | Unassigned | 2-3h | T-OBS-16 |
+| **T-OBS-19** | Enhance ObsidianImportService for link resolution | `pending` | Unassigned | 4-5h | T-OBS-17, T-OBS-18 |
+| **T-OBS-20** | Add link visualization to fragment UI | `pending` | Unassigned | 3-4h | T-OBS-19 |
+| **T-OBS-21** | Create ObsidianWriteService | `pending` | Unassigned | 5-6h | None |
+| **T-OBS-22** | Create ConflictDetector service | `pending` | Unassigned | 3-4h | None |
+| **T-OBS-23** | Enhance ObsidianSyncCommand for bidirectional sync | `pending` | Unassigned | 4-5h | T-OBS-21, T-OBS-22 |
+| **T-OBS-24** | Add sync direction settings (UI + backend) | `pending` | Unassigned | 3-4h | T-OBS-23 |
+| **T-OBS-25** | Add conflict resolution logging and reporting | `pending` | Unassigned | 2-3h | T-OBS-22, T-OBS-23 |
+
+**Progress Summary**: 0/12 tasks completed (0%) 📋 **SPRINT PLANNED**
+
 ---
 
 ## 🚀 Upcoming Sprints Queue
@@ -39,15 +108,20 @@ Choose based on current priorities:
 
 > **Update (2025-01-05)** – Sprint 63 orchestration tooling is progressing. Task-level MCP endpoints (detail/assign/status) are live via `TaskOrchestrationService`, sprint management supports detail/save/status/attach with `SprintOrchestrationService`, and agent profiles can now be inspected/upserted/toggled via `AgentOrchestrationService`. CLI mirrors will land during ORCH-02-05.
 
-#### **Option A: Sprint 58 - DSL Slash Command UX Enhancement** 🎯
+#### **Option A: Sprint 67 - Obsidian Advanced Features (Internal Links & Bi-Sync)** 🔗
+**Priority**: MEDIUM-HIGH | **Estimated**: 80-105 hours (10-13 days) | **Tasks**: 23
+**Impact**: Transform Obsidian integration into bidirectional knowledge management system
+**Can be split into 5 sub-sprints**: 67a (Internal Links - P1), 67b (Bidirectional Sync - P2), 67c (Nested Folders + Multi-vault - P3), 67d (Attachments - P4), 67e (Testing/Docs)
+
+#### **Option B: Sprint 58 - DSL Slash Command UX Enhancement** 🎯
 **Priority**: MEDIUM-HIGH | **Estimated**: 40-56 hours (5-7 days) | **Tasks**: 6
 **Impact**: Enhanced command discoverability and user experience
 
-#### **Option B: Sprint 59 - Settings Experience Enhancement** ⚙️
+#### **Option C: Sprint 59 - Settings Experience Enhancement** ⚙️
 **Priority**: MEDIUM-HIGH | **Estimated**: 40-56 hours (5-7 days) | **Tasks**: 5
 **Impact**: Complete settings management and configuration experience
 
-#### **Option C: Sprint 43 - Enhanced User Experience** 🎨
+#### **Option D: Sprint 43 - Enhanced User Experience** 🎨
 **Priority**: HIGH | **Estimated**: 73-103 hours (9-13 days) | **Tasks**: 7
 **Impact**: High-value user improvements including todo management and infinite scroll
 
@@ -236,6 +310,71 @@ Transform the current static demo data seeder into an AI-powered system that gen
 
 **📁 Location**: `delegation/sprint-60/` (complete documentation)
 
+### **Sprint 67: Obsidian Advanced Features - Deterministic Pipeline, Internal Links & Bi-Directional Sync** 🆕
+**Priority**: MEDIUM-HIGH | **Estimated**: 86-113 hours (11-14 days) | **Tasks**: 25
+
+Extend Obsidian integration with advanced features: deterministic pipeline for intelligent type/tag inference, internal link resolution, bidirectional sync, nested folders, multiple vaults, and media import. **Recommended: Execute as 6 sub-sprints based on priority.**
+
+**Phase 0: Deterministic Pipeline (P0)** - 2 tasks, 6-8h (0.5-1 day) 🔥 **START HERE**
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **T-OBS-15.5** | Create ObsidianFragmentPipeline service | `ready` | 4-5h |
+| **T-OBS-15.6** | Enhance ObsidianImportService with pipeline | `ready` | 2-3h |
+
+**Phase 1: Internal Links (P1)** - 5 tasks, 16-21h (2-3 days)
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **T-OBS-16** | Create WikilinkParser service | `ready` | 3-4h |
+| **T-OBS-17** | Create LinkResolver service | `ready` | 4-5h |
+| **T-OBS-18** | Enhance ObsidianMarkdownParser for link extraction | `ready` | 2-3h |
+| **T-OBS-19** | Enhance ObsidianImportService for link resolution | `ready` | 4-5h |
+| **T-OBS-20** | Add link visualization to fragment UI | `ready` | 3-4h |
+
+**Phase 2: Bidirectional Sync (P2)** - 5 tasks, 17-22h (2-3 days)
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **T-OBS-21** | Create ObsidianWriteService | `ready` | 5-6h |
+| **T-OBS-22** | Create ConflictDetector service | `ready` | 3-4h |
+| **T-OBS-23** | Enhance ObsidianSyncCommand for bidirectional sync | `ready` | 4-5h |
+| **T-OBS-24** | Add sync direction settings (UI + backend) | `ready` | 3-4h |
+| **T-OBS-25** | Add conflict resolution logging and reporting | `ready` | 2-3h |
+
+**Phase 3: Nested Folders (P3)** - 3 tasks, 7-11h (1-2 days)
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **T-OBS-26** | Create FolderHierarchyService | `ready` | 3-4h |
+| **T-OBS-27** | Enhance ObsidianImportService for nested tags | `ready` | 2-3h |
+| **T-OBS-28** | Add folder hierarchy toggle to settings | `ready` | 2h |
+
+**Phase 4: Multiple Vaults (P3)** - 3 tasks, 12-15h (2 days)
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **T-OBS-29** | Create VaultRegistry service | `ready` | 4-5h |
+| **T-OBS-30** | Enhance settings for multi-vault management | `ready` | 5-6h |
+| **T-OBS-31** | Enhance ObsidianSyncCommand for vault selection | `ready` | 3-4h |
+
+**Phase 5: Media & Attachments (P4)** - 3 tasks, 10-13h (1-2 days)
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **T-OBS-32** | Create AttachmentImporter service | `ready` | 5-6h |
+| **T-OBS-33** | Enhance ObsidianImportService for attachment handling | `ready` | 3-4h |
+| **T-OBS-34** | Add attachment settings (UI + backend) | `ready` | 2-3h |
+
+**Phase 6: Testing & Documentation** - 4 tasks, 18-23h (2-3 days)
+| Task ID | Description | Status | Estimated |
+|---------|-------------|--------|-----------|
+| **T-OBS-35** | Unit tests for new services | `ready` | 6-8h |
+| **T-OBS-36** | Feature tests for bidirectional sync | `ready` | 5-6h |
+| **T-OBS-37** | Integration tests for link resolution | `ready` | 4-5h |
+| **T-OBS-38** | Update documentation | `ready` | 3-4h |
+
+**📁 Location**: `delegation/sprints/SPRINT-67-PLAN.md`, `SPRINT-67-TASKS.md` (complete documentation)
+
+**Execution Options**:
+- **Option A**: Full sprint (11-14 days) - all 25 tasks
+- **Option B**: Phased sub-sprints (recommended) 🔥 - Sprint 67.0 (P0 - START HERE), 67a (P1), 67b (P2), 67c (P3), 67d (P4), 67e (Testing)
+- **Option C**: Minimum viable (6-7 days) ⭐ - P0 + P1 + P2 (12 tasks - intelligent pipeline + links + bi-sync)
+
 ### **Sprint 62: Agent Orchestration Foundation - Database & Models** 🆕
 **Priority**: HIGH | **Estimated**: 9-13 hours (1-2 days) | **Tasks**: 4
 
@@ -342,6 +481,7 @@ Complete visual dashboard with CRUD interfaces, Kanban board, backlog management
 - **Sprint 56** (Telemetry) can run independently, enhances debugging for all sprints
 - **Sprint 57** (Vector Store) can run independently, enables NativePHP desktop builds
 - **Sprint 58** (DSL UX) can run independently, enhances command discoverability
+- **Sprint 67** (Obsidian Advanced) depends on Sprint 52 ✅ COMPLETED, can be split into 5 sub-sprints
 
 ### **Resource Conflicts**
 - 🟡 **Backend Resources**: Multiple sprints require Laravel expertise
@@ -353,10 +493,10 @@ Complete visual dashboard with CRUD interfaces, Kanban board, backlog management
 ## 📈 Progress Metrics
 
 ### **Overall Project Status**
-- **Total Tasks**: 110 across 20 active sprints (16 tasks completed across 7 sprints)
-- **Estimated Total**: 592-879 hours (includes Agent Orchestration sprints 62-66)
-- **Completed**: Sprint 40-42 ✅, Sprint 46 ✅, Sprint 48 ✅, Sprint 49 ✅, Sprint 50 ✅, Sprint 56 ✅, Sprint 57 ✅
-- **Active Planning**: Sprint 56+ 🚀
+- **Total Tasks**: 135 across 21 active sprints (31 tasks completed across 8 sprints)
+- **Estimated Total**: 678-992 hours (includes Sprint 67 + Agent Orchestration sprints 62-66)
+- **Completed**: Sprint 40-42 ✅, Sprint 46 ✅, Sprint 48 ✅, Sprint 49 ✅, Sprint 50 ✅, Sprint 52 ✅, Sprint 56 ✅, Sprint 57 ✅
+- **Active Planning**: Sprint 58-67, 62-66 🚀
 - **Backlog**: Future enhancements
 
 ### **Completed Sprints** ✅
@@ -367,12 +507,14 @@ Complete visual dashboard with CRUD interfaces, Kanban board, backlog management
 - **Sprint 48**: Command System Continuation & Migration (7 tasks)
 - **Sprint 49**: System Polish & Agent Tooling Foundation (2 tasks)
 - **Sprint 50**: DSL Deterministic Foundation & TodoManagement Modal (8 tasks)
+- **Sprint 52**: Obsidian Vault Import Integration (15 tasks) ✨ NEW
 - **Sprint 56**: Structured Telemetry Foundation (6 tasks)
 - **Sprint 57**: SQLite-First Vector Store Rollout (6 tasks)
 
 ### **Sprint Completion Targets**
-- **Sprint 56**: Telemetry foundation - critical for debugging (current priority)
-- **Sprint 57**: Vector store rollout - enables NativePHP desktop builds
+- **Sprint 67.0**: Obsidian Deterministic Pipeline (P0) - intelligent type/tag inference 🔥 **RECOMMENDED NEXT**
+- **Sprint 67a**: Obsidian Internal Links (P1) - wikilink resolution
+- **Sprint 67b**: Obsidian Bi-Directional Sync (P2) - two-way sync with conflict detection
 - **Sprint 58**: DSL UX enhancement - improves command discoverability
 - **Sprint 59**: Settings experience - complete settings management card
 - **Sprint 43**: Enhanced UX - high value user improvements
@@ -399,6 +541,15 @@ Complete visual dashboard with CRUD interfaces, Kanban board, backlog management
 # Start Sprint 60 - AI-Powered Demo Data Seeder System (realistic demo data)
 /sprint-start 60
 
+# Start Sprint 67.0 - Obsidian Deterministic Pipeline (P0 - CRITICAL!)
+/sprint-start 67.0
+
+# Start Sprint 67a - Obsidian Internal Links (P1)
+/sprint-start 67a
+
+# Start Sprint 67b - Obsidian Bidirectional Sync (P2)
+/sprint-start 67b
+
 # Start Sprint 62 - Agent Orchestration Foundation (database & models)
 /sprint-start 62
 
@@ -409,13 +560,14 @@ Complete visual dashboard with CRUD interfaces, Kanban board, backlog management
 /sprint-start 43
 
 # Analyze individual tasks  
-/task-analyze TELEMETRY-001-correlation-middleware
-/task-analyze VECTOR-001-embedding-store-abstraction
+/task-analyze T-OBS-15.5-obsidian-fragment-pipeline
+/task-analyze T-OBS-15.6-pipeline-integration
+/task-analyze T-OBS-16-wikilink-parser
+/task-analyze T-OBS-21-obsidian-write-service
+/task-analyze T-OBS-26-folder-hierarchy-service
 /task-analyze DSL-UX-001-enhanced-registry-schema
 /task-analyze SETTINGS-001-import-reset-pipeline
 /task-analyze SEEDER-001-yaml-configuration
-/task-analyze SEEDER-002-ai-content-generation
-/task-analyze ORCH-01-01-database-schema-enhancement
 /task-analyze ORCH-02-01-extend-tool-crate-orchestration
 /task-analyze UX-04-01-todo-management-modal
 

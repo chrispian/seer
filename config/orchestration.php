@@ -84,8 +84,8 @@ return [
             'OPENAI_API_KEY=\S+',
             'ANTHROPIC_API_KEY=\S+',
         ],
-        'custom_patterns' => env('FE_REDACT_PATTERNS') 
-            ? explode(',', env('FE_REDACT_PATTERNS')) 
+        'custom_patterns' => env('FE_REDACT_PATTERNS')
+            ? explode(',', env('FE_REDACT_PATTERNS'))
             : [],
     ],
 ];

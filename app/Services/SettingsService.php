@@ -188,6 +188,14 @@ class SettingsService
                 'auto_title' => true,
                 'context_length' => 4000,
             ],
+            'integrations' => [
+                'readwise' => [
+                    'api_token' => null,
+                    'sync_enabled' => false,
+                    'last_synced_at' => null,
+                    'next_cursor' => null,
+                ],
+            ],
         ];
     }
 

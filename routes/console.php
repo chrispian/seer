@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -47,6 +48,74 @@ Schedule::command('frag:scheduler:tick')
         error('Fragment scheduler tick failed');
     });
 
+// Schedule Readwise sync (runs only when token configured)
+Schedule::command('readwise:sync')
+    ->dailyAt('02:30')
+    ->timezone('UTC')
+    ->name('readwise-sync')
+    ->description('Ingest Readwise highlights into Fragments Engine')
+    ->when(function () {
+        $user = User::query()->first();
+        if (! $user) {
+            return false;
+        }
+
+        $settings = $user->profile_settings['integrations']['readwise'] ?? [];
+
+        return ! empty($settings['api_token']) && ($settings['sync_enabled'] ?? false);
+    });
+
+// Schedule Obsidian vault sync (runs only when vault path configured)
+Schedule::command('obsidian:sync')
+    ->dailyAt('03:00')
+    ->timezone('UTC')
+    ->name('obsidian-sync')
+    ->description('Sync Obsidian vault notes into Fragments Engine')
+    ->when(function () {
+        $user = User::query()->first();
+        if (! $user) {
+            return false;
+        }
+
+        $settings = $user->profile_settings['integrations']['obsidian'] ?? [];
+
+        return ! empty($settings['vault_path']) && ($settings['sync_enabled'] ?? false);
+    });
+
+// Schedule Hardcover sync (runs only when token configured)
+Schedule::command('hardcover:sync')
+    ->dailyAt('03:30')
+    ->timezone('UTC')
+    ->name('hardcover-sync')
+    ->description('Ingest Hardcover book library into Fragments Engine')
+    ->when(function () {
+        $user = User::query()->first();
+        if (! $user) {
+            return false;
+        }
+
+        $settings = $user->profile_settings['integrations']['hardcover'] ?? [];
+
+        return ! empty($settings['bearer_token']) && ($settings['sync_enabled'] ?? false);
+    });
+
+// Schedule Readwise Reader sync (runs only when token configured)
+Schedule::command('readwise:reader:sync')
+    ->dailyAt('02:00')
+    ->timezone('UTC')
+    ->name('readwise-reader-sync')
+    ->description('Ingest Readwise Reader documents (articles, RSS, etc.) into Fragments Engine')
+    ->when(function () {
+        $user = User::query()->first();
+        if (! $user) {
+            return false;
+        }
+
+        $settings = $user->profile_settings['integrations']['readwise'] ?? [];
+
+        return ! empty($settings['api_token']) && ($settings['reader_sync_enabled'] ?? false);
+    });
+
 // Legacy alias support for orchestration task listing
 Artisan::command('orch:task-list
         {--sprint=* : Filter by sprint codes or numbers}
@@ -63,11 +132,13 @@ Artisan::command('orch:task-list
     foreach ($options as $key => $value) {
         if (is_bool($value) && $value === false) {
             unset($options[$key]);
+
             continue;
         }
 
         if ($value === null) {
             unset($options[$key]);
+
             continue;
         }
 

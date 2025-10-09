@@ -33,6 +33,10 @@ class OpenRouterProvider extends AbstractAIProvider
         $model = $options['model'] ?? 'anthropic/claude-3.5-sonnet';
         $maxTokens = $options['max_tokens'] ?? 1000;
         $temperature = $options['temperature'] ?? 0.7;
+        $topP = $options['top_p'] ?? null;
+
+        // Extract telemetry context from options
+        $telemetryContext = $options['_telemetry_context'] ?? [];
 
         $request = [
             'model' => $model,
@@ -43,33 +47,18 @@ class OpenRouterProvider extends AbstractAIProvider
             'temperature' => $temperature,
         ];
 
+        // Add top_p if specified
+        if ($topP !== null) {
+            $request['top_p'] = $topP;
+        }
+
         try {
-            $baseUrl = $this->getConfigValue('base') ?? 'https://openrouter.ai/api/v1';
-
-            $headers = [
-                'Authorization' => 'Bearer '.$this->getConfigValue('key'),
-                'Content-Type' => 'application/json',
-            ];
-
-            // Add optional headers for better routing and attribution
-            if ($referer = $this->getConfigValue('referer')) {
-                $headers['HTTP-Referer'] = $referer;
-            }
-
-            if ($title = $this->getConfigValue('title')) {
-                $headers['X-Title'] = $title;
-            }
-
             $response = $this->createHttpClient()
-                ->withHeaders($headers)
-                ->post("{$baseUrl}/chat/completions", $request);
-
-            if ($response->failed()) {
-                throw new \RuntimeException('OpenRouter API request failed: '.$response->body());
-            }
+                ->withToken($this->getConfigValue('key'))
+                ->post('https://openrouter.ai/api/v1/chat/completions', $request);
 
             $data = $response->json();
-            $this->logApiRequest('text_generation', $request, $data);
+            $this->logApiRequest('text_generation', $request, $data, null, $telemetryContext);
 
             return [
                 'text' => Arr::get($data, 'choices.0.message.content', ''),
@@ -79,7 +68,7 @@ class OpenRouterProvider extends AbstractAIProvider
             ];
 
         } catch (\Exception $e) {
-            $this->logApiRequest('text_generation', $request, null, $e);
+            $this->logApiRequest('text_generation', $request, null, $e, $telemetryContext);
             throw $e;
         }
     }
@@ -155,6 +144,9 @@ class OpenRouterProvider extends AbstractAIProvider
         $model = $options['model'] ?? 'anthropic/claude-3.5-sonnet';
         $maxTokens = $options['max_tokens'] ?? 1000;
         $temperature = $options['temperature'] ?? 0.7;
+
+        // Extract telemetry context from options
+        $telemetryContext = $options['_telemetry_context'] ?? [];
 
         $request = [
             'model' => $model,
@@ -232,7 +224,7 @@ class OpenRouterProvider extends AbstractAIProvider
             }
 
         } catch (\Exception $e) {
-            $this->logApiRequest('stream_chat', $request, null, $e);
+            $this->logApiRequest('stream_chat', $request, null, $e, $telemetryContext);
             throw $e;
         }
     }

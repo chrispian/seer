@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AgentProfile;
+use App\Models\TaskActivity;
 use App\Models\TaskAssignment;
 use App\Models\WorkItem;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -228,6 +229,17 @@ class TaskOrchestrationService
 
             $task->save();
 
+            TaskActivity::logAssignment(
+                taskId: $task->id,
+                agentId: $agent->id,
+                description: "Task assigned to {$agent->name}",
+                metadata: [
+                    'agent_slug' => $agent->slug,
+                    'assignment_id' => $assignment->id,
+                    'note' => $note,
+                ]
+            );
+
             return [
                 'task' => $task->fresh(),
                 'assignment' => $assignment->fresh(),
@@ -272,6 +284,8 @@ class TaskOrchestrationService
                 $task->assignee_id = null;
             }
 
+            $oldStatus = $task->delegation_status;
+            
             $task->delegation_history = $this->appendHistory($task, [
                 'action' => 'status_changed',
                 'status' => $delegationStatus,
@@ -286,6 +300,14 @@ class TaskOrchestrationService
             }
 
             $task->save();
+
+            TaskActivity::logStatusChange(
+                taskId: $task->id,
+                fromStatus: $oldStatus ?? 'unknown',
+                toStatus: $delegationStatus,
+                agentId: $current?->agent_id,
+                description: $note
+            );
 
             return $task->fresh();
         });
@@ -304,7 +326,9 @@ class TaskOrchestrationService
 
         $task->loadMissing(['assignments' => function ($query) use ($limit) {
             $query->with('agent')->orderByDesc('assigned_at')->limit($limit);
-        }, 'assignedAgent']);
+        }, 'assignedAgent', 'activities' => function ($query) {
+            $query->with(['agent:id,name,slug', 'user:id,name'])->orderByDesc('created_at')->limit(50);
+        }]);
 
         $current = $task->currentAssignment;
 
@@ -321,9 +345,41 @@ class TaskOrchestrationService
                 'delegation_history' => $includeHistory ? ($task->delegation_history ?? []) : null,
                 'todo_progress' => Arr::get($task->metadata, 'todo_progress', []),
                 'updated_at' => optional($task->updated_at)->toIso8601String(),
+                'created_at' => optional($task->created_at)->toIso8601String(),
+                'completed_at' => optional($task->completed_at)->toIso8601String(),
             ],
             'current_assignment' => $current ? $this->presentAssignment($current) : null,
             'assignments' => $task->assignments->map(fn (TaskAssignment $assignment) => $this->presentAssignment($assignment))->all(),
+            'content' => [
+                'agent' => $task->agent_content,
+                'plan' => $task->plan_content,
+                'context' => $task->context_content,
+                'todo' => $task->todo_content,
+                'summary' => $task->summary_content,
+            ],
+            'activities' => $task->activities->map(function ($activity) {
+                return [
+                    'id' => $activity->id,
+                    'task_id' => $activity->task_id,
+                    'agent_id' => $activity->agent_id,
+                    'user_id' => $activity->user_id,
+                    'activity_type' => $activity->activity_type,
+                    'action' => $activity->action,
+                    'description' => $activity->description,
+                    'changes' => $activity->changes,
+                    'metadata' => $activity->metadata,
+                    'created_at' => $activity->created_at->toIso8601String(),
+                    'agent' => $activity->agent ? [
+                        'id' => $activity->agent->id,
+                        'name' => $activity->agent->name,
+                        'slug' => $activity->agent->slug ?? null,
+                    ] : null,
+                    'user' => $activity->user ? [
+                        'id' => $activity->user->id,
+                        'name' => $activity->user->name,
+                    ] : null,
+                ];
+            })->all(),
         ];
     }
 

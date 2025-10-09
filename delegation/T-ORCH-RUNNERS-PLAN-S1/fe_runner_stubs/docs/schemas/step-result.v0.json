@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StepResult v0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_id",
+    "run_id",
+    "step_id",
+    "events"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "v0"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "step_id": {
+      "type": "string"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "checkpoint": {
+      "type": "boolean"
+    },
+    "yield": {
+      "type": "boolean"
+    },
+    "heartbeat": {
+      "type": "object"
+    }
+  }
+}

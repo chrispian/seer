@@ -1,0 +1,94 @@
+[
+  {
+    "id": "conv-1",
+    "conversation_id": "conv-1",
+    "title": "Sample chat",
+    "create_time": 1700000000,
+    "update_time": 1700000100,
+    "default_model_slug": "gpt-4o-mini",
+    "current_node": "assistant-msg-1",
+    "mapping": {
+      "root": {
+        "id": "root",
+        "parent": null,
+        "children": ["user-msg-1"],
+        "message": null
+      },
+      "user-msg-1": {
+        "id": "user-msg-1",
+        "parent": "root",
+        "children": ["assistant-msg-1"],
+        "message": {
+          "id": "user-msg-1",
+          "author": {"role": "user", "name": null, "metadata": []},
+          "content": {"content_type": "text", "parts": ["Hello ChatGPT"]},
+          "create_time": 1700000005,
+          "metadata": []
+        }
+      },
+      "assistant-msg-1": {
+        "id": "assistant-msg-1",
+        "parent": "user-msg-1",
+        "children": [],
+        "message": {
+          "id": "assistant-msg-1",
+          "author": {"role": "assistant", "name": null, "metadata": []},
+          "content": {"content_type": "text", "parts": ["Hi there! How can I help?"]},
+          "create_time": 1700000006,
+          "metadata": {"model_slug": "gpt-4o-mini"}
+        }
+      }
+    }
+  },
+  {
+    "id": "conv-2",
+    "conversation_id": "conv-2",
+    "title": "Code sample",
+    "create_time": 1700001000,
+    "update_time": 1700001200,
+    "default_model_slug": "gpt-4o",
+    "current_node": "assistant-code",
+    "mapping": {
+      "root": {
+        "id": "root",
+        "parent": null,
+        "children": ["user-mm"],
+        "message": null
+      },
+      "user-mm": {
+        "id": "user-mm",
+        "parent": "root",
+        "children": ["assistant-code"],
+        "message": {
+          "id": "user-mm",
+          "author": {"role": "user", "name": null, "metadata": []},
+          "content": {
+            "content_type": "multimodal_text",
+            "parts": [
+              {"text": "Can you show me how to echo text in PHP?"},
+              {"type": "image_asset_pointer", "asset_pointer": "foo"}
+            ]
+          },
+          "create_time": 1700001005,
+          "metadata": []
+        }
+      },
+      "assistant-code": {
+        "id": "assistant-code",
+        "parent": "user-mm",
+        "children": [],
+        "message": {
+          "id": "assistant-code",
+          "author": {"role": "assistant", "name": null, "metadata": []},
+          "content": {
+            "content_type": "code",
+            "language": "php",
+            "text": "<?php echo \"Hello\"; ?>"
+          },
+          "create_time": 1700001010,
+          "metadata": {"model_slug": "gpt-4o"}
+        }
+      }
+    }
+  }
+]

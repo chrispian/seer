@@ -18,6 +18,7 @@ window.settingsData = {
         updateAvatar: '{{ route('settings.avatar.update') }}',
         updatePreferences: '{{ route('settings.preferences.update') }}',
         updateAI: '{{ route('settings.ai.update') }}',
+        updateIntegrations: '{{ route('settings.integrations.update') }}',
         exportSettings: '{{ route('settings.export') }}',
         importSettings: '{{ route('settings.import') }}',
         resetSettings: '{{ route('settings.reset') }}',

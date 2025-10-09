@@ -7,12 +7,11 @@ class AgentListCommand extends BaseCommand
     public function handle(): array
     {
         // Get agents from the orchestration system
-        // TODO: Check if there's a specific Agent model or if we need to use the orchestration API
         $agents = $this->getAgents();
         
         return [
-            'type' => 'agent',
-            'component' => 'AgentListModal',
+            'type' => 'agent-profile',
+            'component' => 'AgentProfileListModal',
             'data' => $agents
         ];
     }

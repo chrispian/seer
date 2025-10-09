@@ -1,6 +1,7 @@
 {
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    // "laravel-boost"
+    "orchestration"
   ],
-  "enableAllProjectMcpServers": true
+  "outputStyle": "default"
 }

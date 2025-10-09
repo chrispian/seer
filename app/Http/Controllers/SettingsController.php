@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Actions\CreateUserProfile;
 use App\Services\AvatarService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\File;
 
@@ -15,9 +17,43 @@ class SettingsController extends Controller
     {
         $user = Auth::user();
 
+        $profileSettings = $user->profile_settings ?? [];
+
+        $readwiseSettings = $profileSettings['integrations']['readwise'] ?? [];
+        $profileSettings['integrations']['readwise'] = array_merge([
+            'token_present' => false,
+            'sync_enabled' => false,
+            'reader_sync_enabled' => false,
+            'last_synced_at' => null,
+        ], Arr::except($readwiseSettings, ['api_token', 'next_cursor']) ?? []);
+
+        if (! empty($readwiseSettings['api_token'])) {
+            $profileSettings['integrations']['readwise']['token_present'] = true;
+        }
+
+        $obsidianSettings = $profileSettings['integrations']['obsidian'] ?? [];
+        $profileSettings['integrations']['obsidian'] = array_merge([
+            'vault_path' => null,
+            'sync_enabled' => false,
+            'enrich_enabled' => false,
+            'last_synced_at' => null,
+            'file_count' => 0,
+        ], $obsidianSettings);
+
+        $hardcoverSettings = $profileSettings['integrations']['hardcover'] ?? [];
+        $profileSettings['integrations']['hardcover'] = array_merge([
+            'api_key_present' => false,
+            'sync_enabled' => false,
+            'last_synced_at' => null,
+        ], Arr::except($hardcoverSettings, ['bearer_token']) ?? []);
+
+        if (! empty($hardcoverSettings['bearer_token'])) {
+            $profileSettings['integrations']['hardcover']['api_key_present'] = true;
+        }
+
         return view('settings.index', [
             'user' => $user,
-            'profile_settings' => $user->profile_settings ?? [],
+            'profile_settings' => $profileSettings,
         ]);
     }
 
@@ -157,6 +193,189 @@ class SettingsController extends Controller
             'success' => true,
             'message' => 'AI settings updated successfully',
             'ai_settings' => $aiSettings,
+        ]);
+    }
+
+    public function updateIntegrations(Request $request)
+    {
+        $validated = $request->validate([
+            'readwise_api_token' => 'nullable|string|max:255',
+            'readwise_sync_enabled' => 'nullable|boolean',
+            'obsidian_vault_path' => 'nullable|string|max:500',
+            'obsidian_sync_enabled' => 'nullable|boolean',
+            'obsidian_enrich_enabled' => 'nullable|boolean',
+        ]);
+
+        $user = Auth::user();
+        $currentSettings = $user->profile_settings ?? [];
+
+        $integrations = $currentSettings['integrations'] ?? [];
+        $readwise = $integrations['readwise'] ?? [
+            'api_token' => null,
+            'sync_enabled' => false,
+            'last_synced_at' => null,
+            'next_cursor' => null,
+        ];
+
+        if (array_key_exists('readwise_api_token', $validated)) {
+            $token = $validated['readwise_api_token'];
+            $readwise['api_token'] = $token ? Crypt::encryptString($token) : null;
+        }
+
+        if (array_key_exists('readwise_sync_enabled', $validated)) {
+            $readwise['sync_enabled'] = (bool) $validated['readwise_sync_enabled'];
+        }
+
+        if (array_key_exists('readwise_reader_sync_enabled', $validated)) {
+            $readwise['reader_sync_enabled'] = (bool) $validated['readwise_reader_sync_enabled'];
+        }
+
+        $integrations['readwise'] = $readwise;
+
+        $obsidian = $integrations['obsidian'] ?? [
+            'vault_path' => null,
+            'sync_enabled' => false,
+            'enrich_enabled' => false,
+            'last_synced_at' => null,
+            'file_count' => 0,
+        ];
+
+        if (array_key_exists('obsidian_vault_path', $validated)) {
+            $path = $validated['obsidian_vault_path'];
+            
+            if ($path && ! is_dir($path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid vault path: directory does not exist',
+                ], 422);
+            }
+
+            if ($path && ! is_readable($path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid vault path: directory is not readable',
+                ], 422);
+            }
+
+            $obsidian['vault_path'] = $path;
+        }
+
+        if (array_key_exists('obsidian_sync_enabled', $validated)) {
+            $obsidian['sync_enabled'] = (bool) $validated['obsidian_sync_enabled'];
+        }
+
+        if (array_key_exists('obsidian_enrich_enabled', $validated)) {
+            $obsidian['enrich_enabled'] = (bool) $validated['obsidian_enrich_enabled'];
+        }
+
+        $integrations['obsidian'] = $obsidian;
+
+        $hardcover = $integrations['hardcover'] ?? [
+            'bearer_token' => null,
+            'sync_enabled' => false,
+            'last_synced_at' => null,
+        ];
+
+        if (array_key_exists('hardcover_api_key', $validated)) {
+            $token = $validated['hardcover_api_key'];
+            $hardcover['bearer_token'] = $token ? Crypt::encryptString($token) : null;
+        }
+
+        if (array_key_exists('hardcover_sync_enabled', $validated)) {
+            $hardcover['sync_enabled'] = (bool) $validated['hardcover_sync_enabled'];
+        }
+
+        $integrations['hardcover'] = $hardcover;
+        $currentSettings['integrations'] = $integrations;
+
+        $user->update(['profile_settings' => $currentSettings]);
+
+        Log::info('Integrations settings updated', [
+            'user_id' => $user->id,
+            'integrations' => array_keys(array_filter([
+                'readwise' => array_key_exists('readwise_api_token', $validated) || array_key_exists('readwise_sync_enabled', $validated) || array_key_exists('readwise_reader_sync_enabled', $validated),
+                'obsidian' => array_key_exists('obsidian_vault_path', $validated) || array_key_exists('obsidian_sync_enabled', $validated),
+                'hardcover' => array_key_exists('hardcover_api_key', $validated) || array_key_exists('hardcover_sync_enabled', $validated),
+            ])),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Integration settings saved',
+            'integrations' => [
+                'readwise' => [
+                    'token_present' => ! empty($readwise['api_token']),
+                    'sync_enabled' => $readwise['sync_enabled'] ?? false,
+                    'reader_sync_enabled' => $readwise['reader_sync_enabled'] ?? false,
+                    'last_synced_at' => $readwise['last_synced_at'] ?? null,
+                    'next_cursor' => $readwise['next_cursor'] ?? null,
+                ],
+                'obsidian' => [
+                    'vault_path' => $obsidian['vault_path'] ?? null,
+                    'sync_enabled' => $obsidian['sync_enabled'] ?? false,
+                    'enrich_enabled' => $obsidian['enrich_enabled'] ?? false,
+                    'last_synced_at' => $obsidian['last_synced_at'] ?? null,
+                    'file_count' => $obsidian['file_count'] ?? 0,
+                ],
+                'hardcover' => [
+                    'api_key_present' => ! empty($hardcover['bearer_token']),
+                    'sync_enabled' => $hardcover['sync_enabled'] ?? false,
+                    'last_synced_at' => $hardcover['last_synced_at'] ?? null,
+                ],
+            ],
+        ]);
+    }
+
+    public function testObsidianPath(Request $request)
+    {
+        $validated = $request->validate([
+            'vault_path' => 'required|string|max:500',
+        ]);
+
+        $path = $validated['vault_path'];
+
+        if (! is_dir($path)) {
+            return response()->json([
+                'valid' => false,
+                'error' => 'Path does not exist or is not a directory',
+            ], 422);
+        }
+
+        if (! is_readable($path)) {
+            return response()->json([
+                'valid' => false,
+                'error' => 'Directory is not readable',
+            ], 422);
+        }
+
+        $markdownFiles = [];
+        $fileCount = 0;
+
+        try {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
+
+            foreach ($iterator as $file) {
+                if ($file->isFile() && $file->getExtension() === 'md') {
+                    $fileCount++;
+                    if (count($markdownFiles) < 3) {
+                        $markdownFiles[] = str_replace($path.'/', '', $file->getPathname());
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'valid' => false,
+                'error' => 'Failed to scan directory: '.$e->getMessage(),
+            ], 422);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'file_count' => $fileCount,
+            'sample_files' => $markdownFiles,
         ]);
     }
 

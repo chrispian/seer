@@ -109,6 +109,14 @@ class WorkItem extends Model
     }
 
     /**
+     * Get all activities for this task
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(TaskActivity::class, 'task_id');
+    }
+
+    /**
      * Get the sprint items (many-to-many through sprint_items)
      */
     public function sprintItems(): HasMany

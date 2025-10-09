@@ -31,41 +31,22 @@ class OllamaProvider extends AbstractAIProvider
     public function generateText(string $prompt, array $options = []): array
     {
         $model = $options['model'] ?? 'llama3:latest';
-        $temperature = $options['temperature'] ?? 0.7;
-        $topP = $options['top_p'] ?? null;
-        $maxTokens = $options['max_tokens'] ?? null;
+
+        // Extract telemetry context from options
+        $telemetryContext = $options['_telemetry_context'] ?? [];
 
         $request = [
             'model' => $model,
             'prompt' => $prompt,
             'stream' => false,
-            'options' => [
-                'temperature' => $temperature,
-            ],
         ];
 
-        // Add top_p if specified (Ollama supports this as 'top_p')
-        if ($topP !== null) {
-            $request['options']['top_p'] = $topP;
-        }
-
-        // Add num_predict if max_tokens specified (Ollama equivalent to max_tokens)
-        if ($maxTokens !== null) {
-            $request['options']['num_predict'] = $maxTokens;
-        }
-
         try {
-            $baseUrl = rtrim($this->getConfigValue('base') ?? 'http://127.0.0.1:11434', '/');
-
             $response = $this->createHttpClient()
-                ->post("{$baseUrl}/api/generate", $request);
-
-            if ($response->failed()) {
-                throw new \RuntimeException('Ollama API request failed: '.$response->body());
-            }
+                ->post($this->getEndpointUrl(), $request);
 
             $data = $response->json();
-            $this->logApiRequest('text_generation', $request, $data);
+            $this->logApiRequest('text_generation', $request, $data, null, $telemetryContext);
 
             return [
                 'text' => $data['response'] ?? '',
@@ -75,7 +56,7 @@ class OllamaProvider extends AbstractAIProvider
             ];
 
         } catch (\Exception $e) {
-            $this->logApiRequest('text_generation', $request, null, $e);
+            $this->logApiRequest('text_generation', $request, null, $e, $telemetryContext);
             throw $e;
         }
     }
@@ -84,23 +65,20 @@ class OllamaProvider extends AbstractAIProvider
     {
         $model = $options['model'] ?? 'nomic-embed-text';
 
+        // Extract telemetry context from options
+        $telemetryContext = $options['_telemetry_context'] ?? [];
+
         $request = [
             'model' => $model,
             'prompt' => $text,
         ];
 
         try {
-            $baseUrl = rtrim($this->getConfigValue('base') ?? 'http://127.0.0.1:11434', '/');
-
             $response = $this->createHttpClient()
-                ->post("{$baseUrl}/api/embeddings", $request);
-
-            if ($response->failed()) {
-                throw new \RuntimeException('Ollama embeddings API request failed: '.$response->body());
-            }
+                ->post($this->getEmbeddingEndpointUrl(), $request);
 
             $data = $response->json();
-            $this->logApiRequest('embedding_generation', $request, $data);
+            $this->logApiRequest('embedding_generation', $request, $data, null, $telemetryContext);
 
             $vector = $data['embedding'] ?? [];
 
@@ -112,7 +90,7 @@ class OllamaProvider extends AbstractAIProvider
             ];
 
         } catch (\Exception $e) {
-            $this->logApiRequest('embedding_generation', $request, null, $e);
+            $this->logApiRequest('embedding_generation', $request, null, $e, $telemetryContext);
             throw $e;
         }
     }
@@ -178,6 +156,24 @@ class OllamaProvider extends AbstractAIProvider
     }
 
     /**
+     * Get the endpoint URL for text generation
+     */
+    protected function getEndpointUrl(): string
+    {
+        $baseUrl = rtrim($this->getConfigValue('base') ?? 'http://127.0.0.1:11434', '/');
+        return "{$baseUrl}/api/generate";
+    }
+
+    /**
+     * Get the endpoint URL for embeddings
+     */
+    protected function getEmbeddingEndpointUrl(): string
+    {
+        $baseUrl = rtrim($this->getConfigValue('base') ?? 'http://127.0.0.1:11434', '/');
+        return "{$baseUrl}/api/embeddings";
+    }
+
+    /**
      * Check if provider supports streaming
      */
     public function supportsStreaming(): bool
@@ -194,6 +190,9 @@ class OllamaProvider extends AbstractAIProvider
         $temperature = $options['temperature'] ?? 0.7;
         $topP = $options['top_p'] ?? null;
         $maxTokens = $options['max_tokens'] ?? null;
+
+        // Extract telemetry context from options
+        $telemetryContext = $options['_telemetry_context'] ?? [];
 
         $request = [
             'model' => $model,
@@ -262,7 +261,7 @@ class OllamaProvider extends AbstractAIProvider
             }
 
         } catch (\Exception $e) {
-            $this->logApiRequest('stream_chat', $request, null, $e);
+            $this->logApiRequest('stream_chat', $request, null, $e, $telemetryContext);
             throw $e;
         }
     }

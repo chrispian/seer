@@ -3,6 +3,7 @@
 namespace App\Services\AI\Providers;
 
 use App\Contracts\AIProviderInterface;
+use App\Services\Telemetry\CorrelationContext;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -138,25 +139,73 @@ abstract class AbstractAIProvider implements AIProviderInterface
     }
 
     /**
-     * Log API request for debugging and monitoring
+     * Log API request for debugging and monitoring with enhanced telemetry
      */
-    protected function logApiRequest(string $operation, array $request, ?array $response = null, ?\Exception $error = null): void
-    {
+    protected function logApiRequest(
+        string $operation,
+        array $request,
+        ?array $response = null,
+        ?\Exception $error = null,
+        array $context = []
+    ): void {
+        $startTime = $context['start_time'] ?? microtime(true);
+
         $logData = [
+            // Provider and operation identification
             'provider' => $this->getName(),
             'operation' => $operation,
-            'request_size' => strlen(json_encode($request)),
+
+            // Who (User/Context Tracking)
+            'correlation_id' => $context['correlation_id'] ?? CorrelationContext::get(),
+            'user_id' => $context['user_id'] ?? auth()->id(),
+            'session_id' => $context['session_id'] ?? null,
+            'request_type' => $context['request_type'] ?? 'unknown',
+
+            // What (Content & Parameters)
+            'model' => $request['model'] ?? null,
+            'temperature' => $request['temperature'] ?? null,
+            'top_p' => $request['top_p'] ?? null,
+            'max_tokens' => $request['max_tokens'] ?? null,
+            'prompt_length_chars' => strlen($this->extractPromptContent($request)),
+            'message_count' => count($request['messages'] ?? []),
+
+            // When (Timing Details)
+            'request_start_time' => $startTime,
+            'queue_wait_time_ms' => $context['queue_wait_ms'] ?? 0,
             'timestamp' => now()->toISOString(),
+
+            // Request/Response metadata
+            'request_size' => strlen(json_encode($request)),
         ];
 
+        // Add response metrics if successful
         if ($response) {
-            $logData['response_size'] = strlen(json_encode($response));
-            $logData['success'] = true;
+            $responseTime = (microtime(true) - $startTime) * 1000;
+            $logData = array_merge($logData, [
+                'response_size' => strlen(json_encode($response)),
+                'response_time_ms' => round($responseTime, 2),
+                'success' => true,
+                'http_status_code' => $response['http_status'] ?? null,
+
+                // Token usage and cost
+                'tokens_prompt' => $response['usage']['prompt_tokens'] ?? null,
+                'tokens_completion' => $response['usage']['completion_tokens'] ?? null,
+                'tokens_cached' => $response['usage']['cached_tokens'] ?? null,
+                'cost_usd' => $this->calculateCost($response['usage'] ?? [], $request['model'] ?? null),
+            ]);
         }
 
+        // Add error information if failed
         if ($error) {
-            $logData['error'] = $error->getMessage();
-            $logData['success'] = false;
+            $responseTime = (microtime(true) - $startTime) * 1000;
+            $logData = array_merge($logData, [
+                'response_time_ms' => round($responseTime, 2),
+                'success' => false,
+                'error_message' => $error->getMessage(),
+                'error_class' => get_class($error),
+                'error_category' => $this->categorizeError($error),
+                'retry_count' => $context['retry_count'] ?? 0,
+            ]);
         }
 
         Log::info('AI Provider API call', $logData);
@@ -176,6 +225,107 @@ abstract class AbstractAIProvider implements AIProviderInterface
      * Perform provider-specific health check
      */
     abstract protected function performHealthCheck(): array;
+
+    /**
+     * Extract prompt content from request for length calculation
+     */
+    protected function extractPromptContent(array $request): string
+    {
+        // Handle different request formats
+        if (isset($request['messages'])) {
+            // Chat completions format
+            $content = '';
+            foreach ($request['messages'] as $message) {
+                $content .= $message['content'] ?? '';
+            }
+            return $content;
+        }
+
+        if (isset($request['prompt'])) {
+            // Legacy completions format
+            return $request['prompt'];
+        }
+
+        if (isset($request['input'])) {
+            // Embeddings format
+            return is_array($request['input']) ? implode(' ', $request['input']) : $request['input'];
+        }
+
+        return '';
+    }
+
+    /**
+     * Categorize errors for better analytics
+     */
+    protected function categorizeError(\Exception $e): string
+    {
+        $message = strtolower($e->getMessage());
+
+        // Provider availability issues
+        if (str_contains($message, 'not found') || str_contains($message, 'not available')) {
+            return 'provider_unavailable';
+        }
+
+        // Authentication/authorization issues
+        if (str_contains($message, 'auth') || str_contains($message, 'unauthorized') || str_contains($message, 'api key')) {
+            return 'authentication_error';
+        }
+
+        // Rate limiting
+        if (str_contains($message, 'rate limit') || str_contains($message, 'quota') || str_contains($message, 'too many requests')) {
+            return 'rate_limit_exceeded';
+        }
+
+        // Network/connectivity issues
+        if (str_contains($message, 'timeout') || str_contains($message, 'connection') || str_contains($message, 'network')) {
+            return 'network_error';
+        }
+
+        // Model/parameter issues
+        if (str_contains($message, 'model') || str_contains($message, 'parameter') || str_contains($message, 'invalid request')) {
+            return 'request_error';
+        }
+
+        // Server-side issues
+        if (str_contains($message, 'server error') || str_contains($message, 'internal error') || str_contains($message, '500')) {
+            return 'server_error';
+        }
+
+        return 'unknown_error';
+    }
+
+    /**
+     * Calculate cost based on token usage and model
+     */
+    protected function calculateCost(array $usage, ?string $model): ?float
+    {
+        if (empty($usage) || !$model) {
+            return null;
+        }
+
+        // Get cost rates from configuration
+        $costRates = config('fragments.models.cost_rates', []);
+
+        // Try to find model-specific rates, fall back to provider defaults
+        $modelRates = $costRates[$model] ?? null;
+        if (!$modelRates) {
+            // Extract provider from model name (e.g., 'gpt-4' -> 'openai')
+            $provider = $this->getName();
+            $modelRates = $costRates[$provider]['default'] ?? null;
+        }
+
+        if (!$modelRates) {
+            return null;
+        }
+
+        $inputTokens = $usage['prompt_tokens'] ?? 0;
+        $outputTokens = $usage['completion_tokens'] ?? 0;
+
+        $inputCost = ($inputTokens / 1000) * ($modelRates['input_per_thousand'] ?? 0);
+        $outputCost = ($outputTokens / 1000) * ($modelRates['output_per_thousand'] ?? 0);
+
+        return round($inputCost + $outputCost, 6);
+    }
 
     /**
      * Default streaming implementation - providers should override this

@@ -4,9 +4,15 @@ namespace App\Commands;
 
 class SearchCommand extends BaseCommand
 {
+    protected ?string $query = null;
+
+    public function __construct(?string $argument = null)
+    {
+        $this->query = $argument;
+    }
+
     public function handle(): array
     {
-        // Get search results from fragments
         $results = $this->getSearchResults();
         
         return [
@@ -18,36 +24,46 @@ class SearchCommand extends BaseCommand
     
     private function getSearchResults(): array
     {
-        // Get search query from command context if available
-        $query = $this->getSearchQuery();
-        
         if (class_exists(\App\Models\Fragment::class)) {
             $fragmentQuery = \App\Models\Fragment::query()->with('category');
             
-            if (!empty($query)) {
-                // Simple text search for now
-                $fragmentQuery->where(function ($q) use ($query) {
-                    $q->where('message', 'like', '%' . $query . '%')
-                      ->orWhere('title', 'like', '%' . $query . '%');
+            if (!empty($this->query)) {
+                $fragmentQuery->where(function ($q) {
+                    $q->where('message', 'like', '%' . $this->query . '%')
+                      ->orWhere('title', 'like', '%' . $this->query . '%');
                 });
             }
             
             $fragments = $fragmentQuery
                 ->latest()
-                ->limit(50)
+                ->limit(200)
                 ->get()
                 ->map(function ($fragment) {
+                    // Sanitize strings to ensure valid UTF-8
+                    $message = mb_convert_encoding($fragment->message ?? '', 'UTF-8', 'UTF-8');
+                    $title = mb_convert_encoding($fragment->title ?? '', 'UTF-8', 'UTF-8');
+                    
+                    // Clean metadata - remove any non-UTF-8 safe values
+                    $metadata = $fragment->metadata ?? [];
+                    if (is_array($metadata)) {
+                        array_walk_recursive($metadata, function (&$value) {
+                            if (is_string($value)) {
+                                $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+                            }
+                        });
+                    }
+                    
                     return [
                         'id' => $fragment->id,
-                        'title' => $fragment->title,
-                        'message' => $fragment->message,
+                        'title' => $title,
+                        'message' => $message,
                         'type' => $fragment->type,
                         'category' => $fragment->category?->name ?? null,
-                        'metadata' => $fragment->metadata ?? [],
+                        'metadata' => $metadata,
                         'created_at' => $fragment->created_at?->toISOString(),
                         'updated_at' => $fragment->updated_at?->toISOString(),
                         'created_human' => $fragment->created_at?->diffForHumans(),
-                        'preview' => \Illuminate\Support\Str::limit($fragment->message, 200),
+                        'preview' => \Illuminate\Support\Str::limit($message, 200),
                     ];
                 })
                 ->all();
@@ -56,13 +72,6 @@ class SearchCommand extends BaseCommand
         }
         
         return [];
-    }
-    
-    private function getSearchQuery(): ?string
-    {
-        // TODO: Extract from command context/arguments
-        // For now, return null to show all fragments
-        return null;
     }
     
     public static function getName(): string

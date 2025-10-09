@@ -1,0 +1,54 @@
+schema: fe.contextpack.v1
+version: 1
+project: P-FRAGMENTS-ENGINE
+priority: high
+policy:
+  must_do:
+  - claim.task
+  - boot.context
+  - init.phase
+  - execute
+  - checkpoint
+  - summarize
+init:
+  steps:
+  - id: init.load_profile
+    desc: Load agent profile and permissions.
+  - id: init.healthcheck
+    desc: Verify access to packs/, delegation/, docs/, bus, artifact store.
+  - id: init.resume
+    desc: Load prior notes for runners/telemetry if present and reconcile.
+how_to_run:
+  cli:
+  - fe pm:send --agent=A-fe-spec-writer --task=T-RUNNER-QUANTUM-SCHEMAS --file=./delegation/T-RUNNER-QUANTUM-SCHEMAS.yaml
+  - fe agent:check-messages
+  streams:
+  - agents.A-fe-spec-writer.inbox
+  - tasks.T-RUNNER-QUANTUM-SCHEMAS.mailbox
+task: T-MCP-MAPPING
+agent_profile: A-fe-mcp
+boot:
+  brief: Expose FE Tasks/Runs/Artifacts via MCP resources + tools; enable external
+    agents to query and act under policy.
+  repo:
+    paths:
+    - repo://fragments-engine/app/Services/MCP
+    - repo://fragments-engine/config/mcp.php
+plan:
+  steps:
+  - id: resources
+    desc: 'Resources: fe.tasks, fe.runs, fe.artifacts (list/get).'
+  - id: tools
+    desc: 'Tools: fe.run.start, fe.run.status, fe.artifact.put/link; enforce policy/budgets.'
+  - id: auth
+    desc: Per-agent tokens and scopes; audit trail on tool usage.
+  - id: examples
+    desc: Example configs for Claude, OpenCode, other MCP clients.
+deliverables:
+- config/mcp.php
+- app/Services/MCP/*
+- docs/orchestration/mcp-mapping.md
+- examples/mcp/*.json
+acceptance:
+- External MCP client lists tasks/runs and can read artifacts under policy.
+- Tool calls validate scopes and emit telemetry.

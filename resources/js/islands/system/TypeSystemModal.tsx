@@ -29,13 +29,13 @@ export function TypeSystemModal({ isOpen, onClose }: TypeSystemModalProps) {
             Manage type packs, view validation status, and monitor fragment type distribution across your system.
           </DialogDescription>
         </DialogHeader>
-        
+
         <ScrollArea className="max-h-[75vh] w-full">
           <div className="p-1">
             <TypeSystemWidget />
           </div>
         </ScrollArea>
-        
+
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} className="rounded-sm">
             Close

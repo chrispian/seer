@@ -1,0 +1,243 @@
+Template: 
+
+id: toolctx:<name>@<version>
+name: <name>
+version: <version>
+summary: "<one-line what it does>"
+selection_hint: "<use when …>"
+
+tags: [<capability_1>, <capability_2>]   # e.g., code_search, file_read
+aliases: [<other_names>]                  # optional
+
+syntax: "<name>(<arg1>, <arg2>[, <opt>=<default>])"
+
+args:
+  schema:
+    <arg1>:
+      type: <string|number|boolean|array|string[]>
+      required: true|false
+      description: "<short help>"
+    <arg2>:
+      type: ...
+      required: ...
+      description: "..."
+    <opt>:
+      type: ...
+      required: false
+      description: "..."
+  defaults:
+    <opt>: <value>
+  constraints:
+    <arg1>:
+      regex: "<optional regex>"
+      max_len: <int?>
+      choices: [<enum?>]
+    <arg2>:
+      min: <number?>
+      max: <number?>
+
+examples:
+  - goal: "<gold use case 1>"
+    call: { tool: <name>, args: { <arg1>: "...", <arg2>: "..." } }
+    expect: "<shape/summary of output>"
+  - goal: "<gold use case 2>"
+    call: { tool: <name>, args: { ... } }
+    expect: "..."
+
+constraints:
+  allowed_paths: ["./", "app", "resources"]    # optional per tool
+  disallowed_globs: ["node_modules/**", ".git/**"]
+  perf_notes: "<micro-hint to reduce noise>"
+
+permissions:
+  fs_read: true|false
+  fs_write: true|false
+  net: true|false
+
+return_shape:
+  content: "<text|json|bytes|lines>"
+  meta:
+    exitCode: "number"
+    elapsed_ms: "number?"
+    truncated: "boolean?"
+
+preconditions:
+  - "<e.g., path must exist>"
+side_effects:
+  - "<e.g., writes file, modifies repo>"
+
+timeout_ms: 10000
+idempotent: true|false
+
+failure_modes:
+  - kind: "POLICY_DENIED"
+    fix: "Restrict to allowed_paths"
+  - kind: "NO_MATCHES"
+    fix: "Narrow pattern or adjust path"
+  - kind: "TOO_MUCH_OUTPUT"
+    fix: "Use max_results or narrower path"
+
+weights:
+  priority: 0.5         # keep equal for v0; learn later
+  cost_hint: 0.2        # relative cost/latency hint (0–1)
+  success_hint: 0.3     # prior win-rate if you have it (else 0.3 baseline)
+
+Tool Example: Ripgrep
+
+id: toolctx:ripgrep@1.0
+name: ripgrep
+version: "1.0"
+summary: "Search files for regex patterns quickly."
+selection_hint: "Use to locate code/text occurrences across the workspace."
+
+tags: [code_search, grep]
+aliases: [rg]
+
+syntax: "ripgrep(pattern, path, max_results=100)"
+
+args:
+  schema:
+    pattern:
+      type: string
+      required: true
+      description: "Regex to search for."
+    path:
+      type: string[]          # single string or array allowed
+      required: true
+      description: "One or more directories to search."
+    max_results:
+      type: number
+      required: false
+      description: "Cap result lines."
+  defaults:
+    max_results: 100
+  constraints:
+    pattern:
+      max_len: 200
+    path:
+      choices: []             # empty = any; policy enforces below
+
+examples:
+  - goal: "Find where avatar renders"
+    call: { tool: ripgrep, args: { pattern: "avatar", path: ["resources","app"] } }
+    expect: "File:Line:Snippet list"
+  - goal: "Find PHP files importing Auth"
+    call: { tool: ripgrep, args: { pattern: "use\\s+Auth", path: ["app"] } }
+    expect: "app/.../Something.php:5 use Auth;"
+
+constraints:
+  allowed_paths: ["./", "app", "resources", "config", "routes"]
+  disallowed_globs: ["node_modules/**", ".git/**", "storage/**"]
+  perf_notes: "Prefer specific subdirs (e.g., app/, resources/) to reduce noise."
+
+permissions:
+  fs_read: true
+  fs_write: false
+  net: false
+
+return_shape:
+  content: "lines"            # each line: "<path>:<line>:<snippet>"
+  meta:
+    exitCode: "number"
+    elapsed_ms: "number?"
+    truncated: "boolean?"
+
+preconditions:
+  - "Paths must be within allowed_paths."
+side_effects: []
+
+timeout_ms: 8000
+idempotent: true
+
+failure_modes:
+  - kind: "NO_MATCHES"
+    fix: "Relax pattern or broaden path. Consider case-insensitive or word boundaries."
+  - kind: "TOO_MUCH_OUTPUT"
+    fix: "Use max_results or narrower path."
+  - kind: "POLICY_DENIED"
+    fix: "Remove disallowed path (e.g., node_modules/)."
+
+weights:
+  priority: 0.33
+  cost_hint: 0.2
+  success_hint: 0.33
+
+Tool Example: write_file
+
+id: toolctx:write_file@1.0
+name: write_file
+version: "1.0"
+summary: "Create or overwrite a file with provided content or apply a patch."
+selection_hint: "Use to create/update a file after a reviewed plan."
+
+tags: [file_write, patch]
+syntax: "write_file(path, content|patch, mode='create|overwrite|patch')"
+
+args:
+  schema:
+    path:
+      type: string
+      required: true
+      description: "Relative path within workspace."
+    content:
+      type: string
+      required: false
+      description: "Full file content (create/overwrite)."
+    patch:
+      type: string
+      required: false
+      description: "Unified diff (patch mode)."
+    mode:
+      type: string
+      required: false
+      description: "One of create|overwrite|patch."
+  defaults:
+    mode: "patch"
+  constraints:
+    path:
+      regex: "^(?!\\.\\./).*"    # no parent escapes
+    mode:
+      choices: ["create","overwrite","patch"]
+
+examples:
+  - goal: "Apply a small fix to avatar component"
+    call: { tool: write_file, args: { path: "resources/views/components/avatar.blade.php", patch: "@@ -12,6 +12,7 @@" } }
+    expect: "exitCode=0; file patched"
+
+constraints:
+  allowed_paths: ["./app","./resources","./tests"]
+  disallowed_globs: [".git/**","node_modules/**"]
+  perf_notes: "Prefer patch mode for safety (smaller diffs)."
+
+permissions:
+  fs_read: true
+  fs_write: true
+  net: false
+
+return_shape:
+  content: "text"
+  meta:
+    exitCode: "number"
+    elapsed_ms: "number?"
+    bytes_written: "number?"
+
+preconditions:
+  - "Patch must apply cleanly."
+side_effects:
+  - "Modifies workspace files."
+
+timeout_ms: 10000
+idempotent: false
+
+failure_modes:
+  - kind: "PATCH_APPLY_FAILED"
+    fix: "Refresh target file, rebase diff, or use smaller hunk."
+  - kind: "POLICY_DENIED"
+    fix: "Restrict to allowed_paths."
+  - kind: "LARGE_WRITE"
+    fix: "Confirm plan; split into smaller patches."
+
+weights:
+  priority: 0.33
+  cost_hint: 0.3
+  success_hint: 0.33

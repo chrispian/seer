@@ -33,6 +33,9 @@ class AnthropicProvider extends AbstractAIProvider
         $maxTokens = $options['max_tokens'] ?? 1000;
         $temperature = $options['temperature'] ?? 0.7;
 
+        // Extract telemetry context from options
+        $telemetryContext = $options['_telemetry_context'] ?? [];
+
         $request = [
             'model' => $model,
             'messages' => [
@@ -59,7 +62,7 @@ class AnthropicProvider extends AbstractAIProvider
             }
 
             $data = $response->json();
-            $this->logApiRequest('text_generation', $request, $data);
+            $this->logApiRequest('text_generation', $request, $data, null, $telemetryContext);
 
             // Anthropic response format is different from OpenAI
             $content = '';
@@ -79,7 +82,7 @@ class AnthropicProvider extends AbstractAIProvider
             ];
 
         } catch (\Exception $e) {
-            $this->logApiRequest('text_generation', $request, null, $e);
+            $this->logApiRequest('text_generation', $request, null, $e, $telemetryContext);
             throw $e;
         }
     }
@@ -147,6 +150,9 @@ class AnthropicProvider extends AbstractAIProvider
         $maxTokens = $options['max_tokens'] ?? 1000;
         $temperature = $options['temperature'] ?? 0.7;
 
+        // Extract telemetry context from options
+        $telemetryContext = $options['_telemetry_context'] ?? [];
+
         $request = [
             'model' => $model,
             'messages' => $messages,
@@ -210,7 +216,7 @@ class AnthropicProvider extends AbstractAIProvider
             }
 
         } catch (\Exception $e) {
-            $this->logApiRequest('stream_chat', $request, null, $e);
+            $this->logApiRequest('stream_chat', $request, null, $e, $telemetryContext);
             throw $e;
         }
     }

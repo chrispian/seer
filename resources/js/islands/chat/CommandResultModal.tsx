@@ -14,12 +14,16 @@ import { SprintListModal } from '@/components/orchestration/SprintListModal'
 import { SprintDetailModal } from '@/components/orchestration/SprintDetailModal'
 import { TaskListModal } from '@/components/orchestration/TaskListModal'
 import { TaskDetailModal } from '@/components/orchestration/TaskDetailModal'
-import { AgentListModal } from '@/components/orchestration/AgentListModal'
+import { AgentProfileListModal } from '@/components/orchestration/AgentProfileListModal'
 import { BacklogListModal } from '@/components/orchestration/BacklogListModal'
 import { TodoManagementModal } from '@/islands/chat/TodoManagementModal'
 import { FragmentListModal } from '@/components/fragments/FragmentListModal'
 import { ChannelListModal } from '@/components/channels/ChannelListModal'
 import { RoutingInfoModal } from '@/components/routing/RoutingInfoModal'
+import { AgentProfileDashboard } from '@/pages/AgentProfileDashboard'
+import { AgentDashboard } from '@/pages/AgentDashboard'
+import { TypeManagementModal } from '@/components/types/TypeManagementModal'
+import { UnifiedListModal } from '@/components/unified/UnifiedListModal'
 
 
 interface CommandResult {
@@ -109,13 +113,16 @@ export function CommandResultModal({
       return true
     }
     // Legacy - check result.type for YAML commands
-    return result.type === 'sprint' || result.type === 'task' || result.type === 'backlog' || result.type === 'agent' || result.type === 'ailogs'
+    return result.type === 'sprint' || result.type === 'task' || result.type === 'backlog' || result.type === 'agent' || result.type === 'agent-profile' || result.type === 'ailogs'
   }
 
   const renderOrchestrationUI = (currentResult: CommandResult = result, isDetail = false) => {
     // New PHP command system - direct component routing
-    if (currentResult.component && currentResult.data) {
+    if (currentResult.component) {
       console.log('New PHP command - component:', currentResult.component, 'data:', currentResult.data, 'isDetail:', isDetail)
+      console.log('About to switch on component:', currentResult.component)
+      console.log('Component type:', typeof currentResult.component)
+      console.log('Component === "TypeManagementModal":', currentResult.component === 'TypeManagementModal')
       
       // Direct component routing based on component field
       switch (currentResult.component) {
@@ -159,23 +166,43 @@ export function CommandResultModal({
               }}
             />
           )
-        case 'AgentListModal':
+        case 'AgentProfileDashboard':
           return (
-            <AgentListModal
+            <Dialog open={isOpen} onOpenChange={onClose}>
+              <DialogContent className="max-w-[95vw] h-[90vh] p-0">
+                <AgentProfileDashboard initialAgents={currentResult.data} />
+              </DialogContent>
+            </Dialog>
+          )
+        case 'AgentDashboard':
+          return (
+            <Dialog open={isOpen} onOpenChange={onClose}>
+              <DialogContent className="max-w-[95vw] h-[90vh] p-0">
+                <AgentDashboard 
+                  initialAgents={currentResult.data.agents} 
+                  agentProfiles={currentResult.data.agentProfiles}
+                />
+              </DialogContent>
+            </Dialog>
+          )
+        
+        case 'AgentProfileListModal':
+          return (
+            <AgentProfileListModal
               isOpen={isOpen}
               onClose={() => {
-                console.log('AgentListModal onClose called')
+                console.log('AgentProfileListModal onClose called')
                 handleBackToList()
                 onClose()
               }}
               agents={currentResult.data}
-              onAgentSelect={(agent) => {
-                console.log('Agent selected:', agent)
-                executeDetailCommand(`/agent-detail ${agent.slug}`)
+              onAgentSelect={(agent: any) => {
+                console.log('Agent profile selected:', agent)
+                executeDetailCommand(`/agent-profile-detail ${agent.slug}`)
               }}
               onRefresh={() => {
-                console.log('Agent refresh requested')
-                alert('Agent refresh functionality not implemented yet.')
+                console.log('Agent profile refresh requested')
+                alert('Agent profile refresh functionality not implemented yet.')
               }}
             />
           )
@@ -206,6 +233,30 @@ export function CommandResultModal({
               onClose={() => {
                 console.log('TodoManagementModal onClose called')
                 onClose()
+              }}
+            />
+          )
+        case 'TypeManagementModal':
+          return (
+            <TypeManagementModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('TypeManagementModal onClose called')
+                onClose()
+              }}
+            />
+          )
+        case 'UnifiedListModal':
+          return (
+            <UnifiedListModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('UnifiedListModal onClose called')
+                onClose()
+              }}
+              data={currentResult.data}
+              onRefresh={() => {
+                console.log('UnifiedListModal refresh requested')
               }}
             />
           )
@@ -274,14 +325,32 @@ export function CommandResultModal({
             />
           )
         case 'TaskDetailModal':
+          if (!currentResult.data?.task) {
+            console.error('TaskDetailModal: No task data', currentResult)
+            return (
+              <Dialog open={isOpen} onOpenChange={onClose}>
+                <DialogContent className="max-w-4xl rounded-sm">
+                  <DialogHeader>
+                    <DialogTitle className="text-foreground">Error</DialogTitle>
+                  </DialogHeader>
+                  <div className="p-4 text-center text-muted-foreground">
+                    Task data not available. Please try again.
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )
+          }
           return (
             <TaskDetailModal
               isOpen={isOpen}
               onClose={onClose}
-              task={currentResult.data?.task}
+              task={currentResult.data.task}
               currentAssignment={currentResult.data?.current_assignment}
               assignments={currentResult.data?.assignments || []}
               content={currentResult.data?.content || {}}
+              activities={currentResult.data?.activities || []}
+              activitiesLoading={false}
+              activitiesError={null}
               onBack={isDetail ? handleBackToList : onClose}
             />
           )

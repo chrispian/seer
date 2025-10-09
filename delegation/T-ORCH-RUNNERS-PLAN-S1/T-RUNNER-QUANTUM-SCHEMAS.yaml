@@ -1,0 +1,64 @@
+schema: fe.contextpack.v1
+version: 1
+project: P-FRAGMENTS-ENGINE
+priority: high
+policy:
+  must_do:
+  - claim.task
+  - boot.context
+  - init.phase
+  - execute
+  - checkpoint
+  - summarize
+init:
+  steps:
+  - id: init.load_profile
+    desc: Load agent profile and permissions.
+  - id: init.healthcheck
+    desc: Verify access to packs/, delegation/, docs/, bus, artifact store.
+  - id: init.resume
+    desc: Load prior notes for runners/telemetry if present and reconcile.
+how_to_run:
+  cli:
+  - fe pm:send --agent=A-fe-spec-writer --task=T-RUNNER-QUANTUM-SCHEMAS --file=./delegation/T-RUNNER-QUANTUM-SCHEMAS.yaml
+  - fe agent:check-messages
+  streams:
+  - agents.A-fe-spec-writer.inbox
+  - tasks.T-RUNNER-QUANTUM-SCHEMAS.mailbox
+task: T-RUNNER-QUANTUM-SCHEMAS
+agent_profile: A-fe-spec-writer
+boot:
+  brief: 'Define v0 JSON schemas and examples for runner orchestration:
+
+    PlanSpec, StepSpec, StepResult, Artifact, and EventEnvelope (OTel-ish).
+
+    Include examples and a CLI validator. Version schemas and forbid breaking changes.'
+  repo:
+    paths:
+    - repo://fragments-engine/docs/schemas
+    - repo://fragments-engine/app/Support/Schemas
+plan:
+  steps:
+  - id: plan.planspec
+    desc: Draft PlanSpec (checklist-as-mini-queue) with nodes, budgets, view_signatures.
+  - id: plan.stepspec
+    desc: Draft StepSpec (inputs, preconditions, budgets, emits, acceptance).
+  - id: plan.stepresult
+    desc: Draft StepResult (events, outputs, checkpoint, yield).
+  - id: plan.artifact
+    desc: Draft Artifact schema and fe:// URI manifest.
+  - id: plan.event
+    desc: 'Draft EventEnvelope for telemetry (keys: task_id, run_id, step_id, spans).'
+  - id: impl.validator
+    desc: Implement CLI `fe schemas:validate`.
+deliverables:
+- docs/schemas/plan.v0.json
+- docs/schemas/step.v0.json
+- docs/schemas/step-result.v0.json
+- docs/schemas/artifact.v0.json
+- docs/schemas/event-envelope.v0.json
+- docs/schemas/examples/*.json
+- app/Console/Commands/SchemasValidateCommand.php
+acceptance:
+- '`fe schemas:validate docs/schemas/examples/*.json` passes.'
+- Schemas include `schema_version` and change log doc exists.

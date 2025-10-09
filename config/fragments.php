@@ -150,6 +150,73 @@ return [
             'fallback' => 20,             // Lowest priority
         ],
 
+        // Cost rates for LLM usage tracking (per 1K tokens, USD)
+        'cost_rates' => [
+            // OpenAI models
+            'gpt-4o' => [
+                'input_per_thousand' => 0.0025,
+                'output_per_thousand' => 0.01,
+            ],
+            'gpt-4o-mini' => [
+                'input_per_thousand' => 0.00015,
+                'output_per_thousand' => 0.0006,
+            ],
+            'gpt-4-turbo' => [
+                'input_per_thousand' => 0.01,
+                'output_per_thousand' => 0.03,
+            ],
+            'gpt-4' => [
+                'input_per_thousand' => 0.03,
+                'output_per_thousand' => 0.06,
+            ],
+            'gpt-3.5-turbo' => [
+                'input_per_thousand' => 0.0015,
+                'output_per_thousand' => 0.002,
+            ],
+            'text-embedding-3-large' => [
+                'input_per_thousand' => 0.00013,
+                'output_per_thousand' => 0,
+            ],
+            'text-embedding-3-small' => [
+                'input_per_thousand' => 0.00002,
+                'output_per_thousand' => 0,
+            ],
+
+            // Anthropic models
+            'claude-3-5-sonnet-latest' => [
+                'input_per_thousand' => 0.003,
+                'output_per_thousand' => 0.015,
+            ],
+            'claude-3-5-haiku-latest' => [
+                'input_per_thousand' => 0.0008,
+                'output_per_thousand' => 0.004,
+            ],
+            'claude-3-opus-latest' => [
+                'input_per_thousand' => 0.015,
+                'output_per_thousand' => 0.075,
+            ],
+
+            // OpenRouter (approximate rates, may vary)
+            'anthropic/claude-3.5-sonnet' => [
+                'input_per_thousand' => 0.003,
+                'output_per_thousand' => 0.015,
+            ],
+            'openai/gpt-4o' => [
+                'input_per_thousand' => 0.0025,
+                'output_per_thousand' => 0.01,
+            ],
+            'meta-llama/llama-3.1-70b-instruct' => [
+                'input_per_thousand' => 0.0004,
+                'output_per_thousand' => 0.0004,
+            ],
+
+            // Ollama (free, no cost)
+            'ollama' => [
+                'input_per_thousand' => 0.0,
+                'output_per_thousand' => 0.0,
+            ],
+        ],
+
         // UI transparency settings
         'ui' => [
             'show_model_info' => env('AI_SHOW_MODEL_INFO', true),
@@ -238,6 +305,14 @@ return [
             explode(',', env('FRAGMENT_TOOLS_ALLOWED')) :
             [], // Empty by default for security
 
+        // Exec tool configuration (chat-triggered shell execution)
+        'exec_tool' => [
+            'enabled' => env('FRAGMENT_TOOLS_EXEC_ENABLED', false),
+            'default_command' => env('FRAGMENT_TOOLS_EXEC_DEFAULT', 'ls -asl'),
+            'workdir' => env('FRAGMENT_TOOLS_EXEC_WORKDIR'),
+            'timeout_seconds' => env('FRAGMENT_TOOLS_EXEC_TIMEOUT', 20),
+        ],
+
         // Shell tool configuration
         'shell' => [
             'enabled' => env('FRAGMENT_TOOLS_SHELL_ENABLED', false),
@@ -269,6 +344,38 @@ return [
                 //     'headers' => ['Authorization' => 'Bearer token'],
                 // ],
             ],
+        ],
+    ],
+
+    'tool_aware_turn' => [
+        'enabled' => env('TOOL_AWARE_TURN_ENABLED', false),
+        
+        'limits' => [
+            'max_steps_per_turn' => env('TOOL_AWARE_MAX_STEPS', 10),
+            'timeout_seconds' => env('TOOL_AWARE_TIMEOUT', 60),
+        ],
+
+        'models' => [
+            'router' => env('TOOL_AWARE_ROUTER_MODEL', 'gpt-4o-mini'),
+            'candidate_selector' => env('TOOL_AWARE_CANDIDATE_MODEL', 'gpt-4o-mini'),
+            'summarizer' => env('TOOL_AWARE_SUMMARY_MODEL', 'gpt-4o-mini'),
+            'composer' => env('TOOL_AWARE_COMPOSER_MODEL', 'gpt-4o'),
+        ],
+
+        'features' => [
+            'retry_on_parse_failure' => env('TOOL_AWARE_RETRY_PARSE', true),
+            'audit_enabled' => env('TOOL_AWARE_AUDIT', true),
+            'redact_logs' => env('TOOL_AWARE_REDACT', true),
+        ],
+
+        'context' => [
+            'max_summary_length' => env('TOOL_AWARE_MAX_SUMMARY', 600),
+            'tool_preview_count' => env('TOOL_AWARE_PREVIEW_COUNT', 5),
+        ],
+
+        'cache' => [
+            'mcp_ttl_hours' => env('TOOL_AWARE_MCP_CACHE_TTL', 24),
+            'auto_refresh' => env('TOOL_AWARE_AUTO_REFRESH', true),
         ],
     ],
 ];

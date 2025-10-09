@@ -118,6 +118,14 @@ class AICredential extends Model
     }
 
     /**
+     * Alias for provider relationship
+     */
+    public function providerConfig(): BelongsTo
+    {
+        return $this->provider();
+    }
+
+    /**
      * Get or ensure provider config exists
      */
     public function getProvider(): Provider

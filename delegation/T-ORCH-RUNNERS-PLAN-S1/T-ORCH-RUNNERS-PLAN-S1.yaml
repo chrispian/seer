@@ -1,0 +1,197 @@
+schema: fe.contextpack.v1
+version: 1
+task: T-ORCH-RUNNERS-PLAN-S1
+project: P-FRAGMENTS-ENGINE
+agent_profile: A-fe-pm
+priority: high
+boot:
+  brief: "Plan a sprint to introduce a Quantum Runner (queue-friendly, time/step-bounded\
+    \ execution)\nand an Attached Runner for long/interactive work (OpenHands WebSocket\
+    \ sessions), with FE\nas the system of record. Outcomes: a Sprint Plan and child\
+    \ Task Packs for each workstream.\n\nKey decisions captured:\n\u2022 Tasks are\
+    \ the primitive; agents are stateless workers hydrating on-demand context.\n\u2022\
+    \ Context slices are cached per (task_run_id, view_signature); agents must reuse\
+    \ them.\n\u2022 Mandatory execution phases: boot \u2192 read_task \u2192 gather_context\
+    \ \u2192 plan \u2192 execute[*]\n  \u2192 summary \u2192 admin \u2192 shutdown\
+    \ (checklist-as-mini-queue).\n\u2022 Default = Quantum Runner (Pattern A): execution\
+    \ lease + quantum + buffered telemetry\n  + durable checkpoints + requeue on yield.\n\
+    \u2022 Long/interactive = Attached Runner (OpenHands): WS sessions, heartbeats,\
+    \ checkpoints,\n  reattach, FE remains source of truth.\n\u2022 Git strategy:\
+    \ worktrees per run + short-lived edit leases (file/module granularity).\n\u2022\
+    \ Artifacts: stable fe:// URIs; Postmaster handles blobs; transcripts \u2260 state.\n\
+    \u2022 Structured emissions: PlanSpec/StepSpec/StepResult/Artifact JSON; OTel-style\
+    \ events.\n\u2022 Guardrails: schema versioning, budgets (tokens/time/tool-calls),\
+    \ heartbeat/TTL, retries\n  with backoff, orphan sweeper, no VCS of raw context\
+    \ (fe:// pointers only)."
+  repo:
+    paths:
+    - repo://fragments-engine/docs/orchestration/runners
+    - repo://fragments-engine/docs/orchestration/state-machines
+    - repo://fragments-engine/docs/orchestration/observability
+    - repo://fragments-engine/packs
+    - repo://fragments-engine/delegation
+    - repo://fragments-engine/app/Services/Orchestration
+    - repo://fragments-engine/app/Console/Commands
+    - repo://fragments-engine/app/Jobs
+    - repo://fragments-engine/routes/api.php
+  pointers:
+  - label: Artifacts & Postmaster (prior work)
+    uri: fe://docs/orchestration/postmaster-and-init.md
+  - label: Streams & inbox (prior work)
+    uri: fe://docs/orchestration/streams.md
+  notes:
+  - FE is the orchestrator and source of truth; runners are sidecars.
+  - Default to Quantum Runner; switch to Attached Runner only when needed (long REPL/build).
+policy:
+  must_do:
+  - claim.task
+  - boot.context
+  - init.phase
+  - sprint.plan
+  - qa.logs
+  - summarize
+init:
+  steps:
+  - id: init.resume_memory
+    desc: Load any prior orchestration notes/decisions about runners and telemetry.
+    mem_keys:
+    - mem:orchestration:runners:notes
+    - mem:task:{task_id}:postop
+  - id: init.load_profile
+    desc: Load PM profile, permissions, and endpoints for packs and docs.
+  - id: init.healthcheck
+    desc: Verify write access to packs/, delegation/, and docs/ paths; check bus and
+      artifacts.
+  - id: init.plan_confirm
+    desc: If an Intent Plan exists in memory, reconcile with incoming pack; emit delta.
+plan:
+  steps:
+  - id: design.schemas.v0
+    desc: Author JSON schemas for PlanSpec, StepSpec, StepResult, Artifact, EventEnvelope
+      (OTel-ish).
+    deliverables:
+    - docs/schemas/plan.v0.json
+    - docs/schemas/step.v0.json
+    - docs/schemas/step-result.v0.json
+    - docs/schemas/artifact.v0.json
+    - docs/schemas/event-envelope.v0.json
+    - docs/orchestration/runners/schemas-onepager.md
+  - id: quantum.runner.recipe
+    desc: Define execution lease, quantum loop, budgets, buffered persistence, checkpoint/yield
+      protocol.
+    deliverables:
+    - docs/orchestration/runners/quantum-runner.md
+    - docs/orchestration/state-machines/task-fsm.md
+    events:
+    - checkpoint
+    - heartbeat
+    - retry
+    - escalate
+    - yield
+  - id: attached.runner.openhands.spike
+    desc: Plan integration with OpenHands headless (Socket.IO). Sessions, heartbeats,
+      reconnect, mapping to (task_id, run_id).
+    deliverables:
+    - docs/orchestration/runners/openhands-integration.md
+    - docs/orchestration/runners/session-protocol.md
+    routes:
+    - WS /runner/oh/sessions/{conversation_id}
+    - POST /runner/oh/sessions/{conversation_id}/action
+  - id: context.views.cache
+    desc: Specify Context Views and cache rule keyed by (task_run_id, view_signature).
+    deliverables:
+    - docs/orchestration/context-views.md
+  - id: artifact.uris.layout
+    desc: Finalize fe:// URI scheme and manifests by task/run/kind; CAS usage with
+      Postmaster.
+    deliverables:
+    - docs/orchestration/artifacts-uris.md
+  - id: observability.spec
+    desc: Define OTel-style spans/events, metrics, and log buffering strategy.
+    deliverables:
+    - docs/orchestration/observability/telemetry-spec.md
+  - id: git.strategy
+    desc: Document worktrees-per-run, edit leases (Redis SETNX TTL), 3-way apply,
+      merge bot escalation.
+    deliverables:
+    - docs/orchestration/git-worktrees-and-leases.md
+  - id: provider.matrix
+    desc: Record provider/model matrix for runners (OpenHands via LiteLLM, FE local
+      models, future options).
+    deliverables:
+    - docs/orchestration/providers-matrix.md
+  - id: mcp.mapping
+    desc: Map FE Tasks/Runs/Artifacts to MCP resources/tools for external agents.
+    deliverables:
+    - docs/orchestration/mcp-mapping.md
+  - id: bakeoff.plan
+    desc: Define evaluation criteria and acceptance tests for runner behaviors and
+      fallback rules.
+    deliverables:
+    - docs/orchestration/runners/bakeoff-plan.md
+  - id: sprint.breakdown
+    desc: Produce child Task Packs (like this pack) for each workstream and place
+      them in delegation/.
+    deliverables:
+    - delegation/T-RUNNER-QUANTUM-SCHEMAS.yaml
+    - delegation/T-RUNNER-QUANTUM-ENGINE.yaml
+    - delegation/T-RUNNER-OH-INTEGRATION.yaml
+    - delegation/T-CTX-VIEWS-CACHE.yaml
+    - delegation/T-OBSERVABILITY.yaml
+    - delegation/T-GIT-LEASES.yaml
+    - delegation/T-MCP-MAPPING.yaml
+    - delegation/T-BAKEOFF.yaml
+backlog:
+- title: OpenCode sidecar investigation
+  priority: med
+  reason: Optional thin runner for quantum jobs
+- title: LangGraph Server + Agent Protocol
+  priority: low
+  reason: Interoperability and Studio debugging later
+- title: Merge Bot implementation
+  priority: med
+  reason: Automate ordered patch apply and conflict repair
+- title: Module-level leases & hot-spot detection
+  priority: med
+  reason: Reduce churn in shared areas
+guardrails:
+  schemas:
+    versioned: true
+    rule: All emitted JSON must include schema_version; reject incompatible versions.
+  budgets:
+    tokens: 12000
+    tool_calls: 32
+    wall_seconds: 90
+    behavior: "On budget exceed \u2192 checkpoint + yield + requeue"
+  repos:
+    rule: No raw context or large blobs in VCS; commit fe:// pointers only.
+  secrets:
+    redact_patterns:
+    - AWS_(ACCESS|SECRET)_KEY
+    - APP_KEY
+    - Bearer [A-Za-z0-9._-]+
+acceptance:
+- Sprint Plan document exists under docs/orchestration/runners/ with clear scope,
+  milestones, and risks.
+- All child Task Packs are generated in delegation/ and validate against fe.contextpack.v1
+  schema.
+- Schemas v0 drafted (PlanSpec, StepSpec, StepResult, Artifact, EventEnvelope).
+- Bakeoff plan specifies when to use Quantum vs Attached Runner and the fallback rules.
+- Observability spec defines events, heartbeats, metrics, and buffering strategy.
+how_to_run:
+  cli:
+  - fe pm:send --agent=A-fe-pm --task=T-ORCH-RUNNERS-PLAN-S1 --file=./packs/T-ORCH-RUNNERS-PLAN-S1.yaml
+  - 'fe agent:check-messages # external agent shim listens for this pack'
+  streams:
+  - agents.A-fe-pm.inbox
+  - tasks.T-ORCH-RUNNERS-PLAN-S1.mailbox
+qa:
+  verdicts:
+  - delegation/*.yaml created with required sections (boot/policy/init/plan/backlog/guardrails/acceptance/how_to_run/qa/summary_template)
+  - docs/orchestration/runners/* created (schemas/bakeoff/quantum-runner/openhands-integration)
+summary_template:
+  sections:
+  - Sprint goals & scope (runners & orchestration)
+  - Deliverables & produced task packs
+  - Risks & mitigations
+  - Follow-ups & next sprint candidates

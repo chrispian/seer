@@ -1,0 +1,66 @@
+schema: fe.contextpack.v1
+version: 1
+project: P-FRAGMENTS-ENGINE
+priority: high
+policy:
+  must_do:
+  - claim.task
+  - boot.context
+  - init.phase
+  - execute
+  - checkpoint
+  - summarize
+init:
+  steps:
+  - id: init.load_profile
+    desc: Load agent profile and permissions.
+  - id: init.healthcheck
+    desc: Verify access to packs/, delegation/, docs/, bus, artifact store.
+  - id: init.resume
+    desc: Load prior notes for runners/telemetry if present and reconcile.
+how_to_run:
+  cli:
+  - fe pm:send --agent=A-fe-spec-writer --task=T-RUNNER-QUANTUM-SCHEMAS --file=./delegation/T-RUNNER-QUANTUM-SCHEMAS.yaml
+  - fe agent:check-messages
+  streams:
+  - agents.A-fe-spec-writer.inbox
+  - tasks.T-RUNNER-QUANTUM-SCHEMAS.mailbox
+task: T-RUNNER-QUANTUM-ENGINE
+agent_profile: A-fe-swe
+boot:
+  brief: Implement Quantum Runner (execution lease, quantum loop, budgets, buffered
+    telemetry, checkpoints, yield/requeue).
+  repo:
+    paths:
+    - repo://fragments-engine/app/Jobs/QuantumRun.php
+    - repo://fragments-engine/app/Services/Orchestration/QuantumRunner.php
+    - repo://fragments-engine/app/Services/Orchestration/RunLedger.php
+    - repo://fragments-engine/app/Services/Orchestration/ArtifactStore.php
+    - repo://fragments-engine/routes/api.php
+plan:
+  steps:
+  - id: impl.lease
+    desc: Redis SETNX lease `lease:{task}:{run}` with TTL + heartbeats.
+  - id: impl.loop
+    desc: Quantum loop (wall/time/tool budgets), buffered telemetry, yield on budget
+      exceed.
+  - id: impl.checkpoint
+    desc: Persist StepResult + artifacts; resume from checkpoint.
+  - id: impl.requeue
+    desc: Requeue with backoff; dead-letter after N attempts.
+  - id: api.status
+    desc: "GET /runs/{id} \u2192 state, last_checkpoint, progress, waiting_on."
+  - id: cli
+    desc: '`fe runs:continue {run}` to manually poke a run.'
+  - id: tests
+    desc: Unit & integration tests with fake tools and timeouts.
+deliverables:
+- app/Jobs/QuantumRun.php
+- app/Services/Orchestration/QuantumRunner.php
+- app/Services/Orchestration/RunLedger.php
+- app/Services/Orchestration/Checkpoints.php
+- routes/api.php (status endpoints)
+- tests/Feature/QuantumRunnerTest.php
+acceptance:
+- Run resumes from last checkpoint after simulated crash.
+- Budgets enforce yield; logs buffered and flushed on checkpoint.

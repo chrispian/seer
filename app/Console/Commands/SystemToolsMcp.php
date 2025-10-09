@@ -2,7 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
+use App\Services\Readwise\ReadwiseApiClient;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Crypt;
 
 class SystemToolsMcp extends Command
 {
@@ -56,6 +59,7 @@ class SystemToolsMcp extends Command
             'logs/tail' => $this->logsTail($params),
             'queue/status' => $this->queueStatus($params),
             'config/get' => $this->configGet($params),
+            'readwise/highlights.fetch' => $this->readwiseHighlightsFetch($params),
             default => ['error' => 'Unknown method: '.$method]
         };
     }
@@ -125,6 +129,39 @@ class SystemToolsMcp extends Command
             ];
         } catch (\Exception $e) {
             return ['error' => 'Failed to execute config/get: '.$e->getMessage()];
+        }
+    }
+
+    private function readwiseHighlightsFetch(array $params): array
+    {
+        try {
+            $user = User::query()->first();
+
+            if (! $user) {
+                return ['error' => 'No user available'];
+            }
+
+            $settings = $user->profile_settings['integrations']['readwise'] ?? [];
+            $encryptedToken = $settings['api_token'] ?? null;
+
+            if (! $encryptedToken) {
+                return ['error' => 'Readwise token not configured'];
+            }
+
+            $token = Crypt::decryptString($encryptedToken);
+
+            /** @var ReadwiseApiClient $client */
+            $client = app(ReadwiseApiClient::class);
+
+            $response = $client->fetchHighlights($token, array_filter([
+                'pageCursor' => $params['pageCursor'] ?? null,
+                'updatedAfter' => $params['updatedAfter'] ?? null,
+                'page_size' => $params['page_size'] ?? null,
+            ], fn ($value) => ! is_null($value)));
+
+            return ['result' => $response];
+        } catch (\Throwable $e) {
+            return ['error' => 'Failed to fetch highlights: '.$e->getMessage()];
         }
     }
 }

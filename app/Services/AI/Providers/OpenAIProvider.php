@@ -35,6 +35,9 @@ class OpenAIProvider extends AbstractAIProvider
         $temperature = $options['temperature'] ?? 0.7;
         $topP = $options['top_p'] ?? null;
 
+        // Extract telemetry context from options
+        $telemetryContext = $options['_telemetry_context'] ?? [];
+
         $request = [
             'model' => $model,
             'messages' => [
@@ -59,7 +62,7 @@ class OpenAIProvider extends AbstractAIProvider
             }
 
             $data = $response->json();
-            $this->logApiRequest('text_generation', $request, $data);
+            $this->logApiRequest('text_generation', $request, $data, null, $telemetryContext);
 
             return [
                 'text' => Arr::get($data, 'choices.0.message.content', ''),
@@ -69,7 +72,7 @@ class OpenAIProvider extends AbstractAIProvider
             ];
 
         } catch (\Exception $e) {
-            $this->logApiRequest('text_generation', $request, null, $e);
+            $this->logApiRequest('text_generation', $request, null, $e, $telemetryContext);
             throw $e;
         }
     }
@@ -77,6 +80,9 @@ class OpenAIProvider extends AbstractAIProvider
     public function generateEmbedding(string $text, array $options = []): array
     {
         $model = $options['model'] ?? 'text-embedding-3-small';
+
+        // Extract telemetry context from options
+        $telemetryContext = $options['_telemetry_context'] ?? [];
 
         $request = [
             'model' => $model,
@@ -93,7 +99,7 @@ class OpenAIProvider extends AbstractAIProvider
             }
 
             $data = $response->json();
-            $this->logApiRequest('embedding_generation', $request, $data);
+            $this->logApiRequest('embedding_generation', $request, $data, null, $telemetryContext);
 
             $vector = Arr::get($data, 'data.0.embedding', []);
 
@@ -106,7 +112,7 @@ class OpenAIProvider extends AbstractAIProvider
             ];
 
         } catch (\Exception $e) {
-            $this->logApiRequest('embedding_generation', $request, null, $e);
+            $this->logApiRequest('embedding_generation', $request, null, $e, $telemetryContext);
             throw $e;
         }
     }
@@ -159,6 +165,9 @@ class OpenAIProvider extends AbstractAIProvider
         $maxTokens = $options['max_tokens'] ?? 1000;
         $temperature = $options['temperature'] ?? 0.7;
         $topP = $options['top_p'] ?? null;
+
+        // Extract telemetry context from options
+        $telemetryContext = $options['_telemetry_context'] ?? [];
 
         $request = [
             'model' => $model,
@@ -227,7 +236,7 @@ class OpenAIProvider extends AbstractAIProvider
             }
 
         } catch (\Exception $e) {
-            $this->logApiRequest('stream_chat', $request, null, $e);
+            $this->logApiRequest('stream_chat', $request, null, $e, $telemetryContext);
             throw $e;
         }
     }

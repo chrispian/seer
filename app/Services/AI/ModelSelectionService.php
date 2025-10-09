@@ -6,6 +6,7 @@ use App\Models\AICredential;
 use App\Models\Project;
 use App\Models\Provider;
 use App\Models\Vault;
+use App\Services\Telemetry\LLMTelemetry;
 use Illuminate\Support\Facades\Log;
 
 class ModelSelectionService
@@ -45,11 +46,19 @@ class ModelSelectionService
      */
     public function selectModel(array $context = []): array
     {
+        $startTime = microtime(true);
         $selections = $this->gatherSelections($context);
+        $selectionTime = microtime(true) - $startTime;
+
         $selectedModel = $this->applySelectionStrategy($selections);
 
-        // Validate the selected model is available
-        if (! $this->isModelAvailable($selectedModel['provider'], $selectedModel['model'])) {
+        // Validate the selected model is available (skip for command overrides)
+        $availabilityStart = microtime(true);
+        $isAvailable = $selectedModel['source'] === 'command_override' ||
+                      $this->isModelAvailable($selectedModel['provider'], $selectedModel['model']);
+        $availabilityCheckTime = microtime(true) - $availabilityStart;
+
+        if (! $isAvailable) {
             Log::warning('Selected model not available, falling back', [
                 'selected' => $selectedModel,
                 'context' => $context,
@@ -58,6 +67,25 @@ class ModelSelectionService
             $selectedModel = $this->getFallbackModel($context);
         }
 
+        $totalTime = microtime(true) - $startTime;
+
+        // Enhanced telemetry logging
+        LLMTelemetry::logModelSelection([
+            'operation_type' => $context['operation_type'] ?? 'text',
+            'selected_provider' => $selectedModel['provider'],
+            'selected_model' => $selectedModel['model'],
+            'selection_source' => $selectedModel['source'],
+            'available_selections_count' => count($selections),
+            'model_available' => $isAvailable,
+            'used_fallback' => !$isAvailable,
+            'selection_time_ms' => round($selectionTime * 1000, 2),
+            'availability_check_time_ms' => round($availabilityCheckTime * 1000, 2),
+            'total_time_ms' => round($totalTime * 1000, 2),
+            'context_keys' => array_keys($context),
+            'selection_criteria' => $this->summarizeSelectionCriteria($selections),
+        ]);
+
+        // Legacy logging for backward compatibility
         Log::info('Model selected for AI operation', [
             'provider' => $selectedModel['provider'],
             'model' => $selectedModel['model'],
@@ -73,6 +101,7 @@ class ModelSelectionService
      */
     public function selectEmbeddingModel(array $context = []): array
     {
+        $startTime = microtime(true);
         $context['operation_type'] = 'embedding';
 
         // Check for operation-specific configuration first
@@ -80,6 +109,17 @@ class ModelSelectionService
         if ($operationSelection) {
             // Add AI parameters based on operation context
             $operationSelection['parameters'] = $this->getAIParameters($context);
+
+            $totalTime = microtime(true) - $startTime;
+            LLMTelemetry::logModelSelection([
+                'operation_type' => 'embedding',
+                'selected_provider' => $operationSelection['provider'],
+                'selected_model' => $operationSelection['model'],
+                'source' => $operationSelection['source'],
+                'selection_method' => 'operation_specific',
+                'total_time_ms' => round($totalTime * 1000, 2),
+                'context_keys' => array_keys($context),
+            ]);
 
             return $operationSelection;
         }
@@ -90,6 +130,17 @@ class ModelSelectionService
         // Add AI parameters for embedding operations
         $selection['parameters'] = $this->getAIParameters($context);
 
+        $totalTime = microtime(true) - $startTime;
+        LLMTelemetry::logModelSelection([
+            'operation_type' => 'embedding',
+            'selected_provider' => $selection['provider'],
+            'selected_model' => $selection['model'],
+            'source' => $selection['source'],
+            'selection_method' => 'type_specific',
+            'total_time_ms' => round($totalTime * 1000, 2),
+            'context_keys' => array_keys($context),
+        ]);
+
         return $selection;
     }
 
@@ -98,6 +149,7 @@ class ModelSelectionService
      */
     public function selectTextModel(array $context = []): array
     {
+        $startTime = microtime(true);
         $context['operation_type'] = 'text';
 
         // Check for operation-specific configuration first
@@ -105,6 +157,17 @@ class ModelSelectionService
         if ($operationSelection) {
             // Add AI parameters based on operation context
             $operationSelection['parameters'] = $this->getAIParameters($context);
+
+            $totalTime = microtime(true) - $startTime;
+            LLMTelemetry::logModelSelection([
+                'operation_type' => 'text',
+                'selected_provider' => $operationSelection['provider'],
+                'selected_model' => $operationSelection['model'],
+                'source' => $operationSelection['source'],
+                'selection_method' => 'operation_specific',
+                'total_time_ms' => round($totalTime * 1000, 2),
+                'context_keys' => array_keys($context),
+            ]);
 
             return $operationSelection;
         }
@@ -115,6 +178,17 @@ class ModelSelectionService
         // Add AI parameters based on operation context
         $selection['parameters'] = $this->getAIParameters($context);
 
+        $totalTime = microtime(true) - $startTime;
+        LLMTelemetry::logModelSelection([
+            'operation_type' => 'text',
+            'selected_provider' => $selection['provider'],
+            'selected_model' => $selection['model'],
+            'source' => $selection['source'],
+            'selection_method' => 'type_specific',
+            'total_time_ms' => round($totalTime * 1000, 2),
+            'context_keys' => array_keys($context),
+        ]);
+
         return $selection;
     }
 
@@ -123,13 +197,17 @@ class ModelSelectionService
      */
     protected function selectModelByType(array $context, string $modelType): array
     {
+        $startTime = microtime(true);
         $selections = $this->gatherSelections($context);
 
         // Filter selections to only include providers that support the model type
         $filteredSelections = [];
+        $filteredOutSelections = [];
         foreach ($selections as $key => $selection) {
             if ($this->providerSupportsModelType($selection['provider'], $modelType)) {
                 $filteredSelections[$key] = $selection;
+            } else {
+                $filteredOutSelections[$key] = $selection;
             }
         }
 
@@ -137,15 +215,49 @@ class ModelSelectionService
             // No provider supports this model type, use fallback
             $fallbackSelection = $this->getFallbackForModelType($modelType);
 
+            $totalTime = microtime(true) - $startTime;
+            LLMTelemetry::logModelSelection([
+                'operation_type' => $context['operation_type'] ?? 'unknown',
+                'model_type_requested' => $modelType,
+                'selected_provider' => $fallbackSelection['provider'],
+                'selected_model' => $fallbackSelection['model'],
+                'source' => $fallbackSelection['source'],
+                'selection_method' => 'type_specific_fallback',
+                'total_candidates' => count($selections),
+                'filtered_candidates' => 0,
+                'filtered_out_count' => count($filteredOutSelections),
+                'fallback_reason' => 'no_providers_support_model_type',
+                'total_time_ms' => round($totalTime * 1000, 2),
+                'context_keys' => array_keys($context),
+            ]);
+
             return $fallbackSelection;
         }
 
         $selectedModel = $this->applySelectionStrategy($filteredSelections);
 
         // Ensure the selected model is of the correct type
+        $modelTypeCorrected = false;
         if (! $this->isModelOfType($selectedModel['provider'], $selectedModel['model'], $modelType)) {
             $selectedModel['model'] = $this->getDefaultModelForType($selectedModel['provider'], $modelType);
+            $modelTypeCorrected = true;
         }
+
+        $totalTime = microtime(true) - $startTime;
+        LLMTelemetry::logModelSelection([
+            'operation_type' => $context['operation_type'] ?? 'unknown',
+            'model_type_requested' => $modelType,
+            'selected_provider' => $selectedModel['provider'],
+            'selected_model' => $selectedModel['model'],
+            'source' => $selectedModel['source'],
+            'selection_method' => 'type_specific',
+            'total_candidates' => count($selections),
+            'filtered_candidates' => count($filteredSelections),
+            'filtered_out_count' => count($filteredOutSelections),
+            'model_type_corrected' => $modelTypeCorrected,
+            'total_time_ms' => round($totalTime * 1000, 2),
+            'context_keys' => array_keys($context),
+        ]);
 
         return $selectedModel;
     }
@@ -155,12 +267,24 @@ class ModelSelectionService
      */
     protected function gatherSelections(array $context): array
     {
+        $startTime = microtime(true);
         $selections = [];
+        $gatheringStats = [
+            'command_override_attempted' => false,
+            'command_override_success' => false,
+            'project_preference_attempted' => false,
+            'project_preference_success' => false,
+            'vault_preference_attempted' => false,
+            'vault_preference_success' => false,
+            'type_inference_boost' => false,
+        ];
 
         // Command override (highest priority)
         if (! empty($context['command_model_override'])) {
+            $gatheringStats['command_override_attempted'] = true;
             $override = $this->parseModelOverride($context['command_model_override']);
             if ($override) {
+                $gatheringStats['command_override_success'] = true;
                 $selections['command_override'] = [
                     'provider' => $override['provider'],
                     'model' => $override['model'],
@@ -172,8 +296,10 @@ class ModelSelectionService
 
         // Project preference
         if (! empty($context['project_id'])) {
+            $gatheringStats['project_preference_attempted'] = true;
             $projectModel = $this->getProjectModelPreference($context['project_id']);
             if ($projectModel) {
+                $gatheringStats['project_preference_success'] = true;
                 $selections['project_preference'] = [
                     'provider' => $projectModel['provider'],
                     'model' => $projectModel['model'],
@@ -185,8 +311,10 @@ class ModelSelectionService
 
         // Vault preference
         if (! empty($context['vault'])) {
+            $gatheringStats['vault_preference_attempted'] = true;
             $vaultModel = $this->getVaultModelPreference($context['vault']);
             if ($vaultModel) {
+                $gatheringStats['vault_preference_success'] = true;
                 $selections['vault_preference'] = [
                     'provider' => $vaultModel['provider'],
                     'model' => $vaultModel['model'],
@@ -213,8 +341,22 @@ class ModelSelectionService
         ];
 
         if (($context['command'] ?? null) === 'type_inference') {
+            $gatheringStats['type_inference_boost'] = true;
             $selections['fallback']['priority'] = max($selections['fallback']['priority'], 110);
         }
+
+        $gatheringTime = microtime(true) - $startTime;
+
+        // Log selection gathering process
+        LLMTelemetry::logLLMCall([
+            'event_type' => 'selection_gathering',
+            'operation_type' => $context['operation_type'] ?? 'unknown',
+            'total_selections_gathered' => count($selections),
+            'gathering_time_ms' => round($gatheringTime * 1000, 2),
+            'gathering_stats' => $gatheringStats,
+            'selection_sources' => array_keys($selections),
+            'context_keys' => array_keys($context),
+        ]);
 
         return $selections;
     }
@@ -224,8 +366,12 @@ class ModelSelectionService
      */
     protected function applySelectionStrategy(array $selections): array
     {
+        $startTime = microtime(true);
+
         if (empty($selections)) {
-            return $this->getFallbackModel();
+            $fallback = $this->getFallbackModel();
+            $this->logSelectionStrategy('empty_selections', $selections, $fallback, $startTime);
+            return $fallback;
         }
 
         // Sort by priority (highest first)
@@ -233,19 +379,60 @@ class ModelSelectionService
             return $b['priority'] <=> $a['priority'];
         });
 
+        $attemptedSelections = [];
+        $selectedModel = null;
+
         // Return the highest priority available model
-        foreach ($selections as $selection) {
-            if ($this->isModelAvailable($selection['provider'], $selection['model'])) {
-                return [
+        foreach ($selections as $key => $selection) {
+            $attemptedSelections[] = [
+                'key' => $key,
+                'provider' => $selection['provider'],
+                'model' => $selection['model'],
+                'priority' => $selection['priority'],
+                'source' => $selection['source'],
+            ];
+
+            // Command overrides bypass availability checks
+            if ($selection['source'] === 'command_override' ||
+                $this->isModelAvailable($selection['provider'], $selection['model'])) {
+                $selectedModel = [
                     'provider' => $selection['provider'],
                     'model' => $selection['model'],
                     'source' => $selection['source'],
                 ];
+                break;
             }
         }
 
-        // If no selection is available, return fallback
-        return $this->getFallbackModel();
+        // If no selection is available, use fallback
+        if (!$selectedModel) {
+            $selectedModel = $this->getFallbackModel();
+            $selectedModel['source'] = 'fallback_after_failures';
+        }
+
+        $this->logSelectionStrategy('strategy_applied', $selections, $selectedModel, $startTime, $attemptedSelections);
+
+        return $selectedModel;
+    }
+
+    /**
+     * Log selection strategy execution
+     */
+    protected function logSelectionStrategy(string $strategy, array $selections, array $result, float $startTime, array $attemptedSelections = []): void
+    {
+        $executionTime = microtime(true) - $startTime;
+
+        LLMTelemetry::logLLMCall([
+            'event_type' => 'model_selection_strategy',
+            'strategy_type' => $strategy,
+            'total_candidates' => count($selections),
+            'attempted_selections' => $attemptedSelections,
+            'selected_provider' => $result['provider'],
+            'selected_model' => $result['model'],
+            'selection_source' => $result['source'],
+            'execution_time_ms' => round($executionTime * 1000, 2),
+            'strategy_success' => $result['source'] !== 'fallback_after_failures',
+        ]);
     }
 
     /**
@@ -253,28 +440,44 @@ class ModelSelectionService
      */
     protected function isModelAvailable(string $provider, string $model): bool
     {
+        $startTime = microtime(true);
+        $availabilityChecks = [];
+
         // Check if provider exists in config
-        if (! isset($this->providers[$provider])) {
+        $configExists = isset($this->providers[$provider]);
+        $availabilityChecks['config_exists'] = $configExists;
+
+        if (! $configExists) {
+            $this->logAvailabilityCheck($provider, $model, false, $availabilityChecks, $startTime);
             return false;
         }
 
         // Check if provider is enabled in database
         $providerConfig = Provider::where('provider', $provider)->first();
-        if (! $providerConfig || ! $providerConfig->enabled) {
+        $dbEnabled = $providerConfig && $providerConfig->enabled;
+        $availabilityChecks['db_enabled'] = $dbEnabled;
+
+        if (! $dbEnabled) {
+            $this->logAvailabilityCheck($provider, $model, false, $availabilityChecks, $startTime);
             return false;
         }
 
         // Check if provider has valid credentials
         $credential = AICredential::getActiveEnabledCredential($provider);
-        if (! $credential) {
+        $hasCredentials = false;
+
+        if ($credential) {
+            $hasCredentials = true;
+        } elseif ($provider === 'ollama') {
             // For Ollama, check if base URL is configured instead of credentials
-            if ($provider === 'ollama') {
-                if (empty(config('services.ollama.base'))) {
-                    return false;
-                }
-            } else {
-                return false;
-            }
+            $hasCredentials = !empty(config('services.ollama.base'));
+        }
+
+        $availabilityChecks['has_credentials'] = $hasCredentials;
+
+        if (! $hasCredentials) {
+            $this->logAvailabilityCheck($provider, $model, false, $availabilityChecks, $startTime);
+            return false;
         }
 
         // Check if model exists in provider's model list
@@ -284,7 +487,44 @@ class ModelSelectionService
             array_keys($capabilities['embedding_models'] ?? [])
         );
 
-        return in_array($model, $allModels);
+        $modelExists = in_array($model, $allModels);
+        $availabilityChecks['model_exists'] = $modelExists;
+
+        $isAvailable = $modelExists;
+        $this->logAvailabilityCheck($provider, $model, $isAvailable, $availabilityChecks, $startTime);
+
+        return $isAvailable;
+    }
+
+    /**
+     * Log model availability check results
+     */
+    protected function logAvailabilityCheck(string $provider, string $model, bool $isAvailable, array $checks, float $startTime): void
+    {
+        $checkTime = microtime(true) - $startTime;
+
+        LLMTelemetry::logLLMCall([
+            'event_type' => 'model_availability_check',
+            'provider' => $provider,
+            'model' => $model,
+            'available' => $isAvailable,
+            'check_time_ms' => round($checkTime * 1000, 2),
+            'checks_performed' => $checks,
+            'failure_reason' => $isAvailable ? null : $this->determineFailureReason($checks),
+        ]);
+    }
+
+    /**
+     * Determine the reason for availability check failure
+     */
+    protected function determineFailureReason(array $checks): string
+    {
+        if (!$checks['config_exists']) return 'provider_not_configured';
+        if (!$checks['db_enabled']) return 'provider_disabled';
+        if (!$checks['has_credentials']) return 'no_credentials';
+        if (!$checks['model_exists']) return 'model_not_found';
+
+        return 'unknown';
     }
 
     /**
@@ -440,6 +680,7 @@ class ModelSelectionService
      */
     protected function selectModelForOperation(array $context): ?array
     {
+        $startTime = microtime(true);
         $command = $context['command'] ?? null;
         $operationType = $context['operation_type'] ?? 'text';
 
@@ -448,6 +689,17 @@ class ModelSelectionService
 
         // Check if operation is enabled
         if (! $this->isOperationEnabled($operation)) {
+            $totalTime = microtime(true) - $startTime;
+            LLMTelemetry::logLLMCall([
+                'event_type' => 'operation_selection',
+                'operation' => $operation,
+                'command' => $command,
+                'operation_type' => $operationType,
+                'operation_enabled' => false,
+                'selection_result' => 'operation_disabled',
+                'total_time_ms' => round($totalTime * 1000, 2),
+            ]);
+
             throw new \Exception("AI operation '{$operation}' is disabled");
         }
 
@@ -459,6 +711,18 @@ class ModelSelectionService
         $model = $operationConfig['model'] ?? null;
 
         if (! $provider && ! $model) {
+            $totalTime = microtime(true) - $startTime;
+            LLMTelemetry::logLLMCall([
+                'event_type' => 'operation_selection',
+                'operation' => $operation,
+                'command' => $command,
+                'operation_type' => $operationType,
+                'operation_enabled' => true,
+                'has_operation_config' => false,
+                'selection_result' => 'no_config_fallback_to_standard',
+                'total_time_ms' => round($totalTime * 1000, 2),
+            ]);
+
             return null; // No operation-specific config, use standard selection
         }
 
@@ -469,7 +733,25 @@ class ModelSelectionService
         $finalModel = $model ?: $this->getDefaultModelForProviderAndOperation($finalProvider, $operation);
 
         // Validate the selected model is available
-        if (! $this->isModelAvailable($finalProvider, $finalModel)) {
+        $isAvailable = $this->isModelAvailable($finalProvider, $finalModel);
+        if (! $isAvailable) {
+            $totalTime = microtime(true) - $startTime;
+            LLMTelemetry::logLLMCall([
+                'event_type' => 'operation_selection',
+                'operation' => $operation,
+                'command' => $command,
+                'operation_type' => $operationType,
+                'operation_enabled' => true,
+                'has_operation_config' => true,
+                'configured_provider' => $provider,
+                'configured_model' => $model,
+                'final_provider' => $finalProvider,
+                'final_model' => $finalModel,
+                'model_available' => false,
+                'selection_result' => 'model_unavailable_fallback_to_standard',
+                'total_time_ms' => round($totalTime * 1000, 2),
+            ]);
+
             Log::warning('Operation-specific model not available, falling back to standard selection', [
                 'operation' => $operation,
                 'provider' => $finalProvider,
@@ -479,6 +761,23 @@ class ModelSelectionService
 
             return null;
         }
+
+        $totalTime = microtime(true) - $startTime;
+        LLMTelemetry::logLLMCall([
+            'event_type' => 'operation_selection',
+            'operation' => $operation,
+            'command' => $command,
+            'operation_type' => $operationType,
+            'operation_enabled' => true,
+            'has_operation_config' => true,
+            'configured_provider' => $provider,
+            'configured_model' => $model,
+            'final_provider' => $finalProvider,
+            'final_model' => $finalModel,
+            'model_available' => true,
+            'selection_result' => 'operation_specific_model_selected',
+            'total_time_ms' => round($totalTime * 1000, 2),
+        ]);
 
         Log::info('Using operation-specific model configuration', [
             'operation' => $operation,
@@ -662,5 +961,24 @@ class ModelSelectionService
             'model_name' => $model,
             'type' => 'unknown',
         ];
+    }
+
+    /**
+     * Summarize selection criteria for telemetry
+     */
+    protected function summarizeSelectionCriteria(array $selections): array
+    {
+        $summary = [];
+
+        foreach ($selections as $key => $selection) {
+            $summary[$key] = [
+                'priority' => $selection['priority'],
+                'source' => $selection['source'],
+                'provider' => $selection['provider'],
+                'model' => $selection['model'],
+            ];
+        }
+
+        return $summary;
     }
 }

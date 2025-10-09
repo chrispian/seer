@@ -36,12 +36,36 @@ class ChatApiController extends Controller
         $validationTime = microtime(true);
         ChatTelemetry::logMessageReceived($data);
 
+        \Log::info('Chat message received', [
+            'content' => $data['content'],
+            'content_length' => strlen($data['content']),
+            'starts_with_exec' => str_starts_with(trim($data['content']), ':exec-tool'),
+        ]);
+
         $conversationId = $data['conversation_id'] ?? (string) Str::uuid();
         $sessionId = $data['session_id'] ?? null;
 
         CorrelationContext::addContext('conversation_id', $conversationId);
         if ($sessionId) {
             CorrelationContext::addContext('session_id', $sessionId);
+        }
+
+        if (str_starts_with(trim($data['content']), ':exec-tool')) {
+            \Log::info('Exec-tool prefix detected', [
+                'content' => $data['content'],
+                'message_id' => $messageId,
+                'conversation_id' => $conversationId,
+            ]);
+            return $this->handleExecTool($data, $conversationId, $sessionId, $messageId);
+        }
+
+        // Check if tool-aware turn is enabled
+        if (config('fragments.tool_aware_turn.enabled', false)) {
+            \Log::info('Tool-aware turn enabled, routing to pipeline', [
+                'message_id' => $messageId,
+                'session_id' => $sessionId,
+            ]);
+            return $this->handleToolAwareTurn($data, $conversationId, $sessionId, $messageId);
         }
 
         // Get session-specific model settings if session_id provided
@@ -176,6 +200,11 @@ class ChatApiController extends Controller
         CorrelationContext::addContext('provider', $session['provider']);
         CorrelationContext::addContext('model', $session['model']);
 
+        // Check if this is a tool-aware request
+        if ($session['provider'] === 'tool-aware') {
+            return $this->streamToolAware($messageId, $session);
+        }
+
         ChatTelemetry::logStreamingStarted($messageId, $session);
 
         return new StreamedResponse(function () use ($session, $messageId) {
@@ -307,6 +336,389 @@ class ChatApiController extends Controller
                 'error_occurred' => false,
                 'enrichment_completed' => true, // This will be updated by ProcessAssistantFragment if needed
             ]);
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache, no-transform',
+            'X-Accel-Buffering' => 'no',
+        ]);
+    }
+
+    protected function handleExecTool(array $data, string $conversationId, ?int $sessionId, string $messageId)
+    {
+        \Log::info('handleExecTool called', [
+            'message_id' => $messageId,
+            'enabled' => config('fragments.tools.exec_tool.enabled', false),
+        ]);
+
+        if (! config('fragments.tools.exec_tool.enabled', false)) {
+            \Log::warning('Exec tool not enabled');
+            return response()->json([
+                'error' => 'Exec tool is not enabled',
+                'message_id' => $messageId,
+            ], 403);
+        }
+
+        $content = trim($data['content']);
+        $command = trim(substr($content, strlen(':exec-tool')));
+        
+        if (empty($command)) {
+            $command = config('fragments.tools.exec_tool.default_command', 'ls -asl');
+        }
+
+        \Log::info('Exec tool command parsed', [
+            'command' => $command,
+            'message_id' => $messageId,
+        ]);
+
+        $createChatFragment = app(\App\Actions\CreateChatFragment::class);
+        $fragment = $createChatFragment($data['content']);
+        $userFragmentId = $fragment->id;
+
+        $fragment->update([
+            'metadata' => array_merge($fragment->metadata ?? [], [
+                'turn' => 'prompt',
+                'conversation_id' => $conversationId,
+                'session_id' => $sessionId,
+                'tool' => 'exec',
+                'command' => $command,
+            ]),
+        ]);
+
+        if ($sessionId) {
+            $chatSession = \App\Models\ChatSession::find($sessionId);
+            if ($chatSession) {
+                $messageData = [
+                    'id' => $userFragmentId,
+                    'type' => 'user',
+                    'message' => $data['content'],
+                    'fragment_id' => $userFragmentId,
+                    'created_at' => now()->toISOString(),
+                ];
+                $chatSession->addMessage($messageData);
+            }
+        }
+
+        $toolRegistry = app(\App\Services\Tools\ToolRegistry::class);
+
+        $workdir = config('fragments.tools.exec_tool.workdir') ?? config('fragments.tools.shell.workdir');
+        $timeout = config('fragments.tools.exec_tool.timeout_seconds', 20);
+
+        try {
+            \Log::info('Calling ShellTool via registry', [
+                'command' => $command,
+                'workdir' => $workdir,
+                'timeout' => $timeout,
+            ]);
+
+            $context = [
+                'user_id' => auth()->id(),
+                'session_id' => $sessionId,
+                'ip_address' => request()->ip(),
+                'tool' => 'exec',
+                'source' => 'chat_api',
+            ];
+
+            $result = $toolRegistry->call('shell', [
+                'cmd' => $command,
+                'workdir' => $workdir,
+                'timeout' => $timeout,
+            ], $context);
+
+            \Log::info('ShellTool execution completed', [
+                'exit_code' => $result['exit_code'] ?? null,
+                'success' => $result['success'] ?? false,
+            ]);
+
+            $output = $result['stdout'] ?? '';
+            $stderr = $result['stderr'] ?? '';
+            $exitCode = $result['exit_code'] ?? 1;
+
+            $toolOutput = '';
+            if (! empty($output)) {
+                $toolOutput .= $output;
+            }
+            if (! empty($stderr)) {
+                $toolOutput .= "\n[stderr]: ".$stderr;
+            }
+            $toolOutput .= "\n[exit code: {$exitCode}]";
+
+            $assistantFragment = $createChatFragment($toolOutput);
+            $assistantFragment->update([
+                'metadata' => array_merge($assistantFragment->metadata ?? [], [
+                    'turn' => 'completion',
+                    'conversation_id' => $conversationId,
+                    'session_id' => $sessionId,
+                    'tool' => 'exec',
+                    'command' => $command,
+                    'exit_code' => $exitCode,
+                    'user_fragment_id' => $userFragmentId,
+                ]),
+            ]);
+
+            if ($sessionId) {
+                $chatSession = \App\Models\ChatSession::find($sessionId);
+                if ($chatSession) {
+                    $responseData = [
+                        'id' => $assistantFragment->id,
+                        'type' => 'assistant',
+                        'message' => $toolOutput,
+                        'fragment_id' => $assistantFragment->id,
+                        'created_at' => now()->toISOString(),
+                        'tool' => 'exec',
+                    ];
+                    $chatSession->addMessage($responseData);
+                }
+            }
+
+            \Log::info('Exec tool completed successfully', [
+                'message_id' => $messageId,
+                'exit_code' => $exitCode,
+                'output_length' => strlen($toolOutput),
+            ]);
+
+            return response()->json([
+                'message_id' => $messageId,
+                'conversation_id' => $conversationId,
+                'user_fragment_id' => $userFragmentId,
+                'assistant_fragment_id' => $assistantFragment->id,
+                'tool_output' => $toolOutput,
+                'exit_code' => $exitCode,
+                'skip_stream' => true,
+                'assistant_message' => $toolOutput,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Exec tool execution failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'message_id' => $messageId,
+                'command' => $command,
+            ]);
+
+            $errorMessage = "Tool execution failed: {$e->getMessage()}";
+            
+            $assistantFragment = $createChatFragment($errorMessage);
+            $assistantFragment->update([
+                'metadata' => array_merge($assistantFragment->metadata ?? [], [
+                    'turn' => 'completion',
+                    'conversation_id' => $conversationId,
+                    'session_id' => $sessionId,
+                    'tool' => 'exec',
+                    'command' => $command,
+                    'error' => true,
+                    'user_fragment_id' => $userFragmentId,
+                ]),
+            ]);
+
+            if ($sessionId) {
+                $chatSession = \App\Models\ChatSession::find($sessionId);
+                if ($chatSession) {
+                    $responseData = [
+                        'id' => $assistantFragment->id,
+                        'type' => 'assistant',
+                        'message' => $errorMessage,
+                        'fragment_id' => $assistantFragment->id,
+                        'created_at' => now()->toISOString(),
+                        'tool' => 'exec',
+                        'error' => true,
+                    ];
+                    $chatSession->addMessage($responseData);
+                }
+            }
+
+            return response()->json([
+                'message_id' => $messageId,
+                'conversation_id' => $conversationId,
+                'user_fragment_id' => $userFragmentId,
+                'assistant_fragment_id' => $assistantFragment->id,
+                'error' => $errorMessage,
+                'skip_stream' => true,
+                'assistant_message' => $errorMessage,
+            ], 500);
+        }
+    }
+
+    protected function handleToolAwareTurn(array $data, string $conversationId, ?int $sessionId, string $messageId)
+    {
+        $createChatFragment = app(\App\Actions\CreateChatFragment::class);
+        
+        // Create user fragment
+        $fragment = $createChatFragment($data['content']);
+        $userFragmentId = $fragment->id;
+
+        $fragment->update([
+            'metadata' => array_merge($fragment->metadata ?? [], [
+                'turn' => 'prompt',
+                'conversation_id' => $conversationId,
+                'session_id' => $sessionId,
+                'tool_aware' => true,
+            ]),
+        ]);
+
+        // Add message to chat session
+        if ($sessionId) {
+            $chatSession = \App\Models\ChatSession::find($sessionId);
+            if ($chatSession) {
+                $messageData = [
+                    'id' => $userFragmentId,
+                    'type' => 'user',
+                    'message' => $data['content'],
+                    'fragment_id' => $userFragmentId,
+                    'created_at' => now()->toISOString(),
+                ];
+                $chatSession->addMessage($messageData);
+            }
+        }
+
+        try {
+            // Cache session for streaming endpoint
+            app(\App\Actions\CacheChatSession::class)(
+                $messageId,
+                [
+                    ['role' => 'user', 'content' => $data['content']],
+                ],
+                'tool-aware',
+                'pipeline',
+                $userFragmentId,
+                $conversationId,
+                $sessionId
+            );
+
+            return response()->json([
+                'message_id' => $messageId,
+                'conversation_id' => $conversationId,
+                'user_fragment_id' => $userFragmentId,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Tool-aware turn failed', [
+                'message_id' => $messageId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            $errorMessage = "I encountered an error while processing your request: {$e->getMessage()}";
+            
+            $assistantFragment = $createChatFragment($errorMessage);
+            $assistantFragment->update([
+                'metadata' => array_merge($assistantFragment->metadata ?? [], [
+                    'turn' => 'completion',
+                    'conversation_id' => $conversationId,
+                    'session_id' => $sessionId,
+                    'tool_aware' => true,
+                    'error' => true,
+                    'user_fragment_id' => $userFragmentId,
+                ]),
+            ]);
+
+            if ($sessionId) {
+                $chatSession = \App\Models\ChatSession::find($sessionId);
+                if ($chatSession) {
+                    $responseData = [
+                        'id' => $assistantFragment->id,
+                        'type' => 'assistant',
+                        'message' => $errorMessage,
+                        'fragment_id' => $assistantFragment->id,
+                        'created_at' => now()->toISOString(),
+                        'tool_aware' => true,
+                        'error' => true,
+                    ];
+                    $chatSession->addMessage($responseData);
+                }
+            }
+
+            return response()->json([
+                'message_id' => $messageId,
+                'conversation_id' => $conversationId,
+                'user_fragment_id' => $userFragmentId,
+                'assistant_fragment_id' => $assistantFragment->id,
+                'skip_stream' => true,
+                'assistant_message' => $errorMessage,
+                'error' => true,
+            ], 500);
+        }
+    }
+
+    protected function streamToolAware(string $messageId, array $session)
+    {
+        return new StreamedResponse(function () use ($messageId, $session) {
+            @ini_set('output_buffering', 'off');
+            @ini_set('zlib.output_compression', 0);
+
+            $createChatFragment = app(\App\Actions\CreateChatFragment::class);
+            $sessionId = $session['session_id'] ?? null;
+            $conversationId = $session['conversation_id'] ?? null;
+            $userFragmentId = $session['user_fragment_id'] ?? null;
+            
+            $finalMessage = '';
+            $correlationId = null;
+            $usedTools = false;
+
+            try {
+                $pipeline = app(\App\Services\Orchestration\ToolAware\ToolAwarePipeline::class);
+                
+                $userMessage = $session['messages'][0]['content'] ?? '';
+                
+                foreach ($pipeline->executeStreaming($sessionId, $userMessage) as $event) {
+                    echo 'data: ' . json_encode($event) . "\n\n";
+                    @ob_flush();
+                    @flush();
+
+                    if ($event['type'] === 'final_message') {
+                        $finalMessage = $event['message'];
+                        $usedTools = $event['used_tools'] ?? false;
+                        $correlationId = $event['correlation_id'] ?? null;
+                    }
+                }
+
+                // Create assistant fragment
+                if (!empty($finalMessage)) {
+                    $assistantFragment = $createChatFragment($finalMessage);
+                    $assistantFragment->update([
+                        'metadata' => array_merge($assistantFragment->metadata ?? [], [
+                            'turn' => 'completion',
+                            'conversation_id' => $conversationId,
+                            'session_id' => $sessionId,
+                            'tool_aware' => true,
+                            'used_tools' => $usedTools,
+                            'correlation_id' => $correlationId,
+                            'user_fragment_id' => $userFragmentId,
+                        ]),
+                    ]);
+
+                    // Add to chat session
+                    if ($sessionId) {
+                        $chatSession = \App\Models\ChatSession::find($sessionId);
+                        if ($chatSession) {
+                            $chatSession->addMessage([
+                                'id' => $assistantFragment->id,
+                                'type' => 'assistant',
+                                'message' => $finalMessage,
+                                'fragment_id' => $assistantFragment->id,
+                                'created_at' => now()->toISOString(),
+                                'tool_aware' => true,
+                                'used_tools' => $usedTools,
+                                'correlation_id' => $correlationId,
+                            ]);
+                        }
+                    }
+                }
+
+            } catch (\Exception $e) {
+                \Log::error('Tool-aware streaming failed', [
+                    'message_id' => $messageId,
+                    'error' => $e->getMessage(),
+                ]);
+
+                echo 'data: ' . json_encode([
+                    'type' => 'error',
+                    'error' => 'I encountered an error while processing your request. The error has been logged.',
+                ]) . "\n\n";
+                
+                echo 'data: ' . json_encode(['type' => 'done']) . "\n\n";
+                @ob_flush();
+                @flush();
+            }
         }, 200, [
             'Content-Type' => 'text/event-stream',
             'Cache-Control' => 'no-cache, no-transform',

@@ -1,0 +1,57 @@
+schema: fe.contextpack.v1
+version: 1
+project: P-FRAGMENTS-ENGINE
+priority: high
+policy:
+  must_do:
+  - claim.task
+  - boot.context
+  - init.phase
+  - execute
+  - checkpoint
+  - summarize
+init:
+  steps:
+  - id: init.load_profile
+    desc: Load agent profile and permissions.
+  - id: init.healthcheck
+    desc: Verify access to packs/, delegation/, docs/, bus, artifact store.
+  - id: init.resume
+    desc: Load prior notes for runners/telemetry if present and reconcile.
+how_to_run:
+  cli:
+  - fe pm:send --agent=A-fe-spec-writer --task=T-RUNNER-QUANTUM-SCHEMAS --file=./delegation/T-RUNNER-QUANTUM-SCHEMAS.yaml
+  - fe agent:check-messages
+  streams:
+  - agents.A-fe-spec-writer.inbox
+  - tasks.T-RUNNER-QUANTUM-SCHEMAS.mailbox
+task: T-GIT-LEASES
+agent_profile: A-fe-scm
+boot:
+  brief: Implement worktrees-per-run, short-lived edit leases, 3-way patch apply,
+    merge bot skeleton.
+  repo:
+    paths:
+    - repo://fragments-engine/app/Services/SCM/GitWorktrees.php
+    - repo://fragments-engine/app/Services/SCM/EditLeases.php
+    - repo://fragments-engine/app/Services/SCM/MergeBot.php
+    - repo://fragments-engine/tests/Feature/GitWorktreesTest.php
+plan:
+  steps:
+  - id: worktrees
+    desc: Create and cleanup worktrees `{task}/{run}`; ensure speed & isolation.
+  - id: leases
+    desc: Redis file/module leases with TTL + renew; enforce single-writer.
+  - id: apply
+    desc: '`git apply --3way` with conflict detection; emit repair tasks on conflict.'
+  - id: mergebot
+    desc: Order patches by dependency; open PRs; subscribe to PR events.
+deliverables:
+- app/Services/SCM/GitWorktrees.php
+- app/Services/SCM/EditLeases.php
+- app/Services/SCM/MergeBot.php
+- tests/Feature/GitWorktreesTest.php
+- docs/orchestration/git-worktrees-and-leases.md
+acceptance:
+- Concurrent runs on separate worktrees; conflicting edits escalated properly.
+- Merge bot applies non-conflicting patches and opens PRs for the rest.

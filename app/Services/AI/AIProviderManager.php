@@ -7,6 +7,7 @@ use App\Services\AI\Providers\AnthropicProvider;
 use App\Services\AI\Providers\OllamaProvider;
 use App\Services\AI\Providers\OpenAIProvider;
 use App\Services\AI\Providers\OpenRouterProvider;
+use App\Services\Telemetry\CorrelationContext;
 use Illuminate\Support\Facades\Log;
 
 class AIProviderManager
@@ -99,6 +100,10 @@ class AIProviderManager
         $options = array_merge($selectedModel['parameters'] ?? [], $options);
         $options['model'] = $selectedModel['model'];
 
+        // Add telemetry context for enhanced logging
+        $telemetryContext = $this->buildTelemetryContext($context, 'text_generation');
+        $options['_telemetry_context'] = $telemetryContext;
+
         Log::info('AI text generation request', [
             'provider' => $selectedModel['provider'],
             'model' => $selectedModel['model'],
@@ -124,6 +129,10 @@ class AIProviderManager
         // Merge model selection with AI parameters
         $options = array_merge($selectedModel['parameters'] ?? [], $options);
         $options['model'] = $selectedModel['model'];
+
+        // Add telemetry context for enhanced logging
+        $telemetryContext = $this->buildTelemetryContext($context, 'embedding_generation');
+        $options['_telemetry_context'] = $telemetryContext;
 
         Log::info('AI embedding generation request', [
             'provider' => $selectedModel['provider'],
@@ -208,5 +217,21 @@ class AIProviderManager
         }
 
         return $provider->authenticate($credentials);
+    }
+
+    /**
+     * Build telemetry context for LLM operations
+     */
+    protected function buildTelemetryContext(array $context, string $operationType): array
+    {
+        return [
+            'correlation_id' => CorrelationContext::get(),
+            'user_id' => auth()->id(),
+            'session_id' => $context['session_id'] ?? null,
+            'request_type' => $operationType,
+            'start_time' => microtime(true),
+            'queue_wait_ms' => 0, // Will be set by caller if applicable
+            'retry_count' => 0,   // Will be set by caller if applicable
+        ];
     }
 }

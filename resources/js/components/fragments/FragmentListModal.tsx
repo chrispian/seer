@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { DataManagementModal, ColumnDefinition } from '@/components/ui/DataManagementModal'
+import { useState, useMemo } from 'react'
+import { DataManagementModal, ColumnDefinition, FilterDefinition } from '@/components/ui/DataManagementModal'
 import { Badge } from '@/components/ui/badge'
 import { MessageSquare, Calendar, Tag, ExternalLink } from 'lucide-react'
 
@@ -35,6 +35,7 @@ export function FragmentListModal({
   onRefresh,
   onFragmentSelect 
 }: FragmentListModalProps) {
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   const getTypeColor = (type: string) => {
     switch (type?.toLowerCase()) {
@@ -61,6 +62,15 @@ export function FragmentListModal({
         return <MessageSquare className="h-3 w-3" />
     }
   }
+
+  // Sort fragments by created_at based on direction
+  const sortedFragments = useMemo(() => {
+    return [...fragments].sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime()
+      const dateB = new Date(b.created_at).getTime()
+      return sortDirection === 'desc' ? dateB - dateA : dateA - dateB
+    })
+  }, [fragments, sortDirection])
 
   const columns: ColumnDefinition<Fragment>[] = [
     {
@@ -125,7 +135,7 @@ export function FragmentListModal({
     }
   ]
 
-  const filterOptions = [
+  const filterOptions: FilterDefinition[] = [
     {
       key: 'type',
       label: 'Type',
@@ -148,21 +158,11 @@ export function FragmentListModal({
     }
   ]
 
-  const sortOptions = [
-    { label: 'Newest First', value: 'created_at_desc' },
-    { label: 'Oldest First', value: 'created_at_asc' },
-    { label: 'Type', value: 'type_asc' }
-  ]
-
   const handleFragmentClick = (fragment: Fragment) => {
     console.log('Fragment clicked:', fragment.id)
-    // TODO: Implement fragment navigation (T-FRAG-NAV-01)
-    // This should navigate to the chat session with the fragment focused
-    // and show ±5 surrounding fragments
     if (onFragmentSelect) {
       onFragmentSelect(fragment)
     } else {
-      // Temporary alert until T-FRAG-NAV-01 is implemented
       alert(`Fragment Navigation\n\nClicked fragment: ${fragment.id}\n\nTask T-FRAG-NAV-01 needs to be implemented:\n- Navigate to chat session\n- Focus on this fragment\n- Show ±5 surrounding fragments\n- Enable bidirectional lazy loading`)
     }
   }
@@ -173,7 +173,7 @@ export function FragmentListModal({
       onClose={onClose}
       title="Search Results"
       columns={columns}
-      data={fragments}
+      data={sortedFragments}
       loading={loading}
       error={error ?? undefined}
       onRefresh={onRefresh}
@@ -183,6 +183,31 @@ export function FragmentListModal({
       filters={filterOptions}
       emptyStateMessage="No fragments found"
       clickableRows={true}
+      customHeader={(
+        <div className="flex items-center gap-2 mt-1">
+          <span className="text-xs text-muted-foreground">Sort:</span>
+          <button
+            onClick={() => setSortDirection('desc')}
+            className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
+              sortDirection === 'desc' 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            ↓ Newest
+          </button>
+          <button
+            onClick={() => setSortDirection('asc')}
+            className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
+              sortDirection === 'asc' 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            ↑ Oldest
+          </button>
+        </div>
+      )}
     />
   )
 }

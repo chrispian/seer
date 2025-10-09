@@ -1,0 +1,25 @@
+{
+  "schema_version": "v0",
+  "task_id": "T123",
+  "run_id": "R1",
+  "step_id": "s5",
+  "events": [
+    {
+      "type": "ACTION",
+      "tool": "git.apply_patch",
+      "artifact": "fe://T123/R1/patch/0005.diff"
+    }
+  ],
+  "outputs": [
+    {
+      "kind": "patch",
+      "ref": "fe://T123/R1/patch/0005.diff"
+    }
+  ],
+  "checkpoint": true,
+  "yield": false,
+  "heartbeat": {
+    "progress": 0.72,
+    "waiting_on": null
+  }
+}

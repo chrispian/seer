@@ -1,0 +1,48 @@
+version: "1.0"
+id: tool-aware-turn-mvp
+title: "Implement Tool‑Aware Turn (MVP) in Fragments Engine"
+owner: backend
+priority: P0
+labels: [agents, mcp, orchestration, security-ready]
+
+acceptance_criteria:
+  - ContextBroker.assemble() returns ContextBundle with summary, user_message, agent_prefs, tool_registry_preview.
+  - Router step uses Decision Prompt and outputs valid JSON matching RouterDecision.
+  - If needs_tools=true → Tool Candidate Phase produces a valid ToolPlan (smallest set of tools).
+  - Tool Runner executes plan via MCP, returns ExecutionTrace with per-step ToolResult.
+  - Outcome Summary step returns JSON with short_summary, key_facts, links, confidence.
+  - Final Composer replies to user using summary and records correlation_id in logs.
+  - Audit: store all prompts/responses/tool IO; redact secrets/PII; single correlation_id per turn.
+  - Registry slice function avoids sending full tool list unless needed.
+  - Guards: allow-list enforcement, timebox to N steps, basic retry on read-only tools only.
+  - Demo: “What’s on my calendar next week?” path succeeds end-to-end.
+
+deliverables:
+  - Laravel classes/interfaces or stubs for ContextBroker, Router, CandidateSelector, ToolRunner, OutcomeSummarizer, FinalComposer.
+  - Prompt files (see src/prompts/*).
+  - DTO classes (see src/dtos/*).
+  - Pseudocode or initial implementation outline (src/pipeline/pseudocode.php).
+  - Tests: happy path (no tools), calendar list path, JSON parse failure→retry, permission-blocked tool→graceful.
+
+steps:
+  - name: ContextBroker
+    description: Implement assemble() that returns ContextBundle with minimal preview of likely tools.
+  - name: Router
+    description: Call LLM with Decision Prompt; parse/validate JSON; on failure retry once with “Respond valid JSON only.”
+  - name: Candidate Phase
+    description: Expand registry slice for goal; call LLM with Tool Candidate Prompt; validate schema; fill missing inputs conservatively.
+  - name: Tool Runner
+    description: Execute plan via MCP stdio; record ToolResult + elapsed_ms; collect under correlation_id.
+  - name: Summarizer
+    description: Call Outcome Summary Prompt; store JSON.
+  - name: Final Composer
+    description: Draft user reply with short summary + references; keep answer concise.
+  - name: Logging & Redaction
+    description: Persist all artifacts; redact secrets; store developer_log pointer.
+  - name: Tests
+    description: Add Pest tests covering 4 scenarios listed above.
+
+security_notes:
+  - Do not escalate to write scopes automatically; require explicit user confirmation UI.
+  - Enforce allow-list of tools per user/agent.
+  - Cap tool steps per turn; rate limit MCP calls; exponential backoff on 429/5xx.

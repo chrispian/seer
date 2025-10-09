@@ -1,0 +1,53 @@
+{
+  "schema_version": "v0",
+  "task_id": "T123",
+  "run_id": "R1",
+  "budgets": {
+    "tokens": 12000,
+    "tool_calls": 32,
+    "wall_seconds": 90
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "kind": "boot"
+    },
+    {
+      "id": "s2",
+      "kind": "read_task"
+    },
+    {
+      "id": "s3",
+      "kind": "gather_context",
+      "view_signatures": [
+        "ProjectView@abc",
+        "TaskView@def"
+      ]
+    },
+    {
+      "id": "s4",
+      "kind": "plan"
+    },
+    {
+      "id": "s5",
+      "kind": "execute",
+      "substeps": [
+        "edit",
+        "test",
+        "package"
+      ]
+    },
+    {
+      "id": "s6",
+      "kind": "summary"
+    },
+    {
+      "id": "s7",
+      "kind": "admin"
+    },
+    {
+      "id": "s8",
+      "kind": "shutdown"
+    }
+  ]
+}

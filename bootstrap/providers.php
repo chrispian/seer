@@ -12,4 +12,5 @@ return [
     App\Providers\EmbeddingStoreServiceProvider::class,
     App\Providers\HybridSearchServiceProvider::class,
     App\Providers\CredentialStorageServiceProvider::class,
+    App\Providers\ToolAwareServiceProvider::class,
 ];

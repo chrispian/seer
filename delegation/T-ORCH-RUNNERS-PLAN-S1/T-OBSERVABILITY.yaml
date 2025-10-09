@@ -1,0 +1,58 @@
+schema: fe.contextpack.v1
+version: 1
+project: P-FRAGMENTS-ENGINE
+priority: high
+policy:
+  must_do:
+  - claim.task
+  - boot.context
+  - init.phase
+  - execute
+  - checkpoint
+  - summarize
+init:
+  steps:
+  - id: init.load_profile
+    desc: Load agent profile and permissions.
+  - id: init.healthcheck
+    desc: Verify access to packs/, delegation/, docs/, bus, artifact store.
+  - id: init.resume
+    desc: Load prior notes for runners/telemetry if present and reconcile.
+how_to_run:
+  cli:
+  - fe pm:send --agent=A-fe-spec-writer --task=T-RUNNER-QUANTUM-SCHEMAS --file=./delegation/T-RUNNER-QUANTUM-SCHEMAS.yaml
+  - fe agent:check-messages
+  streams:
+  - agents.A-fe-spec-writer.inbox
+  - tasks.T-RUNNER-QUANTUM-SCHEMAS.mailbox
+task: T-OBSERVABILITY
+agent_profile: A-fe-telemetry
+boot:
+  brief: Specify and implement OTel-style spans/events, metrics, heartbeats; buffered
+    log persistence + projector.
+  repo:
+    paths:
+    - repo://fragments-engine/app/Services/Telemetry
+    - repo://fragments-engine/app/Projectors/TelemetryProjector.php
+    - repo://fragments-engine/config/telemetry.php
+plan:
+  steps:
+  - id: spec.events
+    desc: 'Define events: PLAN, ACTION, QUESTION, CHECKPOINT, HEARTBEAT, ERROR, RETRY,
+      ESCALATE.'
+  - id: buffering
+    desc: In-memory buffers with periodic flush and on-checkpoint flush.
+  - id: projector
+    desc: Condense firehose into DB rows for UI; keep raw stream in bus.
+  - id: metrics
+    desc: Counters/latency per node; token spend; patch sizes.
+  - id: dash.feed
+    desc: Provide a simple JSON feed for the future dashboard.
+deliverables:
+- config/telemetry.php
+- app/Services/Telemetry/*
+- app/Projectors/TelemetryProjector.php
+- docs/orchestration/observability/telemetry-spec.md
+acceptance:
+- Telemetry buffers reduce DB writes; spans link via task_id/run_id/step_id.
+- Heartbeat shows active/idle status accurately.

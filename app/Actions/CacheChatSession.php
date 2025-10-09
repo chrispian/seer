@@ -14,7 +14,7 @@ class CacheChatSession
         string $model,
         $userFragmentId,
         string $conversationId,
-        ?string $sessionId = null
+        ?int $sessionId = null
     ): void {
         $payload = [
             'messages' => $messages,
@@ -22,7 +22,7 @@ class CacheChatSession
             'model' => $model,
             'user_fragment_id' => $userFragmentId,
             'conversation_id' => $conversationId,
-            'session_id' => $sessionId ?? (string) Str::uuid(),
+            'session_id' => $sessionId,
         ];
 
         Cache::put("msg:{$messageId}", $payload, now()->addMinutes(10));

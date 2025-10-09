@@ -27,6 +27,8 @@ return new class extends Migration
     protected function createFtsTable(): void
     {
         try {
+            DB::statement('DROP TABLE IF EXISTS fragments_fts');
+
             // Create FTS5 virtual table for full-text search
             DB::statement('
                 CREATE VIRTUAL TABLE IF NOT EXISTS fragments_fts USING fts5(

@@ -46,6 +46,16 @@ class ShellTool implements Tool
             throw new \InvalidArgumentException('Missing required parameter: cmd');
         }
 
+        // Check for destructive database operations
+        if ($this->requiresUserConfirmation($cmd)) {
+            throw new \RuntimeException(
+                'This command requires explicit user confirmation because it may perform destructive operations. '.
+                'Please confirm you want to execute: '.substr($cmd, 0, 100)
+            );
+        }
+
+        $this->checkForDestructiveOperations($cmd);
+
         // Check against allowlist and prevent command injection
         $allowlist = Config::get('fragments.tools.shell.allowlist', []);
         if (! empty($allowlist)) {
@@ -78,5 +88,85 @@ class ShellTool implements Tool
             'stderr' => substr($process->getErrorOutput(), 0, 20000),
             'success' => $process->isSuccessful(),
         ];
+    }
+
+    /**
+     * Check if the command requires user confirmation
+     */
+    protected function requiresUserConfirmation(string $cmd): bool
+    {
+        $confirmationPatterns = [
+            // Database operations that modify data
+            '/php artisan migrate/',
+            '/artisan migrate/',
+            '/php artisan db:/',
+            '/artisan db:/',
+            '/composer.*install/',
+            '/composer.*update/',
+            '/npm.*install/',
+            '/npm.*update/',
+            '/yarn.*add/',
+            '/git.*push/',
+            '/git.*pull/',
+            '/rm.*-rf/',
+            '/mysql/',
+            '/psql/',
+        ];
+
+        foreach ($confirmationPatterns as $pattern) {
+            if (preg_match($pattern, $cmd)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the command contains destructive database operations
+     */
+    protected function checkForDestructiveOperations(string $cmd): void
+    {
+        $destructivePatterns = [
+            // Laravel artisan commands
+            '/php artisan migrate:fresh/',
+            '/php artisan db:wipe/',
+            '/php artisan migrate:reset/',
+            '/php artisan migrate:rollback/',
+            '/artisan migrate:fresh/',
+            '/artisan db:wipe/',
+            '/artisan migrate:reset/',
+            '/artisan migrate:rollback/',
+
+            // Raw SQL destructive operations
+            '/DROP DATABASE/',
+            '/DROP TABLE/',
+            '/TRUNCATE TABLE/',
+            '/DELETE FROM.*WHERE.*=.*1.*=.*1/', // Attempt to catch DELETE without WHERE
+
+            // MySQL/PostgreSQL specific
+            '/mysql.*-e.*DROP/',
+            '/psql.*-c.*DROP/',
+            '/mysql.*-e.*TRUNCATE/',
+            '/psql.*-c.*TRUNCATE/',
+        ];
+
+        foreach ($destructivePatterns as $pattern) {
+            if (preg_match($pattern, $cmd)) {
+                throw new \RuntimeException(
+                    'Command contains destructive database operation and is blocked. '.
+                    'Destructive operations require explicit user approval. '.
+                    'Command blocked: '.substr($cmd, 0, 100)
+                );
+            }
+        }
+
+        // Additional check for raw DB facade usage in PHP files
+        if (str_contains($cmd, 'DB::') && (str_contains($cmd, 'truncate') || str_contains($cmd, 'delete') || str_contains($cmd, 'drop'))) {
+            throw new \RuntimeException(
+                'Command appears to contain raw database destructive operations and is blocked. '.
+                'Use of DB facade for destructive operations requires explicit user approval.'
+            );
+        }
     }
 }

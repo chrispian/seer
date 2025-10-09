@@ -12,12 +12,14 @@ class DatabaseSeeder extends Seeder
     {
         // SeerLog::factory(10)->create();
 
-        // Setup defaults
+        // Setup system essentials first
         $this->call([
-            DefaultVaultProjectSeeder::class,
-            DemoRoutingDataSeeder::class,
-            TypeSeeder::class,
-            \Database\Seeders\Demo\DemoDataSeeder::class,
+            SystemTypesSeeder::class,           // Essential fragment types
+            ToolDefinitionsSeeder::class,       // AI tool definitions
+            DefaultVaultProjectSeeder::class,   // Default vault and project
+            TypeSeeder::class,                  // Basic fragment types
+            DemoRoutingDataSeeder::class,       // Demo data (development only)
+            \Database\Seeders\Demo\DemoDataSeeder::class, // Demo dataset
         ]);
     }
 }

@@ -1,0 +1,61 @@
+schema: fe.contextpack.v1
+version: 1
+project: P-FRAGMENTS-ENGINE
+priority: high
+policy:
+  must_do:
+  - claim.task
+  - boot.context
+  - init.phase
+  - execute
+  - checkpoint
+  - summarize
+init:
+  steps:
+  - id: init.load_profile
+    desc: Load agent profile and permissions.
+  - id: init.healthcheck
+    desc: Verify access to packs/, delegation/, docs/, bus, artifact store.
+  - id: init.resume
+    desc: Load prior notes for runners/telemetry if present and reconcile.
+how_to_run:
+  cli:
+  - fe pm:send --agent=A-fe-spec-writer --task=T-RUNNER-QUANTUM-SCHEMAS --file=./delegation/T-RUNNER-QUANTUM-SCHEMAS.yaml
+  - fe agent:check-messages
+  streams:
+  - agents.A-fe-spec-writer.inbox
+  - tasks.T-RUNNER-QUANTUM-SCHEMAS.mailbox
+task: T-RUNNER-OH-INTEGRATION
+agent_profile: A-fe-integration
+boot:
+  brief: 'Integrate OpenHands headless as Attached Runner: WS sessions, heartbeats,
+    reconnect, artifact piping; FE is source of truth.'
+  repo:
+    paths:
+    - repo://fragments-engine/app/Services/Runners/OpenHandsClient.php
+    - repo://fragments-engine/app/Http/Controllers/OpenHandsProxyController.php
+    - repo://fragments-engine/routes/api.php
+    - repo://fragments-engine/config/runners.php
+plan:
+  steps:
+  - id: conf.providers
+    desc: Wire LiteLLM/OpenRouter/OpenAI configs for multiple providers.
+  - id: ws.attach
+    desc: Attach by conversation_id; map to (task_id, run_id); maintain heartbeats.
+  - id: reconnect
+    desc: Support resume with latest_event_id; backoff + jitter.
+  - id: artifacts
+    desc: Stream logs/reports to fe:// artifacts; checkpoint at boundaries.
+  - id: policy
+    desc: Route commands via FE policy (allowlist, budgets).
+  - id: demo
+    desc: 'Browser demo: live shell stream within FE UI.'
+deliverables:
+- config/runners.php
+- app/Services/Runners/OpenHandsClient.php
+- app/Http/Controllers/OpenHandsProxyController.php
+- routes/api.php (WS/SSE endpoints)
+- docs/orchestration/runners/openhands-integration.md
+acceptance:
+- Attach/detach works; missed heartbeats close session and FE resumes from checkpoint.
+- Live shell output visible in FE with artifact URIs recorded.

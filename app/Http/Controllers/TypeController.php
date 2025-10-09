@@ -193,4 +193,125 @@ class TypeController extends Controller
             ], 500);
         }
     }
+
+    public function admin(): JsonResponse
+    {
+        try {
+            $types = FragmentTypeRegistry::orderBy('is_system', 'desc')
+                ->orderBy('slug')
+                ->get()
+                ->map(function ($type) {
+                    $fragmentCount = \App\Models\Fragment::where('type', $type->slug)->count();
+
+                    return [
+                        'slug' => $type->slug,
+                        'display_name' => $type->display_name,
+                        'plural_name' => $type->plural_name,
+                        'description' => $type->description,
+                        'icon' => $type->icon,
+                        'color' => $type->color,
+                        'is_enabled' => $type->is_enabled,
+                        'is_system' => $type->is_system,
+                        'hide_from_admin' => $type->hide_from_admin,
+                        'can_disable' => $type->canBeDisabled(),
+                        'can_delete' => $type->canBeDeleted(),
+                        'fragments_count' => $fragmentCount,
+                        'version' => $type->version,
+                        'pagination_default' => $type->pagination_default,
+                        'list_columns' => $type->list_columns,
+                        'filters' => $type->filters,
+                        'actions' => $type->actions,
+                        'default_sort' => $type->default_sort,
+                        'container_component' => $type->container_component,
+                        'row_display_mode' => $type->row_display_mode,
+                        'detail_component' => $type->detail_component,
+                        'detail_fields' => $type->detail_fields,
+                    ];
+                });
+
+            return response()->json([
+                'data' => $types,
+                'total' => $types->count(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to load admin types',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function toggle(string $slug): JsonResponse
+    {
+        try {
+            $type = FragmentTypeRegistry::findBySlug($slug);
+
+            if (! $type) {
+                return response()->json([
+                    'error' => 'Type not found',
+                    'message' => "Type '{$slug}' does not exist",
+                ], 404);
+            }
+
+            if (! $type->canBeDisabled()) {
+                return response()->json([
+                    'error' => 'Cannot disable type',
+                    'message' => 'System types cannot be disabled',
+                ], 403);
+            }
+
+            $type->is_enabled = ! $type->is_enabled;
+            $type->save();
+
+            return response()->json([
+                'slug' => $type->slug,
+                'is_enabled' => $type->is_enabled,
+                'message' => $type->is_enabled ? 'Type enabled' : 'Type disabled',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to toggle type',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, string $slug): JsonResponse
+    {
+        try {
+            $type = FragmentTypeRegistry::findBySlug($slug);
+
+            if (! $type) {
+                return response()->json([
+                    'error' => 'Type not found',
+                    'message' => "Type '{$slug}' does not exist",
+                ], 404);
+            }
+
+            $validated = $request->validate([
+                'display_name' => 'sometimes|string|max:255',
+                'plural_name' => 'sometimes|string|max:255',
+                'description' => 'sometimes|string|nullable',
+                'icon' => 'sometimes|string|nullable',
+                'color' => 'sometimes|string|nullable',
+                'pagination_default' => 'sometimes|integer|min:10|max:500',
+                'container_component' => 'sometimes|string|in:DataManagementModal,Dialog,Drawer',
+                'row_display_mode' => 'sometimes|string|in:list,grid,card',
+                'detail_component' => 'sometimes|string|nullable|in:UnifiedDetailModal,Dialog,Drawer',
+                'detail_fields' => 'sometimes|array|nullable',
+            ]);
+
+            $type->update($validated);
+
+            return response()->json([
+                'slug' => $type->slug,
+                'message' => 'Type updated successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to update type',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

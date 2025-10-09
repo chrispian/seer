@@ -30,6 +30,8 @@ Route::middleware([\App\Http\Middleware\EnsureDefaultUser::class])->group(functi
         Route::post('/avatar', [SettingsController::class, 'updateAvatar'])->name('avatar.update');
         Route::post('/preferences', [SettingsController::class, 'updatePreferences'])->name('preferences.update');
         Route::post('/ai', [SettingsController::class, 'updateAISettings'])->name('ai.update');
+        Route::post('/integrations', [SettingsController::class, 'updateIntegrations'])->name('integrations.update');
+        Route::post('/integrations/obsidian/test-path', [SettingsController::class, 'testObsidianPath'])->name('integrations.obsidian.test');
         Route::get('/export', [SettingsController::class, 'exportSettings'])->name('export');
 
         // Import/Export/Reset routes

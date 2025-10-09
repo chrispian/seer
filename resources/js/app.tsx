@@ -1,10 +1,11 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { bootIslands } from './boot'
+import { Toaster } from 'sonner'
 
 export function mount(id: string, node: React.ReactNode) {
   const el = document.getElementById(id)
-  if (el) createRoot(el).render(node)
+  if (el) createRoot(el).render(<>{node}<Toaster /></>)
 }
 
 declare global { interface Window { __APP_BOOT__?: any } }
