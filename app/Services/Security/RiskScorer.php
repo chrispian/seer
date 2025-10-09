@@ -14,7 +14,7 @@ class RiskScorer
         'write_operation' => 10,
         'delete_operation' => 25,
         'network_egress' => 15,
-        'shell_execution' => 20,
+        'shell_execution' => 35,
         'privileged_operation' => 50,
         'system_modification' => 40,
         'data_exfiltration_risk' => 30,
@@ -25,7 +25,7 @@ class RiskScorer
      */
     private const THRESHOLDS = [
         0 => 'auto_approve',           // 0-25: Low risk
-        26 => 'log_and_approve',       // 26-50: Medium risk
+        26 => 'require_approval',       // 26+: Require approval
         51 => 'require_approval',      // 51-75: High risk
         76 => 'require_approval_with_justification', // 76-100: Critical
     ];
@@ -153,7 +153,7 @@ class RiskScorer
             'level' => $this->getRiskLevel($score),
             'action' => $this->getThresholdAction($score),
             'factors' => $factors,
-            'requires_approval' => $score >= 51,
+            'requires_approval' => $score >= 26,
         ];
     }
 
@@ -218,7 +218,7 @@ class RiskScorer
             'level' => $this->getRiskLevel($score),
             'action' => $this->getThresholdAction($score),
             'factors' => $factors,
-            'requires_approval' => $score >= 51,
+            'requires_approval' => $score >= 26,
         ];
     }
 
@@ -275,7 +275,7 @@ class RiskScorer
             'level' => $this->getRiskLevel($score),
             'action' => $this->getThresholdAction($score),
             'factors' => $factors,
-            'requires_approval' => $score >= 51,
+            'requires_approval' => $score >= 26,
         ];
     }
 
@@ -306,7 +306,7 @@ class RiskScorer
             'action' => $this->getThresholdAction($avgScore),
             'factors' => $allFactors,
             'operation_count' => count($operations),
-            'requires_approval' => $avgScore >= 51,
+            'requires_approval' => $avgScore >= 26,
         ];
     }
 
