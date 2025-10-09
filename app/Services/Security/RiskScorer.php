@@ -1,11 +1,77 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Security;
 
+/**
+ * Multi-dimensional risk scoring engine for security operations.
+ * 
+ * Calculates risk scores (0-100) for tool calls, shell commands, filesystem
+ * operations, and network requests. Scores determine whether operations
+ * require user approval before execution.
+ * 
+ * Risk Levels:
+ * - 0-25 (low): Auto-approve - safe operations
+ * - 26-50 (medium): Require approval - potentially risky
+ * - 51-75 (high): Require approval - dangerous operations
+ * - 76-100 (critical): Require approval with justification
+ * 
+ * Scoring Factors:
+ * - Base operation type (read: 1, write: 10, delete: 25, shell: 35)
+ * - Dangerous patterns (sudo, rm -rf, pipe to shell)
+ * - Sensitive paths (.ssh, .env, /etc/passwd)
+ * - Private IPs (SSRF risk)
+ * - Policy violations (restricted commands/paths/domains)
+ * 
+ * @example Score a shell command
+ * ```php
+ * $scorer = app(RiskScorer::class);
+ * 
+ * $result = $scorer->scoreCommand('rm -rf /tmp/*', [
+ *     'user_id' => 1,
+ *     'workdir' => '/tmp',
+ * ]);
+ * 
+ * // Result: [
+ * //   'score' => 85,
+ * //   'level' => 'critical',
+ * //   'action' => 'require_approval',
+ * //   'requires_approval' => true,
+ * //   'factors' => ['Shell execution: +35', 'Recursive force delete: +40', ...]
+ * // ]
+ * 
+ * if ($result['requires_approval']) {
+ *     // Show approval UI to user
+ * }
+ * ```
+ * 
+ * @example Score a file operation
+ * ```php
+ * $result = $scorer->scoreFileOperation('/etc/passwd', 'write', [
+ *     'size' => 1024,
+ * ]);
+ * 
+ * echo "Risk: {$result['level']} ({$result['score']}/100)\n";
+ * foreach ($result['factors'] as $factor) {
+ *     echo "- {$factor}\n";
+ * }
+ * ```
+ * 
+ * @see PolicyRegistry
+ * @see ApprovalManager
+ * @see RiskScorer::THRESHOLDS For risk threshold definitions
+ * @package App\Services\Security
+ */
 class RiskScorer
 {
     /**
-     * Risk scoring weights (0-100 scale)
+     * Base risk weights for different operation types (0-100 scale).
+     * 
+     * These weights are added to the risk score when specific operation
+     * types are detected. Multiple weights may apply to a single operation.
+     * 
+     * @var array<string, int>
      */
     private const BASE_WEIGHTS = [
         'read_operation' => 1,
@@ -19,7 +85,12 @@ class RiskScorer
     ];
 
     /**
-     * Threshold actions (risk score ranges)
+     * Risk score thresholds that determine required approval actions.
+     * 
+     * Thresholds are evaluated in order - the highest matching threshold
+     * determines the action. Operations scoring >= 26 require user approval.
+     * 
+     * @var array<int, string>
      */
     private const THRESHOLDS = [
         0 => 'auto_approve',           // 0-25: Low risk
@@ -28,12 +99,43 @@ class RiskScorer
         76 => 'require_approval_with_justification', // 76-100: Critical
     ];
 
+    /**
+     * Create a new risk scorer instance.
+     * 
+     * @param PolicyRegistry $policyRegistry Policy registry for checking allowlists and risk weights
+     */
     public function __construct(
         private PolicyRegistry $policyRegistry
     ) {}
 
     /**
-     * Calculate risk score for a tool call
+     * Calculate risk score for a tool call.
+     * 
+     * Evaluates tool ID and parameters to determine risk level. Tool IDs
+     * are analyzed for dangerous patterns (shell, delete, write, network)
+     * and parameters are checked for sensitive data.
+     * 
+     * @param string $toolId The tool identifier (e.g., 'fs.write', 'shell.exec', 'http.fetch')
+     * @param array<string, mixed> $parameters Optional tool parameters to analyze for risk
+     * 
+     * @return array{
+     *     score: int,
+     *     level: string,
+     *     action: string,
+     *     factors: array<int, string>,
+     *     requires_approval: bool
+     * } Risk assessment with score (0-100), level, and contributing factors
+     * 
+     * @example
+     * ```php
+     * $result = $scorer->scoreToolCall('shell.exec', [
+     *     'command' => 'git status',
+     *     'workdir' => '/workspace',
+     * ]);
+     * // Returns: ['score' => 35, 'level' => 'medium', 'requires_approval' => true, ...]
+     * ```
+     * 
+     * @see RiskScorer::analyzeParameters() For parameter risk analysis
      */
     public function scoreToolCall(string $toolId, array $parameters = []): array
     {
@@ -89,7 +191,39 @@ class RiskScorer
     }
 
     /**
-     * Calculate risk score for a shell command
+     * Calculate risk score for a shell command.
+     * 
+     * Analyzes command string for dangerous patterns including:
+     * - Destructive operations (rm -rf, dd, mkfs)
+     * - Privilege escalation (sudo)
+     * - Insecure patterns (chmod 777, pipe to shell)
+     * - Command chaining (|, &, ;)
+     * - Restricted working directories
+     * 
+     * @param string $command The full shell command to score (e.g., 'git clone https://...')
+     * @param array<string, mixed> $context Optional context with workdir, user_id, etc.
+     * 
+     * @return array{
+     *     score: int,
+     *     level: string,
+     *     action: string,
+     *     factors: array<int, string>,
+     *     requires_approval: bool
+     * } Risk assessment with detailed factor breakdown
+     * 
+     * @example Safe command
+     * ```php
+     * $result = $scorer->scoreCommand('ls -la', ['workdir' => '/workspace']);
+     * // Returns: ['score' => 35, 'level' => 'medium', 'requires_approval' => true]
+     * ```
+     * 
+     * @example Dangerous command
+     * ```php
+     * $result = $scorer->scoreCommand('sudo rm -rf /', ['workdir' => '/']);
+     * // Returns: ['score' => 100, 'level' => 'critical', 'factors' => [
+     * //   'Shell execution: +35', 'Privileged execution: +50', 'Recursive force delete: +40'
+     * // ]]
+     * ```
      */
     public function scoreCommand(string $command, array $context = []): array
     {
@@ -156,7 +290,39 @@ class RiskScorer
     }
 
     /**
-     * Calculate risk score for filesystem operation
+     * Calculate risk score for filesystem operation.
+     * 
+     * Evaluates file path and operation type for risk factors including:
+     * - Sensitive file patterns (.ssh, .env, .aws, /etc/passwd)
+     * - Operation type (read: 1, write: 10, delete: 25, execute: 35)
+     * - Policy restrictions (denied paths)
+     * - Bulk operations (multiple files)
+     * 
+     * @param string $path The filesystem path being accessed
+     * @param string $operation The operation type ('read'|'write'|'delete'|'execute')
+     * @param array<string, mixed> $context Optional context with file_count, size, etc.
+     * 
+     * @return array{
+     *     score: int,
+     *     level: string,
+     *     action: string,
+     *     factors: array<int, string>,
+     *     requires_approval: bool
+     * } Risk assessment for the file operation
+     * 
+     * @example Safe read operation
+     * ```php
+     * $result = $scorer->scoreFileOperation('/workspace/data.json', 'read');
+     * // Returns: ['score' => 1, 'level' => 'low', 'requires_approval' => false]
+     * ```
+     * 
+     * @example Dangerous write operation
+     * ```php
+     * $result = $scorer->scoreFileOperation('/etc/passwd', 'write');
+     * // Returns: ['score' => 55, 'level' => 'high', 'factors' => [
+     * //   'Write operation: +10', 'System password file: +45'
+     * // ]]
+     * ```
      */
     public function scoreFileOperation(string $path, string $operation, array $context = []): array
     {
@@ -221,7 +387,45 @@ class RiskScorer
     }
 
     /**
-     * Calculate risk score for network operation
+     * Calculate risk score for network operation.
+     * 
+     * Evaluates network requests for security risks including:
+     * - Private IPs (SSRF vulnerability risk)
+     * - Restricted domains (policy violations)
+     * - Mutating HTTP methods (POST, PUT, DELETE)
+     * - Data upload (request body present)
+     * - Authentication tokens in headers
+     * 
+     * @param string $domain The target domain or IP address
+     * @param array<string, mixed> $context Optional context with method, has_body, headers
+     * 
+     * @return array{
+     *     score: int,
+     *     level: string,
+     *     action: string,
+     *     factors: array<int, string>,
+     *     requires_approval: bool
+     * } Risk assessment for the network operation
+     * 
+     * @example Safe GET request
+     * ```php
+     * $result = $scorer->scoreNetworkOperation('api.github.com', [
+     *     'method' => 'GET',
+     * ]);
+     * // Returns: ['score' => 15, 'level' => 'low', 'requires_approval' => false]
+     * ```
+     * 
+     * @example SSRF risk with private IP
+     * ```php
+     * $result = $scorer->scoreNetworkOperation('192.168.1.1', [
+     *     'method' => 'POST',
+     *     'has_body' => true,
+     * ]);
+     * // Returns: ['score' => 60, 'level' => 'high', 'factors' => [
+     * //   'Network egress: +15', 'Private IP/SSRF risk: +30',
+     * //   'Mutating HTTP method: +5', 'Data upload: +10'
+     * // ]]
+     * ```
      */
     public function scoreNetworkOperation(string $domain, array $context = []): array
     {
@@ -278,7 +482,32 @@ class RiskScorer
     }
 
     /**
-     * Get aggregate risk score for multiple operations
+     * Calculate aggregate risk score for multiple operations.
+     * 
+     * Averages risk scores across multiple operations and returns the
+     * combined assessment. Useful for evaluating complex multi-step
+     * workflows or batch operations.
+     * 
+     * @param array<int, array{score: int, level: string, factors: array}> $operations Array of scored operations
+     * 
+     * @return array{
+     *     score: int,
+     *     level: string,
+     *     action: string,
+     *     factors: array<int, string>,
+     *     operation_count: int,
+     *     requires_approval: bool
+     * } Aggregate risk assessment with all contributing factors
+     * 
+     * @example
+     * ```php
+     * $op1 = $scorer->scoreCommand('git clone https://...');
+     * $op2 = $scorer->scoreFileOperation('/workspace/file.txt', 'write');
+     * $op3 = $scorer->scoreNetworkOperation('api.github.com');
+     * 
+     * $aggregate = $scorer->scoreOperationBatch([$op1, $op2, $op3]);
+     * // Returns average score with all factors combined
+     * ```
      */
     public function scoreOperationBatch(array $operations): array
     {
@@ -311,7 +540,16 @@ class RiskScorer
     // ==================== Private Methods ====================
 
     /**
-     * Analyze parameters for risk factors
+     * Analyze tool parameters for security risk factors.
+     * 
+     * Checks parameters for:
+     * - Sensitive keys (password, secret, token, api_key, private_key)
+     * - Privilege escalation flags (sudo, privileged)
+     * - Destructive flags (force, recursive)
+     * 
+     * @param array<string, mixed> $parameters Tool parameters to analyze
+     * 
+     * @return array{score: int, factors: array<int, string>} Risk score and contributing factors
      */
     private function analyzeParameters(array $parameters): array
     {
@@ -343,7 +581,17 @@ class RiskScorer
     }
 
     /**
-     * Get risk level from score
+     * Convert numeric risk score to human-readable level.
+     * 
+     * Risk levels:
+     * - 0-25: low
+     * - 26-50: medium
+     * - 51-75: high
+     * - 76-100: critical
+     * 
+     * @param int $score The risk score (0-100)
+     * 
+     * @return string The risk level ('low'|'medium'|'high'|'critical')
      */
     private function getRiskLevel(int $score): string
     {
@@ -361,7 +609,16 @@ class RiskScorer
     }
 
     /**
-     * Get threshold action for score
+     * Determine required action based on risk score threshold.
+     * 
+     * Evaluates score against THRESHOLDS constant to determine if
+     * approval is required and what type.
+     * 
+     * @param int $score The risk score (0-100)
+     * 
+     * @return string The threshold action ('auto_approve'|'require_approval'|'require_approval_with_justification')
+     * 
+     * @see RiskScorer::THRESHOLDS
      */
     private function getThresholdAction(int $score): string
     {
@@ -377,7 +634,14 @@ class RiskScorer
     }
 
     /**
-     * Get numeric value for risk level (for comparison)
+     * Convert risk level to numeric value for comparison.
+     * 
+     * Used by scoreOperationBatch() to determine the highest risk level
+     * across multiple operations.
+     * 
+     * @param string $level The risk level ('low'|'medium'|'high'|'critical')
+     * 
+     * @return int Numeric value (0-4) for comparison
      */
     private function levelValue(string $level): int
     {
@@ -391,7 +655,19 @@ class RiskScorer
     }
 
     /**
-     * Check if domain is a private IP address
+     * Check if domain is a private/internal IP address (SSRF risk).
+     * 
+     * Detects:
+     * - Localhost addresses (127.0.0.1, ::1, localhost)
+     * - Private IP ranges (10.x, 172.16-31.x, 192.168.x)
+     * - Reserved IP ranges (link-local, etc.)
+     * 
+     * This helps prevent Server-Side Request Forgery (SSRF) attacks
+     * by flagging requests to internal infrastructure.
+     * 
+     * @param string $domain The domain or IP address to check
+     * 
+     * @return bool True if domain resolves to a private/reserved IP
      */
     private function isPrivateIp(string $domain): bool
     {
