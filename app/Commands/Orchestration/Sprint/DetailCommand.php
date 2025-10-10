@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Commands;
+namespace App\Commands\Orchestration\Sprint;
 
+use App\Commands\BaseCommand;
 use App\Tools\Orchestration\SprintDetailTool;
 use Laravel\Mcp\Request;
 
-class SprintDetailCommand extends BaseCommand
+class DetailCommand extends BaseCommand
 {
     protected ?string $argument = null;
 

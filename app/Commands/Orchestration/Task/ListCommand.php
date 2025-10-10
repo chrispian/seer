@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Commands;
+namespace App\Commands\Orchestration\Task;
 
-class TaskListCommand extends BaseCommand
+use App\Commands\BaseCommand;
+
+class ListCommand extends BaseCommand
 {
     public function handle(): array
     {

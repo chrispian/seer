@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTypePackRequest;
+use App\Http\Requests\UpdateTypePackRequest;
+use App\Http\Resources\TypePackResource;
 use App\Models\FragmentTypeRegistry;
 use App\Services\TypeSystem\TypePackLoader;
+use App\Services\TypeSystem\TypePackManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TypeController extends Controller
 {
     public function __construct(
-        protected TypePackLoader $typePackLoader
+        protected TypePackLoader $typePackLoader,
+        protected TypePackManager $typePackManager
     ) {}
 
     /**
@@ -313,5 +318,144 @@ class TypeController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Create a new type pack
+     */
+    public function store(StoreTypePackRequest $request): JsonResponse
+    {
+        $result = $this->typePackManager->createTypePack($request->validated());
+
+        if (!$result['success']) {
+            return response()->json([
+                'error' => 'Failed to create type pack',
+                'message' => $result['error'],
+            ], 422);
+        }
+
+        return response()->json([
+            'data' => new TypePackResource($result['type_pack']),
+            'message' => 'Type pack created successfully',
+        ], 201);
+    }
+
+    /**
+     * Update an existing type pack
+     */
+    public function update(UpdateTypePackRequest $request, string $slug): JsonResponse
+    {
+        $result = $this->typePackManager->updateTypePack($slug, $request->validated());
+
+        if (!$result['success']) {
+            return response()->json([
+                'error' => 'Failed to update type pack',
+                'message' => $result['error'],
+            ], 422);
+        }
+
+        return response()->json([
+            'data' => new TypePackResource($result['type_pack']),
+            'message' => 'Type pack updated successfully',
+        ]);
+    }
+
+    /**
+     * Delete a type pack
+     */
+    public function destroy(string $slug, Request $request): JsonResponse
+    {
+        $deleteFragments = $request->boolean('delete_fragments', false);
+        $result = $this->typePackManager->deleteTypePack($slug, $deleteFragments);
+
+        if (!$result['success']) {
+            return response()->json([
+                'error' => 'Failed to delete type pack',
+                'message' => $result['error'],
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Type pack deleted successfully',
+            'deleted_fragments' => $result['deleted_fragments'] ?? 0,
+        ]);
+    }
+
+    /**
+     * Validate type pack schema with sample data
+     */
+    public function validateSchema(Request $request, string $slug): JsonResponse
+    {
+        $request->validate([
+            'sample_data' => 'required|array',
+        ]);
+
+        $result = $this->typePackManager->validateTypePack($slug, $request->input('sample_data'));
+
+        return response()->json($result);
+    }
+
+    /**
+     * Refresh type pack cache
+     */
+    public function refreshCache(string $slug): JsonResponse
+    {
+        $this->typePackLoader->refreshCache($slug);
+
+        return response()->json([
+            'message' => 'Cache refreshed successfully',
+        ]);
+    }
+
+    /**
+     * Get fragments using this type pack
+     */
+    public function fragments(string $slug): JsonResponse
+    {
+        $result = $this->typePackManager->getFragmentsByType($slug);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Get available templates
+     */
+    public function templates(): JsonResponse
+    {
+        $templates = $this->typePackManager->getTemplates();
+
+        return response()->json([
+            'data' => $templates,
+        ]);
+    }
+
+    /**
+     * Create type pack from template
+     */
+    public function createFromTemplate(Request $request): JsonResponse
+    {
+        $request->validate([
+            'template' => 'required|string',
+            'slug' => 'required|string|regex:/^[a-z0-9_-]+$/|unique:fragment_type_registry,slug',
+            'name' => 'required|string|max:100',
+        ]);
+
+        $result = $this->typePackManager->createFromTemplate(
+            $request->input('template'),
+            $request->input('slug'),
+            $request->input('name')
+        );
+
+        if (!$result['success']) {
+            return response()->json([
+                'error' => 'Failed to create type pack from template',
+                'message' => $result['error'],
+            ], 422);
+        }
+
+        return response()->json([
+            'data' => new TypePackResource($result['type_pack']),
+            'message' => 'Type pack created from template successfully',
+        ], 201);
     }
 }

@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Commands;
+namespace App\Commands\Orchestration\Task;
 
+use App\Commands\BaseCommand;
 use App\Tools\Orchestration\TaskDetailTool;
 use Laravel\Mcp\Request;
 
-class TaskDetailCommand extends BaseCommand
+class DetailCommand extends BaseCommand
 {
     protected ?string $argument = null;
 
