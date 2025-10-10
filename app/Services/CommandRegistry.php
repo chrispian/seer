@@ -31,6 +31,11 @@ class CommandRegistry
         'tl' => \App\Commands\Orchestration\Task\ListCommand::class,
         'task-detail' => \App\Commands\Orchestration\Task\DetailCommand::class,
         'td' => \App\Commands\Orchestration\Task\DetailCommand::class,
+        'task-save' => \App\Commands\Orchestration\Task\SaveCommand::class,
+        'task-create' => \App\Commands\Orchestration\Task\SaveCommand::class,
+        'task-update' => \App\Commands\Orchestration\Task\SaveCommand::class,
+        'task-assign' => \App\Commands\Orchestration\Task\AssignCommand::class,
+        'task-status' => \App\Commands\Orchestration\Task\UpdateStatusCommand::class,
 
         // Orchestration Commands - Backlog
         'backlog-list' => \App\Commands\Orchestration\Backlog\ListCommand::class,
