@@ -541,3 +541,44 @@ All commands available via `/command-name` in chat
 ---
 
 *This summary serves as the official handoff document for the command system unification project.*
+
+---
+
+## Post-Session Fixes (2025-10-10)
+
+### Critical Bug Fix: Web Command Execution
+
+**Issue Discovered**: All web UI commands (`/sprints`, `/tasks`, etc.) were failing with TypeError
+
+**Root Cause**: 
+- `CommandController` was passing raw string to command constructors
+- Unified commands expect `array $options`
+- Caused: "Argument #1 must be of type array, string given"
+
+**Fixes Applied**:
+
+1. **CommandController.php** - Fixed command instantiation
+   - Changed: `new $commandClass($rawArguments)` 
+   - To: `new $commandClass($arguments)` + `setContext('web')`
+   
+2. **parseArguments()** - Enhanced to support indexed arrays
+   - Now creates: `[0 => 'SPRINT-99', 'body' => 'SPRINT-99']`
+   - Supports both positional and key:value arguments
+   
+3. **Detail Commands** - Updated Sprint and Task Detail commands
+   - Changed constructor: `string $argument` → `array $options`
+   - Supports: `$options['code']` or `$options[0]`
+   - Maintains backward compatibility
+
+**Test Results**: ✅ All commands working
+- /sprints → SprintListModal
+- /tasks → TaskListModal
+- /agents → AgentProfileListModal
+- /sprint-detail TEST-99 → SprintDetailModal
+- /task-detail T-MCP-TEST-01 → TaskDetailModal
+
+**Impact**: System now fully functional across all interfaces (Web ✅ | MCP ✅ | CLI ✅)
+
+---
+
+*Updated: 2025-10-10 - System verified production-ready across all interfaces*
