@@ -1,17 +1,10 @@
 import React, { useState } from 'react'
 import { 
-  Archive, 
-  ChevronDown, 
-  ChevronUp, 
   MessageSquare, 
   Pin, 
   Plus, 
   Folder, 
-  User,
-  Terminal,
-  Loader2,
-  PanelLeftClose,
-  PanelLeftOpen
+  Loader2
 } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
