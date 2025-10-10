@@ -60,6 +60,7 @@ class CommandRegistry
 
         // Bookmark & Collections
         'bookmark' => \App\Commands\BookmarkListCommand::class,
+        'bookmarks' => \App\Commands\BookmarkListCommand::class,
         'bm' => \App\Commands\BookmarkListCommand::class,
 
         // Session & Navigation
@@ -69,6 +70,7 @@ class CommandRegistry
 
         // Todo & Notes
         'todo' => \App\Commands\TodoCommand::class,
+        'todos' => \App\Commands\TodoCommand::class,
         't' => \App\Commands\TodoCommand::class,
         'notes' => \App\Commands\NoteListCommand::class,
         'note' => \App\Commands\NoteCommand::class,
