@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\VaultFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vault extends Model
 {
-    /** @use HasFactory<\Database\Factories\VaultFactory> */
+    /** @use HasFactory<VaultFactory> */
     use HasFactory;
 
     protected $fillable = [

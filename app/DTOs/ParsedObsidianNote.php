@@ -2,13 +2,13 @@
 
 namespace App\DTOs;
 
-class ParsedObsidianNote
+readonly class ParsedObsidianNote
 {
     public function __construct(
-        public readonly string $title,
-        public readonly string $body,
-        public readonly array $frontMatter,
-        public readonly array $tags,
-        public readonly array $links = [],
+        public string $title,
+        public string $body,
+        public array $frontMatter,
+        public array $tags,
+        public array $links = [],
     ) {}
 }

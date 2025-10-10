@@ -340,25 +340,6 @@ class TypeController extends Controller
         ], 201);
     }
 
-    /**
-     * Update an existing type pack
-     */
-    public function update(UpdateTypePackRequest $request, string $slug): JsonResponse
-    {
-        $result = $this->typePackManager->updateTypePack($slug, $request->validated());
-
-        if (!$result['success']) {
-            return response()->json([
-                'error' => 'Failed to update type pack',
-                'message' => $result['error'],
-            ], 422);
-        }
-
-        return response()->json([
-            'data' => new TypePackResource($result['type_pack']),
-            'message' => 'Type pack updated successfully',
-        ]);
-    }
 
     /**
      * Delete a type pack

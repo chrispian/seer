@@ -6,11 +6,30 @@ function getCSRFToken(): string {
 
 export interface TypePack {
   slug: string
-  name: string
-  description: string
-  version: string
-  capabilities: string[]
-  ui: {
+  name?: string
+  display_name?: string
+  plural_name?: string
+  description?: string
+  version?: string
+  capabilities?: string[]
+  icon?: string
+  color?: string
+  is_enabled?: boolean
+  is_system?: boolean
+  hide_from_admin?: boolean
+  can_disable?: boolean
+  can_delete?: boolean
+  fragments_count?: number
+  pagination_default?: number
+  list_columns?: any
+  filters?: any
+  actions?: any
+  default_sort?: any
+  container_component?: string
+  row_display_mode?: string
+  detail_component?: string
+  detail_fields?: any
+  ui?: {
     icon?: string
     color?: string
     display_name?: string
@@ -219,6 +238,31 @@ export const typePacksApi = {
       },
     })
     if (!response.ok) throw new Error('Failed to fetch stats')
+    return response.json()
+  },
+
+  async admin(): Promise<{ data: TypePack[]; total: number }> {
+    const response = await fetch(`${BASE_URL}/admin`, {
+      headers: {
+        'Accept': 'application/json',
+      },
+    })
+    if (!response.ok) throw new Error('Failed to fetch admin types')
+    return response.json()
+  },
+
+  async toggle(slug: string): Promise<{ slug: string; is_enabled: boolean; message: string }> {
+    const response = await fetch(`${BASE_URL}/${slug}/toggle`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': getCSRFToken(),
+      },
+    })
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to toggle type')
+    }
     return response.json()
   },
 }

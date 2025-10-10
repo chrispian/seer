@@ -24,6 +24,9 @@ import { AgentProfileDashboard } from '@/pages/AgentProfileDashboard'
 import { AgentDashboard } from '@/pages/AgentDashboard'
 import { TypeManagementModal } from '@/components/types/TypeManagementModal'
 import { UnifiedListModal } from '@/components/unified/UnifiedListModal'
+import { ProjectListModal } from '@/components/projects/ProjectListModal'
+import { VaultListModal } from '@/components/vaults/VaultListModal'
+import { BookmarkListModal } from '@/components/bookmarks/BookmarkListModal'
 
 
 interface CommandResult {
@@ -229,6 +232,48 @@ export function CommandResultModal({
               onClose={() => {
                 console.log('TypeManagementModal onClose called')
                 onClose()
+              }}
+            />
+          )
+        case 'ProjectListModal':
+          return (
+            <ProjectListModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('ProjectListModal onClose called')
+                onClose()
+              }}
+              projects={currentResult.data}
+              onRefresh={() => {
+                console.log('Project refresh requested')
+              }}
+            />
+          )
+        case 'VaultListModal':
+          return (
+            <VaultListModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('VaultListModal onClose called')
+                onClose()
+              }}
+              vaults={currentResult.data}
+              onRefresh={() => {
+                console.log('Vault refresh requested')
+              }}
+            />
+          )
+        case 'BookmarkListModal':
+          return (
+            <BookmarkListModal
+              isOpen={isOpen}
+              onClose={() => {
+                console.log('BookmarkListModal onClose called')
+                onClose()
+              }}
+              bookmarks={currentResult.data}
+              onRefresh={() => {
+                console.log('Bookmark refresh requested')
               }}
             />
           )

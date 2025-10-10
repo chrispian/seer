@@ -10,9 +10,9 @@ export function useTypePacks() {
     setIsLoading(true)
     setError(null)
     try {
-      const data = await typePacksApi.list()
-      setTypePacks(data)
-      return data
+      const response = await typePacksApi.admin()
+      setTypePacks(response.data)
+      return response.data
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to fetch type packs')
       setError(error)
