@@ -60,8 +60,9 @@ class CommandController extends Controller
             // Check for PHP command first (new system)
             if (CommandRegistry::isPhpCommand($commandName)) {
                 $commandClass = CommandRegistry::getPhpCommand($commandName);
-                // Pass raw arguments string to command constructor
-                $command = new $commandClass($rawArguments);
+                // Instantiate command with parsed arguments array
+                $command = new $commandClass($arguments);
+                $command->setContext('web');
                 $result = $command->handle();
 
                 $executionTime = round((microtime(true) - $startTime) * 1000, 2);
