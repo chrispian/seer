@@ -5,11 +5,7 @@ import {
   ChevronUp, 
   MessageSquare, 
   Pin, 
-  PinOff, 
   Plus, 
-  Trash2, 
-  MoreVertical, 
-  GripVertical, 
   Folder, 
   User,
   Terminal,
@@ -19,7 +15,6 @@ import {
 } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -43,6 +38,7 @@ import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { useScreenReaderAnnouncements } from '@/hooks/useKeyboardNavigation'
 import { trackUserFlow } from '@/lib/performance'
 import { UserAvatar, useUserDisplayName } from '@/components/UserAvatar'
+import { ChatSessionItem } from '@/components/sidebar/ChatSessionItem'
 
 export function AppSidebar() {
   // Use direct hooks instead of context
@@ -241,72 +237,24 @@ export function AppSidebar() {
   }
 
   const renderSessionItem = (session: ChatSession, showPinHandle = false, index?: number, keyPrefix = '') => (
-    <div
-      key={`${keyPrefix}${session.id}`}
-        className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all w-full ${
-          currentSession?.id === session.id
-            ? 'bg-gray-100 border-l-2 border-l-black'
-            : 'hover:bg-gray-50'
-        } ${dragOverIndex === index ? 'border-t-2 border-t-blue-500' : ''}`}
-        onClick={() => handleSwitchSession(session.id)}
-        draggable={showPinHandle}
-        onDragStart={showPinHandle ? (e) => handleDragStart(e, session) : undefined}
-        onDragEnd={showPinHandle ? handleDragEnd : undefined}
-        onDragOver={showPinHandle && typeof index === 'number' ? (e) => handleDragOver(e, index) : undefined}
-        onDragLeave={showPinHandle ? handleDragLeave : undefined}
-        onDrop={showPinHandle && typeof index === 'number' ? (e) => handleDrop(e, index) : undefined}
-      >
-      <div className="flex items-center min-w-0 flex-1 max-w-[180px]">
-        {showPinHandle && (
-          <GripVertical className="w-3 h-3 text-gray-400 mr-2 cursor-grab flex-shrink-0" />
-        )}
-        <span className="text-sm truncate block">{session.channel_display}</span>
-      </div>
-      <div className="flex items-center space-x-1 ml-2 flex-shrink-0">
-        <Badge variant="secondary" className="text-xs">
-          {session.message_count}
-        </Badge>
-         <DropdownMenu>
-           <DropdownMenuTrigger asChild>
-             <Button 
-               variant="ghost" 
-               size="icon" 
-               className="h-6 w-6"
-               onClick={(e) => e.stopPropagation()}
-             >
-               <MoreVertical className="w-3 h-3" />
-             </Button>
-           </DropdownMenuTrigger>
-           <DropdownMenuContent key={`${keyPrefix}dropdown-${session.id}`}>
-             <DropdownMenuItem 
-               key={`${keyPrefix}pin-${session.id}`}
-               onClick={(e) => handleTogglePin(session.id, e)}
-             >
-               {session.is_pinned ? (
-                 <>
-                   <PinOff className="w-3 h-3 mr-2" />
-                   Unpin
-                 </>
-               ) : (
-                 <>
-                   <Pin className="w-3 h-3 mr-2" />
-                   Pin
-                 </>
-               )}
-             </DropdownMenuItem>
-             <DropdownMenuItem 
-               key={`${keyPrefix}delete-${session.id}`}
-               onClick={(e) => handleDeleteSession(session.id, e)}
-               disabled={deletingSessions.has(session.id)}
-             >
-               <Trash2 className="w-3 h-3 mr-2" />
-               Delete
-             </DropdownMenuItem>
-           </DropdownMenuContent>
-           </DropdownMenu>
-         </div>
-      </div>
-    )
+    <ChatSessionItem
+      session={session}
+      isActive={currentSession?.id === session.id}
+      showPinHandle={showPinHandle}
+      index={index}
+      keyPrefix={keyPrefix}
+      isDragOver={dragOverIndex === index}
+      isDeleting={deletingSessions.has(session.id)}
+      onSessionClick={handleSwitchSession}
+      onTogglePin={handleTogglePin}
+      onDelete={handleDeleteSession}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    />
+  )
 
   // Show skeleton loading when initial data is loading
   if (isLoadingVaults && vaults.length === 0) {
