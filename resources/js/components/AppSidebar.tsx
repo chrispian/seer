@@ -37,8 +37,11 @@ import { SidebarSkeleton, ChatSessionSkeleton, VaultProjectSelectorSkeleton } fr
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { useScreenReaderAnnouncements } from '@/hooks/useKeyboardNavigation'
 import { trackUserFlow } from '@/lib/performance'
-import { UserAvatar, useUserDisplayName } from '@/components/UserAvatar'
+import { useUserDisplayName } from '@/components/UserAvatar'
 import { ChatSessionItem } from '@/components/sidebar/ChatSessionItem'
+import { VaultSelector } from '@/components/sidebar/VaultSelector'
+import { UserMenu } from '@/components/sidebar/UserMenu'
+import { SidebarHeader } from '@/components/sidebar/SidebarHeader'
 
 export function AppSidebar() {
   // Use direct hooks instead of context
@@ -270,66 +273,19 @@ export function AppSidebar() {
   return (
     <ErrorBoundary context="sidebar">
       <div className={`${isCollapsed ? 'w-12 md:w-16' : 'w-64 md:w-72'} h-full bg-white border-r flex flex-col transition-all duration-200`}>
-        {/* Collapse Toggle */}
-        <div className="p-1 md:p-2 border-b flex justify-end">
-          <BlackButton
-            size="icon-sm"
-            onClick={() => setSidebarCollapsed(!isCollapsed)}
-            className="h-5 w-5 md:h-6 md:w-6"
-          >
-            {isCollapsed ? <PanelLeftOpen className="h-3 w-3 md:h-4 md:w-4" /> : <PanelLeftClose className="h-3 w-3 md:h-4 md:w-4" />}
-          </BlackButton>
-        </div>
+        <SidebarHeader 
+          isCollapsed={isCollapsed} 
+          onToggle={() => setSidebarCollapsed(!isCollapsed)} 
+        />
 
-        {/* Vault Selection Header */}
         {!isCollapsed && (
-        <div className="p-2 md:p-3 border-b">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost"
-                className="w-full justify-start h-12 px-3 data-[state=open]:bg-gray-100"
-              >
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-black text-white mr-3">
-                  <Archive className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">
-                    {currentVault?.name || 'Loading...'}
-                  </span>
-                  <span className="truncate text-xs text-gray-500">Vault</span>
-                </div>
-                <ChevronDown className="ml-auto" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-              side="bottom"
-              align="start"
-              sideOffset={4}
-            >
-              {vaults.map((vault) => (
-                <DropdownMenuItem
-                  key={vault.id}
-                  onClick={() => switchVaultMutation.mutate(vault.id)}
-                  className="gap-2 p-2"
-                >
-                  <div className="flex size-6 items-center justify-center rounded-sm border">
-                    <Archive className="size-4 shrink-0" />
-                  </div>
-                  {vault.name}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setVaultDialogOpen(true)} className="gap-2 p-2">
-                <div className="flex size-6 items-center justify-center rounded-md border border-dashed">
-                  <Plus className="size-4" />
-                </div>
-                <div className="font-medium text-gray-500">Add vault</div>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+          <VaultSelector
+            currentVault={currentVault}
+            vaults={vaults}
+            isLoading={isLoadingVaults}
+            onVaultChange={(vaultId) => switchVaultMutation.mutate(vaultId)}
+            onCreateVault={() => setVaultDialogOpen(true)}
+          />
         )}
 
         {/* Main Content */}
@@ -463,43 +419,12 @@ export function AppSidebar() {
 
         {/* User Menu Footer */}
         {!isCollapsed && (
-        <div className="p-2 md:p-3 border-t">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-start h-12 px-3 data-[state=open]:bg-gray-100"
-              >
-                <UserAvatar className="rounded-lg mr-3" size="md" />
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{userDisplayName}</span>
-                  <span className="truncate text-xs text-gray-500">Local User</span>
-                </div>
-                <ChevronUp className="ml-auto size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-              side="top"
-              align="start"
-              sideOffset={4}
-            >
-              <DropdownMenuItem onClick={() => window.location.href = '/settings'}>
-                <User className="w-4 h-4 mr-2" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                // Future: Open command palette (Ctrl+K)
-                console.log('Command palette not yet implemented')
-              }}>
-                <Terminal className="w-4 h-4 mr-2" />
-                Commands
-              </DropdownMenuItem>
-
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        )}
+        <UserMenu
+          userDisplayName={userDisplayName}
+          onSettingsClick={() => window.location.href = '/settings'}
+          onCommandsClick={() => console.log('Command palette not yet implemented')}
+        />
+      )}
 
       </div>
       

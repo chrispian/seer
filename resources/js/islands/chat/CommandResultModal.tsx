@@ -29,17 +29,10 @@ import { UnifiedListModal } from '@/components/unified/UnifiedListModal'
 interface CommandResult {
   success: boolean
   type?: string
-  component?: string  // New: direct component specification
-  data?: any          // New: clean data object
+  component?: string  // Direct component specification
+  data?: any          // Clean data object
   message?: string
   error?: string
-  panelData?: {       // Legacy: for old YAML commands
-    message?: string
-    action?: string
-    sprints?: any[]
-    tasks?: any[]
-    [key: string]: any
-  }
   fragments?: any[]
   shouldResetChat?: boolean
   shouldShowSuccessToast?: boolean
@@ -108,23 +101,16 @@ export function CommandResultModal({
 
   // Check if this is an orchestration command that should use rich UI
   const isOrchestrationCommand = () => {
-    // New PHP command system - check for component field first
-    if (result.component) {
-      return true
-    }
-    // Legacy - check result.type for YAML commands
-    return result.type === 'sprint' || result.type === 'task' || result.type === 'backlog' || result.type === 'agent' || result.type === 'agent-profile' || result.type === 'ailogs'
+    // Check for component field
+    return !!result.component
   }
 
   const renderOrchestrationUI = (currentResult: CommandResult = result, isDetail = false) => {
-    // New PHP command system - direct component routing
+    // Direct component routing
     if (currentResult.component) {
-      console.log('New PHP command - component:', currentResult.component, 'data:', currentResult.data, 'isDetail:', isDetail)
-      console.log('About to switch on component:', currentResult.component)
-      console.log('Component type:', typeof currentResult.component)
-      console.log('Component === "TypeManagementModal":', currentResult.component === 'TypeManagementModal')
+      console.log('Rendering component:', currentResult.component, 'data:', currentResult.data, 'isDetail:', isDetail)
       
-      // Direct component routing based on component field
+      // Component routing based on component field
       switch (currentResult.component) {
         case 'SprintListModal':
           return (
@@ -363,18 +349,6 @@ export function CommandResultModal({
       }
     }
     
-    // Legacy YAML command system fallback
-    if (currentResult.type === 'sprint' && currentResult.panelData?.sprints) {
-      console.log('Legacy YAML command - using panelData')
-      return (
-        <SprintListModal
-          isOpen={isOpen}
-          onClose={onClose}
-          sprints={currentResult.panelData.sprints}
-        />
-      )
-    }
-    
     return null
   }
 
@@ -446,11 +420,6 @@ export function CommandResultModal({
       ).join('\n')
       
       return `# Available Commands\n\n${helpContent}\n\n**Tip**: Most commands work with or without arguments. Try them out!`
-    }
-
-    // For help command and other commands with panel data
-    if (result.panelData?.message) {
-      return result.panelData.message
     }
 
     // For commands with direct messages
