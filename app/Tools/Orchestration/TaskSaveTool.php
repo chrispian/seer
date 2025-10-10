@@ -2,10 +2,9 @@
 
 namespace App\Tools\Orchestration;
 
-use App\Support\Orchestration\ModelResolver;
+use App\Commands\Orchestration\Task\SaveCommand;
 use App\Tools\Contracts\SummarizesTool;
 use Illuminate\JsonSchema\JsonSchema;
-use Illuminate\Support\Arr;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -61,18 +60,11 @@ class TaskSaveTool extends Tool implements SummarizesTool
             'upsert' => ['nullable', 'boolean'],
         ]);
 
-        $service = ModelResolver::resolveService('task_service', 'App\\Services\\TaskOrchestrationService');
+        $command = new SaveCommand($validated);
+        $command->setContext('mcp');
+        $result = $command->handle();
 
-        $upsert = Arr::pull($validated, 'upsert', true);
-
-        $task = $service->create($validated, (bool) $upsert);
-
-        $detail = $service->detail($task, [
-            'assignments_limit' => 10,
-            'include_history' => true,
-        ]);
-
-        return Response::json($detail);
+        return Response::json($result);
     }
 
     public static function summaryName(): string

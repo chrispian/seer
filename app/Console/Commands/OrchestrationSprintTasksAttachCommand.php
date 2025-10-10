@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\SprintOrchestrationService;
+use App\Commands\Orchestration\Sprint\AttachTasksCommand;
 use Illuminate\Console\Command;
 
 class OrchestrationSprintTasksAttachCommand extends Command
@@ -17,63 +17,50 @@ class OrchestrationSprintTasksAttachCommand extends Command
 
     protected $description = 'Attach one or more tasks to a sprint backlog.';
 
-    public function handle(SprintOrchestrationService $service): int
+    public function handle(): int
     {
-        $sprint = $this->argument('sprint');
         $tasks = $this->argument('task');
 
         if (empty($tasks)) {
             $this->error('At least one task must be provided.');
-
             return self::FAILURE;
         }
 
-        $options = array_filter([
-            'include_tasks' => $this->option('include-tasks') ?: false,
-            'include_assignments' => $this->option('include-assignments') ?: false,
-            'tasks_limit' => (int) $this->option('tasks-limit'),
-        ]);
-
         try {
-            $result = $service->attachTasks($sprint, $tasks, $options);
+            $command = new AttachTasksCommand([
+                'sprint_code' => $this->argument('sprint'),
+                'task_codes' => $tasks,
+                'include_tasks' => $this->option('include-tasks') ?: false,
+                'include_assignments' => $this->option('include-assignments') ?: false,
+                'tasks_limit' => (int) $this->option('tasks-limit'),
+            ]);
+
+            $command->setContext('cli');
+            $result = $command->handle();
 
             if ($this->option('json')) {
                 $this->line(json_encode($result, JSON_PRETTY_PRINT));
-
                 return self::SUCCESS;
             }
 
-            $sprintInfo = $result['sprint'];
+            $data = $result['data'];
             $this->info(sprintf('Attached %d task(s) to sprint: %s',
-                count($tasks),
-                $sprintInfo['code'] ?? $sprintInfo['id']
+                $data['attached_count'],
+                $data['sprint']['code'] ?? $data['sprint']['id']
             ));
 
-            // Display attached tasks
-            if (! empty($result['tasks'])) {
-                $this->comment('Attached Tasks:');
-                $taskRows = [];
-                foreach ($result['tasks'] as $task) {
-                    $taskRows[] = [
-                        $task['code'] ?? $task['id'] ?? '—',
-                        $task['title'] ?? '—',
-                        $task['delegation_status'] ?? '—',
-                    ];
-                }
-                $this->table(['Code', 'Title', 'Status'], $taskRows);
-            } else {
-                $this->comment(sprintf('Tasks attached: %s', implode(', ', $tasks)));
-            }
+            $this->comment(sprintf('Tasks attached: %s', implode(', ', $data['task_codes'])));
 
             // Show sprint summary
-            if (isset($result['stats'])) {
-                $stats = $result['stats'];
+            if (isset($data['sprint']['stats'])) {
+                $stats = $data['sprint']['stats'];
                 $this->info('Sprint Summary:');
-                $this->table(['Total Tasks', 'Pending', 'In Progress', 'Completed'], [[
-                    $stats['tasks_total'] ?? 0,
-                    $stats['tasks_pending'] ?? 0,
-                    $stats['tasks_in_progress'] ?? 0,
-                    $stats['tasks_completed'] ?? 0,
+                $this->table(['Total Tasks', 'Completed', 'In Progress', 'Blocked', 'Unassigned'], [[
+                    $stats['total'] ?? 0,
+                    $stats['completed'] ?? 0,
+                    $stats['in_progress'] ?? 0,
+                    $stats['blocked'] ?? 0,
+                    $stats['unassigned'] ?? 0,
                 ]]);
             }
 

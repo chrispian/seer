@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\TaskOrchestrationService;
+use App\Commands\Orchestration\Task\AssignCommand;
 use Illuminate\Console\Command;
 
 class OrchestrationTaskAssignCommand extends Command
@@ -18,38 +18,33 @@ class OrchestrationTaskAssignCommand extends Command
 
     protected $description = 'Assign a work item to an agent and update its delegation status.';
 
-    public function handle(TaskOrchestrationService $service): int
+    public function handle(): int
     {
-        $task = $this->argument('task');
-        $agent = $this->argument('agent');
-        $status = (string) $this->option('status');
-        $note = $this->option('note');
         $context = $this->decodeContext($this->option('context'));
-        $assignmentsLimit = (int) $this->option('assignments-limit');
 
-        $service->assignAgent($task, $agent, [
-            'status' => $status,
-            'note' => $note,
+        $command = new AssignCommand([
+            'task_code' => $this->argument('task'),
+            'agent_slug' => $this->argument('agent'),
+            'status' => (string) $this->option('status'),
+            'note' => $this->option('note'),
             'context' => $context,
         ]);
 
-        $detail = $service->detail($task, [
-            'assignments_limit' => $assignmentsLimit,
-        ]);
+        $command->setContext('cli');
+        $result = $command->handle();
 
         if ($this->option('json')) {
-            $this->line(json_encode($detail, JSON_PRETTY_PRINT));
-
+            $this->line(json_encode($result, JSON_PRETTY_PRINT));
             return self::SUCCESS;
         }
 
-        $this->info(sprintf('Task %s assigned to %s (%s)', $detail['task']['task_code'] ?? 'n/a', $detail['current_assignment']['agent_name'] ?? 'n/a', $detail['current_assignment']['status'] ?? 'n/a'));
+        $data = $result['data'];
+        $this->info(sprintf('Task %s assigned to agent', $data['task_code'] ?? 'n/a'));
 
-        $this->table(['Task', 'Delegation', 'Status', 'Agent'], [[
-            $detail['task']['task_code'] ?? '—',
-            $detail['task']['delegation_status'] ?? '—',
-            $detail['task']['status'] ?? '—',
-            $detail['current_assignment']['agent_name'] ?? $detail['current_assignment']['agent_slug'] ?? '—',
+        $this->table(['Task', 'Delegation Status', 'Agent'], [[
+            $data['task_code'] ?? '—',
+            $data['delegation_status'] ?? '—',
+            $data['delegation_context']['assigned_agent']['name'] ?? $data['delegation_context']['agent_recommendation'] ?? '—',
         ]]);
 
         return self::SUCCESS;

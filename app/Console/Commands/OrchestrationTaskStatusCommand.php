@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\TaskOrchestrationService;
+use App\Commands\Orchestration\Task\UpdateStatusCommand;
 use Illuminate\Console\Command;
 
 class OrchestrationTaskStatusCommand extends Command
@@ -16,31 +16,27 @@ class OrchestrationTaskStatusCommand extends Command
 
     protected $description = 'Update delegation status for a work item and sync the active assignment.';
 
-    public function handle(TaskOrchestrationService $service): int
+    public function handle(): int
     {
-        $task = $this->argument('task');
-        $status = $this->argument('status');
-        $note = $this->option('note');
-        $assignmentsLimit = (int) $this->option('assignments-limit');
-
-        $service->updateStatus($task, $status, [
-            'note' => $note,
+        $command = new UpdateStatusCommand([
+            'task_code' => $this->argument('task'),
+            'delegation_status' => $this->argument('status'),
+            'note' => $this->option('note'),
         ]);
 
-        $detail = $service->detail($task, [
-            'assignments_limit' => $assignmentsLimit,
-        ]);
+        $command->setContext('cli');
+        $result = $command->handle();
 
         if ($this->option('json')) {
-            $this->line(json_encode($detail, JSON_PRETTY_PRINT));
-
+            $this->line(json_encode($result, JSON_PRETTY_PRINT));
             return self::SUCCESS;
         }
 
-        $this->info(sprintf('Task %s now %s', $detail['task']['task_code'] ?? 'n/a', $detail['task']['delegation_status'] ?? 'n/a'));
+        $data = $result['data'];
+        $this->info(sprintf('Task %s now %s', $data['task_code'] ?? 'n/a', $data['delegation_status'] ?? 'n/a'));
 
-        if ($note) {
-            $this->line('Note: '.$note);
+        if ($this->option('note')) {
+            $this->line('Note: '.$this->option('note'));
         }
 
         return self::SUCCESS;

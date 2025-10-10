@@ -2,7 +2,7 @@
 
 namespace App\Tools\Orchestration;
 
-use App\Support\Orchestration\ModelResolver;
+use App\Commands\Orchestration\Sprint\UpdateStatusCommand;
 use App\Tools\Contracts\SummarizesTool;
 use Illuminate\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
@@ -34,15 +34,16 @@ class SprintStatusTool extends Tool implements SummarizesTool
             'note' => ['nullable', 'string'],
         ]);
 
-        $service = ModelResolver::resolveService('sprint_service', 'App\\Services\\SprintOrchestrationService');
-
-        $sprint = $service->updateStatus($validated['sprint'], $validated['status'], $validated['note'] ?? null);
-
-        $detail = $service->detail($sprint, [
-            'include_tasks' => false,
+        $command = new UpdateStatusCommand([
+            'code' => $validated['sprint'],
+            'status' => $validated['status'],
+            'note' => $validated['note'] ?? null,
         ]);
+        
+        $command->setContext('mcp');
+        $result = $command->handle();
 
-        return Response::json($detail);
+        return Response::json($result);
     }
 
     public static function summaryName(): string

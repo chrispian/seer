@@ -162,12 +162,20 @@ Route::prefix('inbox')->group(function () {
 // Type System API routes
 Route::prefix('types')->group(function () {
     Route::get('/', [TypeController::class, 'index']);
+    Route::post('/', [TypeController::class, 'store']); // Create new type pack
     Route::get('/stats', [TypeController::class, 'stats']);
     Route::get('/admin', [TypeController::class, 'admin']);
-    Route::post('/{slug}/toggle', [TypeController::class, 'toggle']);
-    Route::put('/{slug}/update', [TypeController::class, 'update']);
+    Route::get('/templates', [TypeController::class, 'templates']); // Get available templates
+    Route::post('/from-template', [TypeController::class, 'createFromTemplate']); // Create from template
     Route::get('/{slug}', [TypeController::class, 'show']);
-    Route::post('/{slug}/validate', [TypeController::class, 'validate']);
+    Route::put('/{slug}', [TypeController::class, 'update']); // Update type pack
+    Route::delete('/{slug}', [TypeController::class, 'destroy']); // Delete type pack
+    Route::post('/{slug}/toggle', [TypeController::class, 'toggle']);
+    Route::put('/{slug}/update', [TypeController::class, 'update']); // Legacy endpoint
+    Route::post('/{slug}/validate', [TypeController::class, 'validate']); // Legacy validation
+    Route::post('/{slug}/validate-schema', [TypeController::class, 'validateSchema']); // New schema validation
+    Route::post('/{slug}/refresh-cache', [TypeController::class, 'refreshCache']); // Cache management
+    Route::get('/{slug}/fragments', [TypeController::class, 'fragments']); // Get fragments by type
 });
 
 // Scheduler API routes

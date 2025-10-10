@@ -12,29 +12,42 @@ class CommandRegistry
         // Help & System
         'help' => \App\Commands\HelpCommand::class,
 
-        // Orchestration Commands
-        'sprints' => \App\Commands\SprintListCommand::class,
-        'sprint-list' => \App\Commands\SprintListCommand::class,
-        'sl' => \App\Commands\SprintListCommand::class,
-        'sprint-detail' => \App\Commands\SprintDetailCommand::class,
-        'sd' => \App\Commands\SprintDetailCommand::class,
+        // Orchestration Commands - Sprints
+        'sprints' => \App\Commands\Orchestration\Sprint\ListCommand::class,
+        'sprint-list' => \App\Commands\Orchestration\Sprint\ListCommand::class,
+        'sl' => \App\Commands\Orchestration\Sprint\ListCommand::class,
+        'sprint-detail' => \App\Commands\Orchestration\Sprint\DetailCommand::class,
+        'sd' => \App\Commands\Orchestration\Sprint\DetailCommand::class,
+        'sprint-save' => \App\Commands\Orchestration\Sprint\SaveCommand::class,
+        'sprint-create' => \App\Commands\Orchestration\Sprint\SaveCommand::class,
+        'sprint-update' => \App\Commands\Orchestration\Sprint\SaveCommand::class,
+        'sprint-status' => \App\Commands\Orchestration\Sprint\UpdateStatusCommand::class,
+        'sprint-attach-tasks' => \App\Commands\Orchestration\Sprint\AttachTasksCommand::class,
+        'sprint-attach' => \App\Commands\Orchestration\Sprint\AttachTasksCommand::class,
 
-        'tasks' => \App\Commands\TaskListCommand::class,
-        'task-list' => \App\Commands\TaskListCommand::class,
-        'tl' => \App\Commands\TaskListCommand::class,
-        'task-detail' => \App\Commands\TaskDetailCommand::class,
-        'td' => \App\Commands\TaskDetailCommand::class,
+        // Orchestration Commands - Tasks
+        'tasks' => \App\Commands\Orchestration\Task\ListCommand::class,
+        'task-list' => \App\Commands\Orchestration\Task\ListCommand::class,
+        'tl' => \App\Commands\Orchestration\Task\ListCommand::class,
+        'task-detail' => \App\Commands\Orchestration\Task\DetailCommand::class,
+        'td' => \App\Commands\Orchestration\Task\DetailCommand::class,
+        'task-save' => \App\Commands\Orchestration\Task\SaveCommand::class,
+        'task-create' => \App\Commands\Orchestration\Task\SaveCommand::class,
+        'task-update' => \App\Commands\Orchestration\Task\SaveCommand::class,
+        'task-assign' => \App\Commands\Orchestration\Task\AssignCommand::class,
+        'task-status' => \App\Commands\Orchestration\Task\UpdateStatusCommand::class,
 
-        'backlog-list' => \App\Commands\BacklogListCommand::class,
-        'backlog' => \App\Commands\BacklogListCommand::class,
-        'bl' => \App\Commands\BacklogListCommand::class,
+        // Orchestration Commands - Backlog
+        'backlog-list' => \App\Commands\Orchestration\Backlog\ListCommand::class,
+        'backlog' => \App\Commands\Orchestration\Backlog\ListCommand::class,
+        'bl' => \App\Commands\Orchestration\Backlog\ListCommand::class,
 
-        // Agent Commands - use AgentListCommand (returns AgentProfile data)
-        'agents' => \App\Commands\AgentListCommand::class,
-        'agent-list' => \App\Commands\AgentListCommand::class,
-        'agent-profiles' => \App\Commands\AgentListCommand::class,
-        'ap' => \App\Commands\AgentListCommand::class,
-        'al' => \App\Commands\AgentListCommand::class,
+        // Orchestration Commands - Agents
+        'agents' => \App\Commands\Orchestration\Agent\ListCommand::class,
+        'agent-list' => \App\Commands\Orchestration\Agent\ListCommand::class,
+        'agent-profiles' => \App\Commands\Orchestration\Agent\ListCommand::class,
+        'ap' => \App\Commands\Orchestration\Agent\ListCommand::class,
+        'al' => \App\Commands\Orchestration\Agent\ListCommand::class,
 
         // Fragment & Content Commands
         'search' => \App\Commands\SearchCommand::class,
