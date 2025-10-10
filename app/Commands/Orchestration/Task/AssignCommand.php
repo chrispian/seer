@@ -49,10 +49,6 @@ class AssignCommand extends BaseCommand
         return $this->respond($taskData, $this->context === 'web' ? 'TaskDetailModal' : null);
     }
 
-    protected function getType(): string
-    {
-        return 'task';
-    }
 
     public static function getName(): string
     {

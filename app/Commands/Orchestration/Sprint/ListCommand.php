@@ -105,11 +105,6 @@ class ListCommand extends BaseCommand
             ->toArray();
     }
 
-    protected function getType(): string
-    {
-        return 'sprint';
-    }
-
     public static function getName(): string
     {
         return 'Sprint List';

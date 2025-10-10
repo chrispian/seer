@@ -47,10 +47,6 @@ class AttachTasksCommand extends BaseCommand
         return $this->respond($data, $this->context === 'web' ? 'SprintDetailModal' : null);
     }
 
-    protected function getType(): string
-    {
-        return 'sprint';
-    }
 
     public static function getName(): string
     {

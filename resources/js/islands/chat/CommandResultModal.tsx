@@ -32,14 +32,39 @@ import { BookmarkListModal } from '@/components/bookmarks/BookmarkListModal'
 interface CommandResult {
   success: boolean
   type?: string
-  component?: string  // Direct component specification
-  data?: any          // Clean data object
+  component?: string
+  data?: any
   message?: string
   error?: string
   fragments?: any[]
   shouldResetChat?: boolean
   shouldShowSuccessToast?: boolean
   toastData?: any
+  config?: {
+    type?: {
+      slug?: string
+      display_name?: string
+      plural_name?: string
+      storage_type?: string
+      default_card_component?: string
+      default_detail_component?: string
+    }
+    ui?: {
+      modal_container?: string
+      layout_mode?: string
+      card_component?: string
+      detail_component?: string
+      filters?: any
+      default_sort?: any
+      pagination_default?: number
+    }
+    command?: {
+      command?: string
+      name?: string
+      description?: string
+      category?: string
+    }
+  }
 }
 
 interface CommandResultModalProps {

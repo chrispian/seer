@@ -14,12 +14,14 @@ class DatabaseSeeder extends Seeder
 
         // Setup system essentials first
         $this->call([
+            TypesSeeder::class,                 // Unified types registry (NEW)
+            CommandsSeeder::class,              // Unified commands (NEW)
             SystemTypesSeeder::class,           // Essential fragment types
             ToolDefinitionsSeeder::class,       // AI tool definitions
             DefaultVaultProjectSeeder::class,   // Default vault and project
-            TypeSeeder::class,                  // Basic fragment types
-            DemoRoutingDataSeeder::class,       // Demo data (development only)
-            \Database\Seeders\Demo\DemoDataSeeder::class, // Demo dataset
+            // TypeSeeder::class,               // OLD - replaced by TypesSeeder
+            // DemoRoutingDataSeeder::class,    // REMOVED - archived to docs/demo-seeder-backup
+            // \Database\Seeders\Demo\DemoDataSeeder::class, // REMOVED - archived to docs/demo-seeder-backup
         ]);
     }
 }

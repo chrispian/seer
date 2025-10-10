@@ -2,115 +2,89 @@
 
 namespace App\Commands;
 
-use App\Models\FragmentTypeRegistry;
+use App\Commands\Concerns\FormatsListData;
+use App\Commands\Concerns\HandlesModelQueries;
+use App\Models\Fragment;
 
 /**
  * Base List Command
  *
- * Provides standardized list command functionality that reads
- * configuration from the fragment_type_registry database table.
+ * Provides standardized list command functionality using the unified
+ * Type + Command system.
  *
- * Eliminates boilerplate by handling:
- * - Type registry lookup
- * - Component routing
- * - Data fetching with configurable pagination
- * - Standard response format
+ * Handles both model-backed and fragment-backed types automatically.
+ * Component routing comes from Command UI config.
  */
 abstract class BaseListCommand extends BaseCommand
 {
-    /**
-     * Get the fragment type slug this command handles
-     */
-    abstract protected function getTypeSlug(): string;
+    use HandlesModelQueries, FormatsListData;
 
     /**
-     * Get the data for this type (override for custom queries)
+     * Get the data for this type
+     * Override for custom query logic
      */
-    protected function getData(FragmentTypeRegistry $typeConfig): array
+    protected function getData(): array
     {
-        $limit = $typeConfig->pagination_default ?? 50;
+        if (! $this->type) {
+            throw new \RuntimeException('Type model not set. Ensure Command is injected.');
+        }
 
-        $fragments = \App\Models\Fragment::where('type', $typeConfig->slug)
+        if ($this->type->storage_type === 'model') {
+            return $this->getModelData();
+        }
+
+        return $this->getFragmentData();
+    }
+
+    /**
+     * Get data for model-backed types
+     */
+    protected function getModelData(): array
+    {
+        $modelClass = $this->type->model_class;
+        
+        if (! class_exists($modelClass)) {
+            throw new \RuntimeException("Model class not found: {$modelClass}");
+        }
+
+        $items = $this->queryModel($modelClass);
+
+        return $items->map(fn ($item) => $this->formatListItem($item))->all();
+    }
+
+    /**
+     * Get data for fragment-backed types
+     */
+    protected function getFragmentData(): array
+    {
+        $limit = $this->command?->pagination_default ?? 50;
+
+        $fragments = Fragment::where('type', $this->type->slug)
             ->orderBy('created_at', 'desc')
             ->limit($limit)
-            ->get()
-            ->map(function ($fragment) {
-                return [
-                    'id' => $fragment->id,
-                    'title' => $fragment->title,
-                    'message' => $fragment->message,
-                    'type' => $fragment->type,
-                    'metadata' => $fragment->metadata,
-                    'created_at' => $fragment->created_at?->toISOString(),
-                    'updated_at' => $fragment->updated_at?->toISOString(),
-                    'created_human' => $fragment->created_at?->diffForHumans(),
-                    'preview' => \Illuminate\Support\Str::limit($fragment->message, 150),
-                ];
-            })
-            ->all();
+            ->get();
 
-        return $fragments;
+        return $fragments->map(fn ($f) => $this->formatFragmentItem($f))->all();
     }
 
     public function handle(): array
     {
-        $typeConfig = FragmentTypeRegistry::findBySlug($this->getTypeSlug());
-
-        if (! $typeConfig) {
-            return [
-                'type' => 'error',
-                'component' => 'ErrorModal',
-                'data' => [
-                    'message' => "Type configuration not found: {$this->getTypeSlug()}",
-                ],
-            ];
+        if (! $this->type) {
+            return $this->respond([
+                'error' => 'Type configuration not available',
+                'message' => 'Command not properly configured. Type model missing.',
+            ]);
         }
 
-        if (! $typeConfig->is_enabled) {
-            return [
-                'type' => 'error',
-                'component' => 'ErrorModal',
-                'data' => [
-                    'message' => "Type '{$typeConfig->display_name}' is currently disabled.",
-                ],
-            ];
+        if (! $this->type->is_enabled) {
+            return $this->respond([
+                'error' => 'Type disabled',
+                'message' => "Type '{$this->type->display_name}' is currently disabled.",
+            ]);
         }
 
-        $data = $this->getData($typeConfig);
+        $data = $this->getData();
 
-        return [
-            'type' => $typeConfig->slug,
-            'component' => $this->getComponentName($typeConfig),
-            'data' => [
-                'items' => $data,
-                'typeConfig' => [
-                    'slug' => $typeConfig->slug,
-                    'display_name' => $typeConfig->display_name,
-                    'plural_name' => $typeConfig->plural_name,
-                    'icon' => $typeConfig->icon,
-                    'color' => $typeConfig->color,
-                    'container_component' => $typeConfig->container_component,
-                    'row_display_mode' => $typeConfig->row_display_mode,
-                    'list_columns' => $typeConfig->list_columns,
-                    'filters' => $typeConfig->filters,
-                    'actions' => $typeConfig->actions,
-                    'default_sort' => $typeConfig->default_sort,
-                    'pagination_default' => $typeConfig->pagination_default,
-                    'detail_component' => $typeConfig->detail_component,
-                    'detail_fields' => $typeConfig->detail_fields,
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * Get the component name based on type config
-     * Override if you need custom component routing
-     */
-    protected function getComponentName(FragmentTypeRegistry $typeConfig): string
-    {
-        // For now, use UnifiedListModal for all types
-        // Later we can make this dynamic based on container_component
-        return 'UnifiedListModal';
+        return $this->respond(['items' => $data]);
     }
 }

@@ -19,7 +19,7 @@ class SaveCommand extends BaseCommand
     protected ?array $dependencies = null;
     protected ?array $tags = null;
     protected ?string $agentContent = null;
-    protected ?string $type = null;
+    protected ?string $taskType = null;
     protected ?string $acceptance = null;
     protected bool $upsert = true;
 
@@ -37,7 +37,7 @@ class SaveCommand extends BaseCommand
         $this->dependencies = $options['dependencies'] ?? null;
         $this->tags = $options['tags'] ?? null;
         $this->agentContent = $options['agent_content'] ?? null;
-        $this->type = $options['type'] ?? null;
+        $this->taskType = $options['type'] ?? null;
         $this->acceptance = $options['acceptance'] ?? null;
         $this->upsert = $options['upsert'] ?? true;
     }
@@ -56,7 +56,7 @@ class SaveCommand extends BaseCommand
             'priority' => $this->priority,
             'estimate_text' => $this->estimateText,
             'estimated_hours' => $this->estimatedHours,
-            'type' => $this->type,
+            'type' => $this->taskType,
             'acceptance' => $this->acceptance,
             'agent_content' => $this->agentContent,
         ], static fn ($value) => $value !== null && $value !== '');
@@ -80,10 +80,6 @@ class SaveCommand extends BaseCommand
         return $this->respond($taskData, $this->context === 'web' ? 'TaskDetailModal' : null);
     }
 
-    protected function getType(): string
-    {
-        return 'task';
-    }
 
     public static function getName(): string
     {
