@@ -162,17 +162,27 @@ class CommandController extends Controller
     private function parseArguments(string $rawArguments): array
     {
         $arguments = [];
+        $positionalIndex = 0;
 
         // Simple argument parsing - can be enhanced
         // For now, just split by spaces and handle key:value pairs
         $parts = explode(' ', $rawArguments);
 
         foreach ($parts as $part) {
+            $part = trim($part);
+            if (empty($part)) {
+                continue;
+            }
+            
             if (str_contains($part, ':')) {
                 [$key, $value] = explode(':', $part, 2);
                 $arguments[$key] = $value;
             } else {
-                // Treat as positional argument or add to 'body' (for YAML template compatibility)
+                // Add as indexed argument for new unified commands
+                $arguments[$positionalIndex] = $part;
+                $positionalIndex++;
+                
+                // Also add to 'body' for YAML template compatibility
                 if (! isset($arguments['body'])) {
                     $arguments['body'] = $part;
                 } else {

@@ -8,23 +8,23 @@ use Laravel\Mcp\Request;
 
 class DetailCommand extends BaseCommand
 {
-    protected ?string $argument = null;
+    protected ?string $code = null;
 
-    public function __construct(?string $argument = null)
+    public function __construct(array $options = [])
     {
-        $this->argument = $argument;
+        // Support both 'code' parameter and first positional argument
+        $this->code = $options['code'] ?? $options[0] ?? null;
     }
 
     public function handle(): array
     {
-        $sprintCode = $this->getSprintCode();
+        $sprintCode = $this->code;
 
         if (! $sprintCode) {
-            return [
-                'type' => 'error',
-                'component' => null,
-                'message' => 'Please provide a sprint code. Usage: /sprint-detail SPRINT-43 or /sprint-detail 43',
-            ];
+            return $this->respond(
+                ['error' => 'Please provide a sprint code. Usage: /sprint-detail SPRINT-43 or /sprint-detail 43'],
+                null
+            );
         }
 
         if (is_numeric($sprintCode)) {
@@ -72,11 +72,6 @@ class DetailCommand extends BaseCommand
                 'message' => "Sprint '{$sprintCode}' not found. Use /sprints to see available sprints.\n\nError: ".$e->getMessage(),
             ];
         }
-    }
-
-    private function getSprintCode(): ?string
-    {
-        return $this->argument ? trim($this->argument) : null;
     }
 
     public static function getName(): string

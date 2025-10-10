@@ -8,16 +8,17 @@ use Laravel\Mcp\Request;
 
 class DetailCommand extends BaseCommand
 {
-    protected ?string $argument = null;
+    protected ?string $code = null;
 
-    public function __construct(?string $argument = null)
+    public function __construct(array $options = [])
     {
-        $this->argument = $argument;
+        // Support both 'code' parameter and first positional argument
+        $this->code = $options['code'] ?? $options[0] ?? null;
     }
 
     public function handle(): array
     {
-        $taskCode = $this->getTaskCode();
+        $taskCode = $this->code;
 
         if (! $taskCode) {
             return [
@@ -51,11 +52,6 @@ class DetailCommand extends BaseCommand
                 'message' => "Task '{$taskCode}' not found. Use /tasks to see available tasks.",
             ];
         }
-    }
-
-    private function getTaskCode(): ?string
-    {
-        return $this->argument ? trim($this->argument) : null;
     }
 
     public static function getName(): string
