@@ -2,10 +2,9 @@
 
 namespace App\Tools\Orchestration;
 
-use App\Support\Orchestration\ModelResolver;
+use App\Commands\Orchestration\Sprint\SaveCommand;
 use App\Tools\Contracts\SummarizesTool;
 use Illuminate\JsonSchema\JsonSchema;
-use Illuminate\Support\Arr;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -49,18 +48,11 @@ class SprintSaveTool extends Tool implements SummarizesTool
             'upsert' => ['nullable', 'boolean'],
         ]);
 
-        $service = ModelResolver::resolveService('sprint_service', 'App\\Services\\SprintOrchestrationService');
+        $command = new SaveCommand($validated);
+        $command->setContext('mcp');
+        $result = $command->handle();
 
-        $upsert = Arr::pull($validated, 'upsert', true);
-
-        $sprint = $service->create($validated, (bool) $upsert);
-
-        $detail = $service->detail($sprint, [
-            'include_tasks' => true,
-            'tasks_limit' => 10,
-        ]);
-
-        return Response::json($detail);
+        return Response::json($result);
     }
 
     public static function summaryName(): string

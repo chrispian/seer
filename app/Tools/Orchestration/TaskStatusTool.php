@@ -2,10 +2,9 @@
 
 namespace App\Tools\Orchestration;
 
-use App\Support\Orchestration\ModelResolver;
+use App\Commands\Orchestration\Task\UpdateStatusCommand;
 use App\Tools\Contracts\SummarizesTool;
 use Illuminate\JsonSchema\JsonSchema;
-use Illuminate\Support\Arr;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -45,16 +44,16 @@ class TaskStatusTool extends Tool implements SummarizesTool
             'include_history' => ['nullable', 'boolean'],
         ]);
 
-        $service = ModelResolver::resolveService('task_service', 'App\\Services\\TaskOrchestrationService');
-
-        $task = $service->updateStatus($validated['task'], $validated['status'], Arr::only($validated, ['assignment_status', 'note']));
-
-        $detail = $service->detail($task, [
-            'assignments_limit' => $validated['assignments_limit'] ?? 10,
-            'include_history' => $validated['include_history'] ?? true,
+        $command = new UpdateStatusCommand([
+            'task_code' => $validated['task'],
+            'delegation_status' => $validated['status'],
+            'note' => $validated['note'] ?? null,
         ]);
+        
+        $command->setContext('mcp');
+        $result = $command->handle();
 
-        return Response::json($detail);
+        return Response::json($result);
     }
 
     public static function summaryName(): string

@@ -2,7 +2,7 @@
 
 namespace App\Tools\Orchestration;
 
-use App\Support\Orchestration\ModelResolver;
+use App\Commands\Orchestration\Sprint\AttachTasksCommand;
 use App\Tools\Contracts\SummarizesTool;
 use Illuminate\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
@@ -37,19 +37,18 @@ class SprintTasksAttachTool extends Tool implements SummarizesTool
             'include_assignments' => ['nullable', 'boolean'],
         ]);
 
-        $service = ModelResolver::resolveService('sprint_service', 'App\\Services\\SprintOrchestrationService');
+        $command = new AttachTasksCommand([
+            'sprint_code' => $validated['sprint'],
+            'task_codes' => $validated['tasks'],
+            'include_tasks' => true,
+            'tasks_limit' => $validated['tasks_limit'] ?? 10,
+            'include_assignments' => $validated['include_assignments'] ?? false,
+        ]);
+        
+        $command->setContext('mcp');
+        $result = $command->handle();
 
-        $payload = $service->attachTasks(
-            $validated['sprint'],
-            $validated['tasks'],
-            [
-                'tasks_limit' => $validated['tasks_limit'] ?? 10,
-                'include_tasks' => true,
-                'include_assignments' => $validated['include_assignments'] ?? false,
-            ]
-        );
-
-        return Response::json($payload);
+        return Response::json($result);
     }
 
     public static function summaryName(): string

@@ -2,10 +2,9 @@
 
 namespace App\Tools\Orchestration;
 
-use App\Support\Orchestration\ModelResolver;
+use App\Commands\Orchestration\Task\AssignCommand;
 use App\Tools\Contracts\SummarizesTool;
 use Illuminate\JsonSchema\JsonSchema;
-use Illuminate\Support\Arr;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -45,22 +44,18 @@ class TaskAssignTool extends Tool implements SummarizesTool
             'context' => ['nullable', 'array'],
         ]);
 
-        $service = ModelResolver::resolveService('task_service', 'App\\Services\\TaskOrchestrationService');
-
-        $result = $service->assignAgent($validated['task'], $validated['agent'], Arr::only($validated, [
-            'status', 'assignment_status', 'note', 'context',
-        ]));
-
-        $detail = $service->detail($result['task'], [
-            'assignments_limit' => 10,
-            'include_history' => true,
+        $command = new AssignCommand([
+            'task_code' => $validated['task'],
+            'agent_slug' => $validated['agent'],
+            'status' => $validated['status'] ?? 'assigned',
+            'note' => $validated['note'] ?? null,
+            'context' => $validated['context'] ?? null,
         ]);
+        
+        $command->setContext('mcp');
+        $result = $command->handle();
 
-        return Response::json([
-            'assignment' => $detail['current_assignment'],
-            'task' => $detail['task'],
-            'assignments' => $detail['assignments'],
-        ]);
+        return Response::json($result);
     }
 
     public static function summaryName(): string

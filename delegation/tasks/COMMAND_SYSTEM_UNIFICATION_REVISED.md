@@ -2028,10 +2028,15 @@ Review all command categories and identify which commands would benefit from UI 
 ---
 
 ### Sprint 4: MCP Exposure (2 days)
-- [ ] Task 4.1: Enhance Orchestration MCP Server (4h)
-- [ ] Task 4.2: Test MCP Tools from Claude Desktop (3h)
+- [x] Task 4.1: Enhance Orchestration MCP Server (4h) - DONE
+- [ ] Task 4.2: Test MCP Tools from Claude Desktop (3h) - Ready for testing
 
-**Sprint 4 Status**: 0/2 tasks complete
+**Sprint 4 Status**: 1/2 tasks complete
+
+**Note**: Updated all 6 write operation MCP tools to use our unified command classes:
+- Task tools: SaveTool, AssignTool, StatusTool
+- Sprint tools: SaveTool, StatusTool, TasksAttachTool
+All tools now delegate to unified commands with MCP context
 
 ---
 
