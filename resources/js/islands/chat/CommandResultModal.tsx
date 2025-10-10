@@ -14,7 +14,7 @@ import { SprintListModal } from '@/components/orchestration/SprintListModal'
 import { SprintDetailModal } from '@/components/orchestration/SprintDetailModal'
 import { TaskListModal } from '@/components/orchestration/TaskListModal'
 import { TaskDetailModal } from '@/components/orchestration/TaskDetailModal'
-import { AgentProfileListModal } from '@/components/orchestration/AgentProfileListModal'
+import { AgentProfileGridModal } from '@/components/orchestration/AgentProfileGridModal'
 import { BacklogListModal } from '@/components/orchestration/BacklogListModal'
 import { TodoManagementModal } from '@/islands/chat/TodoManagementModal'
 import { FragmentListModal } from '@/components/fragments/FragmentListModal'
@@ -188,10 +188,10 @@ export function CommandResultModal({
         
         case 'AgentProfileListModal':
           return (
-            <AgentProfileListModal
+            <AgentProfileGridModal
               isOpen={isOpen}
               onClose={() => {
-                console.log('AgentProfileListModal onClose called')
+                console.log('AgentProfileGridModal onClose called')
                 handleBackToList()
                 onClose()
               }}
