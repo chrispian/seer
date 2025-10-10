@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\SprintOrchestrationService;
+use App\Commands\Orchestration\Sprint\SaveCommand;
 use Illuminate\Console\Command;
 
 class OrchestrationSprintSaveCommand extends Command
@@ -22,25 +22,15 @@ class OrchestrationSprintSaveCommand extends Command
 
     protected $description = 'Create or update sprint metadata.';
 
-    public function handle(SprintOrchestrationService $service): int
+    public function handle(): int
     {
-        $code = $this->argument('code');
-        $attributes = array_filter([
-            'code' => $code,
-            'title' => $this->option('title'),
-            'priority' => $this->option('priority'),
-            'estimate' => $this->option('estimate'),
-            'status' => $this->option('status'),
-            'starts_on' => $this->option('starts-on'),
-            'ends_on' => $this->option('ends-on'),
-        ], static fn ($value) => $value !== null && $value !== '');
-
         $notes = $this->option('note');
         if ($notes !== []) {
-            $attributes['notes'] = array_values(array_filter($notes));
+            $notes = array_values(array_filter($notes));
         }
 
         $metaPairs = $this->option('meta');
+        $meta = null;
         if ($metaPairs !== []) {
             $meta = [];
             foreach ($metaPairs as $pair) {
@@ -50,25 +40,33 @@ class OrchestrationSprintSaveCommand extends Command
                 [$key, $value] = explode('=', $pair, 2);
                 $meta[trim($key)] = trim($value);
             }
-            if ($meta !== []) {
-                $attributes['meta'] = $meta;
+            if ($meta === []) {
+                $meta = null;
             }
         }
 
-        $upsert = ! $this->option('no-upsert');
-
-        $sprint = $service->create($attributes, $upsert);
-        $detail = $service->detail($sprint, [
-            'tasks_limit' => 10,
+        $command = new SaveCommand([
+            'code' => $this->argument('code'),
+            'title' => $this->option('title'),
+            'priority' => $this->option('priority'),
+            'status' => $this->option('status'),
+            'estimate' => $this->option('estimate'),
+            'starts_on' => $this->option('starts-on'),
+            'ends_on' => $this->option('ends-on'),
+            'notes' => $notes ?: null,
+            'meta' => $meta,
+            'upsert' => ! $this->option('no-upsert'),
         ]);
 
-        if ($this->option('json')) {
-            $this->line(json_encode($detail, JSON_PRETTY_PRINT));
+        $command->setContext('cli');
+        $result = $command->handle();
 
+        if ($this->option('json')) {
+            $this->line(json_encode($result, JSON_PRETTY_PRINT));
             return self::SUCCESS;
         }
 
-        $this->info(sprintf('Sprint %s saved.', $detail['sprint']['code'] ?? $code));
+        $this->info(sprintf('Sprint %s saved.', $result['data']['code'] ?? $this->argument('code')));
 
         return self::SUCCESS;
     }

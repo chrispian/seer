@@ -18,6 +18,12 @@ class CommandRegistry
         'sl' => \App\Commands\Orchestration\Sprint\ListCommand::class,
         'sprint-detail' => \App\Commands\Orchestration\Sprint\DetailCommand::class,
         'sd' => \App\Commands\Orchestration\Sprint\DetailCommand::class,
+        'sprint-save' => \App\Commands\Orchestration\Sprint\SaveCommand::class,
+        'sprint-create' => \App\Commands\Orchestration\Sprint\SaveCommand::class,
+        'sprint-update' => \App\Commands\Orchestration\Sprint\SaveCommand::class,
+        'sprint-status' => \App\Commands\Orchestration\Sprint\UpdateStatusCommand::class,
+        'sprint-attach-tasks' => \App\Commands\Orchestration\Sprint\AttachTasksCommand::class,
+        'sprint-attach' => \App\Commands\Orchestration\Sprint\AttachTasksCommand::class,
 
         // Orchestration Commands - Tasks
         'tasks' => \App\Commands\Orchestration\Task\ListCommand::class,
