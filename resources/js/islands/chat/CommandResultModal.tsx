@@ -307,6 +307,117 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
       ]
       props.searchFields = ['code', 'title']
       props.searchPlaceholder = 'Search sprints...'
+    } else if (typeSlug === 'task' || typeSlug === 'tasks') {
+      // Task-specific columns
+      props.columns = [
+        { 
+          key: 'task_code', 
+          label: 'Code', 
+          sortable: true,
+          width: 'w-24'
+        },
+        { 
+          key: 'task_name', 
+          label: 'Task', 
+          sortable: true,
+          render: (item: any, value: any) => (
+            <div className="flex flex-col">
+              <span className="font-medium">{value || 'Untitled'}</span>
+              {item.description && (
+                <span className="text-xs text-muted-foreground truncate max-w-[300px]">
+                  {item.description}
+                </span>
+              )}
+            </div>
+          )
+        },
+        { 
+          key: 'sprint_code', 
+          label: 'Sprint',
+          sortable: true,
+          width: 'w-24',
+          render: (_item: any, value: any) => value || '-'
+        },
+        { 
+          key: 'delegation_status', 
+          label: 'Status', 
+          sortable: true,
+          width: 'w-28',
+          render: (_item: any, value: any) => {
+            const statusColors: Record<string, string> = {
+              'unassigned': 'text-gray-500',
+              'assigned': 'text-blue-600',
+              'in_progress': 'text-yellow-600',
+              'completed': 'text-green-600',
+              'blocked': 'text-red-600',
+            }
+            return <span className={statusColors[value] || 'text-gray-500'}>{value || 'unknown'}</span>
+          }
+        },
+        { 
+          key: 'priority', 
+          label: 'Priority',
+          sortable: true,
+          width: 'w-20',
+          render: (_item: any, value: any) => {
+            const priorityColors: Record<string, string> = {
+              'high': 'text-red-600',
+              'medium': 'text-yellow-600',
+              'low': 'text-green-600',
+            }
+            return <span className={priorityColors[value] || 'text-gray-500'}>{value || 'medium'}</span>
+          }
+        },
+        { 
+          key: 'assigned_to', 
+          label: 'Assigned To',
+          width: 'w-32',
+          render: (_item: any, value: any) => value || 'Unassigned'
+        },
+        { 
+          key: 'updated_at', 
+          label: 'Updated', 
+          sortable: true,
+          width: 'w-28',
+          render: (_item: any, value: any) => {
+            if (!value) return '-'
+            return new Date(value).toLocaleDateString()
+          }
+        },
+      ]
+      props.searchFields = ['task_code', 'task_name', 'description']
+      props.searchPlaceholder = 'Search tasks...'
+      
+      // Add action items for CRUD
+      props.actionItems = [
+        { key: 'view', label: 'View Details' },
+        { key: 'edit', label: 'Edit Task' },
+        { key: 'assign', label: 'Assign Agent' },
+        { key: 'delete', label: 'Delete', className: 'text-red-600' },
+      ]
+      
+      // Handle actions
+      props.onAction = (action: string, item: any) => {
+        switch(action) {
+          case 'view':
+            handlers.executeDetailCommand!(`/task-detail ${item.task_code}`)
+            break
+          case 'edit':
+            // TODO: Implement edit command
+            console.log('Edit task:', item.task_code)
+            break
+          case 'assign':
+            // TODO: Implement assign command
+            console.log('Assign task:', item.task_code)
+            break
+          case 'delete':
+            if (confirm(`Delete task ${item.task_code}?`)) {
+              // TODO: Implement delete command
+              console.log('Delete task:', item.task_code)
+            }
+            break
+        }
+      }
     } else if (result.data && Array.isArray(result.data) && result.data.length > 0) {
       // Auto-generate columns from first data item
       const firstItem = result.data[0]
