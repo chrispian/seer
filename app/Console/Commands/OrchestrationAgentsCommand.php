@@ -6,6 +6,17 @@ use App\Services\AgentProfileService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 
+/**
+ * CLI-ONLY Artisan command for listing agent profiles.
+ * 
+ * IMPORTANT: This is a console command for CLI use only.
+ * It is NOT part of the unified command system used by the web UI.
+ * 
+ * Web UI and MCP use: /agents → App\Commands\Orchestration\Agent\ListCommand
+ * CLI console use:    orchestration:agents → This class
+ * 
+ * Do NOT add this to the commands table or CommandsSeeder.
+ */
 class OrchestrationAgentsCommand extends Command
 {
     protected $signature = 'orchestration:agents
