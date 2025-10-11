@@ -199,7 +199,16 @@ export function TaskDetailModal({
   ]
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      console.log('[TaskDetailModal] Dialog onOpenChange, open:', open, 'onBack exists?', !!onBack)
+      if (!open) {
+        if (onBack) {
+          onBack()
+        } else {
+          onClose()
+        }
+      }
+    }}>
       <DialogContent className="max-w-6xl max-h-[90vh] rounded-sm">
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">

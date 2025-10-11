@@ -193,6 +193,7 @@ const DataRow = <T extends DataItem>({
 interface DataManagementModalProps<T extends DataItem> {
   isOpen: boolean
   onClose: () => void
+  onBack?: () => void
   title: string
   data: T[]
   columns: ColumnDefinition<T>[]
@@ -219,6 +220,7 @@ interface DataManagementModalProps<T extends DataItem> {
 export function DataManagementModal<T extends DataItem>({
   isOpen,
   onClose,
+  onBack,
   title,
   data,
   columns,
@@ -255,18 +257,31 @@ export function DataManagementModal<T extends DataItem>({
     }
   }, [isOpen])
 
+  // Use ref to avoid stale closure issues
+  const onBackRef = useRef(onBack)
+  useEffect(() => { onBackRef.current = onBack }, [onBack])
+
   // Keyboard shortcuts
   useEffect(() => {
     if (!isOpen) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose()
+        console.log('[DataManagementModal] ESC pressed, onBack exists?', !!onBackRef.current)
+        // If onBack is provided, use it for ESC (go back one level)
+        // Otherwise use onClose (close modal)
+        if (onBackRef.current) {
+          e.preventDefault()
+          e.stopPropagation()
+          onBackRef.current()
+        } else {
+          onClose()
+        }
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
+    document.addEventListener('keydown', handleKeyDown, { capture: true })
+    return () => document.removeEventListener('keydown', handleKeyDown, { capture: true })
   }, [isOpen, onClose])
 
   // Filter data based on search and filters
@@ -311,7 +326,7 @@ export function DataManagementModal<T extends DataItem>({
   if (!isOpen) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && (onBack ? onBack() : onClose())}>
       <DialogContent className="max-w-6xl w-[95vw] sm:w-[85vw] h-[85vh] min-h-[600px] rounded-sm flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">

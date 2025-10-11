@@ -24,6 +24,7 @@ class Command extends Model
         'available_in_cli',
         'available_in_mcp',
         'ui_modal_container',
+        'ui_base_renderer',
         'ui_layout_mode',
         'ui_card_component',
         'ui_detail_component',

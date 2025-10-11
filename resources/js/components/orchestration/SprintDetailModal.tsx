@@ -242,6 +242,7 @@ export function SprintDetailModal({
     <DataManagementModal
       isOpen={isOpen}
       onClose={onClose}
+      onBack={onBack}
       title={`Sprint: ${sprint.code}`}
       data={sortedTasks}
       columns={columns}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import {
@@ -101,6 +101,7 @@ interface ComponentHandlers {
   onClose: () => void
   onRefresh?: () => void
   executeDetailCommand?: (cmd: string) => void
+  onBackToList?: () => void
 }
 
 function transformCardToModal(cardName: string): string {
@@ -111,6 +112,13 @@ function transformCardToModal(cardName: string): string {
 }
 
 function getComponentName(result: CommandResult): string {
+  // Priority 1: Explicit component from respond() method
+  if (result.component) {
+    console.log('[CommandResultModal] Using explicit component:', result.component)
+    return result.component
+  }
+  
+  // Priority 2: Config-based resolution
   if (!result.config) {
     console.warn('[CommandResultModal] No config provided - using fallback')
     return 'UnifiedListModal'
@@ -137,12 +145,39 @@ function getComponentName(result: CommandResult): string {
   return 'UnifiedListModal'
 }
 
-function buildComponentProps(result: CommandResult, componentName: string, handlers: ComponentHandlers): Record<string, any> {
+function buildComponentProps(result: CommandResult, componentName: string, handlers: ComponentHandlers, isOpen: boolean = true): Record<string, any> {
   const props: Record<string, any> = {
-    isOpen: true,
+    isOpen: isOpen,
     onClose: handlers.onClose,
     data: result.data,
     config: result.config,
+  }
+  
+  // Handle Detail modals - they expect data spread as individual props
+  if (componentName.includes('Detail')) {
+    // Spread data object properties as individual props (sprint, tasks, stats, etc.)
+    if (result.data && typeof result.data === 'object') {
+      Object.assign(props, result.data)
+    }
+  } else {
+    // Add legacy type-specific props for List modals
+    if (componentName.includes('Sprint')) {
+      props.sprints = result.data
+    } else if (componentName.includes('Task')) {
+      props.tasks = result.data
+    } else if (componentName.includes('Agent')) {
+      props.agents = result.data
+    } else if (componentName.includes('Project')) {
+      props.projects = result.data
+    } else if (componentName.includes('Vault')) {
+      props.vaults = result.data
+    } else if (componentName.includes('Bookmark')) {
+      props.bookmarks = result.data
+    } else if (componentName.includes('Fragment')) {
+      props.fragments = result.data
+    } else if (componentName.includes('Channel')) {
+      props.channels = result.data
+    }
   }
   
   if (handlers.onRefresh) {
@@ -152,21 +187,33 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
   if (handlers.executeDetailCommand) {
     if (componentName.includes('Sprint')) {
       props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`/sprint-detail ${item.code}`)
+      props.onSprintSelect = (item: any) => handlers.executeDetailCommand!(`/sprint-detail ${item.code}`)
     } else if (componentName.includes('Task')) {
       props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`/task-detail ${item.task_code}`)
+      props.onTaskSelect = (item: any) => handlers.executeDetailCommand!(`/task-detail ${item.task_code}`)
     } else if (componentName.includes('Agent')) {
       props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`/agent-profile-detail ${item.slug}`)
+      props.onAgentSelect = (item: any) => handlers.executeDetailCommand!(`/agent-profile-detail ${item.slug}`)
     }
   }
   
   if (componentName.includes('Detail')) {
-    props.onBack = handlers.onClose
+    // Detail modals get both onClose (for X/Close buttons) and onBack (for Back button/ESC)
+    // onBack is set via onBackToList handler
+    if (handlers.onBackToList) {
+      props.onBack = handlers.onBackToList
+    }
+    
+    // Add drill-down handlers for detail views
+    if (componentName.includes('Sprint') && handlers.executeDetailCommand) {
+      props.onTaskSelect = (item: any) => handlers.executeDetailCommand!(`/task-detail ${item.task_code}`)
+    }
   }
   
   return props
 }
 
-function renderComponent(result: CommandResult, handlers: ComponentHandlers): React.ReactNode {
+function renderComponent(result: CommandResult, handlers: ComponentHandlers, isOpen: boolean = true): React.ReactNode {
   const componentName = getComponentName(result)
   let Component = COMPONENT_MAP[componentName]
   
@@ -175,7 +222,7 @@ function renderComponent(result: CommandResult, handlers: ComponentHandlers): Re
     Component = COMPONENT_MAP['UnifiedListModal']
   }
   
-  const props = buildComponentProps(result, componentName, handlers)
+  const props = buildComponentProps(result, componentName, handlers, isOpen)
   return <Component {...props} />
 }
 
@@ -185,16 +232,32 @@ export function CommandResultModal({
   result,
   command
 }: CommandResultModalProps) {
-  const [detailView, setDetailView] = useState<CommandResult | null>(null)
+  const [viewStack, setViewStack] = useState<CommandResult[]>([])
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
 
-  if (!result) {
+  // Reset stack when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setViewStack([])
+    }
+  }, [isOpen])
+
+  if (!result || !isOpen) {
     return null
   }
 
-  const handleBackToList = () => {
-    console.log('CommandResultModal: Going back to list view')
-    setDetailView(null)
+  const handleBack = () => {
+    console.log('CommandResultModal: Going back one level', 'stack length:', viewStack.length)
+    
+    // If stack is empty, we're on the root view - close modal
+    if (viewStack.length === 0) {
+      console.log('CommandResultModal: On root view - closing modal')
+      onClose()
+      return
+    }
+    
+    // Otherwise, pop the stack to go back one level
+    setViewStack(prev => prev.slice(0, -1))
   }
 
   const executeDetailCommand = async (detailCommand: string) => {
@@ -216,7 +279,7 @@ export function CommandResultModal({
 
       if (detailResult.success) {
         console.log('Detail command result:', detailResult)
-        setDetailView(detailResult)
+        setViewStack(prev => [...prev, detailResult])
       } else {
         console.error('Detail command failed:', detailResult)
         alert(detailResult.error || 'Failed to load details')
@@ -230,40 +293,49 @@ export function CommandResultModal({
   }
 
   // Debug current state
-  console.log('CommandResultModal render - detailView:', detailView, 'result.type:', result?.type)
+  const currentView = viewStack.length > 0 ? viewStack[viewStack.length - 1] : null
+  console.log('[CommandResultModal v2.0 - NAVIGATION STACK] viewStack length:', viewStack.length, 'currentView:', currentView?.type, 'result.type:', result?.type)
 
   const handlers: ComponentHandlers = {
-    onClose,
+    onClose: onClose, // X/Close/ESC on root → close modal
     onRefresh: () => console.log('[CommandResultModal] Refresh requested'),
     executeDetailCommand,
+    onBackToList: handleBack, // Back button on stack views
   }
 
-  // If we have a detail view, render it using new system
-  if (detailView && detailView.success && detailView.config) {
-    return renderComponent(detailView, handlers)
+  // If we have views in the stack, render the current view
+  if (currentView && currentView.success && currentView.config) {
+    // For views in the navigation stack:
+    // - onClose (X/Close buttons) should close modal entirely
+    // - onBack (Back button/ESC) should go back one level
+    const stackHandlers: ComponentHandlers = {
+      ...handlers,
+      onClose: onClose, // X/Close buttons close modal entirely
+      onBackToList: handleBack, // Back button/ESC go back
+    }
+    console.log('[CommandResultModal] Rendering from stack - component:', getComponentName(currentView), 'data keys:', Object.keys(currentView.data || {}))
+    return renderComponent(currentView, stackHandlers, isOpen)
   }
-  if (detailView && detailView.success) {
-    // If detail view has no component (e.g., message response), show it in regular modal
-    if (!detailView.component && detailView.message) {
-      // Use detailView as the result for the regular modal
-      const currentResult = detailView
+  if (currentView && currentView.success) {
+    // If view has no component (e.g., message response), show it in regular modal
+    if (!currentView.component && currentView.message) {
       return (
         <Dialog open={isOpen} onOpenChange={onClose}>
           <DialogContent className="max-w-4xl max-h-[80vh] rounded-sm">
             <DialogHeader>
-              <DialogTitle className="text-foreground">Agent Details</DialogTitle>
+              <DialogTitle className="text-foreground">Details</DialogTitle>
             </DialogHeader>
 
             <ScrollArea className="max-h-[60vh] w-full rounded-sm border-0 bg-muted/20 p-3">
               <div className="prose prose-sm max-w-none text-foreground">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {currentResult.message}
+                  {currentView.message}
                 </ReactMarkdown>
               </div>
             </ScrollArea>
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={handleBackToList} className="rounded-sm">
+              <Button variant="outline" onClick={handleBack} className="rounded-sm">
                 Back
               </Button>
               <Button variant="outline" onClick={onClose} className="rounded-sm">
@@ -278,7 +350,7 @@ export function CommandResultModal({
 
   // If this has config, use new rendering system
   if (result.success && result.config) {
-    return renderComponent(result, handlers)
+    return renderComponent(result, handlers, isOpen)
   }
 
   const getTitle = () => {
