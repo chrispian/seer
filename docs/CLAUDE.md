@@ -27,6 +27,19 @@ This application is a Laravel application and its main Laravel ecosystems packag
 ## Frontend Bundling
 - If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `npm run build`, `npm run dev`, or `composer run dev`. Ask them.
 
+## React/Vite Critical Rule - Prevent White Screen Errors
+- **CRITICAL**: When testing frontend changes, **prefer `npm run build` over `npm run dev`**
+- The dev server (HMR/Fast Refresh) is fragile and breaks when rapid file changes corrupt the module cache
+- Production builds are stable and always work - use them for verification
+- If you must use `npm run dev`, and white screen occurs:
+  1. Stop dev server: `pkill -f "vite"`
+  2. Clear cache: `rm -rf node_modules/.vite`
+  3. Restart: `npm run dev`
+  4. Hard refresh browser
+- **DO NOT** reinstall node_modules or nuke package-lock.json - just clear Vite cache
+- Error: `@vitejs/plugin-react can't detect preamble` = HMR cache corruption, NOT missing imports
+- See `docs/VITE_PREAMBLE_ERROR_FIX.md` for full troubleshooting guide
+
 ## Replies
 - Be concise in your explanations - focus on what's important rather than explaining obvious details.
 

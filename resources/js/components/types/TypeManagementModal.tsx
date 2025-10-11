@@ -1,3 +1,4 @@
+import React from 'react'
 import { TypePackManagement } from '@/components/type-system'
 
 interface TypeManagementModalProps {

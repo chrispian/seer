@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Plus, Bot } from 'lucide-react'

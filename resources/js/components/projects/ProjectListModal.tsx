@@ -1,3 +1,4 @@
+import React from 'react'
 import { DataManagementModal, ColumnDefinition } from '@/components/ui/DataManagementModal'
 import { Badge } from '@/components/ui/badge'
 import { Folder } from 'lucide-react'

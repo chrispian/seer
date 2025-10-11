@@ -1,3 +1,4 @@
+import React from 'react'
 export function useFullScreenModal(isOpen: boolean, onClose: () => void) {
   return {
     dialogProps: {
