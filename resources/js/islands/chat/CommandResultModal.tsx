@@ -80,6 +80,17 @@ interface CommandResult {
       filters?: any
       default_sort?: any
       pagination_default?: number
+      navigation?: {
+        data_prop?: string
+        item_key?: string
+        detail_command?: string
+        parent_command?: string
+        children?: Array<{
+          type: string
+          command: string
+          item_key: string
+        }>
+      }
     }
     command?: {
       command?: string
@@ -145,6 +156,10 @@ function getComponentName(result: CommandResult): string {
   return 'UnifiedListModal'
 }
 
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
 function buildComponentProps(result: CommandResult, componentName: string, handlers: ComponentHandlers, isOpen: boolean = true): Record<string, any> {
   const props: Record<string, any> = {
     isOpen: isOpen,
@@ -153,16 +168,33 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
     config: result.config,
   }
   
+  const navConfig = result.config?.ui?.navigation
+  
   // Handle Detail modals - they expect data spread as individual props
   if (componentName.includes('Detail')) {
     // Spread data object properties as individual props (sprint, tasks, stats, etc.)
     if (result.data && typeof result.data === 'object') {
       Object.assign(props, result.data)
     }
+  } else if (navConfig?.data_prop) {
+    // CONFIG-DRIVEN: Use navigation config to set data props
+    const dataProp = navConfig.data_prop
+    
+    // Handle new structure: {sprints, unassigned_tasks} or legacy array
+    if (result.data && typeof result.data === 'object' && dataProp in result.data) {
+      props[dataProp] = result.data[dataProp]
+      // Copy any additional data properties (like unassigned_tasks)
+      Object.keys(result.data).forEach(key => {
+        if (key !== dataProp) {
+          props[key] = result.data[key]
+        }
+      })
+    } else {
+      props[dataProp] = result.data
+    }
   } else {
-    // Add legacy type-specific props for List modals
+    // LEGACY FALLBACK: Maintain backward compatibility for commands without navigation config
     if (componentName.includes('Sprint')) {
-      // Handle new structure: {sprints, unassigned_tasks} or legacy array
       if (result.data && typeof result.data === 'object' && 'sprints' in result.data) {
         props.sprints = result.data.sprints
         props.unassigned_tasks = result.data.unassigned_tasks
@@ -190,7 +222,22 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
     props.onRefresh = handlers.onRefresh
   }
   
-  if (handlers.executeDetailCommand) {
+  if (handlers.executeDetailCommand && navConfig) {
+    // CONFIG-DRIVEN: Use navigation config for item selection handlers
+    if (navConfig.detail_command && navConfig.item_key) {
+      const itemKey = navConfig.item_key
+      props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
+    }
+    
+    // Add child handlers for drill-down navigation
+    if (navConfig.children) {
+      navConfig.children.forEach((child: any) => {
+        const handlerName = `on${capitalize(child.type)}Select`
+        props[handlerName] = (item: any) => handlers.executeDetailCommand!(`${child.command} ${item[child.item_key]}`)
+      })
+    }
+  } else if (handlers.executeDetailCommand) {
+    // LEGACY FALLBACK: Hardcoded handlers for backward compatibility
     if (componentName.includes('Sprint')) {
       props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`/sprint-detail ${item.code}`)
       props.onSprintSelect = (item: any) => handlers.executeDetailCommand!(`/sprint-detail ${item.code}`)
@@ -205,13 +252,19 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
   
   if (componentName.includes('Detail')) {
     // Detail modals get both onClose (for X/Close buttons) and onBack (for Back button/ESC)
-    // onBack is set via onBackToList handler
     if (handlers.onBackToList) {
       props.onBack = handlers.onBackToList
     }
     
     // Add drill-down handlers for detail views
-    if (componentName.includes('Sprint') && handlers.executeDetailCommand) {
+    if (navConfig?.children && handlers.executeDetailCommand) {
+      // CONFIG-DRIVEN: Use children config
+      navConfig.children.forEach((child: any) => {
+        const handlerName = `on${capitalize(child.type)}Select`
+        props[handlerName] = (item: any) => handlers.executeDetailCommand!(`${child.command} ${item[child.item_key]}`)
+      })
+    } else if (componentName.includes('Sprint') && handlers.executeDetailCommand) {
+      // LEGACY FALLBACK
       props.onTaskSelect = (item: any) => handlers.executeDetailCommand!(`/task-detail ${item.task_code}`)
     }
   }
