@@ -113,8 +113,10 @@ class ListCommand extends BaseCommand
     
     private function fetchUnassignedTasks(): array
     {
-        return WorkItem::whereNull('metadata->sprint_code')
-            ->orWhereJsonLength('metadata->sprint_code', 0)
+        return WorkItem::where(function($query) {
+                $query->whereNull('metadata->sprint_code')
+                      ->orWhere('metadata->sprint_code', '');
+            })
             ->orderByDesc('created_at')
             ->limit(100) // Reasonable limit for unassigned
             ->get()
