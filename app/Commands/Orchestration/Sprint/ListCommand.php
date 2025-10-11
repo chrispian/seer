@@ -34,7 +34,7 @@ class ListCommand extends BaseCommand
         return $this->respond([
             'sprints' => $data,
             'unassigned_tasks' => $unassignedTasks,
-        ], $this->context === 'web' ? 'SprintListModal' : null);
+        ]);
     }
 
     private function fetchSprints()
@@ -67,10 +67,14 @@ class ListCommand extends BaseCommand
             'updated_at' => $sprint->updated_at?->toIso8601String(),
             // Legacy fields for backward compatibility
             'task_count' => $stats['total'],
+            'total_tasks' => $stats['total'], // Alternative naming
             'completed_tasks' => $stats['completed'],
             'in_progress_tasks' => $stats['in_progress'],
             'todo_tasks' => $stats['unassigned'],
             'backlog_tasks' => 0,
+            'progress_percentage' => $stats['total'] > 0 
+                ? round(($stats['completed'] / $stats['total']) * 100) 
+                : 0,
             'meta' => $meta,
         ];
 

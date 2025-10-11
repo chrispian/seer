@@ -57,12 +57,14 @@ import { UnifiedListModal } from '@/components/unified/UnifiedListModal'
 import { ProjectListModal } from '@/components/projects/ProjectListModal'
 import { VaultListModal } from '@/components/vaults/VaultListModal'
 import { BookmarkListModal } from '@/components/bookmarks/BookmarkListModal'
+import { DataManagementModal } from '@/components/ui/DataManagementModal'
 
 /**
  * Central registry mapping component names to React components.
  * All components must be registered here to be rendered by the command system.
  */
 const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
+  'DataManagementModal': DataManagementModal,
   'SprintListModal': SprintListModal,
   'TaskListModal': TaskListModal,
   'AgentProfileGridModal': AgentProfileGridModal,
@@ -206,21 +208,39 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
     if (result.data && typeof result.data === 'object') {
       Object.assign(props, result.data)
     }
+
   } else if (navConfig?.data_prop) {
     // CONFIG-DRIVEN: Use navigation config to set data props
     const dataProp = navConfig.data_prop
     
     // Handle new structure: {sprints, unassigned_tasks} or legacy array
     if (result.data && typeof result.data === 'object' && dataProp in result.data) {
-      props[dataProp] = result.data[dataProp]
-      // Copy any additional data properties (like unassigned_tasks)
-      Object.keys(result.data).forEach(key => {
-        if (key !== dataProp) {
-          props[key] = result.data[key]
-        }
-      })
+      // For DataManagementModal, the 'data' prop must be an array
+      if (componentName === 'DataManagementModal') {
+        props.data = result.data[dataProp]
+        // Store other properties separately (like unassigned_tasks)
+        Object.keys(result.data).forEach(key => {
+          if (key !== dataProp) {
+            props[key] = result.data[key]
+          }
+        })
+      } else {
+        // For other components, use the configured data prop name
+        props[dataProp] = result.data[dataProp]
+        // Copy any additional data properties
+        Object.keys(result.data).forEach(key => {
+          if (key !== dataProp) {
+            props[key] = result.data[key]
+          }
+        })
+      }
     } else {
-      props[dataProp] = result.data
+      // Fallback for simple array data
+      if (componentName === 'DataManagementModal') {
+        props.data = result.data
+      } else {
+        props[dataProp] = result.data
+      }
     }
   } else {
     // LEGACY FALLBACK: Maintain backward compatibility for commands without navigation config
@@ -250,6 +270,73 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
   
   if (handlers.onRefresh) {
     props.onRefresh = handlers.onRefresh
+  }
+  
+  // Configure DataManagementModal specific props
+  if (componentName === 'DataManagementModal') {
+    // Set up columns based on the type
+    const typeSlug = (result.config as any)?.type_slug || result.config?.type?.slug
+    
+    if (typeSlug === 'sprint' || typeSlug === 'sprints') {
+      // Sprint-specific columns
+      props.columns = [
+        { 
+          key: 'code', 
+          label: 'Sprint', 
+          sortable: true,
+        },
+        { 
+          key: 'title', 
+          label: 'Title', 
+          sortable: true,
+          render: (_item: any, value: any) => value || 'No title'
+        },
+        { 
+          key: 'status', 
+          label: 'Status', 
+          sortable: true,
+          render: (_item: any, value: any) => value || 'Active'
+        },
+        { 
+          key: 'progress_percentage', 
+          label: 'Progress', 
+          render: (_item: any, value: any) => `${value || 0}%` 
+        },
+        { key: 'total_tasks', label: 'Tasks' },
+        { key: 'created_at', label: 'Created', sortable: true },
+      ]
+      props.searchFields = ['code', 'title']
+      props.searchPlaceholder = 'Search sprints...'
+    } else if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+      // Auto-generate columns from first data item
+      const firstItem = result.data[0]
+      const keys = Object.keys(firstItem).filter(key => 
+        key !== 'id' && 
+        key !== 'metadata' && 
+        !key.startsWith('_')
+      )
+      props.columns = keys.slice(0, 6).map(key => ({
+        key,
+        label: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        sortable: true
+      }))
+    } else {
+      // Fallback columns
+      props.columns = []
+    }
+    
+    // Enable clickable rows for navigation if we have navigation config
+    if (navConfig) {
+      props.clickableRows = true
+      
+      // Set up row click handler using navigation config
+      if (navConfig.detail_command && navConfig.item_key && handlers.executeDetailCommand) {
+        const itemKey = navConfig.item_key as string
+        props.onRowClick = (item: any) => {
+          handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
+        }
+      }
+    }
   }
   
   if (handlers.executeDetailCommand && navConfig) {
@@ -322,7 +409,7 @@ export function CommandResultModal({
   command
 }: CommandResultModalProps) {
   const [viewStack, setViewStack] = useState<CommandResult[]>([])
-  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+  const [_isLoadingDetail, setIsLoadingDetail] = useState(false)
 
   // Reset stack when modal closes
   useEffect(() => {

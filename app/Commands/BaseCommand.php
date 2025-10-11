@@ -99,6 +99,7 @@ abstract class BaseCommand
     {
         return [
             'type' => $this->getTypeConfig(),
+            'type_slug' => $this->type?->slug ?? $this->command?->type_slug,
             'ui' => $this->getUIConfig(),
             'command' => $this->command ? [
                 'command' => $this->command->command,

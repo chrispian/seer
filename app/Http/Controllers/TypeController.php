@@ -2,21 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreTypePackRequest;
-use App\Http\Requests\UpdateTypePackRequest;
-use App\Http\Resources\TypePackResource;
-use App\Models\FragmentTypeRegistry;
-use App\Services\TypeSystem\TypePackLoader;
-use App\Services\TypeSystem\TypePackManager;
+use App\Models\Type;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TypeController extends Controller
 {
-    public function __construct(
-        protected TypePackLoader $typePackLoader,
-        protected TypePackManager $typePackManager
-    ) {}
 
     /**
      * Get all available types with metadata
@@ -24,35 +15,28 @@ class TypeController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $registryEntries = FragmentTypeRegistry::all();
-            $types = [];
-
-            foreach ($registryEntries as $entry) {
-                $typePack = $this->typePackLoader->loadTypePack($entry->slug);
-
-                if ($typePack) {
-                    $types[] = [
-                        'slug' => $entry->slug,
-                        'name' => $typePack['manifest']['name'] ?? $entry->slug,
-                        'description' => $typePack['manifest']['description'] ?? '',
-                        'version' => $entry->version,
-                        'capabilities' => $entry->getCapabilities(),
-                        'ui' => $typePack['manifest']['ui'] ?? [
-                            'icon' => 'file-text',
-                            'color' => '#6B7280',
-                            'display_name' => ucfirst($entry->slug),
-                            'plural_name' => ucfirst($entry->slug).'s',
-                        ],
-                        'hot_fields' => $entry->getHotFields(),
-                        'schema_hash' => $entry->schema_hash,
-                        'updated_at' => $entry->updated_at,
-                    ];
-                }
-            }
+            $types = Type::all()->map(function ($type) {
+                return [
+                    'slug' => $type->slug,
+                    'name' => $type->display_name,
+                    'description' => $type->description ?? '',
+                    'capabilities' => $type->capabilities ?? [],
+                    'ui' => [
+                        'icon' => $type->icon ?? 'file-text',
+                        'color' => $type->color ?? '#6B7280',
+                        'display_name' => $type->display_name,
+                        'plural_name' => $type->plural_name,
+                    ],
+                    'hot_fields' => $type->hot_fields ?? [],
+                    'storage_type' => $type->storage_type,
+                    'is_enabled' => $type->is_enabled,
+                    'updated_at' => $type->updated_at,
+                ];
+            });
 
             return response()->json([
                 'data' => $types,
-                'total' => count($types),
+                'total' => $types->count(),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -68,35 +52,29 @@ class TypeController extends Controller
     public function show(string $slug): JsonResponse
     {
         try {
-            $registryEntry = FragmentTypeRegistry::findBySlug($slug);
-            if (! $registryEntry) {
+            $type = Type::findBySlug($slug);
+            if (! $type) {
                 return response()->json([
                     'error' => 'Type not found',
                     'message' => "Type '{$slug}' does not exist",
                 ], 404);
             }
 
-            $typePack = $this->typePackLoader->loadTypePack($slug);
-            if (! $typePack) {
-                return response()->json([
-                    'error' => 'Type pack not loaded',
-                    'message' => "Failed to load type pack for '{$slug}'",
-                ], 500);
-            }
-
             return response()->json([
                 'slug' => $slug,
-                'manifest' => $typePack['manifest'],
-                'schema' => $typePack['schema'] ?? null,
-                'indexes' => $typePack['indexes'] ?? null,
-                'registry' => [
-                    'version' => $registryEntry->version,
-                    'source_path' => $registryEntry->source_path,
-                    'schema_hash' => $registryEntry->schema_hash,
-                    'hot_fields' => $registryEntry->getHotFields(),
-                    'capabilities' => $registryEntry->getCapabilities(),
-                    'updated_at' => $registryEntry->updated_at,
-                ],
+                'display_name' => $type->display_name,
+                'plural_name' => $type->plural_name,
+                'description' => $type->description,
+                'icon' => $type->icon,
+                'color' => $type->color,
+                'storage_type' => $type->storage_type,
+                'model_class' => $type->model_class,
+                'schema' => $type->schema,
+                'capabilities' => $type->capabilities,
+                'hot_fields' => $type->hot_fields,
+                'is_enabled' => $type->is_enabled,
+                'is_system' => $type->is_system,
+                'updated_at' => $type->updated_at,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -116,8 +94,8 @@ class TypeController extends Controller
         ]);
 
         try {
-            $typePack = $this->typePackLoader->loadTypePack($slug);
-            if (! $typePack || ! isset($typePack['schema'])) {
+            $type = Type::findBySlug($slug);
+            if (! $type || ! $type->schema) {
                 return response()->json([
                     'error' => 'Schema not found',
                     'message' => "No schema available for type '{$slug}'",
@@ -125,7 +103,7 @@ class TypeController extends Controller
             }
 
             // Basic validation (would use a proper JSON Schema validator in production)
-            $schema = $typePack['schema'];
+            $schema = $type->schema;
             $state = $validated['state'];
             $errors = [];
 
@@ -168,20 +146,25 @@ class TypeController extends Controller
     public function stats(): JsonResponse
     {
         try {
-            $registryEntries = FragmentTypeRegistry::all();
+            $types = Type::all();
             $typeStats = [];
 
-            foreach ($registryEntries as $entry) {
-                $fragmentCount = \App\Models\Fragment::where('type', $entry->slug)->count();
-                $pendingCount = \App\Models\Fragment::where('type', $entry->slug)->inInbox()->count();
+            foreach ($types as $type) {
+                $fragmentCount = $type->isFragmentBacked() 
+                    ? \App\Models\Fragment::where('type', $type->slug)->count() 
+                    : 0;
+                $pendingCount = $type->isFragmentBacked()
+                    ? \App\Models\Fragment::where('type', $type->slug)->inInbox()->count()
+                    : 0;
 
                 $typeStats[] = [
-                    'slug' => $entry->slug,
+                    'slug' => $type->slug,
                     'fragments_count' => $fragmentCount,
                     'pending_count' => $pendingCount,
-                    'capabilities' => $entry->getCapabilities(),
-                    'version' => $entry->version,
-                    'updated_at' => $entry->updated_at,
+                    'capabilities' => $type->capabilities ?? [],
+                    'storage_type' => $type->storage_type,
+                    'is_enabled' => $type->is_enabled,
+                    'updated_at' => $type->updated_at,
                 ];
             }
 
@@ -202,11 +185,13 @@ class TypeController extends Controller
     public function admin(): JsonResponse
     {
         try {
-            $types = FragmentTypeRegistry::orderBy('is_system', 'desc')
+            $types = Type::orderBy('is_system', 'desc')
                 ->orderBy('slug')
                 ->get()
                 ->map(function ($type) {
-                    $fragmentCount = \App\Models\Fragment::where('type', $type->slug)->count();
+                    $fragmentCount = $type->isFragmentBacked()
+                        ? \App\Models\Fragment::where('type', $type->slug)->count()
+                        : 0;
 
                     return [
                         'slug' => $type->slug,
@@ -217,20 +202,15 @@ class TypeController extends Controller
                         'color' => $type->color,
                         'is_enabled' => $type->is_enabled,
                         'is_system' => $type->is_system,
-                        'hide_from_admin' => $type->hide_from_admin,
+                        'storage_type' => $type->storage_type,
+                        'model_class' => $type->model_class,
                         'can_disable' => $type->canBeDisabled(),
                         'can_delete' => $type->canBeDeleted(),
                         'fragments_count' => $fragmentCount,
-                        'version' => $type->version,
-                        'pagination_default' => $type->pagination_default,
-                        'list_columns' => $type->list_columns,
-                        'filters' => $type->filters,
-                        'actions' => $type->actions,
-                        'default_sort' => $type->default_sort,
-                        'container_component' => $type->container_component,
-                        'row_display_mode' => $type->row_display_mode,
-                        'detail_component' => $type->detail_component,
-                        'detail_fields' => $type->detail_fields,
+                        'capabilities' => $type->capabilities,
+                        'hot_fields' => $type->hot_fields,
+                        'schema' => $type->schema,
+                        'updated_at' => $type->updated_at,
                     ];
                 });
 
@@ -249,7 +229,7 @@ class TypeController extends Controller
     public function toggle(string $slug): JsonResponse
     {
         try {
-            $type = FragmentTypeRegistry::findBySlug($slug);
+            $type = Type::findBySlug($slug);
 
             if (! $type) {
                 return response()->json([
@@ -284,7 +264,7 @@ class TypeController extends Controller
     public function update(Request $request, string $slug): JsonResponse
     {
         try {
-            $type = FragmentTypeRegistry::findBySlug($slug);
+            $type = Type::findBySlug($slug);
 
             if (! $type) {
                 return response()->json([
@@ -299,11 +279,9 @@ class TypeController extends Controller
                 'description' => 'sometimes|string|nullable',
                 'icon' => 'sometimes|string|nullable',
                 'color' => 'sometimes|string|nullable',
-                'pagination_default' => 'sometimes|integer|min:10|max:500',
-                'container_component' => 'sometimes|string|in:DataManagementModal,Dialog,Drawer',
-                'row_display_mode' => 'sometimes|string|in:list,grid,card',
-                'detail_component' => 'sometimes|string|nullable|in:UnifiedDetailModal,Dialog,Drawer',
-                'detail_fields' => 'sometimes|array|nullable',
+                'schema' => 'sometimes|array|nullable',
+                'capabilities' => 'sometimes|array|nullable',
+                'hot_fields' => 'sometimes|array|nullable',
             ]);
 
             $type->update($validated);
@@ -321,49 +299,85 @@ class TypeController extends Controller
     }
 
     /**
-     * Create a new type pack
+     * Create a new type
      */
-    public function store(StoreTypePackRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
-        $result = $this->typePackManager->createTypePack($request->validated());
+        $validated = $request->validate([
+            'slug' => 'required|string|regex:/^[a-z0-9_-]+$/|unique:types_registry,slug',
+            'display_name' => 'required|string|max:255',
+            'plural_name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'icon' => 'nullable|string',
+            'color' => 'nullable|string',
+            'storage_type' => 'required|string|in:fragment,model',
+            'model_class' => 'nullable|string|required_if:storage_type,model',
+            'schema' => 'nullable|array',
+            'capabilities' => 'nullable|array',
+            'hot_fields' => 'nullable|array',
+        ]);
 
-        if (!$result['success']) {
+        try {
+            $type = Type::create($validated);
+
             return response()->json([
-                'error' => 'Failed to create type pack',
-                'message' => $result['error'],
+                'data' => $type,
+                'message' => 'Type created successfully',
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to create type',
+                'message' => $e->getMessage(),
             ], 422);
         }
-
-        return response()->json([
-            'data' => new TypePackResource($result['type_pack']),
-            'message' => 'Type pack created successfully',
-        ], 201);
     }
 
 
     /**
-     * Delete a type pack
+     * Delete a type
      */
     public function destroy(string $slug, Request $request): JsonResponse
     {
-        $deleteFragments = $request->boolean('delete_fragments', false);
-        $result = $this->typePackManager->deleteTypePack($slug, $deleteFragments);
+        try {
+            $type = Type::findBySlug($slug);
+            
+            if (!$type) {
+                return response()->json([
+                    'error' => 'Type not found',
+                    'message' => "Type '{$slug}' does not exist",
+                ], 404);
+            }
 
-        if (!$result['success']) {
+            if (!$type->canBeDeleted()) {
+                return response()->json([
+                    'error' => 'Cannot delete type',
+                    'message' => 'System types or types with existing fragments cannot be deleted',
+                ], 403);
+            }
+
+            $deleteFragments = $request->boolean('delete_fragments', false);
+            $deletedFragments = 0;
+
+            if ($deleteFragments && $type->isFragmentBacked()) {
+                $deletedFragments = $type->fragments()->delete();
+            }
+
+            $type->delete();
+
             return response()->json([
-                'error' => 'Failed to delete type pack',
-                'message' => $result['error'],
+                'message' => 'Type deleted successfully',
+                'deleted_fragments' => $deletedFragments,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to delete type',
+                'message' => $e->getMessage(),
             ], 422);
         }
-
-        return response()->json([
-            'message' => 'Type pack deleted successfully',
-            'deleted_fragments' => $result['deleted_fragments'] ?? 0,
-        ]);
     }
 
     /**
-     * Validate type pack schema with sample data
+     * Validate type schema with sample data
      */
     public function validateSchema(Request $request, string $slug): JsonResponse
     {
@@ -371,31 +385,83 @@ class TypeController extends Controller
             'sample_data' => 'required|array',
         ]);
 
-        $result = $this->typePackManager->validateTypePack($slug, $request->input('sample_data'));
+        try {
+            $type = Type::findBySlug($slug);
+            
+            if (!$type || !$type->schema) {
+                return response()->json([
+                    'error' => 'Schema not found',
+                    'message' => "No schema available for type '{$slug}'",
+                ], 404);
+            }
 
-        return response()->json($result);
+            // Simple validation - in production would use JSON Schema validator
+            $valid = true;
+            $errors = [];
+            
+            if (isset($type->schema['required'])) {
+                foreach ($type->schema['required'] as $field) {
+                    if (!isset($request->input('sample_data')[$field])) {
+                        $valid = false;
+                        $errors[] = "Missing required field: {$field}";
+                    }
+                }
+            }
+
+            return response()->json([
+                'valid' => $valid,
+                'errors' => $errors,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
-     * Refresh type pack cache
+     * Refresh type cache
      */
     public function refreshCache(string $slug): JsonResponse
     {
-        $this->typePackLoader->refreshCache($slug);
-
+        // Since we're no longer using the old cache system, this is a no-op
         return response()->json([
             'message' => 'Cache refreshed successfully',
         ]);
     }
 
     /**
-     * Get fragments using this type pack
+     * Get fragments using this type
      */
     public function fragments(string $slug): JsonResponse
     {
-        $result = $this->typePackManager->getFragmentsByType($slug);
+        try {
+            $type = Type::findBySlug($slug);
+            
+            if (!$type) {
+                return response()->json([
+                    'error' => 'Type not found',
+                    'message' => "Type '{$slug}' does not exist",
+                ], 404);
+            }
 
-        return response()->json($result);
+            if (!$type->isFragmentBacked()) {
+                return response()->json([
+                    'data' => [],
+                    'message' => 'This is a model-backed type',
+                ]);
+            }
+
+            $fragments = $type->fragments()->paginate(20);
+
+            return response()->json($fragments);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to load fragments',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -403,40 +469,21 @@ class TypeController extends Controller
      */
     public function templates(): JsonResponse
     {
-        $templates = $this->typePackManager->getTemplates();
-
+        // Return empty for now since the old template system is deprecated
         return response()->json([
-            'data' => $templates,
+            'data' => [],
         ]);
     }
 
     /**
-     * Create type pack from template
+     * Create type from template
      */
     public function createFromTemplate(Request $request): JsonResponse
     {
-        $request->validate([
-            'template' => 'required|string',
-            'slug' => 'required|string|regex:/^[a-z0-9_-]+$/|unique:fragment_type_registry,slug',
-            'name' => 'required|string|max:100',
-        ]);
-
-        $result = $this->typePackManager->createFromTemplate(
-            $request->input('template'),
-            $request->input('slug'),
-            $request->input('name')
-        );
-
-        if (!$result['success']) {
-            return response()->json([
-                'error' => 'Failed to create type pack from template',
-                'message' => $result['error'],
-            ], 422);
-        }
-
+        // This functionality is deprecated with the old type pack system
         return response()->json([
-            'data' => new TypePackResource($result['type_pack']),
-            'message' => 'Type pack created from template successfully',
-        ], 201);
+            'error' => 'Feature deprecated',
+            'message' => 'Type templates are no longer supported. Use the store endpoint instead.',
+        ], 410);
     }
 }

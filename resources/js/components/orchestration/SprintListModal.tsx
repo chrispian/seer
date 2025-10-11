@@ -45,20 +45,23 @@ interface SprintListModalProps {
   error?: string | null
   onRefresh?: () => void
   onSprintSelect?: (sprint: Sprint) => void
+  onItemSelect?: (sprint: Sprint) => void
   onTaskSelect?: (task: Task) => void
 }
 
 export function SprintListModal({ 
   isOpen, 
   onClose, 
-  sprints = [],
+  sprints = [], 
   unassigned_tasks = [],
   loading = false, 
   error = null,
   onRefresh,
   onSprintSelect,
+  onItemSelect,
   onTaskSelect
 }: SprintListModalProps) {
+  const handleSprintClick = onSprintSelect || onItemSelect
   const [showUnassigned, setShowUnassigned] = React.useState(false)
 
   const getStatusColor = (status: string) => {
@@ -243,7 +246,7 @@ export function SprintListModal({
       }}
       actionItems={actionItems}
       clickableRows={true}
-      onRowClick={onSprintSelect}
+      onRowClick={handleSprintClick}
       onRefresh={onRefresh}
     />
   )
