@@ -12,6 +12,31 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - react islands in blade for ui/ux
 - shadcn components
 
+## CRITICAL: System Architecture (#PM-CACHE-2025-10-11)
+
+**READ FIRST**: `docs/CURRENT_SYSTEM_ARCHITECTURE.md`
+
+**Active Tables** (ALL current, NONE legacy):
+- ✅ `commands` - Slash command registry
+- ✅ `types_registry` - Model-backed types
+- ✅ `fragment_type_registry` - Fragment-backed types
+
+**Deprecated ONLY**:
+- ❌ `command_registry` - Old YAML system
+- ❌ `fragments/commands/*.yaml` - Old YAML files
+
+**Cache Management**:
+After running seeders or updating commands/types tables:
+```bash
+php artisan cache:clear
+```
+CommandRegistry caches for 1 hour. Stale cache = broken navigation.
+
+**Never assume**:
+- fragment_type_registry is legacy (it's current!)
+- types_registry is the only type system (both are active!)
+- Database value is wrong if behavior differs (check cache first!)
+
 ## Conventions
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, naming.
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.

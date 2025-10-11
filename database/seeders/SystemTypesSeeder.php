@@ -146,6 +146,8 @@ class SystemTypesSeeder extends Seeder
             );
         }
 
-        $this->command->info('✅ Seeded '.count($systemTypes).' system types');
+        \App\Services\CommandRegistry::clearCache();
+
+        $this->command->info('✅ Seeded '.count($systemTypes).' system types and cleared cache');
     }
 }

@@ -1,3 +1,33 @@
+/**
+ * CommandResultModal - Config-Driven Command Result Renderer
+ * Hash: #PM-CACHE-2025-10-11
+ * 
+ * ═══════════════════════════════════════════════════════════════
+ * CURRENT SYSTEM (All tables below are ACTIVE, none are legacy)
+ * ═══════════════════════════════════════════════════════════════
+ * 
+ * DATABASE TABLES:
+ *   1. commands - Slash command registry (/sprints, /tasks, etc.)
+ *      Fields: ui_modal_container, navigation_config, type_slug
+ *   
+ *   2. types_registry - Model-backed types (sprints, tasks, agents)
+ *      Fields: slug, model_class, default_card_component
+ *   
+ *   3. fragment_type_registry - Fragment-backed types (notes, bookmarks)
+ *      Fields: slug, container_component, schema
+ * 
+ * COMPONENT RESOLUTION:
+ *   config.ui.modal_container → commands.ui_modal_container
+ *   This is 100% database-driven, no hardcoding.
+ * 
+ * CACHE WARNING:
+ *   CommandRegistry caches for 1 hour. After database changes:
+ *   php artisan cache:clear
+ * 
+ * See: docs/POST_MORTEM_SPRINT_NAVIGATION_CACHE_BUG.md
+ * ═══════════════════════════════════════════════════════════════
+ */
+
 import React, { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'

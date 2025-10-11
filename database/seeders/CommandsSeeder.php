@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Command;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Cache;
 
 class CommandsSeeder extends Seeder
 {
@@ -211,6 +212,9 @@ class CommandsSeeder extends Seeder
             );
         }
 
-        $this->command->info('Seeded ' . count($commands) . ' commands');
+        Cache::forget('command_registry');
+        \App\Services\CommandRegistry::clearCache();
+
+        $this->command->info('✅ Seeded ' . count($commands) . ' commands and cleared cache');
     }
 }
