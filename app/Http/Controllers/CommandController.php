@@ -81,6 +81,7 @@ class CommandController extends Controller
                     'type' => $result['type'] ?? 'unknown',
                     'component' => $result['component'] ?? null,
                     'data' => $result['data'] ?? null,
+                    'config' => $result['config'] ?? null,
                     'message' => $result['message'] ?? null,
                     'fragments' => [],
                     'shouldResetChat' => false,
@@ -329,13 +330,20 @@ class CommandController extends Controller
             $fragment->type = 'command';
 
             // Build metadata for activity tracking
+            $responseType = null;
+            if (is_array($response)) {
+                $responseType = $response['type'] ?? null;
+            } elseif (is_object($response)) {
+                $responseType = $response->type ?? null;
+            }
+            
             $metadata = [
                 'turn' => 'command',
                 'command_name' => $commandName,
                 'command_arguments' => $arguments,
                 'execution_time_ms' => $executionTimeMs,
                 'success' => $success,
-                'response_type' => $response?->type ?? null,
+                'response_type' => $responseType,
                 'timestamp' => now()->toISOString(),
             ];
 
@@ -344,11 +352,19 @@ class CommandController extends Controller
             }
 
             if ($success && $response) {
-                $metadata['response_data'] = [
-                    'type' => $response->type,
-                    'fragments_count' => is_array($response->fragments) ? count($response->fragments) : 0,
-                    'has_panel_data' => ! empty($response->panelData),
-                ];
+                if (is_array($response)) {
+                    $metadata['response_data'] = [
+                        'type' => $response['type'] ?? null,
+                        'fragments_count' => is_array($response['fragments'] ?? null) ? count($response['fragments']) : 0,
+                        'has_panel_data' => ! empty($response['panelData'] ?? null),
+                    ];
+                } else {
+                    $metadata['response_data'] = [
+                        'type' => $response->type ?? null,
+                        'fragments_count' => is_array($response->fragments ?? null) ? count($response->fragments) : 0,
+                        'has_panel_data' => ! empty($response->panelData ?? null),
+                    ];
+                }
             }
 
             // Add session context if available from request

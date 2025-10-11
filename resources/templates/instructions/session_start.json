@@ -1,0 +1,21 @@
+{
+  "template": "session_start",
+  "description": "Instructions returned when a new session is started",
+  "structure": {
+    "next_actions": [
+      "Activate sprint to set working context",
+      "Start or resume a task"
+    ],
+    "suggested_commands": [
+      "/sprint-activate SPRINT-XX",
+      "/task-activate T-XX"
+    ],
+    "suggestions": []
+  },
+  "variables": {
+    "session_key": "The unique session identifier (e.g., SESSION-001)",
+    "session_type": "Type of session (work, planning, review)",
+    "source": "Where session originated (cli, mcp, api, gui)"
+  },
+  "usage": "InstructionBuilder::forSessionStart($session, $suggestions)"
+}

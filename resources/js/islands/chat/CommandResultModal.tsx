@@ -28,6 +28,29 @@ import { ProjectListModal } from '@/components/projects/ProjectListModal'
 import { VaultListModal } from '@/components/vaults/VaultListModal'
 import { BookmarkListModal } from '@/components/bookmarks/BookmarkListModal'
 
+/**
+ * Central registry mapping component names to React components.
+ * All components must be registered here to be rendered by the command system.
+ */
+const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
+  'SprintListModal': SprintListModal,
+  'TaskListModal': TaskListModal,
+  'AgentProfileGridModal': AgentProfileGridModal,
+  'BacklogListModal': BacklogListModal,
+  'ProjectListModal': ProjectListModal,
+  'VaultListModal': VaultListModal,
+  'BookmarkListModal': BookmarkListModal,
+  'FragmentListModal': FragmentListModal,
+  'ChannelListModal': ChannelListModal,
+  'SprintDetailModal': SprintDetailModal,
+  'TaskDetailModal': TaskDetailModal,
+  'UnifiedListModal': UnifiedListModal,
+  'TodoManagementModal': TodoManagementModal,
+  'TypeManagementModal': TypeManagementModal,
+  'RoutingInfoModal': RoutingInfoModal,
+  'AgentProfileDashboard': AgentProfileDashboard,
+  'AgentDashboard': AgentDashboard,
+}
 
 interface CommandResult {
   success: boolean
@@ -74,11 +97,93 @@ interface CommandResultModalProps {
   command: string
 }
 
-export function CommandResultModal({ 
-  isOpen, 
-  onClose, 
-  result, 
-  command 
+interface ComponentHandlers {
+  onClose: () => void
+  onRefresh?: () => void
+  executeDetailCommand?: (cmd: string) => void
+}
+
+function transformCardToModal(cardName: string): string {
+  if (cardName.endsWith('Card')) {
+    return cardName.replace('Card', 'ListModal')
+  }
+  return cardName
+}
+
+function getComponentName(result: CommandResult): string {
+  if (!result.config) {
+    console.warn('[CommandResultModal] No config provided - using fallback')
+    return 'UnifiedListModal'
+  }
+  
+  if (result.config.ui?.modal_container) {
+    console.log('[CommandResultModal] Using ui.modal_container:', result.config.ui.modal_container)
+    return result.config.ui.modal_container
+  }
+  
+  if (result.config.ui?.card_component) {
+    const transformed = transformCardToModal(result.config.ui.card_component)
+    console.log('[CommandResultModal] Transformed ui.card_component:', result.config.ui.card_component, '→', transformed)
+    return transformed
+  }
+  
+  if (result.config.type?.default_card_component) {
+    const transformed = transformCardToModal(result.config.type.default_card_component)
+    console.log('[CommandResultModal] Transformed type.default_card_component:', result.config.type.default_card_component, '→', transformed)
+    return transformed
+  }
+  
+  console.log('[CommandResultModal] No component specified - using UnifiedListModal')
+  return 'UnifiedListModal'
+}
+
+function buildComponentProps(result: CommandResult, componentName: string, handlers: ComponentHandlers): Record<string, any> {
+  const props: Record<string, any> = {
+    isOpen: true,
+    onClose: handlers.onClose,
+    data: result.data,
+    config: result.config,
+  }
+  
+  if (handlers.onRefresh) {
+    props.onRefresh = handlers.onRefresh
+  }
+  
+  if (handlers.executeDetailCommand) {
+    if (componentName.includes('Sprint')) {
+      props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`/sprint-detail ${item.code}`)
+    } else if (componentName.includes('Task')) {
+      props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`/task-detail ${item.task_code}`)
+    } else if (componentName.includes('Agent')) {
+      props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`/agent-profile-detail ${item.slug}`)
+    }
+  }
+  
+  if (componentName.includes('Detail')) {
+    props.onBack = handlers.onClose
+  }
+  
+  return props
+}
+
+function renderComponent(result: CommandResult, handlers: ComponentHandlers): React.ReactNode {
+  const componentName = getComponentName(result)
+  let Component = COMPONENT_MAP[componentName]
+  
+  if (!Component) {
+    console.warn(`[CommandResultModal] Component "${componentName}" not found in registry`)
+    Component = COMPONENT_MAP['UnifiedListModal']
+  }
+  
+  const props = buildComponentProps(result, componentName, handlers)
+  return <Component {...props} />
+}
+
+export function CommandResultModal({
+  isOpen,
+  onClose,
+  result,
+  command
 }: CommandResultModalProps) {
   const [detailView, setDetailView] = useState<CommandResult | null>(null)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
@@ -95,7 +200,7 @@ export function CommandResultModal({
   const executeDetailCommand = async (detailCommand: string) => {
     console.log('Executing detail command:', detailCommand)
     setIsLoadingDetail(true)
-    
+
     try {
       const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
       const response = await fetch('/api/commands/execute', {
@@ -108,7 +213,7 @@ export function CommandResultModal({
       })
 
       const detailResult = await response.json()
-      
+
       if (detailResult.success) {
         console.log('Detail command result:', detailResult)
         setDetailView(detailResult)
@@ -127,307 +232,17 @@ export function CommandResultModal({
   // Debug current state
   console.log('CommandResultModal render - detailView:', detailView, 'result.type:', result?.type)
 
-  // Check if this is an orchestration command that should use rich UI
-  const isOrchestrationCommand = () => {
-    // Check for component field
-    return !!result.component
+  const handlers: ComponentHandlers = {
+    onClose,
+    onRefresh: () => console.log('[CommandResultModal] Refresh requested'),
+    executeDetailCommand,
   }
 
-  const renderOrchestrationUI = (currentResult: CommandResult = result, isDetail = false) => {
-    // Direct component routing
-    if (currentResult.component) {
-      console.log('Rendering component:', currentResult.component, 'data:', currentResult.data, 'isDetail:', isDetail)
-      
-      // Component routing based on component field
-      switch (currentResult.component) {
-        case 'SprintListModal':
-          return (
-            <SprintListModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('SprintListModal onClose called')
-                handleBackToList()
-                onClose()
-              }}
-              sprints={currentResult.data}
-              onSprintSelect={(sprint) => {
-                console.log('Sprint selected:', sprint)
-                executeDetailCommand(`/sprint-detail ${sprint.code}`)
-              }}
-              onRefresh={() => {
-                console.log('Refresh requested')
-                alert('Refresh functionality not implemented yet.')
-              }}
-            />
-          )
-        case 'TaskListModal':
-          return (
-            <TaskListModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('TaskListModal onClose called')
-                handleBackToList()
-                onClose()
-              }}
-              tasks={currentResult.data}
-              onTaskSelect={(task) => {
-                console.log('Task selected:', task)
-                executeDetailCommand(`/task-detail ${task.task_code}`)
-              }}
-              onRefresh={() => {
-                console.log('Task refresh requested')
-                alert('Task refresh functionality not implemented yet.')
-              }}
-            />
-          )
-        case 'AgentProfileDashboard':
-          return (
-            <Dialog open={isOpen} onOpenChange={onClose}>
-              <DialogContent className="max-w-[95vw] h-[90vh] p-0">
-                <AgentProfileDashboard initialAgents={currentResult.data} />
-              </DialogContent>
-            </Dialog>
-          )
-        case 'AgentDashboard':
-          return (
-            <Dialog open={isOpen} onOpenChange={onClose}>
-              <DialogContent className="max-w-[95vw] h-[90vh] p-0">
-                <AgentDashboard 
-                  initialAgents={currentResult.data.agents} 
-                  agentProfiles={currentResult.data.agentProfiles}
-                />
-              </DialogContent>
-            </Dialog>
-          )
-        
-        case 'AgentProfileListModal':
-          return (
-            <AgentProfileGridModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('AgentProfileGridModal onClose called')
-                handleBackToList()
-                onClose()
-              }}
-              agents={currentResult.data}
-              onAgentSelect={(agent: any) => {
-                console.log('Agent profile selected:', agent)
-                executeDetailCommand(`/agent-profile-detail ${agent.slug}`)
-              }}
-              onRefresh={() => {
-                console.log('Agent profile refresh requested')
-                alert('Agent profile refresh functionality not implemented yet.')
-              }}
-            />
-          )
-        case 'BacklogListModal':
-          return (
-            <BacklogListModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('BacklogListModal onClose called')
-                handleBackToList()
-                onClose()
-              }}
-              tasks={currentResult.data}
-              onTaskSelect={(task) => {
-                console.log('Backlog task selected:', task)
-                executeDetailCommand(`/task-detail ${task.task_code}`)
-              }}
-              onRefresh={() => {
-                console.log('Backlog refresh requested')
-                alert('Backlog refresh functionality not implemented yet.')
-              }}
-            />
-          )
-        case 'TodoManagementModal':
-          return (
-            <TodoManagementModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('TodoManagementModal onClose called')
-                onClose()
-              }}
-            />
-          )
-        case 'TypeManagementModal':
-          return (
-            <TypeManagementModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('TypeManagementModal onClose called')
-                onClose()
-              }}
-            />
-          )
-        case 'ProjectListModal':
-          return (
-            <ProjectListModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('ProjectListModal onClose called')
-                onClose()
-              }}
-              projects={currentResult.data}
-              onRefresh={() => {
-                console.log('Project refresh requested')
-              }}
-            />
-          )
-        case 'VaultListModal':
-          return (
-            <VaultListModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('VaultListModal onClose called')
-                onClose()
-              }}
-              vaults={currentResult.data}
-              onRefresh={() => {
-                console.log('Vault refresh requested')
-              }}
-            />
-          )
-        case 'BookmarkListModal':
-          return (
-            <BookmarkListModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('BookmarkListModal onClose called')
-                onClose()
-              }}
-              bookmarks={currentResult.data}
-              onRefresh={() => {
-                console.log('Bookmark refresh requested')
-              }}
-            />
-          )
-        case 'UnifiedListModal':
-          return (
-            <UnifiedListModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('UnifiedListModal onClose called')
-                onClose()
-              }}
-              data={currentResult.data}
-              onRefresh={() => {
-                console.log('UnifiedListModal refresh requested')
-              }}
-            />
-          )
-        case 'FragmentListModal':
-          return (
-            <FragmentListModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('FragmentListModal onClose called')
-                onClose()
-              }}
-              fragments={currentResult.data}
-              onFragmentSelect={(fragment) => {
-                console.log('Fragment selected:', fragment)
-                alert(`Fragment Navigation\n\nClicked: ${fragment.id}\n\nTask T-FRAG-NAV-01 required:\n- Navigate to chat session\n- Focus on fragment with ±5 context\n- Lazy loading`)
-              }}
-              onRefresh={() => {
-                console.log('Fragment refresh requested')
-                alert('Fragment refresh not implemented yet.')
-              }}
-            />
-          )
-        case 'ChannelListModal':
-          return (
-            <ChannelListModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('ChannelListModal onClose called')
-                onClose()
-              }}
-              channels={currentResult.data}
-              onChannelSelect={(channel) => {
-                console.log('Channel selected:', channel)
-                alert(`Channel: ${channel.name}\n\nChannel interaction coming soon.\nThis will allow joining/viewing channel details.`)
-              }}
-              onRefresh={() => {
-                console.log('Channel refresh requested')
-                alert('Channel refresh not implemented yet.')
-              }}
-            />
-          )
-        case 'RoutingInfoModal':
-          return (
-            <RoutingInfoModal
-              isOpen={isOpen}
-              onClose={() => {
-                console.log('RoutingInfoModal onClose called')
-                onClose()
-              }}
-              routingData={currentResult.data}
-            />
-          )
-        case 'SprintDetailModal':
-          return (
-            <SprintDetailModal
-              isOpen={isOpen}
-              onClose={onClose}
-              sprint={currentResult.data?.sprint}
-              tasks={currentResult.data?.tasks || []}
-              stats={currentResult.data?.stats || { total: 0, completed: 0, in_progress: 0, todo: 0, backlog: 0 }}
-              onBack={isDetail ? handleBackToList : onClose}
-              onTaskSelect={(task) => {
-                console.log('Task selected from sprint detail:', task)
-                executeDetailCommand(`/task-detail ${task.task_code}`)
-              }}
-            />
-          )
-        case 'TaskDetailModal':
-          if (!currentResult.data?.task) {
-            console.error('TaskDetailModal: No task data', currentResult)
-            return (
-              <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="max-w-4xl rounded-sm">
-                  <DialogHeader>
-                    <DialogTitle className="text-foreground">Error</DialogTitle>
-                  </DialogHeader>
-                  <div className="p-4 text-center text-muted-foreground">
-                    Task data not available. Please try again.
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )
-          }
-          return (
-            <TaskDetailModal
-              isOpen={isOpen}
-              onClose={onClose}
-              task={currentResult.data.task}
-              currentAssignment={currentResult.data?.current_assignment}
-              assignments={currentResult.data?.assignments || []}
-              content={currentResult.data?.content || {}}
-              activities={currentResult.data?.activities || []}
-              activitiesLoading={false}
-              activitiesError={null}
-              onBack={isDetail ? handleBackToList : onClose}
-            />
-          )
-        case 'HelpModal':
-          // For now, use the regular modal for help until we create HelpModal
-          return null
-        default:
-          console.warn('Unknown component:', result.component)
-          return null
-      }
-    }
-    
-    return null
+  // If we have a detail view, render it using new system
+  if (detailView && detailView.success && detailView.config) {
+    return renderComponent(detailView, handlers)
   }
-
-  // If we have a detail view, render it
   if (detailView && detailView.success) {
-    const detailUI = renderOrchestrationUI(detailView, true)
-    if (detailUI) {
-      return detailUI
-    }
     // If detail view has no component (e.g., message response), show it in regular modal
     if (!detailView.component && detailView.message) {
       // Use detailView as the result for the regular modal
@@ -438,7 +253,7 @@ export function CommandResultModal({
             <DialogHeader>
               <DialogTitle className="text-foreground">Agent Details</DialogTitle>
             </DialogHeader>
-            
+
             <ScrollArea className="max-h-[60vh] w-full rounded-sm border-0 bg-muted/20 p-3">
               <div className="prose prose-sm max-w-none text-foreground">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -446,7 +261,7 @@ export function CommandResultModal({
                 </ReactMarkdown>
               </div>
             </ScrollArea>
-            
+
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={handleBackToList} className="rounded-sm">
                 Back
@@ -461,12 +276,9 @@ export function CommandResultModal({
     }
   }
 
-  // If this is an orchestration command, render the rich UI instead of the modal
-  if (isOrchestrationCommand() && result.success) {
-    const orchestrationUI = renderOrchestrationUI()
-    if (orchestrationUI) {
-      return orchestrationUI
-    }
+  // If this has config, use new rendering system
+  if (result.success && result.config) {
+    return renderComponent(result, handlers)
   }
 
   const getTitle = () => {
@@ -485,10 +297,10 @@ export function CommandResultModal({
     // For new PHP help command
     if (result.component === 'HelpModal' && result.data?.commands) {
       const commands = result.data.commands
-      const helpContent = commands.map((cmd: any) => 
+      const helpContent = commands.map((cmd: any) =>
         `- **${cmd.usage}** – ${cmd.description}`
       ).join('\n')
-      
+
       return `# Available Commands\n\n${helpContent}\n\n**Tip**: Most commands work with or without arguments. Try them out!`
     }
 
@@ -499,10 +311,10 @@ export function CommandResultModal({
 
     // For commands with fragments (like search results)
     if (result.fragments && result.fragments.length > 0) {
-      const fragmentList = result.fragments.map((fragment, index) => 
+      const fragmentList = result.fragments.map((fragment, index) =>
         `**Fragment ${index + 1}:** ${fragment.message || fragment.content || 'No content'}`
       ).join('\n\n')
-      
+
       return `Found ${result.fragments.length} result(s):\n\n${fragmentList}`
     }
 
@@ -510,7 +322,7 @@ export function CommandResultModal({
     if (result.type === 'clear') {
       return 'Chat cleared successfully. The conversation history has been reset.'
     }
-    
+
     return result.type === 'success' ? 'Command executed successfully' : `Command executed (type: ${result.type})`
   }
 
@@ -525,10 +337,10 @@ export function CommandResultModal({
             </DialogDescription>
           )}
         </DialogHeader>
-        
+
         <ScrollArea className="max-h-[60vh] w-full rounded-sm border-0 bg-muted/20 p-3">
           <div className="prose prose-sm max-w-none text-foreground">
-            <ReactMarkdown 
+            <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
                 // Custom styling for help content
@@ -578,7 +390,7 @@ export function CommandResultModal({
             </ReactMarkdown>
           </div>
         </ScrollArea>
-        
+
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} className="rounded-sm">
             Close

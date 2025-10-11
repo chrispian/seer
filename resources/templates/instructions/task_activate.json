@@ -1,0 +1,29 @@
+{
+  "template": "task_activate",
+  "description": "Instructions returned when a task is activated",
+  "structure": {
+    "next_actions": [
+      "Begin implementation work",
+      "Log progress with /update or /note commands",
+      "Complete task with /task-deactivate when finished"
+    ],
+    "context_reminder": {
+      "task": "Task code (e.g., T-UNIFY-01)",
+      "description": "Task name or description",
+      "priority": "Task priority (low, medium, high, critical)",
+      "estimated_time": "Optional: Time estimate"
+    },
+    "validation_requirements": [
+      "Add context updates as you work",
+      "Provide summary on completion",
+      "Track time spent"
+    ]
+  },
+  "variables": {
+    "task": "WorkItem model instance",
+    "session": "WorkSession model instance",
+    "task_code": "Extracted from task metadata",
+    "estimate": "Extracted from task metadata['estimate_text']"
+  },
+  "usage": "InstructionBuilder::forTaskActivate($task, $session)"
+}

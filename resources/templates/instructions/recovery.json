@@ -1,0 +1,38 @@
+{
+  "template": "recovery",
+  "description": "Instructions for agent recovery after interruption (INIT pattern)",
+  "structure": {
+    "recovery_status": {
+      "session_interrupted": "Time since last activity (e.g., '5 minutes ago')",
+      "session_key": "Session identifier",
+      "activities_logged": "Count of activities in session"
+    },
+    "recovered_context": {
+      "sprint": "Optional: Active sprint data",
+      "task": "Optional: Active task data"
+    },
+    "next_actions": []
+  },
+  "conditional_next_actions": {
+    "with_sprint_and_task": [
+      "Continue working on sprint {sprint_code}",
+      "Resume task {task_code}",
+      "Time tracking will resume automatically"
+    ],
+    "with_sprint_only": [
+      "Continue working on sprint {sprint_code}",
+      "Select a task to resume work"
+    ],
+    "no_context": [
+      "Select a sprint to activate",
+      "Then choose a task to work on"
+    ]
+  },
+  "variables": {
+    "session": "WorkSession model instance",
+    "context": "Session context from SessionPersistenceService::getSessionContext()",
+    "minutes_since_activity": "Minutes elapsed since last activity"
+  },
+  "purpose": "Enables agents to reconstruct work state after conversation loss. Data loss limited to last 30 seconds instead of entire conversation.",
+  "usage": "InstructionBuilder::forRecovery($session, $context, $minutesSinceActivity)"
+}
