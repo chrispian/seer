@@ -162,7 +162,13 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
   } else {
     // Add legacy type-specific props for List modals
     if (componentName.includes('Sprint')) {
-      props.sprints = result.data
+      // Handle new structure: {sprints, unassigned_tasks} or legacy array
+      if (result.data && typeof result.data === 'object' && 'sprints' in result.data) {
+        props.sprints = result.data.sprints
+        props.unassigned_tasks = result.data.unassigned_tasks
+      } else {
+        props.sprints = result.data
+      }
     } else if (componentName.includes('Task')) {
       props.tasks = result.data
     } else if (componentName.includes('Agent')) {

@@ -24,25 +24,42 @@ interface Sprint {
   }
 }
 
+interface Task {
+  task_code: string
+  task_name: string
+  delegation_status: string
+  status: string
+  agent_recommendation?: string
+  current_agent?: string
+  estimate_text?: string
+  priority?: string
+  type?: string
+}
+
 interface SprintListModalProps {
   isOpen: boolean
   onClose: () => void
-  sprints: Sprint[]
+  sprints?: Sprint[]
+  unassigned_tasks?: Task[]
   loading?: boolean
   error?: string | null
   onRefresh?: () => void
   onSprintSelect?: (sprint: Sprint) => void
+  onTaskSelect?: (task: Task) => void
 }
 
 export function SprintListModal({ 
   isOpen, 
   onClose, 
-  sprints, 
+  sprints = [],
+  unassigned_tasks = [],
   loading = false, 
   error = null,
   onRefresh,
-  onSprintSelect 
+  onSprintSelect,
+  onTaskSelect
 }: SprintListModalProps) {
+  const [showUnassigned, setShowUnassigned] = React.useState(false)
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -160,25 +177,44 @@ export function SprintListModal({
     }
   ]
 
+  // Create virtual sprint for unassigned tasks
+  const unassignedSprint: Sprint | null = unassigned_tasks.length > 0 ? {
+    id: 'unassigned',
+    code: 'UNASSIGNED',
+    title: 'Tasks Without Sprint',
+    status: 'Unassigned',
+    task_count: unassigned_tasks.length,
+    completed_tasks: unassigned_tasks.filter(t => t.delegation_status === 'completed').length,
+    in_progress_tasks: unassigned_tasks.filter(t => t.delegation_status === 'in_progress' || t.delegation_status === 'assigned').length,
+    todo_tasks: unassigned_tasks.filter(t => t.delegation_status === 'unassigned').length,
+    backlog_tasks: 0,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  } : null
+
+  // Combine sprints with unassigned virtual sprint at top if it exists
+  const displaySprints = unassignedSprint ? [unassignedSprint, ...sprints] : sprints
+
   const filters = [
     {
       key: 'status',
       label: 'Status',
       options: [
-        { value: 'all', label: 'All', count: sprints.length },
-        { value: 'active', label: 'Active', count: sprints.filter(s => !s.status || s.status.toLowerCase() === 'active').length },
-        { value: 'completed', label: 'Completed', count: sprints.filter(s => s.status?.toLowerCase() === 'completed' || s.status?.toLowerCase() === 'done').length },
-        { value: 'planning', label: 'Planning', count: sprints.filter(s => s.status?.toLowerCase() === 'planning').length }
+        { value: 'all', label: 'All', count: displaySprints.length },
+        { value: 'active', label: 'Active', count: displaySprints.filter(s => !s.status || s.status.toLowerCase() === 'active').length },
+        { value: 'completed', label: 'Completed', count: displaySprints.filter(s => s.status?.toLowerCase() === 'completed' || s.status?.toLowerCase() === 'done').length },
+        { value: 'planning', label: 'Planning', count: displaySprints.filter(s => s.status?.toLowerCase() === 'planning').length },
+        { value: 'unassigned', label: 'Unassigned', count: unassigned_tasks.length }
       ]
     },
     {
       key: 'priority',
       label: 'Priority',
       options: [
-        { value: 'all', label: 'All', count: sprints.length },
-        { value: 'high', label: 'High', count: sprints.filter(s => s.meta?.priority?.toLowerCase() === 'high').length },
-        { value: 'medium', label: 'Medium', count: sprints.filter(s => s.meta?.priority?.toLowerCase() === 'medium').length },
-        { value: 'low', label: 'Low', count: sprints.filter(s => s.meta?.priority?.toLowerCase() === 'low').length }
+        { value: 'all', label: 'All', count: displaySprints.length },
+        { value: 'high', label: 'High', count: displaySprints.filter(s => s.meta?.priority?.toLowerCase() === 'high').length },
+        { value: 'medium', label: 'Medium', count: displaySprints.filter(s => s.meta?.priority?.toLowerCase() === 'medium').length },
+        { value: 'low', label: 'Low', count: displaySprints.filter(s => s.meta?.priority?.toLowerCase() === 'low').length }
       ]
     }
   ]
@@ -193,7 +229,7 @@ export function SprintListModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Sprint Management"
-      data={sprints}
+      data={displaySprints}
       columns={columns}
       loading={loading}
       error={error}
@@ -209,15 +245,6 @@ export function SprintListModal({
       clickableRows={true}
       onRowClick={onSprintSelect}
       onRefresh={onRefresh}
-      customHeader={
-        <div className="text-sm text-muted-foreground">
-          Manage sprints and track progress across all development cycles
-        </div>
-      }
-      emptyStateMessage="No sprints found"
-      emptyStateIcon={<Calendar className="h-8 w-8" />}
-      defaultSort="updated_at"
-      defaultSortDirection="desc"
     />
   )
 }

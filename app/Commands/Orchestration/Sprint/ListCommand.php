@@ -26,9 +26,15 @@ class ListCommand extends BaseCommand
     {
         $sprints = $this->fetchSprints();
         $data = $sprints->map(fn($sprint) => $this->formatSprint($sprint))->toArray();
+        
+        // Include unassigned tasks for filtering in UI
+        $unassignedTasks = $this->fetchUnassignedTasks();
 
         // Web context gets optional UI component
-        return $this->respond($data, $this->context === 'web' ? 'SprintListModal' : null);
+        return $this->respond([
+            'sprints' => $data,
+            'unassigned_tasks' => $unassignedTasks,
+        ], $this->context === 'web' ? 'SprintListModal' : null);
     }
 
     private function fetchSprints()
@@ -101,6 +107,27 @@ class ListCommand extends BaseCommand
                 'status' => $task->status,
                 'agent_recommendation' => Arr::get($task->delegation_context, 'agent_recommendation'),
                 'estimate_text' => Arr::get($task->metadata, 'estimate_text'),
+            ])
+            ->toArray();
+    }
+    
+    private function fetchUnassignedTasks(): array
+    {
+        return WorkItem::whereNull('metadata->sprint_code')
+            ->orWhereJsonLength('metadata->sprint_code', 0)
+            ->orderByDesc('created_at')
+            ->limit(100) // Reasonable limit for unassigned
+            ->get()
+            ->map(fn($task) => [
+                'task_code' => Arr::get($task->metadata, 'task_code'),
+                'task_name' => Arr::get($task->metadata, 'task_name'),
+                'delegation_status' => $task->delegation_status,
+                'status' => $task->status,
+                'agent_recommendation' => Arr::get($task->delegation_context, 'agent_recommendation'),
+                'current_agent' => Arr::get($task->delegation_context, 'current_agent'),
+                'estimate_text' => Arr::get($task->metadata, 'estimate_text'),
+                'priority' => Arr::get($task->metadata, 'priority'),
+                'type' => Arr::get($task->metadata, 'type'),
             ])
             ->toArray();
     }
