@@ -160,7 +160,6 @@ function transformCardToModal(cardName: string): string {
 function getComponentName(result: CommandResult): string {
   // Priority 1: Explicit component from respond() method
   if (result.component) {
-    console.log('[CommandResultModal] Using explicit component:', result.component)
     return result.component
   }
   
@@ -171,23 +170,19 @@ function getComponentName(result: CommandResult): string {
   }
   
   if (result.config.ui?.modal_container) {
-    console.log('[CommandResultModal] Using ui.modal_container:', result.config.ui.modal_container)
     return result.config.ui.modal_container
   }
   
   if (result.config.ui?.card_component) {
     const transformed = transformCardToModal(result.config.ui.card_component)
-    console.log('[CommandResultModal] Transformed ui.card_component:', result.config.ui.card_component, '→', transformed)
     return transformed
   }
   
   if (result.config.type?.default_card_component) {
     const transformed = transformCardToModal(result.config.type.default_card_component)
-    console.log('[CommandResultModal] Transformed type.default_card_component:', result.config.type.default_card_component, '→', transformed)
     return transformed
   }
   
-  console.log('[CommandResultModal] No component specified - using UnifiedListModal')
   return 'UnifiedListModal'
 }
 
@@ -196,10 +191,6 @@ function capitalize(str: string): string {
 }
 
 function buildComponentProps(result: CommandResult, componentName: string, handlers: ComponentHandlers, isOpen: boolean = true): Record<string, any> {
-  console.log('[buildComponentProps] START')
-  console.log('[buildComponentProps] componentName:', componentName)
-  console.log('[buildComponentProps] result.data:', result.data)
-  console.log('[buildComponentProps] result.config?.ui?.navigation:', result.config?.ui?.navigation)
   
   const props: Record<string, any> = {
     isOpen: isOpen,
@@ -209,7 +200,6 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
   }
   
   const navConfig = result.config?.ui?.navigation
-  console.log('[buildComponentProps] navConfig:', navConfig)
   
   // Handle Detail modals - they expect data spread as individual props
   if (componentName.includes('Detail')) {
@@ -283,14 +273,9 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
   
   // Configure DataManagementModal specific props
   if (componentName === 'DataManagementModal') {
-    console.log('[CommandResultModal] Configuring DataManagementModal')
-    console.log('[CommandResultModal] props.data:', props.data)
-    console.log('[CommandResultModal] props.data is array?', Array.isArray(props.data))
-    console.log('[CommandResultModal] props.data length:', props.data?.length)
     
     // Set up columns based on the type
     const typeSlug = (result.config as any)?.type_slug || result.config?.type?.slug
-    console.log('[CommandResultModal] typeSlug:', typeSlug)
     
     if (typeSlug === 'sprint' || typeSlug === 'sprints') {
       // Sprint-specific columns
@@ -436,33 +421,23 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
       }
     } else if (props.data && Array.isArray(props.data) && props.data.length > 0) {
       // Auto-generate columns from first data item (use props.data, not result.data!)
-      console.log('[CommandResultModal] Auto-generating columns from props.data')
-      console.log('[CommandResultModal] props.data type:', Array.isArray(props.data) ? 'array' : typeof props.data)
-      console.log('[CommandResultModal] props.data length:', props.data.length)
       
       const firstItem = props.data[0]
-      console.log('[CommandResultModal] First item keys:', Object.keys(firstItem))
       
       const keys = Object.keys(firstItem).filter(key => 
         key !== 'id' && 
         key !== 'metadata' && 
         !key.startsWith('_')
       )
-      console.log('[CommandResultModal] Filtered keys for columns:', keys)
       
       props.columns = keys.slice(0, 6).map(key => ({
         key,
         label: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
         sortable: true
       }))
-      console.log('[CommandResultModal] Generated columns:', props.columns.length)
     } else {
       // Fallback columns
-      console.log('[CommandResultModal] No auto-generation - falling back to empty columns')
-      console.log('[CommandResultModal] props.data exists?', !!props.data)
-      console.log('[CommandResultModal] props.data is array?', Array.isArray(props.data))
       if (props.data) {
-        console.log('[CommandResultModal] props.data length:', Array.isArray(props.data) ? props.data.length : 'N/A')
       }
       props.columns = []
     }
@@ -571,7 +546,6 @@ export function CommandResultModal({
   result,
   command
 }: CommandResultModalProps) {
-  console.log('=== CommandResultModal RENDER ===')
   console.log('isOpen:', isOpen)
   console.log('result:', result)
   console.log('command:', command)
@@ -587,11 +561,9 @@ export function CommandResultModal({
   }, [isOpen])
 
   if (!result || !isOpen) {
-    console.log('=== CommandResultModal EARLY RETURN ===')
     return null
   }
   
-  console.log('=== CommandResultModal CONTINUING ===')
   console.log('result.success:', result.success)
   console.log('result.config:', !!result.config)
   console.log('result.data keys:', Object.keys(result.data || {}))
@@ -645,7 +617,6 @@ export function CommandResultModal({
   }
 
   const refreshCurrentView = async () => {
-    console.log('[CommandResultModal] Refreshing current view')
     
     // Determine which command to refresh
     const currentView = viewStack.length > 0 ? viewStack[viewStack.length - 1] : null
@@ -672,7 +643,6 @@ export function CommandResultModal({
       const refreshedResult = await response.json()
 
       if (refreshedResult.success) {
-        console.log('[CommandResultModal] Refresh successful')
         refreshedResult._command = commandToRefresh
         
         if (viewStack.length > 0) {
@@ -711,7 +681,6 @@ export function CommandResultModal({
       onClose: onClose, // X/Close buttons close modal entirely
       onBackToList: handleBack, // Back button/ESC go back
     }
-    console.log('[CommandResultModal] Rendering from stack - component:', getComponentName(currentView), 'data keys:', Object.keys(currentView.data || {}))
     return renderComponent(currentView, stackHandlers, isOpen)
   }
   if (currentView && currentView.success) {
@@ -747,17 +716,11 @@ export function CommandResultModal({
   }
 
   // If this has config, use new rendering system
-  console.log('[CommandResultModal] Before renderComponent check')
-  console.log('[CommandResultModal] result.success:', result.success)
-  console.log('[CommandResultModal] result.config:', result.config)
-  console.log('[CommandResultModal] Will call renderComponent?', !!(result.success && result.config))
   
   if (result.success && result.config) {
-    console.log('[CommandResultModal] Calling renderComponent!')
     return renderComponent(result, handlers, isOpen)
   }
   
-  console.log('[CommandResultModal] Skipping renderComponent - using fallback rendering')
 
   const getTitle = () => {
     if (result.success) {
