@@ -6,12 +6,12 @@ use App\Commands\BaseCommand;
 
 class ListCommand extends BaseCommand
 {
-    public function __invoke(array $params = []): array
+    public function handle(): array
     {
         // Get sprint filter from command arguments (if any)
-        $sprintFilter = $params['sprint'] ?? null;
-        $status = $params['status'] ?? null;
-        $limit = $params['limit'] ?? 100;
+        $sprintFilter = $this->getSprintFilter();
+        $status = null;
+        $limit = 100;
 
         // Build query
         $query = \App\Models\WorkItem::query()->with('assignedAgent');

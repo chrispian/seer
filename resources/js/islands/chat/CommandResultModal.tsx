@@ -455,6 +455,15 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
     if (navConfig.detail_command && navConfig.item_key) {
       const itemKey = navConfig.item_key
       props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
+      
+      // Also set component-specific handlers based on component name
+      if (componentName.includes('Task')) {
+        props.onTaskSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
+      } else if (componentName.includes('Sprint')) {
+        props.onSprintSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
+      } else if (componentName.includes('Agent')) {
+        props.onAgentSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
+      }
     }
     
     // Add child handlers for drill-down navigation
