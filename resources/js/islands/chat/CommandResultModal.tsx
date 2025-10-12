@@ -424,19 +424,34 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
       }
     } else if (props.data && Array.isArray(props.data) && props.data.length > 0) {
       // Auto-generate columns from first data item (use props.data, not result.data!)
+      console.log('[CommandResultModal] Auto-generating columns from props.data')
+      console.log('[CommandResultModal] props.data type:', Array.isArray(props.data) ? 'array' : typeof props.data)
+      console.log('[CommandResultModal] props.data length:', props.data.length)
+      
       const firstItem = props.data[0]
+      console.log('[CommandResultModal] First item keys:', Object.keys(firstItem))
+      
       const keys = Object.keys(firstItem).filter(key => 
         key !== 'id' && 
         key !== 'metadata' && 
         !key.startsWith('_')
       )
+      console.log('[CommandResultModal] Filtered keys for columns:', keys)
+      
       props.columns = keys.slice(0, 6).map(key => ({
         key,
         label: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
         sortable: true
       }))
+      console.log('[CommandResultModal] Generated columns:', props.columns.length)
     } else {
       // Fallback columns
+      console.log('[CommandResultModal] No auto-generation - falling back to empty columns')
+      console.log('[CommandResultModal] props.data exists?', !!props.data)
+      console.log('[CommandResultModal] props.data is array?', Array.isArray(props.data))
+      if (props.data) {
+        console.log('[CommandResultModal] props.data length:', Array.isArray(props.data) ? props.data.length : 'N/A')
+      }
       props.columns = []
     }
     
