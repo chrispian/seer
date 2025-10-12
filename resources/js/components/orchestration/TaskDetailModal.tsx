@@ -210,7 +210,7 @@ export function TaskDetailModal({
         }
       }
     }}>
-      <DialogContent className="max-w-6xl max-h-[90vh] rounded-sm">
+      <DialogContent className="max-w-6xl max-h-[90vh] rounded-sm flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             {onBack && (
@@ -229,9 +229,9 @@ export function TaskDetailModal({
           </DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(90vh-120px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
           {/* Left Panel - Task Info */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className="lg:col-span-1 space-y-4 overflow-y-auto">
             <div className="bg-muted/20 rounded-lg p-4">
               <h3 className="font-medium mb-3">Task Details</h3>
               
@@ -349,7 +349,7 @@ export function TaskDetailModal({
           </div>
 
           {/* Right Panel - Content */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 overflow-hidden flex flex-col">
             <Tabs defaultValue={contentTabs[0]?.key} className="h-full flex flex-col">
                 <TabsList className="flex items-center justify-start border-b bg-muted/30 px-1 py-1 h-auto rounded-none w-full">
                   {contentTabs.map(tab => (

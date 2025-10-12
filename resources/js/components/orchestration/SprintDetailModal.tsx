@@ -211,12 +211,18 @@ export function SprintDetailModal({
     }
   ]
 
+  // Pre-process tasks to normalize status values for filtering
+  const tasksWithNormalizedStatus = sortedTasks.map(task => ({
+    ...task,
+    status_filter: task.status?.toLowerCase() === 'completed' ? 'done' : task.status?.toLowerCase()
+  }))
+
   const filters = [
     {
-      key: 'status',
+      key: 'status_filter',
       label: 'Status',
       options: [
-        { value: 'all', label: 'All', count: sortedTasks.length },
+        { value: 'all', label: 'All', count: tasksWithNormalizedStatus.length },
         { value: 'in-progress', label: 'In Progress', count: stats.in_progress },
         { value: 'todo', label: 'Todo', count: stats.todo },
         { value: 'done', label: 'Done', count: stats.completed },
@@ -246,7 +252,7 @@ export function SprintDetailModal({
       onClose={onClose}
       onBack={onBack}
       title={`Sprint: ${sprint.code}`}
-      data={sortedTasks}
+      data={tasksWithNormalizedStatus}
       columns={columns}
       loading={loading}
       error={error}
