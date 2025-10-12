@@ -277,8 +277,14 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
   
   // Configure DataManagementModal specific props
   if (componentName === 'DataManagementModal') {
+    console.log('[CommandResultModal] Configuring DataManagementModal')
+    console.log('[CommandResultModal] props.data:', props.data)
+    console.log('[CommandResultModal] props.data is array?', Array.isArray(props.data))
+    console.log('[CommandResultModal] props.data length:', props.data?.length)
+    
     // Set up columns based on the type
     const typeSlug = (result.config as any)?.type_slug || result.config?.type?.slug
+    console.log('[CommandResultModal] typeSlug:', typeSlug)
     
     if (typeSlug === 'sprint' || typeSlug === 'sprints') {
       // Sprint-specific columns
