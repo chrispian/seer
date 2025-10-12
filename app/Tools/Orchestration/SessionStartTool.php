@@ -20,10 +20,10 @@ class SessionStartTool extends Tool implements SummarizesTool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'agent_id' => $schema->string()->optional()->description('Agent UUID or slug'),
+            'agent_id' => $schema->string()->description('Agent UUID or slug'),
             'session_type' => $schema->string()->enum(['work', 'planning', 'review'])->default('work'),
             'source' => $schema->string()->enum(['cli', 'mcp', 'api', 'gui'])->default('mcp'),
-            'metadata' => $schema->object()->optional()->description('Additional metadata'),
+            'metadata' => $schema->object()->description('Additional metadata'),
         ];
     }
 
