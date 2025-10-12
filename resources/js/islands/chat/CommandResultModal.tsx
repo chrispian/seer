@@ -196,6 +196,11 @@ function capitalize(str: string): string {
 }
 
 function buildComponentProps(result: CommandResult, componentName: string, handlers: ComponentHandlers, isOpen: boolean = true): Record<string, any> {
+  console.log('[buildComponentProps] START')
+  console.log('[buildComponentProps] componentName:', componentName)
+  console.log('[buildComponentProps] result.data:', result.data)
+  console.log('[buildComponentProps] result.config?.ui?.navigation:', result.config?.ui?.navigation)
+  
   const props: Record<string, any> = {
     isOpen: isOpen,
     onClose: handlers.onClose,
@@ -204,6 +209,7 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
   }
   
   const navConfig = result.config?.ui?.navigation
+  console.log('[buildComponentProps] navConfig:', navConfig)
   
   // Handle Detail modals - they expect data spread as individual props
   if (componentName.includes('Detail')) {
