@@ -422,9 +422,9 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
             break
         }
       }
-    } else if (result.data && Array.isArray(result.data) && result.data.length > 0) {
-      // Auto-generate columns from first data item
-      const firstItem = result.data[0]
+    } else if (props.data && Array.isArray(props.data) && props.data.length > 0) {
+      // Auto-generate columns from first data item (use props.data, not result.data!)
+      const firstItem = props.data[0]
       const keys = Object.keys(firstItem).filter(key => 
         key !== 'id' && 
         key !== 'metadata' && 
