@@ -23,6 +23,18 @@ This audit examines how different data modules (Tasks, Sprints, Agents, Projects
 - **Common structure**: All use `navigation_config` with `data_prop`, `item_key`, `detail_command`
 - **Complexity source**: Custom wrappers duplicate table setup logic
 
+### Architecture Intent vs Reality
+
+**Intended Design** (per `NAVIGATION_SYSTEM_COMPLETE_GUIDE.md`):
+> "No more `SprintListModal`, `TaskListModal`, etc. Just `DataManagementModal` + config."
+
+**Current Reality**:
+- ✅ **Tasks, Projects, Vaults, Bookmarks**: Follow intended design perfectly
+- ⚠️ **Sprints, Backlog**: Use temporary custom wrappers (acknowledged as migration debt)
+- ❌ **Agents**: Fully custom modal, doesn't use `DataManagementModal` at all
+
+**Gap**: 3 of 7 modules (43%) still use custom components instead of pure config-driven approach.
+
 ---
 
 ## Module Inventory
@@ -285,6 +297,50 @@ export function AgentProfileGridModal({ agents, onAgentSelect }) {
 5. CommandResultModal pushes new view to navigation stack
    ↓
 6. Detail modal opens with item data
+```
+
+**Complete System Flow** (per NAVIGATION_SYSTEM_COMPLETE_GUIDE.md):
+
+```typescript
+// Step 1: Backend returns structured response
+{
+  type: 'task',
+  data: { tasks: [...] },
+  config: {
+    ui: {
+      modal_container: 'DataManagementModal',
+      navigation: {
+        data_prop: 'tasks',
+        item_key: 'task_code',
+        detail_command: '/task-detail'
+      }
+    }
+  }
+}
+
+// Step 2: CommandResultModal extracts array (line 220-247)
+const dataProp = navConfig.data_prop  // 'tasks'
+props.data = result.data[dataProp]    // Extract array from {tasks: [...]}
+
+// Step 3: Build navigation handler (line 459-472)
+if (navConfig.detail_command && navConfig.item_key) {
+  props.onItemSelect = (item: any) => {
+    const command = `${navConfig.detail_command} ${item[navConfig.item_key]}`
+    handlers.executeDetailCommand(command)
+  }
+}
+
+// Step 4: DataManagementModal connects click to handler (line 86-92)
+const handleRowClick = (e: React.MouseEvent) => {
+  if (clickableRows) {
+    if (onRowClick) {
+      onRowClick(item)  // Calls onItemSelect
+    }
+  }
+}
+
+// Step 5: Navigation command executes
+'/task-detail T-001' → Backend → New modal opens
 ```
 
 **The Wiring** (CommandResultModal.tsx:457-495):
@@ -721,9 +777,225 @@ User clicks: Agent card "backend-specialist"
 
 ---
 
+## Migration Strategy (Per Navigation Guide)
+
+### The Vision
+
+From `NAVIGATION_SYSTEM_COMPLETE_GUIDE.md`:
+
+> **Core Philosophy**: Build primitives and generics, then assemble them via configuration.  
+> **No more `SprintListModal`, `TaskListModal`, etc. Just `DataManagementModal` + config.**
+
+### Current State Assessment
+
+**Pattern Compliance**:
+- ✅ **57% compliant** (4/7 modules): Tasks, Projects, Vaults, Bookmarks use direct `DataManagementModal`
+- ⚠️ **29% migration debt** (2/7 modules): Sprints, Backlog use temporary wrappers
+- ❌ **14% non-compliant** (1/7 modules): Agents fully custom
+
+### Step-by-Step Migration Path
+
+#### Phase 1: Fix Agents (Immediate)
+
+**Current Problem**:
+```typescript
+// AgentProfileGridModal.tsx - Doesn't use DataManagementModal at all
+export function AgentProfileGridModal({ agents }) {
+  // ~250 lines of duplicated modal boilerplate
+  return <Dialog>...</Dialog>
+}
+```
+
+**Solution Option A**: Add Detail View
+```php
+// Database
+'detail_command' => '/agent-detail',
+
+// Create handler
+class AgentDetailCommand extends BaseCommand {
+    public function handle(): array {
+        $agent = AgentProfile::where('slug', $this->params['slug'])->first();
+        return $this->respond(['agent' => $agent]);
+    }
+}
+```
+
+**Solution Option B**: Keep Grid, Disable Clicks
+```typescript
+// AgentProfileGridModal.tsx
+const handleAgentClick = (agent: AgentProfile) => {
+  // Just show info, don't navigate
+  setExpandedAgent(agent)
+}
+```
+
+**Estimated Effort**: 2-3 hours
+
+---
+
+#### Phase 2: Migrate Sprints & Backlog (Future Config System)
+
+**Current Pattern** (temporary bridge):
+```typescript
+// SprintListModal.tsx - Wraps DataManagementModal
+export function SprintListModal({ sprints, onSprintSelect }) {
+  const columns = [ /* custom definitions */ ]
+  return <DataManagementModal columns={columns} data={sprints} />
+}
+```
+
+**Target Pattern** (pure config):
+```php
+// CommandsSeeder.php
+'navigation_config' => [
+    'data_prop' => 'sprints',
+    'item_key' => 'code',
+    'detail_command' => '/sprint-detail',
+    'columns' => [
+        [
+            'key' => 'code',
+            'label' => 'Sprint',
+            'render' => 'sprint-code-with-title',  // Registered renderer
+        ],
+        [
+            'key' => 'progress',
+            'label' => 'Progress',
+            'render' => 'progress-bar',  // Registered component
+            'params' => [
+                'numerator' => 'completed_tasks',
+                'denominator' => 'total_tasks',
+            ]
+        ],
+        [
+            'key' => 'status',
+            'label' => 'Status',
+            'render' => 'status-badge',
+            'colors' => [
+                'active' => 'blue',
+                'completed' => 'green',
+                'planning' => 'yellow',
+            ]
+        ]
+    ],
+    'filters' => [
+        [
+            'key' => 'status',
+            'type' => 'select',
+            'options' => ['all', 'active', 'completed', 'planning']
+        ]
+    ]
+]
+```
+
+**Frontend Changes**:
+```typescript
+// CommandResultModal.tsx - Enhanced column building
+if (navConfig.columns) {
+  props.columns = navConfig.columns.map(col => ({
+    key: col.key,
+    label: col.label,
+    render: col.render ? RENDER_MAP[col.render](col.params) : undefined
+  }))
+}
+
+// Registered renderers
+const RENDER_MAP = {
+  'progress-bar': (params) => (item) => (
+    <ProgressBar 
+      value={item[params.numerator] / item[params.denominator]} 
+    />
+  ),
+  'status-badge': (params) => (item) => (
+    <Badge color={params.colors[item.status]}>
+      {item.status}
+    </Badge>
+  ),
+  // ...
+}
+```
+
+**After Migration**:
+- Delete `SprintListModal.tsx` (~180 lines removed)
+- Delete `BacklogListModal.tsx` (~220 lines removed)
+- Update `CommandsSeeder.php` with column configs
+- Total reduction: **~400 lines of frontend code**
+
+**Estimated Effort**: 8-12 hours
+
+---
+
+#### Phase 3: Implement Full Module System (Long Term)
+
+**From Navigation Guide**:
+```json
+{
+  "navigation_config": {
+    "columns": [...],    // Column definitions
+    "filters": [...],    // Filter schemas
+    "actions": [         // Action buttons
+      {
+        "key": "edit",
+        "label": "Edit",
+        "command": "/task-edit",
+        "icon": "edit"
+      }
+    ]
+  }
+}
+```
+
+**Benefits**:
+- Zero custom list components
+- Add new modules with just database config
+- Consistent UX across all modules
+- Easy to extend (new column types, filters)
+
+**Estimated Effort**: 20-30 hours (full Module System as per MODULE_ARCHITECTURE.md)
+
+---
+
+### Why Custom Wrappers Still Exist
+
+From the Navigation Guide (line 241-246):
+
+> **Why SprintListModal Still Exists (TEMPORARY)**
+> 1. Unassigned Tasks Virtual Sprint - Should be removed per your direction
+> 2. Custom Column Rendering - Should move to config
+> 3. Dual Prop Support - Bridging legacy/new during migration
+
+**They are acknowledged technical debt**, not permanent architecture.
+
+---
+
+### Validation Checklist
+
+Before deleting a custom wrapper, verify:
+
+- [ ] `navigation_config.data_prop` set
+- [ ] `navigation_config.item_key` set
+- [ ] `navigation_config.detail_command` set (or intentionally null)
+- [ ] Handler uses `$this->respond(['data_prop' => $data])`
+- [ ] Component registered in `COMPONENT_MAP`
+- [ ] Cache cleared after config changes
+- [ ] Click navigation tested in browser
+- [ ] All custom column features captured in config (or deprecated)
+
+---
+
+### Success Metrics
+
+**Goal**: 100% of list modules use direct `DataManagementModal` with config-driven columns.
+
+**Current**: 57% (4/7)  
+**Phase 1 Target**: 71% (5/7) - Fix agents  
+**Phase 2 Target**: 100% (7/7) - Migrate sprints/backlog
+
+---
+
 ## References
 
 - **Architecture Doc**: `docs/COMMAND_UI_ARCHITECTURE.md`
+- **Navigation Guide**: `docs/NAVIGATION_SYSTEM_COMPLETE_GUIDE.md` ⭐
 - **Module Vision**: `docs/MODULE_ARCHITECTURE.md`
 - **Implementation**: `docs/BACKLOG_SPRINT_ASSIGNMENT_IMPLEMENTATION.md`
 - **Code**:
@@ -738,7 +1010,8 @@ User clicks: Agent card "backend-specialist"
 | Date | Version | Changes |
 |------|---------|---------|
 | 2025-10-12 | 1.0 | Initial audit - documented 7 modules, 3 patterns, click navigation flow |
+| 2025-10-12 | 1.1 | Added migration strategy based on NAVIGATION_SYSTEM_COMPLETE_GUIDE.md |
 
 ---
 
-**Audit Complete**: All module configurations documented with click navigation analysis.
+**Audit Complete**: All module configurations documented with click navigation analysis and clear migration path to 100% config-driven architecture.
