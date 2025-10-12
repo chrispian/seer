@@ -571,6 +571,11 @@ export function CommandResultModal({
   result,
   command
 }: CommandResultModalProps) {
+  console.log('=== CommandResultModal RENDER ===')
+  console.log('isOpen:', isOpen)
+  console.log('result:', result)
+  console.log('command:', command)
+  
   const [viewStack, setViewStack] = useState<CommandResult[]>([])
   const [_isLoadingDetail, setIsLoadingDetail] = useState(false)
 
@@ -582,8 +587,14 @@ export function CommandResultModal({
   }, [isOpen])
 
   if (!result || !isOpen) {
+    console.log('=== CommandResultModal EARLY RETURN ===')
     return null
   }
+  
+  console.log('=== CommandResultModal CONTINUING ===')
+  console.log('result.success:', result.success)
+  console.log('result.config:', !!result.config)
+  console.log('result.data keys:', Object.keys(result.data || {}))
 
   const handleBack = () => {
     console.log('CommandResultModal: Going back one level', 'stack length:', viewStack.length)
