@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
 import { DataManagementModal, ColumnDefinition } from '@/components/ui/DataManagementModal'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Users, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 
 interface Sprint {
   id: string
@@ -46,7 +46,7 @@ interface SprintListModalProps {
   onRefresh?: () => void
   onSprintSelect?: (sprint: Sprint) => void
   onItemSelect?: (sprint: Sprint) => void
-  onTaskSelect?: (task: Task) => void
+  onCreate?: () => void
 }
 
 export function SprintListModal({ 
@@ -59,10 +59,18 @@ export function SprintListModal({
   onRefresh,
   onSprintSelect,
   onItemSelect,
-  onTaskSelect
+  onCreate
 }: SprintListModalProps) {
   const handleSprintClick = onSprintSelect || onItemSelect
-  const [showUnassigned, setShowUnassigned] = React.useState(false)
+
+  const handleCreateClick = () => {
+    console.log('[SprintListModal] Create button clicked, onCreate exists?', !!onCreate)
+    if (onCreate) {
+      onCreate()
+    } else {
+      console.error('[SprintListModal] onCreate handler not provided!')
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -102,7 +110,7 @@ export function SprintListModal({
 
 
 
-  const columns: ColumnDefinition<Sprint>[] = [
+  const columns: ColumnDefinition<Sprint | any>[] = [
     {
       key: 'code',
       label: 'Sprint',
@@ -228,26 +236,40 @@ export function SprintListModal({
   ]
 
   return (
-    <DataManagementModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Sprint Management"
-      data={displaySprints}
-      columns={columns}
-      loading={loading}
-      error={error}
-      filters={filters}
-      searchPlaceholder="Search sprints..."
-      searchFields={['code', 'title', 'meta.title']}
-      onAction={(action, sprint) => {
-        if (action === 'view' || action === 'tasks') {
-          onSprintSelect?.(sprint)
+    <>
+      <DataManagementModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Sprint Management"
+        data={displaySprints}
+        columns={columns}
+        loading={loading}
+        error={error || undefined}
+        filters={filters}
+        searchPlaceholder="Search sprints..."
+        searchFields={['code', 'title']}
+        onAction={(action, sprint) => {
+          if (action === 'view' || action === 'tasks') {
+            onSprintSelect?.(sprint)
+          }
+        }}
+        actionItems={actionItems}
+        clickableRows={true}
+        onRowClick={handleSprintClick}
+        onRefresh={onRefresh}
+        customHeader={
+          <div className="flex items-center gap-2 mt-2">
+            <Button 
+              size="sm" 
+              onClick={handleCreateClick}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Sprint
+            </Button>
+          </div>
         }
-      }}
-      actionItems={actionItems}
-      clickableRows={true}
-      onRowClick={handleSprintClick}
-      onRefresh={onRefresh}
-    />
+      />
+    </>
   )
 }

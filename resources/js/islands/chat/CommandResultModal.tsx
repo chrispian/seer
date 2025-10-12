@@ -42,6 +42,7 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { SprintListModal } from '@/components/orchestration/SprintListModal'
 import { SprintDetailModal } from '@/components/orchestration/SprintDetailModal'
+import { SprintFormModal } from '@/components/orchestration/SprintFormModal'
 import { TaskListModal } from '@/components/orchestration/TaskListModal'
 import { TaskDetailModal } from '@/components/orchestration/TaskDetailModal'
 import { AgentProfileGridModal } from '@/components/orchestration/AgentProfileGridModal'
@@ -66,6 +67,7 @@ import { DataManagementModal } from '@/components/ui/DataManagementModal'
 const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
   'DataManagementModal': DataManagementModal,
   'SprintListModal': SprintListModal,
+  'SprintFormModal': SprintFormModal,
   'TaskListModal': TaskListModal,
   'AgentProfileGridModal': AgentProfileGridModal,
   'BacklogListModal': BacklogListModal,
@@ -461,6 +463,8 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
         props.onTaskSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
       } else if (componentName.includes('Sprint')) {
         props.onSprintSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
+        // Add create handler for Sprint list
+        props.onCreate = () => handlers.executeDetailCommand!('/sprint-create')
       } else if (componentName.includes('Agent')) {
         props.onAgentSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
       }
@@ -478,6 +482,7 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
     if (componentName.includes('Sprint')) {
       props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`/sprint-detail ${item.code}`)
       props.onSprintSelect = (item: any) => handlers.executeDetailCommand!(`/sprint-detail ${item.code}`)
+      props.onCreate = () => handlers.executeDetailCommand!('/sprint-create')
     } else if (componentName.includes('Task')) {
       props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`/task-detail ${item.task_code}`)
       props.onTaskSelect = (item: any) => handlers.executeDetailCommand!(`/task-detail ${item.task_code}`)
@@ -487,8 +492,8 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
     }
   }
   
-  if (componentName.includes('Detail')) {
-    // Detail modals get both onClose (for X/Close buttons) and onBack (for Back button/ESC)
+  if (componentName.includes('Detail') || componentName.includes('Form')) {
+    // Detail and Form modals get both onClose (for X/Close buttons) and onBack (for Back button/ESC)
     if (handlers.onBackToList) {
       props.onBack = handlers.onBackToList
     }
