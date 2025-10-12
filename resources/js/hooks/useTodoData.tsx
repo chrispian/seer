@@ -174,15 +174,23 @@ export function useTodoData(): UseTodoDataReturn {
     ))
 
     try {
-      // Use ID-based commands to avoid position issues
-      const command = newStatus === 'completed' 
-        ? `todo complete:${todoId}`
-        : `todo reopen:${todoId}`
+      // Update fragment state via API
+      const response = await fetch(`/api/fragment/${todo.fragment_id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({
+          state: {
+            status: newStatus === 'completed' ? 'complete' : 'open',
+            completed_at: newStatus === 'completed' ? now : null,
+          }
+        }),
+      })
 
-      const result = await executeCommand(command)
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update todo status')
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
     } catch (err) {
       // Revert optimistic update on error
