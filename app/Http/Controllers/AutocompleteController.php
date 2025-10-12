@@ -13,7 +13,7 @@ class AutocompleteController extends Controller
     {
         $query = $request->get('q', '');
 
-        // Get PHP-based commands only (YAML commands should be migrated to PHP)
+        // Get PHP-based commands only
         $allCommands = CommandRegistry::all();
 
         // Filter by query if provided
