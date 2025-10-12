@@ -6,14 +6,11 @@ class ProjectListCommand extends BaseCommand
 {
     public function handle(): array
     {
-        // Get projects
         $projects = $this->getProjects();
 
-        return [
-            'type' => 'project',
-            'component' => 'ProjectListModal',
-            'data' => $projects,
-        ];
+        return $this->respond([
+            'projects' => $projects,
+        ]);
     }
 
     private function getProjects(): array

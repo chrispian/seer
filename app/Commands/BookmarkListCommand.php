@@ -11,7 +11,7 @@ class BookmarkListCommand extends BaseCommand
     public function handle(): array
     {
         $bookmarks = $this->getBookmarks();
-        return $this->respond(['items' => $bookmarks]);
+        return $this->respond(['bookmarks' => $bookmarks]);
     }
 
     private function getBookmarks(): array

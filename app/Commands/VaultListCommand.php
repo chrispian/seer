@@ -6,14 +6,11 @@ class VaultListCommand extends BaseCommand
 {
     public function handle(): array
     {
-        // Get vaults
         $vaults = $this->getVaults();
 
-        return [
-            'type' => 'vault',
-            'component' => 'VaultListModal',
-            'data' => $vaults,
-        ];
+        return $this->respond([
+            'vaults' => $vaults,
+        ]);
     }
 
     private function getVaults(): array

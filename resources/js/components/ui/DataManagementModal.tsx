@@ -284,8 +284,34 @@ export function DataManagementModal<T extends DataItem>({
     return () => document.removeEventListener('keydown', handleKeyDown, { capture: true })
   }, [isOpen, onClose])
 
+  // ERROR TRAP: Catch non-array data before it causes .filter() error
+  // This happens when handler returns wrong data structure or navigation_config.data_prop is incorrect
+  if (!Array.isArray(data)) {
+    console.error('[DataManagementModal] ❌ DATA IS NOT AN ARRAY ❌')
+    console.error('Received type:', typeof data)
+    console.error('Received value:', data)
+    console.error('')
+    console.error('🔍 COMMON CAUSES:')
+    console.error('1. Handler returns old format: { type, component, data }')
+    console.error('   FIX: Use $this->respond([\'items\' => $data]) instead')
+    console.error('')
+    console.error('2. navigation_config.data_prop mismatch')
+    console.error('   Example: Handler returns [\'bookmarks\' => ...] but config says data_prop: \'items\'')
+    console.error('   FIX: Match data_prop to response key')
+    console.error('')
+    console.error('3. Handler returns data directly instead of wrapped')
+    console.error('   Example: return $data (wrong) vs return $this->respond([\'items\' => $data]) (right)')
+    console.error('')
+    console.error('💡 See: docs/NAVIGATION_SYSTEM_COMPLETE_GUIDE.md')
+  }
+
   // Filter data based on search and filters
   const filteredData = useMemo(() => {
+    // Guard against non-array data
+    if (!Array.isArray(data)) {
+      return []
+    }
+    
     return data.filter(item => {
       // Search filter
       if (searchQuery && searchFields.length > 0) {
@@ -325,6 +351,40 @@ export function DataManagementModal<T extends DataItem>({
 
   if (!isOpen) return null
 
+  // Show error UI if data is not an array
+  if (!Array.isArray(data)) {
+    return (
+      <Dialog open={isOpen} onOpenChange={(open) => !open && (onBack ? onBack() : onClose())}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Configuration Error</DialogTitle>
+            <DialogDescription>
+              DataManagementModal received invalid data
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 p-4 bg-destructive/10 rounded border border-destructive/20">
+            <div className="font-semibold">❌ Data is not an array</div>
+            <div className="text-sm space-y-2">
+              <div><strong>Received type:</strong> {typeof data}</div>
+              <div className="text-xs"><strong>Value:</strong> {JSON.stringify(data, null, 2).slice(0, 200)}</div>
+            </div>
+            <div className="text-sm space-y-2">
+              <div className="font-semibold">🔍 Common causes:</div>
+              <ol className="list-decimal list-inside space-y-1 text-xs">
+                <li>Handler uses old format instead of <code className="bg-muted px-1">$this-&gt;respond()</code></li>
+                <li><code className="bg-muted px-1">navigation_config.data_prop</code> doesn't match response key</li>
+                <li>Handler returns unwrapped data</li>
+              </ol>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              💡 See: <code>docs/NAVIGATION_SYSTEM_COMPLETE_GUIDE.md</code>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && (onBack ? onBack() : onClose())}>
       <DialogContent className="max-w-6xl w-[95vw] sm:w-[85vw] h-[85vh] min-h-[600px] rounded-sm flex flex-col">
@@ -332,7 +392,7 @@ export function DataManagementModal<T extends DataItem>({
           <DialogTitle className="text-foreground flex items-center gap-2">
             <span>{title}</span>
             <Badge variant="secondary" className="text-xs">
-              {filteredData.length} of {data.length}
+              {filteredData.length} of {Array.isArray(data) ? data.length : 0}
             </Badge>
           </DialogTitle>
           <DialogDescription className="sr-only">
