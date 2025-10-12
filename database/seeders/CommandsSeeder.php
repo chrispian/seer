@@ -152,7 +152,7 @@ class CommandsSeeder extends Seeder
                 'navigation_config' => [
                     'data_prop' => 'agents',
                     'item_key' => 'slug',
-                    'detail_command' => '/agent-detail',
+                    'detail_command' => null,
                 ],
                 'is_active' => true,
             ],

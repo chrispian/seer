@@ -1,0 +1,123 @@
+# Agent Base Template
+# This is the foundational structure for all agent configurations
+# Copy and customize for your specific use case
+
+pack_version: 3.0
+agent_version: 1.0
+
+# Unique identifiers (REQUIRED)
+agent_hash: "<generate: echo -n 'agent-name-YYYYMMDD' | sha256sum>"
+
+# Tracing infrastructure (REQUIRED for task chains)
+agent_steps:
+  last: null  # ID of previous task (null if first)
+  next: "<task-id>"  # ID of next task (null if last)
+
+# System configuration (REQUIRED)
+engine:
+  name: "<Your Engine Name>"
+  version: "1.0"
+  compatibility: ">=1.0 <2.0"
+
+# Agent capabilities (REQUIRED)
+capabilities:
+  allowed_actions:
+    - "<action.category>"
+    # Examples: scaffold.*, test.*, docs.*, refactor.*
+  
+  allowed_tools:
+    - "fs"
+    - "git"
+    - "composer"
+    - "php-artisan"
+    # Add: node-pnpm, docker, etc. as needed
+  
+  policies:
+    must_use_command_router: false  # Set true when command routing required
+    dry_run_supported: true
+    commit_changes: false  # Set true only when explicitly approved
+
+# Safety constraints (REQUIRED)
+safety_rails:
+  fs_scope:
+    - "<allowed/path/1>"
+    - "<allowed/path/2>"
+    # Restrict file system access to these paths only
+  
+  tool_whitelist:
+    - "<command1>"
+    - "<command2>"
+    # Whitelist specific commands the agent can run
+  
+  timeouts:
+    action_seconds: 90  # Max time for single action
+    plan_seconds: 60    # Max time for planning
+
+# Telemetry configuration (REQUIRED)
+telemetry:
+  correlate_ids: true  # Enable correlation ID tracking
+  
+  emit_events:
+    - "task.started"
+    - "task.deliverable.completed"
+    - "task.completed"
+    # Add domain-specific events
+  
+  sinks:
+    - "db"
+    # Options: db, sse, file, console
+
+# Context and documentation (REQUIRED)
+context:
+  reference_docs:
+    - "<path/to/spec.md>"
+    - "<path/to/adr.md>"
+    # List all relevant documentation
+  
+  constraints:
+    - "Follow PSR-12 coding standards"
+    - "Use strict types"
+    - "Comprehensive PHPDoc"
+    # Add language/framework-specific constraints
+
+# Prompts for guidance (OPTIONAL but recommended)
+prompts:
+  system:
+    - id: "<prompt.id>"
+      content: |
+        <Your system prompt here>
+        
+        Key principles:
+        - Principle 1
+        - Principle 2
+  
+  snippets:
+    - id: "<snippet.id>"
+      content: "<Reusable snippet text>"
+
+# Lifecycle hooks (OPTIONAL but recommended)
+hooks:
+  on_start:
+    - "context.load.reference_docs"
+    - "telemetry.emit.task.started"
+  
+  on_deliverable_complete:
+    - "telemetry.emit.task.deliverable.completed"
+    - "context.update.progress"
+  
+  on_complete:
+    - "telemetry.emit.task.completed"
+    - "agent_steps.update.last = <current-task-id>"
+    - "agent_steps.update.next = <next-task-id>"
+    - "context.sync"
+
+# MCP tool configuration (REQUIRED)
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "git"
+    capability: "read"
+  - id: "composer"
+    capability: "install"
+  - id: "laravel"
+    capability: "artisan"
