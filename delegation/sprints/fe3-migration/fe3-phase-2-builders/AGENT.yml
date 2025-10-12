@@ -1,0 +1,149 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-2-builders"
+task_hash: "e9212323482846e43d5a5ad1999e89f932356ebd4c6a4308137e9359d9edb055"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "2"
+  
+agent_steps:
+  last: "fe3-phase-1-registry"
+  next: "fe3-phase-2-manifests"
+
+engine:
+  name: Fragments Engine
+  target_version: "3.0"
+  compatibility: ">=3.0 <4.0"
+  
+task:
+  title: "Phase 2: Fluent Builder API"
+  status: "pending"
+  priority: "P0"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Implement fluent builder pattern for module definition"
+    - "Create builders for Module, Type, Field, Command, Action, Filter, Container"
+    - "Enable declarative module authoring"
+    - "Write comprehensive Pest tests"
+  
+  deliverables:
+    - "Core/Builders/Module.php"
+    - "Core/Builders/Type.php"
+    - "Core/Builders/Field.php"
+    - "Core/Builders/Command.php"
+    - "Core/Builders/Action.php"
+    - "Core/Builders/Filter.php"
+    - "Core/Builders/Container.php"
+    - "30+ Pest tests for all builders"
+    - "Builder usage examples in docs"
+
+  acceptance_criteria:
+    - "All 7 builder classes implemented with fluent API"
+    - "Builders can generate valid module definitions"
+    - "Method chaining works correctly"
+    - "All tests pass"
+    - "PSR-12 compliant code"
+    - "Documentation with usage examples"
+
+capabilities:
+  allowed_actions:
+    - "scaffold.builder"
+    - "test.write"
+    - "docs.write"
+  
+  allowed_tools:
+    - "fs"
+    - "git"
+    - "composer"
+    - "php-artisan"
+  
+  policies:
+    must_use_command_router: false
+    dry_run_supported: true
+    commit_changes: false
+
+safety_rails:
+  fs_scope: 
+    - "app/Core/Builders/"
+    - "tests/Unit/Core/Builders/"
+    - "docs/fragments-engine-v3/modules/"
+  tool_whitelist:
+    - "composer"
+    - "php artisan test"
+  timeouts:
+    action_seconds: 120
+    plan_seconds: 60
+
+telemetry:
+  correlate_ids: true
+  emit_events:
+    - "task.started"
+    - "task.builder.completed"
+    - "task.tests.passed"
+    - "task.completed"
+  sinks:
+    - "db"
+
+context:
+  reference_docs:
+    - "delegation/Fragments Engine 3.0/ASSESSMENT_AND_PLAN.md"
+    - "delegation/Fragments Engine 3.0/fragments_engine_v_3_spec_prd_adrs_and_quickstart.md"
+    - "docs/MODULE_ARCHITECTURE.md"
+  
+  constraints:
+    - "Follow Filament-style fluent API patterns"
+    - "Use strict types"
+    - "Return $this for method chaining"
+    - "Immutable once built"
+
+prompts:
+  system:
+    - id: "fe3.phase2.builders"
+      content: |
+        Implement fluent builder classes for declarative module authoring.
+        
+        Pattern:
+        ```php
+        Module::make('id')
+          ->title('Name')
+          ->types([...])
+          ->register();
+        ```
+        
+        Each builder should:
+        - Support method chaining (return $this)
+        - Validate inputs as they're set
+        - Generate immutable DTOs when built
+        - Have clear, minimal API
+        
+        Reference Filament for inspiration.
+
+hooks:
+  on_start:
+    - "context.load.reference_docs"
+    - "telemetry.emit.task.started"
+  
+  on_deliverable_complete:
+    - "telemetry.emit.task.builder.completed"
+    - "context.update.progress"
+  
+  on_tests_pass:
+    - "telemetry.emit.task.tests.passed"
+  
+  on_complete:
+    - "telemetry.emit.task.completed"
+    - "agent_steps.update.last = fe3-phase-2-builders"
+    - "agent_steps.update.next = fe3-phase-2-manifests"
+    - "context.sync"
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "git"
+    capability: "read"
+  - id: "composer"
+    capability: "install"
+  - id: "laravel"
+    capability: "artisan"

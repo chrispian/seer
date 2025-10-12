@@ -1,0 +1,51 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-9-rules"
+task_hash: "64b2648ff2edf72811307a050c97c90d2c7e7c761484c5851a95ab3642c650ba"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "9"
+  
+agent_steps:
+  last: "fe3-phase-8-prompts"
+  next: "fe3-phase-10-cli"
+
+task:
+  title: "Phase 9: Composable Rules Engine"
+  status: "pending"
+  priority: "P2"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Implement RuleEngine and RuleEvaluator"
+    - "Support rule composition (AND, OR, NOT)"
+    - "Add 'explain' traces for debugging"
+    - "Create RuleBuilder UI"
+  
+  deliverables:
+    - "Core/Services/RuleEngine.php"
+    - "Core/Services/RuleEvaluator.php"
+    - "Core/Contracts/RuleInterface.php"
+    - "rules table migration"
+    - "resources/js/fe3/RuleBuilder.tsx"
+    - "25+ tests"
+
+  acceptance_criteria:
+    - "Rules evaluate correctly"
+    - "Composition works (AND/OR/NOT)"
+    - "Explain traces show rule logic"
+    - "Rules hydrate from config"
+    - "Tests pass"
+
+capabilities:
+  allowed_tools: ["fs", "git", "composer", "node-pnpm", "php-artisan"]
+
+telemetry:
+  correlate_ids: true
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "composer"
+    capability: "install"

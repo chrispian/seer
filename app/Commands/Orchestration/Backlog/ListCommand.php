@@ -8,14 +8,11 @@ class ListCommand extends BaseCommand
 {
     public function handle(): array
     {
-        // Get backlog tasks (status = 'backlog')
         $tasks = $this->getBacklogTasks();
 
-        return [
-            'type' => 'backlog',
-            'component' => 'BacklogListModal',
-            'data' => $tasks,
-        ];
+        return $this->respond([
+            'tasks' => $tasks,
+        ]);
     }
 
     private function getBacklogTasks(): array
@@ -24,9 +21,9 @@ class ListCommand extends BaseCommand
             $tasks = \App\Models\WorkItem::query()
                 ->with('assignedAgent')
                 ->where('status', 'backlog')
-                ->orderBy('priority', 'desc')
-                ->orderBy('created_at', 'desc')
-                ->limit(50)
+                ->orderByRaw("CASE priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END")
+                ->orderByDesc('created_at')
+                ->limit(200)
                 ->get();
 
             return $tasks->map(function ($task) {

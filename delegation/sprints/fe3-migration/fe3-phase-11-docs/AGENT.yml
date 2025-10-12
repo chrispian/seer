@@ -1,0 +1,52 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-11-docs"
+task_hash: "129722cecb630e6a8b27062a7d29aee793df0f4183ef72cee0548ad86a0ac91f"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "11"
+  
+agent_steps:
+  last: "fe3-phase-10-cli"
+  next: "fe3-phase-12-second-module"
+
+task:
+  title: "Phase 11: Best-in-Class Documentation"
+  status: "pending"
+  priority: "P2"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Write comprehensive FE 3.0 documentation"
+    - "Create quickstart guide (10-min to first module)"
+    - "Document all APIs and contracts"
+  
+  deliverables:
+    - "docs/fragments-engine-v3/intro.md"
+    - "docs/fragments-engine-v3/quickstart.md"
+    - "docs/fragments-engine-v3/modules/"
+    - "docs/fragments-engine-v3/ui-dsl/"
+    - "docs/fragments-engine-v3/agents/"
+    - "docs/fragments-engine-v3/prompts/"
+    - "docs/fragments-engine-v3/rules/"
+    - "docs/fragments-engine-v3/flows/"
+    - "docs/fragments-engine-v3/observability/"
+    - "docs/fragments-engine-v3/scaffolding/"
+    - "ADR index"
+
+  acceptance_criteria:
+    - "Quickstart works (< 10 min)"
+    - "All public APIs documented"
+    - "Examples for every feature"
+    - "Clear mental model"
+
+capabilities:
+  allowed_tools: ["fs", "git"]
+
+telemetry:
+  correlate_ids: true
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"

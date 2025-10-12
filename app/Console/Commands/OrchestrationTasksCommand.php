@@ -8,6 +8,17 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
+/**
+ * CLI-ONLY Artisan command for listing tasks.
+ * 
+ * IMPORTANT: This is a console command for CLI use only.
+ * It is NOT part of the unified command system used by the web UI.
+ * 
+ * Web UI and MCP use: /tasks → App\Commands\Orchestration\Task\ListCommand
+ * CLI console use:    orchestration:tasks → This class
+ * 
+ * Do NOT add this to the commands table or CommandsSeeder.
+ */
 class OrchestrationTasksCommand extends Command
 {
     protected $signature = 'orchestration:tasks

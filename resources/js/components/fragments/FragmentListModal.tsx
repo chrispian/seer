@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState, useMemo } from 'react'
 import { DataManagementModal, ColumnDefinition, FilterDefinition } from '@/components/ui/DataManagementModal'
 import { Badge } from '@/components/ui/badge'

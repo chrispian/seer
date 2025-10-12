@@ -1,3 +1,4 @@
+import React from 'react'
 import { DataManagementModal, ColumnDefinition } from '@/components/ui/DataManagementModal'
 import { Badge } from '@/components/ui/badge'
 import { Hash, Lock, Eye, Users, ExternalLink } from 'lucide-react'

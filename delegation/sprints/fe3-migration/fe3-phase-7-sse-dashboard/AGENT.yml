@@ -1,0 +1,43 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-7-sse-dashboard"
+task_hash: "1fb4e3e84bfbce07c219e701318f490932f56b13fdcfb52e50650d3c362e5744"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "7"
+  
+agent_steps:
+  last: "fe3-phase-7-agents"
+  next: "fe3-phase-8-prompts"
+
+task:
+  title: "Phase 7: SSE Event Stream & Dashboard"
+  status: "pending"
+  priority: "P1"
+  estimated_duration: "1 week"
+  
+  objectives:
+    - "Create SSE endpoint for live agent events"
+    - "Build AgentDashboard UI component"
+    - "Display live event stream"
+  
+  deliverables:
+    - "routes/api.php - /api/v1/events endpoint"
+    - "resources/js/fe3/AgentDashboard.tsx"
+    - "Event stream consumer"
+
+  acceptance_criteria:
+    - "✅ Live events visible in dashboard"
+    - "SSE connection stable"
+    - "Events display in real-time"
+
+capabilities:
+  allowed_tools: ["fs", "git", "composer", "node-pnpm", "php-artisan"]
+
+telemetry:
+  correlate_ids: true
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"

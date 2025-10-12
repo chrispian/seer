@@ -1,0 +1,143 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-1-registry"
+task_hash: "300c5db40bb3c79c0813a137f5822b5621ac9ed028b1c88fa54f7902541e06b7"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "1"
+  
+agent_steps:
+  last: "fe3-phase-1-contracts"
+  next: "fe3-phase-2-builders"
+
+engine:
+  name: Fragments Engine
+  target_version: "3.0"
+  compatibility: ">=3.0 <4.0"
+  
+task:
+  title: "Phase 1: Module Registry & Loader"
+  status: "pending"
+  priority: "P0"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Implement ModuleRegistry for managing module lifecycle"
+    - "Implement ModuleLoader for discovering and loading modules"
+    - "Create service provider integration"
+    - "Write comprehensive Pest tests"
+  
+  deliverables:
+    - "Core/Services/ModuleRegistry.php"
+    - "Core/Services/ModuleLoader.php"
+    - "Core/Services/ModuleValidator.php"
+    - "FragmentsEngineServiceProvider updates"
+    - "20+ Pest tests for registry and loader"
+    - "Documentation for module lifecycle"
+
+  acceptance_criteria:
+    - "ModuleRegistry can register, enable, disable, and retrieve modules"
+    - "ModuleLoader auto-discovers modules from configured paths"
+    - "Module validation ensures engine compatibility"
+    - "Service provider boots all registered modules"
+    - "All tests pass (composer test:unit)"
+    - "PSR-12 compliant code"
+
+capabilities:
+  allowed_actions:
+    - "scaffold.service"
+    - "scaffold.provider"
+    - "test.write"
+  
+  allowed_tools:
+    - "fs"
+    - "git"
+    - "composer"
+    - "php-artisan"
+  
+  policies:
+    must_use_command_router: false
+    dry_run_supported: true
+    commit_changes: false
+
+safety_rails:
+  fs_scope: 
+    - "app/Core/Services/"
+    - "app/Providers/"
+    - "tests/Unit/Core/"
+  tool_whitelist:
+    - "composer"
+    - "php artisan test"
+  timeouts:
+    action_seconds: 120
+    plan_seconds: 60
+
+telemetry:
+  correlate_ids: true
+  emit_events:
+    - "task.started"
+    - "task.service.completed"
+    - "task.tests.passed"
+    - "task.completed"
+  sinks:
+    - "db"
+
+context:
+  reference_docs:
+    - "delegation/Fragments Engine 3.0/ASSESSMENT_AND_PLAN.md"
+    - "delegation/Fragments Engine 3.0/fragments_engine_v_3_spec_prd_adrs_and_quickstart.md"
+  
+  constraints:
+    - "Follow PSR-12 coding standards"
+    - "Use strict types"
+    - "Comprehensive PHPDoc"
+    - "Module registry must be thread-safe"
+
+prompts:
+  system:
+    - id: "fe3.phase1.registry"
+      content: |
+        Implement the module registry and loader for FE 3.0.
+        
+        ModuleRegistry responsibilities:
+        - Store registered modules in memory/cache
+        - Enable/disable modules
+        - Validate module compatibility
+        - Provide module lookup by ID/slug
+        
+        ModuleLoader responsibilities:
+        - Scan configured paths for module.json manifests
+        - Validate module definitions
+        - Register discovered modules with registry
+        - Handle circular dependencies
+        
+        Use Laravel's cache for performance.
+
+hooks:
+  on_start:
+    - "context.load.reference_docs"
+    - "telemetry.emit.task.started"
+  
+  on_deliverable_complete:
+    - "telemetry.emit.task.service.completed"
+    - "context.update.progress"
+  
+  on_tests_pass:
+    - "telemetry.emit.task.tests.passed"
+  
+  on_complete:
+    - "telemetry.emit.task.completed"
+    - "agent_steps.update.last = fe3-phase-1-registry"
+    - "agent_steps.update.next = fe3-phase-2-builders"
+    - "context.sync"
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "git"
+    capability: "read"
+  - id: "composer"
+    capability: "install"
+  - id: "laravel"
+    capability: "artisan"

@@ -1,0 +1,145 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-3-project-manager"
+task_hash: "a6de3147bb1d2a0ef71fa90cb4232cc12a8b694a18076e75c5d80b4801440306"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "3"
+  milestone: "M3-SPEC-01"  # From seed_tasks
+  
+agent_steps:
+  last: "fe3-phase-2-manifests"
+  next: "fe3-phase-4-ui-compiler"
+
+engine:
+  name: Fragments Engine
+  target_version: "3.0"
+  compatibility: ">=3.0 <4.0"
+  
+task:
+  title: "Phase 3: Convert Project Manager to FE 3.0 Module (Reference)"
+  status: "pending"
+  priority: "P0"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Convert Sprint/Task system to FE 3.0 module"
+    - "Create module.project-manager manifest"
+    - "Implement module definition using builders"
+    - "Implement List/Detail/Task planes with navigation"
+    - "Route all UI actions through Command Router"
+    - "Emit telemetry events with correlation IDs"
+  
+  deliverables:
+    - "modules/project-manager/module.json"
+    - "modules/project-manager/ProjectManagerModule.php"
+    - "Sprint and Task type definitions"
+    - "Command registrations"
+    - "Updated UI components with plane stack"
+    - "Correlation ID infrastructure"
+    - "Documentation as reference example"
+
+  acceptance_criteria:
+    - "✅ List/Detail/Task planes with Esc/Back/Close behaviors"
+    - "✅ All UI actions route through Command Router"
+    - "✅ Telemetry events emitted with correlation IDs"
+    - "Feature parity with current Sprint/Task system"
+    - "All tests pass"
+    - "Performance: No regressions"
+
+capabilities:
+  allowed_actions:
+    - "scaffold.module"
+    - "refactor.component"
+    - "test.write"
+  
+  allowed_tools:
+    - "fs"
+    - "git"
+    - "composer"
+    - "php-artisan"
+    - "node-pnpm"
+  
+  policies:
+    must_use_command_router: true  # Enforced starting Phase 3
+    dry_run_supported: true
+    commit_changes: false
+
+safety_rails:
+  fs_scope: 
+    - "modules/project-manager/"
+    - "app/Commands/Orchestration/"
+    - "resources/js/islands/"
+    - "tests/Feature/Modules/"
+  tool_whitelist:
+    - "composer"
+    - "npm"
+    - "php artisan test"
+  timeouts:
+    action_seconds: 120
+    plan_seconds: 90
+
+telemetry:
+  correlate_ids: true  # CRITICAL: Enable for this phase
+  emit_events:
+    - "task.started"
+    - "sprint.viewed"
+    - "task.opened"
+    - "action.executed"
+    - "task.completed"
+  sinks:
+    - "db"
+
+context:
+  reference_docs:
+    - "delegation/Fragments Engine 3.0/ASSESSMENT_AND_PLAN.md"
+    - "delegation/Fragments Engine 3.0/fragments_engine_v_3_spec_prd_adrs_and_quickstart.md"
+    - "docs/MODULE_ARCHITECTURE.md"
+    - "app/Models/WorkItem.php"  # Current Sprint/Task model
+  
+  constraints:
+    - "Maintain backward compatibility during migration"
+    - "Keep existing Sprint/Task data intact"
+    - "Use feature flag for gradual rollout"
+    - "Comprehensive E2E tests"
+
+prompts:
+  system:
+    - id: "fe3.phase3.project-manager"
+      content: |
+        Convert the existing Sprint/Task system to a full FE 3.0 module.
+        
+        This is the REFERENCE MODULE - it validates all abstractions built in Phase 1-2.
+        
+        Key requirements:
+        1. module.json manifest with all metadata
+        2. Module definition using fluent builders
+        3. Sprint and Task as module types
+        4. Commands route through Command Router
+        5. Correlation IDs on all telemetry
+        6. Plane stack navigation (dashboard → detail → task)
+        
+        This module will be the template for all future modules.
+
+hooks:
+  on_start:
+    - "context.load.reference_docs"
+    - "telemetry.emit.task.started"
+  
+  on_complete:
+    - "telemetry.emit.task.completed"
+    - "agent_steps.update.last = fe3-phase-3-project-manager"
+    - "agent_steps.update.next = fe3-phase-4-ui-compiler"
+    - "context.sync"
+    - "docs.generate.reference_module_guide"
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "git"
+    capability: "read"
+  - id: "composer"
+    capability: "install"
+  - id: "laravel"
+    capability: "artisan"

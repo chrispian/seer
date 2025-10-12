@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -17,12 +18,21 @@ import {
   Users,
   ArrowLeft,
   Clock,
-  RefreshCw
+  RefreshCw,
+  Calendar,
+  UserPlus
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { TaskActivityTimeline } from './TaskActivityTimeline'
-import { TaskContentEditor } from './TaskContentEditor'
+import { InlineEditText } from '@/components/ui/InlineEditText'
+import { InlineEditSelect } from '@/components/ui/InlineEditSelect'
+import { TagEditor } from '@/components/ui/TagEditor'
+import { MarkdownEditor } from '@/components/ui/MarkdownEditor'
+import { CopyToClipboard } from '@/components/ui/CopyToClipboard'
+import { AssignSprintModal } from './AssignSprintModal'
+import { AssignAgentModal } from './AssignAgentModal'
+import { Edit } from 'lucide-react'
 
 interface Task {
   id: string
@@ -35,6 +45,8 @@ interface Task {
   agent_recommendation?: string
   estimate_text?: string
   sprint_code?: string
+  assignee_id?: string | null
+  assignee_type?: string | null
   tags?: string[]
   created_at: string
   updated_at: string
@@ -97,6 +109,7 @@ interface TaskDetailModalProps {
   onAddNote?: (note: string) => Promise<void>
   loading?: boolean
   error?: string | null
+  onRefresh?: () => void
   onBack?: () => void
   editMode?: boolean
 }
@@ -117,9 +130,53 @@ export function TaskDetailModal({
   activitiesError = null,
   onRefreshActivities,
   onAddNote,
+  onRefresh,
   onBack,
   editMode = false
 }: TaskDetailModalProps) {
+  const [availableSprints, setAvailableSprints] = useState<Array<{ value: string; label: string }>>([])
+  const [availableAgents, setAvailableAgents] = useState<Array<{ value: string; label: string }>>([])
+  const [editingContent, setEditingContent] = useState<string | null>(null)
+  const [showAssignSprintModal, setShowAssignSprintModal] = useState(false)
+  const [showAssignAgentModal, setShowAssignAgentModal] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const loadOptions = async () => {
+      try {
+        const [sprintsRes, agentsRes] = await Promise.all([
+          fetch('/api/orchestration/tasks/sprints/available'),
+          fetch('/api/agents'),
+        ])
+
+        if (sprintsRes.ok) {
+          const sprintsData = await sprintsRes.json()
+          setAvailableSprints([
+            { value: '', label: 'No sprint' },
+            ...(sprintsData.sprints || []),
+          ])
+        }
+
+        if (agentsRes.ok) {
+          const agentsData = await agentsRes.json()
+          const agents = (agentsData.data || agentsData.agents || []).map((agent: any) => ({
+            value: agent.id,
+            label: agent.name || agent.designation,
+          }))
+          setAvailableAgents([
+            { value: '', label: 'Unassigned' },
+            ...agents,
+          ])
+        }
+      } catch (error) {
+        console.error('Failed to load options:', error)
+      }
+    }
+
+    loadOptions()
+  }, [isOpen])
+
   if (!task) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -186,6 +243,60 @@ export function TaskDetailModal({
     }
   }
 
+  const handleSaveField = async (field: string, value: string) => {
+    const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
+    
+    const response = await fetch(`/api/orchestration/tasks/${task.id}/field`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrf,
+      },
+      body: JSON.stringify({ field, value }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to save field')
+    }
+
+    onRefresh?.()
+  }
+
+  const handleSaveTags = async (tags: string[]) => {
+    const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
+    
+    const response = await fetch(`/api/orchestration/tasks/${task.id}/tags`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrf,
+      },
+      body: JSON.stringify({ tags }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to save tags')
+    }
+
+    onRefresh?.()
+  }
+
+  const handleSaveContent = async (contentKey: string, content: string) => {
+    const fieldMap: Record<string, string> = {
+      'agent': 'agent_content',
+      'plan': 'plan_content',
+      'context': 'context_content',
+      'todo': 'todo_content',
+      'summary': 'summary_content',
+    }
+
+    const field = fieldMap[contentKey]
+    if (!field) return
+
+    await handleSaveField(field, content)
+    setEditingContent(null)
+  }
+
   const safeContent = content || {}
   const safeActivities = activities || []
   
@@ -199,8 +310,17 @@ export function TaskDetailModal({
   ]
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] rounded-sm">
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      console.log('[TaskDetailModal] Dialog onOpenChange, open:', open, 'onBack exists?', !!onBack)
+      if (!open) {
+        if (onBack) {
+          onBack()
+        } else {
+          onClose()
+        }
+      }
+    }}>
+      <DialogContent className="max-w-6xl w-[95vw] sm:w-[85vw] h-[85vh] min-h-[600px] rounded-sm flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             {onBack && (
@@ -219,58 +339,147 @@ export function TaskDetailModal({
           </DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(90vh-120px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
           {/* Left Panel - Task Info */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className="lg:col-span-1 space-y-4 overflow-y-auto">
             <div className="bg-muted/20 rounded-lg p-4">
               <h3 className="font-medium mb-3">Task Details</h3>
               
               <div className="space-y-3">
                 <div>
                   <span className="text-sm font-medium">Name:</span>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {task.task_name || task.metadata?.title || task.metadata?.task_name || 'Untitled Task'}
-                  </p>
+                  <InlineEditText 
+                    value={task.task_name || task.metadata?.title || task.metadata?.task_name || ''}
+                    onSave={(value) => handleSaveField('task_name', value)}
+                    placeholder="Untitled Task"
+                    className="text-sm text-muted-foreground mt-1"
+                  />
                 </div>
 
-                {task.description && (
-                  <div>
-                    <span className="text-sm font-medium">Description:</span>
-                    <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
-                  </div>
-                )}
+                <div>
+                  <span className="text-sm font-medium">Description:</span>
+                  <InlineEditText 
+                    value={task.description || ''}
+                    onSave={(value) => handleSaveField('description', value)}
+                    placeholder="Add description..."
+                    multiline
+                    className="text-sm text-muted-foreground mt-1"
+                  />
+                </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className={`text-xs ${getStatusColor(task.status)}`}>
-                    {task.status}
-                  </Badge>
+                  <InlineEditSelect
+                    value={task.status}
+                    options={[
+                      { value: 'backlog', label: 'Backlog' },
+                      { value: 'todo', label: 'Todo' },
+                      { value: 'in_progress', label: 'In Progress' },
+                      { value: 'review', label: 'Review' },
+                      { value: 'done', label: 'Done' },
+                      { value: 'blocked', label: 'Blocked' },
+                    ]}
+                    onSave={(value) => handleSaveField('status', value)}
+                    className={getStatusColor(task.status)}
+                  />
+                  
                   <Badge variant="outline" className={`text-xs ${getDelegationStatusColor(task.delegation_status)}`}>
                     {task.delegation_status}
                   </Badge>
-                  {task.priority && (
-                    <Badge variant="outline" className={`text-xs ${getPriorityColor(task.priority)}`}>
-                      {task.priority}
-                    </Badge>
+                  
+                  <InlineEditSelect
+                    value={task.priority || 'medium'}
+                    options={[
+                      { value: 'low', label: 'Low' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'high', label: 'High' },
+                    ]}
+                    onSave={(value) => handleSaveField('priority', value)}
+                    className={getPriorityColor(task.priority)}
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2 border-t border-border/50">
+                  <Button
+                    size="sm"
+                    variant={task.status === 'backlog' ? 'secondary' : 'outline'}
+                    onClick={() => handleSaveField('status', 'backlog')}
+                    disabled={task.status === 'backlog'}
+                    className="flex-1"
+                  >
+                    {task.status === 'backlog' ? 'In Backlog' : 'Send to Backlog'}
+                  </Button>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Sprint:</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowAssignSprintModal(true)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      <Calendar className="h-3 w-3 mr-1" />
+                      Assign
+                    </Button>
+                  </div>
+                  {availableSprints.length > 0 ? (
+                    <InlineEditSelect
+                      value={task.sprint_code || ''}
+                      options={availableSprints}
+                      onSave={(value) => handleSaveField('sprint_code', value)}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <InlineEditText 
+                      value={task.sprint_code || ''}
+                      onSave={(value) => handleSaveField('sprint_code', value)}
+                      placeholder="No sprint assigned"
+                      className="text-sm text-muted-foreground mt-1"
+                    />
                   )}
                 </div>
 
-                {task.sprint_code && (
-                  <div>
-                    <span className="text-sm font-medium">Sprint:</span>
-                    <p className="text-sm text-muted-foreground mt-1">{task.sprint_code}</p>
-                  </div>
-                )}
+                <div>
+                  <span className="text-sm font-medium">Estimate:</span>
+                  <InlineEditText 
+                    value={task.estimate_text || ''}
+                    onSave={(value) => handleSaveField('estimate_text', value)}
+                    placeholder="Add estimate..."
+                    className="text-sm text-muted-foreground mt-1"
+                  />
+                </div>
 
-                {task.estimate_text && (
-                  <div>
-                    <span className="text-sm font-medium">Estimate:</span>
-                    <p className="text-sm text-muted-foreground mt-1">{task.estimate_text}</p>
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Assigned Agent:</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowAssignAgentModal(true)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      <UserPlus className="h-3 w-3 mr-1" />
+                      Assign
+                    </Button>
                   </div>
-                )}
+                  {availableAgents.length > 0 ? (
+                    <InlineEditSelect
+                      value={task.assignee_id || ''}
+                      options={availableAgents}
+                      onSave={(value) => handleSaveField('assignee_id', value)}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {task.assignee_id || 'Unassigned'}
+                    </p>
+                  )}
+                </div>
 
                 {task.agent_recommendation && (
                   <div>
-                    <span className="text-sm font-medium">Recommended Agent:</span>
+                    <span className="text-sm font-medium">Recommended:</span>
                     <p className="text-sm text-muted-foreground mt-1">{task.agent_recommendation}</p>
                   </div>
                 )}
@@ -324,22 +533,17 @@ export function TaskDetailModal({
             )}
 
             {/* Tags */}
-            {task.tags && task.tags.length > 0 && (
-              <div className="bg-muted/20 rounded-lg p-4">
-                <h3 className="font-medium mb-3">Tags</h3>
-                <div className="flex flex-wrap gap-1">
-                  {task.tags.map(tag => (
-                    <Badge key={tag} variant="outline" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="bg-muted/20 rounded-lg p-4">
+              <h3 className="font-medium mb-3">Tags</h3>
+              <TagEditor
+                tags={task.tags || []}
+                onSave={handleSaveTags}
+              />
+            </div>
           </div>
 
           {/* Right Panel - Content */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 overflow-hidden flex flex-col">
             <Tabs defaultValue={contentTabs[0]?.key} className="h-full flex flex-col">
                 <TabsList className="flex items-center justify-start border-b bg-muted/30 px-1 py-1 h-auto rounded-none w-full">
                   {contentTabs.map(tab => (
@@ -383,20 +587,52 @@ export function TaskDetailModal({
                           onAddNote={onAddNote}
                         />
                       </div>
+                    ) : editingContent === tab.key ? (
+                      <div className="h-full rounded-md border bg-muted/20 p-4">
+                        <MarkdownEditor
+                          content={tab.content || ''}
+                          onSave={(content) => handleSaveContent(tab.key, content)}
+                          onCancel={() => setEditingContent(null)}
+                          placeholder={`Add ${tab.label.toLowerCase()} content...`}
+                        />
+                      </div>
                     ) : tab.content ? (
-                      <ScrollArea className="h-full rounded-md border bg-muted/20 p-4">
-                        <div className="prose prose-sm max-w-none text-foreground">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {tab.content}
-                          </ReactMarkdown>
+                      <div className="h-full rounded-md border bg-muted/20">
+                        <div className="flex justify-between items-center p-2 border-b">
+                          <span className="text-xs font-medium text-muted-foreground">
+                            {tab.label} Content
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingContent(tab.key)}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
                         </div>
-                      </ScrollArea>
+                        <ScrollArea className="h-[calc(100%-40px)] p-4">
+                          <div className="prose prose-sm max-w-none text-foreground">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {tab.content}
+                            </ReactMarkdown>
+                          </div>
+                        </ScrollArea>
+                      </div>
                     ) : (
                       <div className="h-full rounded-md border bg-muted/20 p-4 flex items-center justify-center">
                         <div className="text-center text-muted-foreground">
                           <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
                           <p className="text-sm">No {tab.label.toLowerCase()} content yet</p>
-                          <p className="text-xs mt-1">Content can be added during task execution</p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingContent(tab.key)}
+                            className="mt-2"
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Add Content
+                          </Button>
                         </div>
                       </div>
                     )}
@@ -407,14 +643,37 @@ export function TaskDetailModal({
         </div>
 
         <div className="flex justify-between items-center pt-4 border-t">
-          <div className="text-sm text-muted-foreground">
-            Task ID: {task.id}
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
+            <span>Task ID: {task.id}</span>
+            <CopyToClipboard text={task.id} />
+            <span className="ml-4">Code: {task.task_code}</span>
+            <CopyToClipboard text={task.task_code} />
           </div>
           <Button onClick={onClose}>
             Close
           </Button>
         </div>
       </DialogContent>
+
+      <AssignSprintModal
+        isOpen={showAssignSprintModal}
+        onClose={() => setShowAssignSprintModal(false)}
+        taskCode={task.task_code}
+        currentSprintCode={task.sprint_code}
+        onAssign={async (sprintCode) => {
+          await handleSaveField('sprint_code', sprintCode)
+        }}
+      />
+
+      <AssignAgentModal
+        isOpen={showAssignAgentModal}
+        onClose={() => setShowAssignAgentModal(false)}
+        taskCode={task.task_code}
+        currentAgentId={task.assignee_id}
+        onAssign={async (agentId) => {
+          await handleSaveField('assignee_id', agentId)
+        }}
+      />
     </Dialog>
   )
 }

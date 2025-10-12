@@ -1,0 +1,29 @@
+{
+  "template": "task_deactivate",
+  "description": "Instructions returned when a task is deactivated",
+  "structure": {
+    "next_actions": [
+      "Select another task to work on",
+      "Or end session with /session-end",
+      "View session status with /session-status"
+    ],
+    "suggested_commands": [
+      "/task-activate T-XX",
+      "/session-status",
+      "/session-end"
+    ],
+    "completion_summary": {
+      "task": "Task code",
+      "total_time": "Total time spent (formatted)",
+      "variance": "Optional: Variance from estimate (formatted)"
+    }
+  },
+  "variables": {
+    "task": "WorkItem model instance",
+    "time_result": "Result from TimeTrackingService::stopTracking()",
+    "task_code": "Extracted from task metadata",
+    "total_time_formatted": "From time_result",
+    "variance": "Optional variance data from time_result"
+  },
+  "usage": "InstructionBuilder::forTaskDeactivate($task, $timeResult)"
+}

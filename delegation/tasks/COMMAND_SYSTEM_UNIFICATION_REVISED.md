@@ -2092,3 +2092,40 @@ Review all command categories and identify which commands would benefit from UI 
 ---
 
 **Status**: READY TO EXECUTE - Awaiting approval to begin Sprint 1
+
+---
+
+## CRITICAL UPDATE (October 11, 2025)
+
+### Console Commands vs Unified Commands Confusion - RESOLVED
+
+**Issue Found**: The seeder was adding BOTH console commands (`orchestration:sprints`) AND unified commands (`/sprints`) to the `commands` table, causing routing conflicts.
+
+**Root Cause**: Misunderstanding during Sprint 3 implementation - trying to give parity between CLI and user commands by registering both in the unified system.
+
+**Clarification**:
+- **Console Commands** (`app/Console/Commands/Orchestration*.php`) are for **CLI ONLY**
+  - Registered automatically by Laravel
+  - Output formatted text for terminal
+  - NOT part of web UI or MCP
+  - Should NEVER be added to `CommandsSeeder.php` or `commands` table
+  
+- **Unified Commands** (`app/Commands/Orchestration/*/`) are for **Web UI + MCP**
+  - Registered in `CommandsSeeder.php`
+  - Return structured data for UI/APIs
+  - Used by slash commands (`/sprints`) and MCP tools
+  - Handle requests from web, MCP, and can be wrapped by console commands
+
+**Fix Applied**:
+1. ✅ Removed `orchestration:sprints`, `orchestration:tasks`, `orchestration:agents` from `CommandsSeeder.php`
+2. ✅ Deleted those entries from `commands` table
+3. ✅ Added docblocks to console commands clarifying they are CLI-only
+4. ✅ Created `delegation/tasks/COMMAND_SYSTEM_CLI_VS_UNIFIED.md` with full explanation
+
+**New Documentation**: See `delegation/tasks/COMMAND_SYSTEM_CLI_VS_UNIFIED.md` for complete guide on CLI vs Unified commands.
+
+**Symptom Before Fix**: Running `/sprints` showed error `Command Failed: /orchestration:sprints` because the wrong command entry was being loaded.
+
+**Symptom After Fix**: `/sprints` correctly uses `App\Commands\Orchestration\Sprint\ListCommand` and shows `SprintListModal`.
+
+This issue is now resolved and documented to prevent recurrence.

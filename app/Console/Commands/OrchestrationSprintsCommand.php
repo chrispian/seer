@@ -6,6 +6,21 @@ use App\Commands\Orchestration\Sprint\ListCommand;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 
+/**
+ * CLI-ONLY Artisan command for listing sprints.
+ * 
+ * IMPORTANT: This is a console command for CLI use only.
+ * It is NOT part of the unified command system used by the web UI.
+ * 
+ * Web UI and MCP use: /sprints → App\Commands\Orchestration\Sprint\ListCommand
+ * CLI console use:    orchestration:sprints → This class (thin wrapper)
+ * 
+ * These are separate by design:
+ * - Console commands output formatted text for terminal
+ * - Unified commands return structured data for UI/MCP
+ * 
+ * Do NOT add this to the commands table or CommandsSeeder.
+ */
 class OrchestrationSprintsCommand extends Command
 {
     protected $signature = 'orchestration:sprints
@@ -15,7 +30,7 @@ class OrchestrationSprintsCommand extends Command
         {--tasks-limit=5 : Number of tasks to include when using --details}
         {--json : Output JSON instead of a table}';
 
-    protected $description = 'List orchestration sprints (thin wrapper around unified command)';
+    protected $description = 'List orchestration sprints - CLI ONLY (use /sprints for web UI)';
 
     public function handle(): int
     {

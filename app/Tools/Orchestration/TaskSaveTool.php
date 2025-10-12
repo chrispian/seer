@@ -20,7 +20,8 @@ class TaskSaveTool extends Tool implements SummarizesTool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'task_code' => $schema->string()->required()->description('Task code (e.g., T-ART-02-CAS)'),
+            'session_key' => $schema->string()->optional()->description('Optional session key (SESSION-XXX) to infer task from active context'),
+            'task_code' => $schema->string()->optional()->description('Task code (e.g., T-ART-02-CAS). Required if session_key not provided or no active task'),
             'task_name' => $schema->string()->description('Human-friendly task name'),
             'type' => $schema->string()->description('Task type (task, feature, bug, etc.)'),
             'status' => $schema->string()->description('Work item status (todo, in_progress, done, etc.)'),
@@ -41,7 +42,8 @@ class TaskSaveTool extends Tool implements SummarizesTool
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
-            'task_code' => ['required', 'string'],
+            'session_key' => ['nullable', 'string'],
+            'task_code' => ['nullable', 'string'],
             'task_name' => ['nullable', 'string'],
             'type' => ['nullable', 'string'],
             'status' => ['nullable', 'string'],
@@ -59,6 +61,28 @@ class TaskSaveTool extends Tool implements SummarizesTool
             'tags.*' => ['string'],
             'upsert' => ['nullable', 'boolean'],
         ]);
+
+        $taskCode = $validated['task_code'] ?? null;
+
+        if (!$taskCode && !empty($validated['session_key'])) {
+            $sessionManager = app(\App\Services\Orchestration\SessionManager::class);
+            $session = \App\Models\WorkSession::where('session_key', $validated['session_key'])->first();
+            
+            if ($session) {
+                $activeTask = $sessionManager->getActiveContext($session->id, 'task');
+                if ($activeTask) {
+                    $taskCode = $activeTask['data']['task_code'] ?? $activeTask['id'];
+                    $validated['task_code'] = $taskCode;
+                }
+            }
+        }
+
+        if (!$taskCode) {
+            return Response::json([
+                'success' => false,
+                'error' => 'task_code required when no active task in session',
+            ]);
+        }
 
         $command = new SaveCommand($validated);
         $command->setContext('mcp');

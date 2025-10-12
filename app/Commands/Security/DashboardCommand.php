@@ -12,14 +12,10 @@ class DashboardCommand extends BaseCommand
         $approvalRequests = $this->getApprovalRequests();
         $stats = $this->getSecurityStats();
 
-        return [
-            'type' => 'security-dashboard',
-            'component' => 'SecurityDashboardModal',
-            'data' => [
-                'approval_requests' => $approvalRequests,
-                'stats' => $stats,
-            ],
-        ];
+        return $this->respond([
+            'approval_requests' => $approvalRequests,
+            'stats' => $stats,
+        ]);
     }
 
     private function getApprovalRequests(): array

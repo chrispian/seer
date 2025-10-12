@@ -11,11 +11,9 @@ class ListCommand extends BaseCommand
         // Get agents from the orchestration system
         $agents = $this->getAgents();
 
-        return [
-            'type' => 'agent-profile',
-            'component' => 'AgentProfileListModal',
-            'data' => $agents,
-        ];
+        return $this->respond([
+            'agents' => $agents,
+        ]);
     }
 
     private function getAgents(): array

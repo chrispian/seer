@@ -20,7 +20,8 @@ class TaskStatusTool extends Tool implements SummarizesTool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'task' => $schema->string()->required()->description('Task UUID or delegation task code'),
+            'session_key' => $schema->string()->optional()->description('Optional session key (SESSION-XXX) to infer task from active context'),
+            'task' => $schema->string()->optional()->description('Task UUID or delegation task code. Required if session_key not provided or no active task'),
             'status' => $schema->string()->enum([
                 'unassigned', 'assigned', 'in_progress', 'blocked', 'completed', 'cancelled',
             ])->required(),
@@ -36,7 +37,8 @@ class TaskStatusTool extends Tool implements SummarizesTool
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
-            'task' => ['required', 'string'],
+            'session_key' => ['nullable', 'string'],
+            'task' => ['nullable', 'string'],
             'status' => ['required', 'string'],
             'assignment_status' => ['nullable', 'string'],
             'note' => ['nullable', 'string'],
@@ -44,8 +46,29 @@ class TaskStatusTool extends Tool implements SummarizesTool
             'include_history' => ['nullable', 'boolean'],
         ]);
 
+        $taskCode = $validated['task'] ?? null;
+
+        if (!$taskCode && !empty($validated['session_key'])) {
+            $sessionManager = app(\App\Services\Orchestration\SessionManager::class);
+            $session = \App\Models\WorkSession::where('session_key', $validated['session_key'])->first();
+            
+            if ($session) {
+                $activeTask = $sessionManager->getActiveContext($session->id, 'task');
+                if ($activeTask) {
+                    $taskCode = $activeTask['data']['task_code'] ?? $activeTask['id'];
+                }
+            }
+        }
+
+        if (!$taskCode) {
+            return Response::json([
+                'success' => false,
+                'error' => 'task required when no active task in session',
+            ]);
+        }
+
         $command = new UpdateStatusCommand([
-            'task_code' => $validated['task'],
+            'task_code' => $taskCode,
             'delegation_status' => $validated['status'],
             'note' => $validated['note'] ?? null,
         ]);

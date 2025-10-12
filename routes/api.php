@@ -146,6 +146,16 @@ Route::prefix('widgets')->group(function () {
     Route::get('/tool-calls', [WidgetApiController::class, 'toolCalls']);
 });
 
+// Session API routes
+Route::prefix('sessions')->group(function () {
+    Route::post('/', [\App\Http\Controllers\Api\SessionController::class, 'start']);
+    Route::get('/', [\App\Http\Controllers\Api\SessionController::class, 'list']);
+    Route::get('/{sessionKey}/status', [\App\Http\Controllers\Api\SessionController::class, 'status']);
+    Route::post('/{sessionKey}/end', [\App\Http\Controllers\Api\SessionController::class, 'end']);
+    Route::post('/{sessionKey}/pause', [\App\Http\Controllers\Api\SessionController::class, 'pause']);
+    Route::post('/{sessionKey}/resume', [\App\Http\Controllers\Api\SessionController::class, 'resume']);
+});
+
 // Inbox API routes
 Route::prefix('inbox')->group(function () {
     Route::get('/', [InboxController::class, 'index']);
@@ -197,6 +207,10 @@ Route::prefix('orchestration')->group(function () {
     Route::get('/tasks/{taskId}/artifacts', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'listTaskArtifacts']);
     Route::get('/artifacts/{artifactId}/download', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'downloadArtifact']);
 
+    Route::patch('/tasks/{id}/field', [\App\Http\Controllers\Orchestration\TaskController::class, 'updateField']);
+    Route::patch('/tasks/{id}/tags', [\App\Http\Controllers\Orchestration\TaskController::class, 'updateTags']);
+    Route::get('/tasks/sprints/available', [\App\Http\Controllers\Orchestration\TaskController::class, 'getAvailableSprints']);
+    
     Route::get('/tasks/{taskId}/activities', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'index']);
     Route::post('/tasks/{taskId}/activities', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'store']);
     Route::get('/tasks/{taskId}/activities/summary', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'summary']);

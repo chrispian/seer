@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState } from 'react'
 import { DataManagementModal, ColumnDefinition } from '@/components/ui/DataManagementModal'
 import { Badge } from '@/components/ui/badge'
@@ -44,8 +45,14 @@ interface SecurityDashboardModalProps {
 export function SecurityDashboardModal({
   isOpen,
   onClose,
-  approval_requests,
-  stats,
+  approval_requests = [],
+  stats = {
+    pending_count: 0,
+    approved_today: 0,
+    rejected_today: 0,
+    timed_out_count: 0,
+    high_risk_pending: 0
+  },
   loading = false,
   error = null,
   onRefresh

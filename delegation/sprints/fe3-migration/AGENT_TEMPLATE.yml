@@ -1,0 +1,112 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "[task-id]"
+task_hash: "[generate with: echo -n 'task-id-YYYYMMDD' | sha256sum]"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "[N]"
+  
+agent_steps:
+  last: "[previous-task-id]"  # Updated when previous task completes
+  next: "[next-task-id]"      # Updated when this task completes
+
+engine:
+  name: Fragments Engine
+  target_version: "3.0"
+  compatibility: ">=3.0 <4.0"
+  
+task:
+  title: "[Task Title]"
+  status: "pending"  # pending | in_progress | completed | blocked
+  priority: "P[0-3]"  # P0=Critical, P1=High, P2=Medium, P3=Low
+  estimated_duration: "[X weeks]"
+  
+  objectives:
+    - "[Objective 1]"
+    - "[Objective 2]"
+  
+  deliverables:
+    - "[Deliverable 1]"
+    - "[Deliverable 2]"
+
+  acceptance_criteria:
+    - "[Criterion 1]"
+    - "[Criterion 2]"
+
+capabilities:
+  allowed_actions:
+    - "[action.category]"
+  
+  allowed_tools:
+    - "fs"
+    - "git"
+    - "composer"
+    - "php-artisan"
+  
+  policies:
+    must_use_command_router: false  # true for Phase 3+
+    dry_run_supported: true
+    commit_changes: false  # true only when explicitly approved
+
+safety_rails:
+  fs_scope: 
+    - "[allowed/path/1]"
+    - "[allowed/path/2]"
+  tool_whitelist:
+    - "[command1]"
+    - "[command2]"
+  timeouts:
+    action_seconds: 90
+    plan_seconds: 60
+
+telemetry:
+  correlate_ids: true
+  emit_events:
+    - "task.started"
+    - "task.deliverable.completed"
+    - "task.completed"
+  sinks:
+    - "db"
+
+context:
+  reference_docs:
+    - "delegation/Fragments Engine 3.0/ASSESSMENT_AND_PLAN.md"
+    - "[other relevant docs]"
+  
+  constraints:
+    - "Follow PSR-12 coding standards"
+    - "Use 4-space indentation for PHP"
+    - "Use 2-space indentation for YAML/MD"
+    - "Follow Conventional Commit format"
+
+prompts:
+  system:
+    - id: "fe3.[phase].[component]"
+      content: |
+        [Specific instructions for this task]
+
+hooks:
+  on_start:
+    - "context.load.reference_docs"
+    - "telemetry.emit.task.started"
+  
+  on_deliverable_complete:
+    - "telemetry.emit.task.deliverable.completed"
+    - "context.update.progress"
+  
+  on_complete:
+    - "telemetry.emit.task.completed"
+    - "agent_steps.update.last = [this-task-id]"
+    - "agent_steps.update.next = [next-task-id]"
+    - "context.sync"
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "git"
+    capability: "read"
+  - id: "composer"
+    capability: "install"
+  - id: "laravel"
+    capability: "artisan"

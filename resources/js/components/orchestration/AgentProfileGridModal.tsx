@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -91,9 +92,9 @@ export function AgentProfileGridModal({
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle className="text-2xl">Agent Profiles</DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">
+              <DialogDescription className="text-sm text-muted-foreground mt-1">
                 Browse and select agent profile configurations
-              </p>
+              </DialogDescription>
             </div>
             {onRefresh && (
               <Button

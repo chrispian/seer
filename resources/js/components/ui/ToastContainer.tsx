@@ -1,3 +1,4 @@
+import React from 'react'
 import { Toast } from './toast'
 import type { Toast as ToastType } from '@/hooks/useToast'
 

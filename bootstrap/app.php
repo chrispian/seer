@@ -29,6 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\EnsureDefaultUser::class,
             \App\Http\Middleware\EnsureUserSetupComplete::class,
         ]);
+
+        // Apply middlewares to API routes
+        $middleware->api(append: [
+            \App\Http\Middleware\EnsureDefaultUser::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

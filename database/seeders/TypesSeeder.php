@@ -211,6 +211,8 @@ class TypesSeeder extends Seeder
             );
         }
 
-        $this->command->info('Seeded ' . count($types) . ' types');
+        \App\Services\CommandRegistry::clearCache();
+
+        $this->command->info('✅ Seeded ' . count($types) . ' types and cleared CommandRegistry cache');
     }
 }

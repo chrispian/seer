@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState, useCallback } from 'react'
 
 export interface TodoItem {
@@ -111,7 +112,7 @@ export function useTodoData(): UseTodoDataReturn {
 
     try {
       // Build todo list command with filters
-      let command = 'todo list'
+      let command = '/todos'
       
       if (filters.status && filters.status !== 'all') {
         command += ` status:${filters.status}`
@@ -131,7 +132,12 @@ export function useTodoData(): UseTodoDataReturn {
 
       const result = await executeCommand(command)
       
-      if (result.success && result.panelData?.fragments) {
+      // Handle new response format: result.data.items or legacy panelData.fragments
+      if (result.success && result.data?.items) {
+        // New format: todos already transformed by backend
+        setTodos(result.data.items)
+      } else if (result.success && result.panelData?.fragments) {
+        // Legacy format: fragments need transformation
         const todoItems = result.panelData.fragments.map(transformFragmentToTodo)
         setTodos(todoItems)
       } else if (result.success) {
@@ -168,15 +174,23 @@ export function useTodoData(): UseTodoDataReturn {
     ))
 
     try {
-      // Use ID-based commands to avoid position issues
-      const command = newStatus === 'completed' 
-        ? `todo complete:${todoId}`
-        : `todo reopen:${todoId}`
+      // Update fragment state via API
+      const response = await fetch(`/api/fragment/${todo.fragment_id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({
+          state: {
+            status: newStatus === 'completed' ? 'complete' : 'open',
+            completed_at: newStatus === 'completed' ? now : null,
+          }
+        }),
+      })
 
-      const result = await executeCommand(command)
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update todo status')
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
     } catch (err) {
       // Revert optimistic update on error

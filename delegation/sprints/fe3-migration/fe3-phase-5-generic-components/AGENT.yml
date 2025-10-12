@@ -1,0 +1,44 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-5-generic-components"
+task_hash: "7b826c159a1dc40e4473f945ca45ab070e42f91e091742dc8df34967824f89da"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "5"
+  
+agent_steps:
+  last: "fe3-phase-5-renderer"
+  next: "fe3-phase-6-router"
+
+task:
+  title: "Phase 5: Universal Generic Components"
+  status: "pending"
+  priority: "P0"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Create UniversalListModal"
+    - "Create UniversalDetailModal"
+    - "Create UniversalFormModal"
+    - "Make components data-driven from JSON"
+  
+  deliverables:
+    - "resources/js/fe3/UniversalListModal.tsx"
+    - "resources/js/fe3/UniversalDetailModal.tsx"
+    - "resources/js/fe3/UniversalFormModal.tsx"
+
+  acceptance_criteria:
+    - "Components render from JSON config"
+    - "All module types supported"
+    - "Tests pass"
+
+capabilities:
+  allowed_tools: ["fs", "git", "node-pnpm"]
+
+telemetry:
+  correlate_ids: true
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"

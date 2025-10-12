@@ -3,6 +3,7 @@ import { DataManagementModal, ColumnDefinition } from '@/components/ui/DataManag
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Calendar, CheckCircle, Clock, AlertCircle, BarChart3, Users, ArrowLeft } from 'lucide-react'
+import { CopyToClipboard } from '@/components/ui/CopyToClipboard'
 
 interface SprintDetail {
   id: string
@@ -54,6 +55,7 @@ interface SprintDetailModalProps {
   onRefresh?: () => void
   onTaskSelect?: (task: Task) => void
   onBack?: () => void
+  onEdit?: (sprint: SprintDetail) => void
 }
 
 export function SprintDetailModal({ 
@@ -66,7 +68,8 @@ export function SprintDetailModal({
   error = null,
   onRefresh,
   onTaskSelect,
-  onBack
+  onBack,
+  onEdit
 }: SprintDetailModalProps) {
 
   const getStatusColor = (status: string) => {
@@ -209,12 +212,18 @@ export function SprintDetailModal({
     }
   ]
 
+  // Pre-process tasks to normalize status values for filtering
+  const tasksWithNormalizedStatus = sortedTasks.map(task => ({
+    ...task,
+    status_filter: task.status?.toLowerCase() === 'completed' ? 'done' : task.status?.toLowerCase()
+  }))
+
   const filters = [
     {
-      key: 'status',
+      key: 'status_filter',
       label: 'Status',
       options: [
-        { value: 'all', label: 'All', count: sortedTasks.length },
+        { value: 'all', label: 'All', count: tasksWithNormalizedStatus.length },
         { value: 'in-progress', label: 'In Progress', count: stats.in_progress },
         { value: 'todo', label: 'Todo', count: stats.todo },
         { value: 'done', label: 'Done', count: stats.completed },
@@ -242,8 +251,9 @@ export function SprintDetailModal({
     <DataManagementModal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Sprint: ${sprint.code}`}
-      data={sortedTasks}
+      onBack={onBack}
+      title={`Sprint: ${sprint.code} (ID: ${sprint.id})`}
+      data={tasksWithNormalizedStatus}
       columns={columns}
       loading={loading}
       error={error}
@@ -261,21 +271,34 @@ export function SprintDetailModal({
       onRefresh={onRefresh}
       customHeader={
         <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            {onBack && (
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              {onBack && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onBack}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to List
+                </Button>
+              )}
+              <div className="text-sm text-muted-foreground">
+                {sprint.title || sprint.meta?.title || 'Sprint Details'}
+              </div>
+            </div>
+            {onEdit && (
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm" 
-                onClick={onBack}
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                onClick={() => onEdit(sprint)}
+                className="flex items-center gap-2"
               >
-                <ArrowLeft className="h-4 w-4" />
-                Back to List
+                <BarChart3 className="h-4 w-4" />
+                Edit Sprint
               </Button>
             )}
-            <div className="text-sm text-muted-foreground">
-              {sprint.title || sprint.meta?.title || 'Sprint Details'}
-            </div>
           </div>
           
           {/* Progress Section */}

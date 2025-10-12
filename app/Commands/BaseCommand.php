@@ -84,6 +84,8 @@ abstract class BaseCommand
         
         return [
             'modal_container' => $this->command->ui_modal_container,
+            'base_renderer' => $this->command->ui_base_renderer,
+            'navigation' => $this->command->navigation_config,
             'layout_mode' => $this->command->ui_layout_mode,
             'card_component' => $this->command->ui_card_component ?? $typeConfig['default_card_component'] ?? null,
             'detail_component' => $this->command->ui_detail_component ?? $typeConfig['default_detail_component'] ?? null,
@@ -97,6 +99,7 @@ abstract class BaseCommand
     {
         return [
             'type' => $this->getTypeConfig(),
+            'type_slug' => $this->type?->slug ?? $this->command?->type_slug,
             'ui' => $this->getUIConfig(),
             'command' => $this->command ? [
                 'command' => $this->command->command,

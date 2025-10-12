@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
 import { DataManagementModal, ColumnDefinition } from '@/components/ui/DataManagementModal'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Users, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 
 interface Sprint {
   id: string
@@ -27,22 +27,36 @@ interface Sprint {
 interface SprintListModalProps {
   isOpen: boolean
   onClose: () => void
-  sprints: Sprint[]
+  sprints?: Sprint[]
   loading?: boolean
   error?: string | null
   onRefresh?: () => void
   onSprintSelect?: (sprint: Sprint) => void
+  onItemSelect?: (sprint: Sprint) => void
+  onCreate?: () => void
 }
 
 export function SprintListModal({ 
   isOpen, 
   onClose, 
-  sprints, 
+  sprints = [], 
   loading = false, 
   error = null,
   onRefresh,
-  onSprintSelect 
+  onSprintSelect,
+  onItemSelect,
+  onCreate
 }: SprintListModalProps) {
+  const handleSprintClick = onSprintSelect || onItemSelect
+
+  const handleCreateClick = () => {
+    console.log('[SprintListModal] Create button clicked, onCreate exists?', !!onCreate)
+    if (onCreate) {
+      onCreate()
+    } else {
+      console.error('[SprintListModal] onCreate handler not provided!')
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -82,7 +96,7 @@ export function SprintListModal({
 
 
 
-  const columns: ColumnDefinition<Sprint>[] = [
+  const columns: ColumnDefinition<Sprint | any>[] = [
     {
       key: 'code',
       label: 'Sprint',
@@ -160,25 +174,27 @@ export function SprintListModal({
     }
   ]
 
+  const displaySprints = sprints
+
   const filters = [
     {
       key: 'status',
       label: 'Status',
       options: [
-        { value: 'all', label: 'All', count: sprints.length },
-        { value: 'active', label: 'Active', count: sprints.filter(s => !s.status || s.status.toLowerCase() === 'active').length },
-        { value: 'completed', label: 'Completed', count: sprints.filter(s => s.status?.toLowerCase() === 'completed' || s.status?.toLowerCase() === 'done').length },
-        { value: 'planning', label: 'Planning', count: sprints.filter(s => s.status?.toLowerCase() === 'planning').length }
+        { value: 'all', label: 'All', count: displaySprints.length },
+        { value: 'active', label: 'Active', count: displaySprints.filter(s => !s.status || s.status.toLowerCase() === 'active').length },
+        { value: 'completed', label: 'Completed', count: displaySprints.filter(s => s.status?.toLowerCase() === 'completed' || s.status?.toLowerCase() === 'done').length },
+        { value: 'planning', label: 'Planning', count: displaySprints.filter(s => s.status?.toLowerCase() === 'planning').length }
       ]
     },
     {
       key: 'priority',
       label: 'Priority',
       options: [
-        { value: 'all', label: 'All', count: sprints.length },
-        { value: 'high', label: 'High', count: sprints.filter(s => s.meta?.priority?.toLowerCase() === 'high').length },
-        { value: 'medium', label: 'Medium', count: sprints.filter(s => s.meta?.priority?.toLowerCase() === 'medium').length },
-        { value: 'low', label: 'Low', count: sprints.filter(s => s.meta?.priority?.toLowerCase() === 'low').length }
+        { value: 'all', label: 'All', count: displaySprints.length },
+        { value: 'high', label: 'High', count: displaySprints.filter(s => s.meta?.priority?.toLowerCase() === 'high').length },
+        { value: 'medium', label: 'Medium', count: displaySprints.filter(s => s.meta?.priority?.toLowerCase() === 'medium').length },
+        { value: 'low', label: 'Low', count: displaySprints.filter(s => s.meta?.priority?.toLowerCase() === 'low').length }
       ]
     }
   ]
@@ -189,35 +205,40 @@ export function SprintListModal({
   ]
 
   return (
-    <DataManagementModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Sprint Management"
-      data={sprints}
-      columns={columns}
-      loading={loading}
-      error={error}
-      filters={filters}
-      searchPlaceholder="Search sprints..."
-      searchFields={['code', 'title', 'meta.title']}
-      onAction={(action, sprint) => {
-        if (action === 'view' || action === 'tasks') {
-          onSprintSelect?.(sprint)
+    <>
+      <DataManagementModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Sprint Management"
+        data={displaySprints}
+        columns={columns}
+        loading={loading}
+        error={error || undefined}
+        filters={filters}
+        searchPlaceholder="Search sprints..."
+        searchFields={['code', 'title']}
+        onAction={(action, sprint) => {
+          if (action === 'view' || action === 'tasks') {
+            onSprintSelect?.(sprint)
+          }
+        }}
+        actionItems={actionItems}
+        clickableRows={true}
+        onRowClick={handleSprintClick}
+        onRefresh={onRefresh}
+        customHeader={
+          <div className="flex items-center gap-2 mt-2">
+            <Button 
+              size="sm" 
+              onClick={handleCreateClick}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Sprint
+            </Button>
+          </div>
         }
-      }}
-      actionItems={actionItems}
-      clickableRows={true}
-      onRowClick={onSprintSelect}
-      onRefresh={onRefresh}
-      customHeader={
-        <div className="text-sm text-muted-foreground">
-          Manage sprints and track progress across all development cycles
-        </div>
-      }
-      emptyStateMessage="No sprints found"
-      emptyStateIcon={<Calendar className="h-8 w-8" />}
-      defaultSort="updated_at"
-      defaultSortDirection="desc"
-    />
+      />
+    </>
   )
 }

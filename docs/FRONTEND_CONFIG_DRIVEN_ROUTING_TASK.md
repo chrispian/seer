@@ -327,8 +327,6 @@ export function UnifiedListModal({
 2. `SprintListModal` (heavily used)
 3. `TaskListModal` (heavily used)
 
----
-
 ## Testing Checklist
 
 ### Smoke Tests
@@ -379,8 +377,6 @@ fetch('/api/commands/execute', {
 });
 ```
 
----
-
 ## Success Criteria
 
 ✅ No hardcoded switch statement  
@@ -391,8 +387,6 @@ fetch('/api/commands/execute', {
 ✅ Fallbacks work when config missing  
 ✅ Detail views render correctly  
 ✅ No TypeScript errors
-
----
 
 ## Time Estimate
 
@@ -406,8 +400,6 @@ fetch('/api/commands/execute', {
 | Testing & debugging | 30 min |
 | **Total** | **~3 hours** |
 
----
-
 ## Files to Modify
 
 **Required:**
@@ -418,8 +410,6 @@ fetch('/api/commands/execute', {
 - `resources/js/components/orchestration/SprintListModal.tsx`
 - `resources/js/components/orchestration/TaskListModal.tsx`
 - Other list modals as needed
-
----
 
 ## Rollback Plan
 
@@ -434,22 +424,6 @@ fetch('/api/commands/execute', {
 2. Old switch statement still present in git history
 3. Backend continues working with legacy `component` field
 4. No data loss or breaking changes
-
----
-
-## Future Enhancements (After This Task)
-
-Once config-driven routing works:
-
-1. **Layout Modes** - Support table/grid/list from `config.ui.layout_mode`
-2. **Dynamic Filters** - Render filters from `config.ui.filters`
-3. **Dynamic Sorting** - Use `config.ui.default_sort`
-4. **Card Customization** - Render card fields from `config.type.hot_fields`
-5. **Admin UI** - Edit command config via Filament dashboard
-
-All optional - system fully functional after this task.
-
----
 
 ## Reference Documentation
 
@@ -473,13 +447,13 @@ See "Backend Response Structure" section above for full example.
 A: No. Start with CommandResultModal routing, then incrementally add config to child components.
 
 **Q: What about the old `component` field?**  
-A: Keep as fallback. Priority: component > config ensures backward compatibility.
+A: Keep as fallback until complete? Priority: component > config ensures backward compatibility. Discuss with user.
 
 **Q: How to test config locally?**  
 A: Commands already return config. Check Network tab in DevTools or console.log the response.
 
 **Q: What if a component isn't in the map?**  
-A: Falls back to UnifiedListModal + console warning. Safe failure.
+A: Falls back to UnifiedListModal + console warning but let's consider what should happen here. 
 
 ---
 

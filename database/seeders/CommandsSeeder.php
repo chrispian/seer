@@ -4,14 +4,23 @@ namespace Database\Seeders;
 
 use App\Models\Command;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Cache;
 
 class CommandsSeeder extends Seeder
 {
     /**
      * Seed the commands table with existing commands.
      * 
-     * Maps all current slash commands, CLI commands, and MCP tools
-     * to the unified commands table with proper configuration.
+     * IMPORTANT: This seeds the UNIFIED command system (slash commands, MCP tools).
+     * 
+     * DO NOT add artisan console commands here (e.g., orchestration:sprints).
+     * Console commands are registered separately in app/Console/Commands/ and are
+     * for CLI-only use, not part of the web UI or MCP system.
+     * 
+     * The unified system uses slash commands (/sprints) that work across:
+     * - Web UI (chat interface)
+     * - MCP (AI agents via Model Context Protocol)
+     * - Direct PHP invocation
      */
     public function run(): void
     {
@@ -27,7 +36,7 @@ class CommandsSeeder extends Seeder
                 'available_in_slash' => true,
                 'available_in_cli' => false,
                 'available_in_mcp' => true,
-                'ui_modal_container' => 'DataManagementModal',
+                'ui_modal_container' => 'SprintListModal',
                 'ui_layout_mode' => 'table',
                 'ui_card_component' => null,
                 'ui_detail_component' => null,
@@ -47,25 +56,6 @@ class CommandsSeeder extends Seeder
                 'available_in_cli' => false,
                 'available_in_mcp' => true,
                 'ui_modal_container' => 'Dialog',
-                'ui_layout_mode' => null,
-                'ui_card_component' => null,
-                'ui_detail_component' => null,
-                'filters' => null,
-                'default_sort' => null,
-                'pagination_default' => 25,
-                'is_active' => true,
-            ],
-            [
-                'command' => 'orchestration:sprints',
-                'name' => 'List Sprints (CLI)',
-                'description' => 'List all sprints via command line',
-                'category' => 'Orchestration',
-                'type_slug' => 'sprint',
-                'handler_class' => 'App\\Commands\\Orchestration\\Sprint\\ListCommand',
-                'available_in_slash' => false,
-                'available_in_cli' => true,
-                'available_in_mcp' => false,
-                'ui_modal_container' => null,
                 'ui_layout_mode' => null,
                 'ui_card_component' => null,
                 'ui_detail_component' => null,
@@ -114,23 +104,30 @@ class CommandsSeeder extends Seeder
                 'pagination_default' => 25,
                 'is_active' => true,
             ],
+            
+            // Backlog commands
             [
-                'command' => 'orchestration:tasks',
-                'name' => 'List Tasks (CLI)',
-                'description' => 'List all tasks via command line',
+                'command' => '/backlog',
+                'name' => 'Backlog Items',
+                'description' => 'Display all backlog items for future planning',
                 'category' => 'Orchestration',
                 'type_slug' => 'task',
-                'handler_class' => 'App\\Commands\\Orchestration\\Task\\ListCommand',
-                'available_in_slash' => false,
-                'available_in_cli' => true,
-                'available_in_mcp' => false,
-                'ui_modal_container' => null,
-                'ui_layout_mode' => null,
+                'handler_class' => 'App\\Commands\\Orchestration\\Backlog\\ListCommand',
+                'available_in_slash' => true,
+                'available_in_cli' => false,
+                'available_in_mcp' => true,
+                'ui_modal_container' => 'BacklogListModal',
+                'ui_layout_mode' => 'table',
                 'ui_card_component' => null,
                 'ui_detail_component' => null,
                 'filters' => null,
-                'default_sort' => null,
-                'pagination_default' => 25,
+                'default_sort' => ['field' => 'priority', 'direction' => 'desc'],
+                'pagination_default' => 50,
+                'navigation_config' => [
+                    'data_prop' => 'tasks',
+                    'item_key' => 'task_code',
+                    'detail_command' => '/task-detail',
+                ],
                 'is_active' => true,
             ],
             
@@ -145,32 +142,18 @@ class CommandsSeeder extends Seeder
                 'available_in_slash' => true,
                 'available_in_cli' => false,
                 'available_in_mcp' => true,
-                'ui_modal_container' => 'DataManagementModal',
+                'ui_modal_container' => 'AgentProfileGridModal',
                 'ui_layout_mode' => 'grid',
                 'ui_card_component' => null,
                 'ui_detail_component' => null,
                 'filters' => null,
                 'default_sort' => ['field' => 'name', 'direction' => 'asc'],
-                'pagination_default' => 25,
-                'is_active' => true,
-            ],
-            [
-                'command' => 'orchestration:agents',
-                'name' => 'List Agents (CLI)',
-                'description' => 'List all agent profiles via command line',
-                'category' => 'Orchestration',
-                'type_slug' => 'agent',
-                'handler_class' => 'App\\Commands\\Orchestration\\Agent\\ListCommand',
-                'available_in_slash' => false,
-                'available_in_cli' => true,
-                'available_in_mcp' => false,
-                'ui_modal_container' => null,
-                'ui_layout_mode' => null,
-                'ui_card_component' => null,
-                'ui_detail_component' => null,
-                'filters' => null,
-                'default_sort' => null,
-                'pagination_default' => 25,
+                'pagination_default' => 50,
+                'navigation_config' => [
+                    'data_prop' => 'agents',
+                    'item_key' => 'slug',
+                    'detail_command' => null,
+                ],
                 'is_active' => true,
             ],
             
@@ -185,7 +168,7 @@ class CommandsSeeder extends Seeder
                 'available_in_slash' => true,
                 'available_in_cli' => false,
                 'available_in_mcp' => false,
-                'ui_modal_container' => 'DataManagementModal',
+                'ui_modal_container' => 'ProjectListModal',
                 'ui_layout_mode' => 'table',
                 'ui_card_component' => null,
                 'ui_detail_component' => null,
@@ -204,7 +187,7 @@ class CommandsSeeder extends Seeder
                 'available_in_slash' => true,
                 'available_in_cli' => false,
                 'available_in_mcp' => false,
-                'ui_modal_container' => 'DataManagementModal',
+                'ui_modal_container' => 'VaultListModal',
                 'ui_layout_mode' => 'table',
                 'ui_card_component' => null,
                 'ui_detail_component' => null,
@@ -216,20 +199,39 @@ class CommandsSeeder extends Seeder
             [
                 'command' => '/bookmarks',
                 'name' => 'List Bookmarks',
-                'description' => 'Display all bookmarks',
+                'description' => 'Display all bookmarks with recent activity',
                 'category' => 'Navigation',
                 'type_slug' => 'bookmark',
                 'handler_class' => 'App\\Commands\\BookmarkListCommand',
                 'available_in_slash' => true,
                 'available_in_cli' => false,
-                'available_in_mcp' => false,
-                'ui_modal_container' => 'DataManagementModal',
+                'available_in_mcp' => true,
+                'ui_modal_container' => 'BookmarkListModal',
                 'ui_layout_mode' => 'table',
                 'ui_card_component' => null,
                 'ui_detail_component' => null,
                 'filters' => null,
                 'default_sort' => ['field' => 'created_at', 'direction' => 'desc'],
                 'pagination_default' => 25,
+                'is_active' => true,
+            ],
+            [
+                'command' => '/security',
+                'name' => 'Security Dashboard',
+                'description' => 'View approval requests, risk scores, and security status',
+                'category' => 'Security',
+                'type_slug' => null,
+                'handler_class' => 'App\\Commands\\Security\\DashboardCommand',
+                'available_in_slash' => true,
+                'available_in_cli' => false,
+                'available_in_mcp' => false,
+                'ui_modal_container' => 'SecurityDashboardModal',
+                'ui_layout_mode' => null,
+                'ui_card_component' => null,
+                'ui_detail_component' => null,
+                'filters' => null,
+                'default_sort' => null,
+                'pagination_default' => 100,
                 'is_active' => true,
             ],
             [
@@ -242,7 +244,7 @@ class CommandsSeeder extends Seeder
                 'available_in_slash' => true,
                 'available_in_cli' => false,
                 'available_in_mcp' => false,
-                'ui_modal_container' => 'DataManagementModal',
+                'ui_modal_container' => 'TodoManagementModal',
                 'ui_layout_mode' => 'list',
                 'ui_card_component' => null,
                 'ui_detail_component' => null,
@@ -260,6 +262,9 @@ class CommandsSeeder extends Seeder
             );
         }
 
-        $this->command->info('Seeded ' . count($commands) . ' commands');
+        Cache::forget('command_registry');
+        \App\Services\CommandRegistry::clearCache();
+
+        $this->command->info('✅ Seeded ' . count($commands) . ' commands and cleared cache');
     }
 }

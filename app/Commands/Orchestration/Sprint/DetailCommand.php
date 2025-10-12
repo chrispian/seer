@@ -56,15 +56,11 @@ class DetailCommand extends BaseCommand
             $stats = $sprint['stats'] ?? ['total' => 0, 'completed' => 0, 'in_progress' => 0, 'todo' => 0, 'backlog' => 0];
             unset($sprint['tasks'], $sprint['stats']);
 
-            return [
-                'type' => 'sprint',
-                'component' => 'SprintDetailModal',
-                'data' => [
-                    'sprint' => $sprint,
-                    'tasks' => $tasks,
-                    'stats' => $stats,
-                ],
-            ];
+            return $this->respond([
+                'sprint' => $sprint,
+                'tasks' => $tasks,
+                'stats' => $stats,
+            ], 'SprintDetailModal');
         } catch (\Exception $e) {
             return [
                 'type' => 'message',

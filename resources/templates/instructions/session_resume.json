@@ -1,0 +1,31 @@
+{
+  "template": "session_resume",
+  "description": "Instructions returned when resuming an existing session",
+  "structure": {
+    "session_status": "Resumed",
+    "time_since_last_activity": "Human-readable time since last activity",
+    "next_actions": []
+  },
+  "conditional_next_actions": {
+    "with_active_task": [
+      "Continue working on {task_code}",
+      "Log progress with /update or /note",
+      "Complete with /task-deactivate when done"
+    ],
+    "with_active_sprint_only": [
+      "Select a task from {sprint_code}",
+      "Use /task-activate T-XX to start"
+    ],
+    "no_active_context": [
+      "Activate sprint with /sprint-activate SPRINT-XX",
+      "Then start a task with /task-activate T-XX"
+    ]
+  },
+  "variables": {
+    "session_key": "The session being resumed",
+    "active_sprint": "Current sprint context (if any)",
+    "active_task": "Current task context (if any)",
+    "last_activity_at": "ISO 8601 timestamp of last activity"
+  },
+  "usage": "InstructionBuilder::forSessionResume($session, $context)"
+}

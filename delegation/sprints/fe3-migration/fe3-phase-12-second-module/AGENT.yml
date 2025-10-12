@@ -1,0 +1,49 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-12-second-module"
+task_hash: "7b59391fe7b313516361902d6e58b814d3dfef930427c50040553693b2aa6a49"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "12"
+  
+agent_steps:
+  last: "fe3-phase-11-docs"
+  next: null  # Final task in sprint
+
+task:
+  title: "Phase 12: Second Module Validation (CRM or Inventory)"
+  status: "pending"
+  priority: "P2"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Build second domain module (CRM or Inventory)"
+    - "Validate abstractions work for different use cases"
+    - "Document lessons learned"
+    - "Refine abstractions based on feedback"
+  
+  deliverables:
+    - "modules/[crm|inventory]/"
+    - "Full module using FE 3.0 APIs"
+    - "Validation report"
+    - "Abstraction refinements"
+
+  acceptance_criteria:
+    - "Second module fully functional"
+    - "Feature parity with design"
+    - "Abstractions validated"
+    - "Tests pass"
+    - "Performance acceptable"
+
+capabilities:
+  allowed_tools: ["fs", "git", "composer", "node-pnpm", "php-artisan"]
+
+telemetry:
+  correlate_ids: true
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "composer"
+    capability: "install"

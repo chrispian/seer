@@ -1,0 +1,38 @@
+{
+  "template": "validation_failure",
+  "description": "Instructions returned when validation fails (task or session completion)",
+  "structure": {
+    "required_actions": [],
+    "validation_errors": [],
+    "validation_warnings": [],
+    "missing_requirements": [],
+    "suggested_commands": []
+  },
+  "context_types": {
+    "task": {
+      "required_actions": [
+        "Add summary with /task-deactivate --summary=\"Summary text\"",
+        "Or add context update first with /update \"details\""
+      ],
+      "suggested_commands": [
+        "/update \"Additional context\"",
+        "/task-deactivate --summary=\"Work completed\""
+      ]
+    },
+    "session": {
+      "required_actions": [
+        "Close all active tasks first",
+        "Add session summary with /session-end --summary=\"Summary\""
+      ],
+      "suggested_commands": [
+        "/task-deactivate",
+        "/session-end --summary=\"Session summary\""
+      ]
+    }
+  },
+  "variables": {
+    "validation": "Validation result array with errors, warnings, requirements",
+    "context": "Either 'task' or 'session'"
+  },
+  "usage": "InstructionBuilder::forValidationFailure($validation, $context)"
+}

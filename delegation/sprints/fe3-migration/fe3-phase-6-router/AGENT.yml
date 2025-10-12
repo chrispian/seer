@@ -1,0 +1,52 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-6-router"
+task_hash: "6dc419acc272f22dbbc94c7ead6919f36e1c7cbd19bf25903d9f2ebab5b229c3"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "6"
+  
+agent_steps:
+  last: "fe3-phase-5-generic-components"
+  next: "fe3-phase-7-agents"
+
+task:
+  title: "Phase 6: Unified Command Router"
+  status: "pending"
+  priority: "P0"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Implement unified Command Router"
+    - "Add policy enforcement"
+    - "Implement idempotency tracking"
+    - "Add correlation ID propagation"
+    - "Emit command execution events"
+  
+  deliverables:
+    - "Core/Services/CommandRouter.php"
+    - "Core/DTOs/CommandDTO.php, CommandResultDTO.php"
+    - "Core/Policies/CommandPolicy.php"
+    - "Idempotency infrastructure"
+    - "30+ tests"
+
+  acceptance_criteria:
+    - "All UI actions route through CommandRouter"
+    - "Policies enforce capabilities"
+    - "Idempotency prevents duplicate execution"
+    - "Correlation IDs propagate correctly"
+    - "Tests pass"
+
+capabilities:
+  allowed_tools: ["fs", "git", "composer", "php-artisan"]
+
+telemetry:
+  correlate_ids: true
+  emit_events: ["command.executed", "command.failed"]
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "composer"
+    capability: "install"

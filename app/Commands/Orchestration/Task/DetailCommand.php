@@ -21,11 +21,10 @@ class DetailCommand extends BaseCommand
         $taskCode = $this->code;
 
         if (! $taskCode) {
-            return [
-                'type' => 'error',
-                'component' => null,
-                'message' => 'Please provide a task code. Usage: /task-detail T-ART-02-CAS',
-            ];
+            return $this->respond(
+                ['error' => 'Please provide a task code. Usage: /task-detail T-ART-02-CAS'],
+                null
+            );
         }
 
         try {
@@ -40,11 +39,7 @@ class DetailCommand extends BaseCommand
             $content = $response->content();
             $data = json_decode((string) $content, true);
 
-            return [
-                'type' => 'task',
-                'component' => 'TaskDetailModal',
-                'data' => $data,
-            ];
+            return $this->respond($data, 'TaskDetailModal');
         } catch (\Exception $e) {
             return [
                 'type' => 'message',

@@ -1,0 +1,50 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-8-prompts"
+task_hash: "5dc5472f988b17e79dfda59eb211f5d27659de4ce06f7311e6cbe508e2e0efb3"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "8"
+  
+agent_steps:
+  last: "fe3-phase-7-sse-dashboard"
+  next: "fe3-phase-9-rules"
+
+task:
+  title: "Phase 8: Versioned Prompt Store"
+  status: "pending"
+  priority: "P2"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Implement PromptStore service"
+    - "Implement PromptRenderer (PHP + TS)"
+    - "Add hash pinning for prompts"
+    - "Create PromptEditor UI"
+  
+  deliverables:
+    - "Core/Services/PromptStore.php"
+    - "Core/Services/PromptRenderer.php"
+    - "prompts table migration"
+    - "resources/js/fe3/PromptEditor.tsx"
+    - "25+ tests"
+
+  acceptance_criteria:
+    - "Prompts versioned with hashes"
+    - "Context-pack injection works"
+    - "Labels for discovery"
+    - "Evaluation notes stored"
+    - "Tests pass"
+
+capabilities:
+  allowed_tools: ["fs", "git", "composer", "node-pnpm", "php-artisan"]
+
+telemetry:
+  correlate_ids: true
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "composer"
+    capability: "install"
