@@ -54,6 +54,7 @@ interface SprintDetailModalProps {
   onRefresh?: () => void
   onTaskSelect?: (task: Task) => void
   onBack?: () => void
+  onEdit?: (sprint: SprintDetail) => void
 }
 
 export function SprintDetailModal({ 
@@ -66,7 +67,8 @@ export function SprintDetailModal({
   error = null,
   onRefresh,
   onTaskSelect,
-  onBack
+  onBack,
+  onEdit
 }: SprintDetailModalProps) {
 
   const getStatusColor = (status: string) => {
@@ -262,21 +264,34 @@ export function SprintDetailModal({
       onRefresh={onRefresh}
       customHeader={
         <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            {onBack && (
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              {onBack && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onBack}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to List
+                </Button>
+              )}
+              <div className="text-sm text-muted-foreground">
+                {sprint.title || sprint.meta?.title || 'Sprint Details'}
+              </div>
+            </div>
+            {onEdit && (
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm" 
-                onClick={onBack}
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                onClick={() => onEdit(sprint)}
+                className="flex items-center gap-2"
               >
-                <ArrowLeft className="h-4 w-4" />
-                Back to List
+                <BarChart3 className="h-4 w-4" />
+                Edit Sprint
               </Button>
             )}
-            <div className="text-sm text-muted-foreground">
-              {sprint.title || sprint.meta?.title || 'Sprint Details'}
-            </div>
           </div>
           
           {/* Progress Section */}

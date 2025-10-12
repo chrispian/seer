@@ -498,8 +498,17 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
       props.onBack = handlers.onBackToList
     }
     
+    // Add edit handler for detail modals
+    if (componentName.includes('Detail') && handlers.executeDetailCommand) {
+      if (componentName.includes('Sprint')) {
+        props.onEdit = (item: any) => handlers.executeDetailCommand!(`/sprint-edit ${item.code}`)
+      } else if (componentName.includes('Task')) {
+        props.onEdit = (item: any) => handlers.executeDetailCommand!(`/task-edit ${item.task_code}`)
+      }
+    }
+    
     // Add drill-down handlers for detail views
-    if (navConfig?.children && handlers.executeDetailCommand) {
+    if (componentName.includes('Detail') && navConfig?.children && handlers.executeDetailCommand) {
       // CONFIG-DRIVEN: Use children config
       navConfig.children.forEach((child: any) => {
         const handlerName = `on${capitalize(child.type)}Select`
