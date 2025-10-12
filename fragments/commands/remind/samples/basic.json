@@ -1,8 +1,0 @@
-{
-  "ctx": {
-    "body": "Call the dentist to schedule annual checkup",
-    "user_id": 1,
-    "fragment_id": null,
-    "session_id": "test-session-123"
-  }
-}

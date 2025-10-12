@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Decorators\CommandTelemetryDecorator;
-use App\Models\CommandRegistry as CommandRegistryModel;
+
 use App\Models\Fragment;
 use App\Services\CommandRegistry;
-use App\Services\Commands\DSL\CommandRunner;
 use Illuminate\Http\Request;
 
 class CommandController extends Controller
@@ -99,43 +97,8 @@ class CommandController extends Controller
                 return response()->json($response);
             }
 
-            // Try to find YAML command (legacy system)
-            $dbCommand = CommandRegistryModel::where('slug', $commandName)->first();
-            if ($dbCommand) {
-                $runner = app(CommandRunner::class);
-
-                // Wrap runner with telemetry if enabled
-                if (config('command-telemetry.enabled', true)) {
-                    $runner = CommandTelemetryDecorator::wrap($runner);
-                }
-
-                $result = $runner->execute($commandName, $arguments);
-
-                $executionTime = round((microtime(true) - $startTime) * 1000, 2);
-
-                // Convert CommandRunner result to expected response format
-                $response = $this->convertDslResultToResponse($result);
-
-                // Log command execution
-                $this->logCommandExecution($commandName, $commandText, $arguments, $response, $executionTime, $result['success']);
-
-                return response()->json([
-                    'success' => $result['success'],
-                    'type' => $response->type,
-                    'message' => $response->message,
-                    'fragments' => $response->fragments ?? [],
-                    'shouldResetChat' => $response->shouldResetChat ?? false,
-                    'shouldOpenPanel' => $response->shouldOpenPanel ?? false,
-                    'panelData' => $response->panelData ?? null,
-                    'shouldShowSuccessToast' => $response->shouldShowSuccessToast ?? false,
-                    'toastData' => $response->toastData ?? null,
-                    'shouldShowErrorToast' => $response->shouldShowErrorToast ?? false,
-                    'data' => $response->data ?? null,
-                ]);
-            } else {
-                // Command not found
-                throw new \InvalidArgumentException("Command not recognized: {$commandName}");
-            }
+            // Command not found
+            throw new \InvalidArgumentException("Command not recognized: {$commandName}");
 
         } catch (\InvalidArgumentException $e) {
             // Log failed command execution
@@ -187,129 +150,16 @@ class CommandController extends Controller
                 [$key, $value] = explode(':', $part, 2);
                 $arguments[$key] = $value;
             } else {
-                // Add as indexed argument for new unified commands
+                // Add as indexed argument
                 $arguments[$positionalIndex] = $part;
                 $positionalIndex++;
-                
-                // Also add to 'body' for YAML template compatibility
-                if (! isset($arguments['body'])) {
-                    $arguments['body'] = $part;
-                } else {
-                    $arguments['body'] .= ' '.$part;
-                }
             }
         }
 
         return $arguments;
     }
 
-    /**
-     * Convert CommandRunner DSL result to expected response format
-     */
-    private function convertDslResultToResponse(array $result): object
-    {
-        $response = new \stdClass;
-        $response->type = 'success';
-        $response->message = 'Command executed successfully';
-        $response->fragments = [];
-        $response->shouldResetChat = false;
-        $response->shouldOpenPanel = false;
-        $response->panelData = null;
-        $response->shouldShowSuccessToast = false;
-        $response->toastData = null;
-        $response->shouldShowErrorToast = false;
-        $response->data = null;
 
-        if (! $result['success']) {
-            $response->type = 'error';
-            $response->message = $result['error'] ?? 'Command execution failed';
-            $response->shouldShowErrorToast = true;
-
-            return $response;
-        }
-
-        // Look for response-generating steps (notify, response.panel, etc.) recursively
-        $this->processStepsForResponse($result['steps'], $response);
-
-        return $response;
-    }
-
-    /**
-     * Process steps recursively to find response-generating steps
-     */
-    private function processStepsForResponse(array $steps, object $response): void
-    {
-        foreach ($steps as $step) {
-            $stepOutput = $step['output'] ?? [];
-
-            // Handle notify steps with panel_data for navigation
-            if ($step['type'] === 'notify' && isset($stepOutput['panel_data'])) {
-                $panelData = $stepOutput['panel_data'];
-                if (isset($panelData['action']) && $panelData['action'] === 'navigate') {
-                    $response->shouldOpenPanel = true;
-                    $response->panelData = $panelData;
-                    $response->message = $stepOutput['message'] ?? 'Navigating...';
-                }
-            }
-
-            // Handle notify steps with response_data
-            if ($step['type'] === 'notify' && isset($stepOutput['response_data'])) {
-                $responseData = $stepOutput['response_data'];
-
-                // Apply response_data properties to the response
-                if (isset($responseData['type'])) {
-                    $response->type = $responseData['type'];
-                }
-                if (isset($responseData['shouldResetChat'])) {
-                    $response->shouldResetChat = $responseData['shouldResetChat'];
-                }
-                if (isset($responseData['shouldOpenPanel'])) {
-                    $response->shouldOpenPanel = $responseData['shouldOpenPanel'];
-                }
-                if (isset($responseData['panelData'])) {
-                    $response->panelData = $responseData['panelData'];
-                }
-                if (isset($responseData['shouldShowSuccessToast'])) {
-                    $response->shouldShowSuccessToast = $responseData['shouldShowSuccessToast'];
-                }
-                if (isset($responseData['shouldShowErrorToast'])) {
-                    $response->shouldShowErrorToast = $responseData['shouldShowErrorToast'];
-                }
-                if (isset($responseData['toastData'])) {
-                    $response->toastData = $responseData['toastData'];
-                }
-
-                // Use the notify message if provided, otherwise keep existing
-                if (isset($stepOutput['message']) && ! empty($stepOutput['message'])) {
-                    $response->message = $stepOutput['message'];
-                }
-            }
-
-            // Handle simple notify steps (just message)
-            if ($step['type'] === 'notify' && isset($stepOutput['message']) &&
-                ! isset($stepOutput['panel_data']) && ! isset($stepOutput['response_data'])) {
-                $response->message = $stepOutput['message'];
-                if (isset($stepOutput['level']) && $stepOutput['level'] === 'success') {
-                    $response->shouldShowSuccessToast = true;
-                } elseif (isset($stepOutput['level']) && $stepOutput['level'] === 'error') {
-                    $response->shouldShowErrorToast = true;
-                }
-            }
-
-            // Handle response.panel steps
-            if ($step['type'] === 'response.panel') {
-                $response->type = $stepOutput['type'] ?? 'panel';
-                $response->message = $stepOutput['message'] ?? 'Panel response';
-                $response->shouldOpenPanel = true; // Always open panel for response.panel steps
-                $response->panelData = $stepOutput['panel_data'] ?? $stepOutput;
-            }
-
-            // Recursively process sub-steps (condition branches, etc.)
-            if (isset($stepOutput['steps_executed'])) {
-                $this->processStepsForResponse($stepOutput['steps_executed'], $response);
-            }
-        }
-    }
 
     /**
      * Log command execution as a fragment for activity tracking
