@@ -210,7 +210,7 @@ export function TaskDetailModal({
         }
       }
     }}>
-      <DialogContent className="max-w-6xl max-h-[90vh] rounded-sm flex flex-col overflow-hidden">
+      <DialogContent className="max-w-6xl w-[95vw] sm:w-[85vw] h-[85vh] min-h-[600px] rounded-sm flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             {onBack && (
