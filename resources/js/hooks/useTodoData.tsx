@@ -112,7 +112,7 @@ export function useTodoData(): UseTodoDataReturn {
 
     try {
       // Build todo list command with filters
-      let command = 'todo list'
+      let command = '/todos'
       
       if (filters.status && filters.status !== 'all') {
         command += ` status:${filters.status}`
@@ -132,7 +132,12 @@ export function useTodoData(): UseTodoDataReturn {
 
       const result = await executeCommand(command)
       
-      if (result.success && result.panelData?.fragments) {
+      // Handle new response format: result.data.items or legacy panelData.fragments
+      if (result.success && result.data?.items) {
+        // New format: todos already transformed by backend
+        setTodos(result.data.items)
+      } else if (result.success && result.panelData?.fragments) {
+        // Legacy format: fragments need transformation
         const todoItems = result.panelData.fragments.map(transformFragmentToTodo)
         setTodos(todoItems)
       } else if (result.success) {
