@@ -1,0 +1,248 @@
+# Task-Level Agent Configuration
+# Phase 1: API Foundation
+
+pack_version: 3.0
+agent_version: 1.0
+
+# Task identifiers
+task_id: "phase-1-api-foundation"
+task_hash: "9e879e12464947b1ebcfe4bf2daa173309a7d78af8940ad75993c9578e6854a6"
+
+# Parent context
+parent:
+  sprint: "orchestration-api-v2"
+  sprint_hash: "fce04a99a907e7f2b2f6ebd587c80de3eac4d94b5c129368537d019fcfba6119"
+  phase: 1
+  
+# Tracing
+agent_steps:
+  last: null  # First task in sprint
+  next: "phase-2-event-system"
+  correlation_id: null  # Generated on task start
+
+# Engine configuration
+engine:
+  name: "Fragments Engine"
+  target_version: "3.0"
+  compatibility: ">=3.0 <4.0"
+  
+# Task definition
+task:
+  title: "API Foundation - Sprint/Task CRUD with Hash Tracking"
+  status: "pending"
+  priority: "P0"
+  estimated_duration: "1 week"
+  
+  objectives:
+    - "Create database schema for orchestration_sprints, orchestration_tasks, orchestration_events"
+    - "Build Eloquent models with relationships and hash generation"
+    - "Implement RESTful API controllers for CRUD operations"
+    - "Create hash generation and event emission services"
+    - "Write comprehensive feature and unit tests"
+  
+  deliverables:
+    - "3 migration files (sprints, tasks, events)"
+    - "3 Eloquent models with relationships"
+    - "2 API controllers (OrchestrationSprintController, OrchestrationTaskController)"
+    - "2 service classes (OrchestrationHashService, OrchestrationEventService)"
+    - "API routes registered in routes/api.php"
+    - "Feature tests covering all endpoints"
+    - "Unit tests for services"
+  
+  acceptance_criteria:
+    - "✅ Migrations create tables with correct schema"
+    - "✅ Can create sprint via POST /api/orchestration/sprints"
+    - "✅ Sprint hash generated as SHA-256"
+    - "✅ Event emitted on sprint creation"
+    - "✅ Can create task linked to sprint"
+    - "✅ Task hash generated and stored"
+    - "✅ Can update task status via PATCH"
+    - "✅ Event emitted on status change"
+    - "✅ All tests pass"
+
+# Capabilities
+capabilities:
+  allowed_actions:
+    - "code.create"
+    - "code.read"
+    - "code.update"
+    - "database.migration.create"
+    - "test.create"
+    - "test.run"
+  
+  allowed_tools:
+    - "fs"
+    - "git"
+    - "composer"
+    - "artisan"
+    - "phpunit"
+  
+  policies:
+    must_use_command_router: false
+    dry_run_supported: true
+    commit_changes: true
+    require_tests: true
+
+# Safety rails
+safety_rails:
+  fs_scope:
+    - "app/Models/Orchestration*"
+    - "app/Http/Controllers/Orchestration*"
+    - "app/Services/Orchestration*"
+    - "database/migrations/*_create_orchestration_*"
+    - "tests/Feature/Orchestration*"
+    - "tests/Unit/Orchestration*"
+    - "routes/api.php"
+  
+  tool_whitelist:
+    - "php artisan make:model"
+    - "php artisan make:migration"
+    - "php artisan make:controller"
+    - "php artisan migrate"
+    - "php artisan test"
+    - "composer test"
+  
+  forbidden_paths:
+    - "config/database.php"
+    - ".env"
+    - "app/Models/User.php"
+  
+  timeouts:
+    action_seconds: 120
+    plan_seconds: 90
+    test_seconds: 180
+
+# Telemetry
+telemetry:
+  correlate_ids: true
+  emit_events:
+    - "task.started"
+    - "task.migration.created"
+    - "task.model.created"
+    - "task.controller.created"
+    - "task.test.passed"
+    - "task.test.failed"
+    - "task.completed"
+  sinks:
+    - "db"
+    - "file:storage/telemetry/orchestration-api-v2.log"
+
+# Context
+context:
+  reference_docs:
+    - "delegation/sprints/orchestration-api-v2/SPRINT.md"
+    - "delegation/sprints/orchestration-api-v2/phase-1-api-foundation/TASK.md"
+    - "app/Models/WorkItem.php"
+    - "app/Http/Controllers/Orchestration/TaskController.php"
+    - "docs/NAVIGATION_SYSTEM_COMPLETE_GUIDE.md"
+    - "database/migrations/*_create_work_items_table.php"
+  
+  constraints:
+    - "Use Laravel 12 conventions"
+    - "Follow PSR-12 coding standards"
+    - "Use respond() pattern from BaseCommand for consistency"
+    - "JSON columns must be cast to array in models"
+    - "Use soft deletes for sprints and tasks"
+    - "Hash format: sha256(entity_code . json_encode($metadata) . $timestamp)"
+    - "Event payload must include entity snapshot"
+    - "All API endpoints must validate inputs with Form Requests"
+  
+  related_files:
+    - "app/Commands/BaseCommand.php"
+    - "app/Models/Fragment.php"
+    - "app/Services/Orchestration/SessionManager.php"
+
+# Prompts
+prompts:
+  system:
+    - id: "orchestration.api.foundation"
+      content: |
+        You are building the foundational API layer for database-backed project management.
+        
+        Key Requirements:
+        1. Create clean, RESTful API endpoints following Laravel conventions
+        2. Use JSON columns for flexible metadata storage
+        3. Generate SHA-256 hashes for change tracking
+        4. Emit events for every create/update/delete operation
+        5. Write tests FIRST (TDD approach recommended)
+        6. Follow existing patterns in app/Models/WorkItem.php
+        
+        Hash Generation Pattern:
+        ```php
+        hash('sha256', $entity->code . json_encode($entity->metadata) . $entity->updated_at->timestamp)
+        ```
+        
+        Event Emission Pattern:
+        ```php
+        OrchestrationEvent::create([
+            'event_type' => 'orchestration.sprint.created',
+            'entity_type' => 'sprint',
+            'entity_id' => $sprint->id,
+            'correlation_id' => Str::uuid(),
+            'payload' => $sprint->toArray(),
+        ]);
+        ```
+        
+        Remember: This is phase 1 foundation. Keep it simple and extensible.
+
+# Hooks
+hooks:
+  on_start:
+    - "context.load.reference_docs"
+    - "telemetry.emit.task.started"
+    - "git.branch.create:feature/orchestration-api-foundation"
+  
+  on_migration_created:
+    - "telemetry.emit.task.migration.created"
+  
+  on_test_pass:
+    - "telemetry.emit.task.test.passed"
+  
+  on_test_fail:
+    - "telemetry.emit.task.test.failed"
+    - "halt_on_failure: true"
+  
+  on_complete:
+    - "test.run:php artisan test --filter=Orchestration"
+    - "git.commit:feat(orchestration): add API foundation with hash tracking"
+    - "telemetry.emit.task.completed"
+    - "agent_steps.update.last = phase-1-api-foundation"
+    - "agent_steps.update.next = phase-2-event-system"
+    - "context.sync"
+
+# MCP tools
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+    scope: "${safety_rails.fs_scope}"
+  
+  - id: "git"
+    capability: "read-write"
+    operations: ["status", "diff", "add", "commit", "branch"]
+  
+  - id: "artisan"
+    capability: "execute"
+    commands: ["make:*", "migrate", "test"]
+  
+  - id: "composer"
+    capability: "execute"
+    commands: ["test", "test:unit", "test:feature"]
+
+# Validation
+validation:
+  pre_start:
+    - check: "database.connection"
+      message: "Database must be accessible"
+    - check: "git.clean_working_tree"
+      message: "Git working tree must be clean"
+  
+  pre_complete:
+    - check: "tests.passing"
+      command: "php artisan test --filter=Orchestration"
+      message: "All orchestration tests must pass"
+    - check: "migrations.reversible"
+      command: "php artisan migrate:rollback --pretend"
+      message: "Migrations must be reversible"
+    - check: "code.style"
+      command: "./vendor/bin/pint --test"
+      message: "Code must pass style checks"
