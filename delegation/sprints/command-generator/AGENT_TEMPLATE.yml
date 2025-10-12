@@ -1,0 +1,119 @@
+# Task-Level Agent Template
+# Inherits from AGENT_BASE.yml + adds task-specific configuration
+
+pack_version: 3.0
+agent_version: 1.0
+
+# Task identifiers (REQUIRED)
+task_id: "<task-id>"
+task_hash: "<generate: echo -n 'task-id-YYYYMMDD' | sha256sum>"
+
+# Parent context (REQUIRED for sprint tasks)
+parent:
+  sprint: "<sprint-id>"
+  phase: "<N>"
+  milestone: "<milestone-id>"  # Optional: if task is a milestone
+  
+# Tracing (REQUIRED)
+agent_steps:
+  last: "<previous-task-id>"  # null if first task
+  next: "<next-task-id>"      # null if last task
+
+# Engine configuration (inherited, can override)
+engine:
+  name: "<Engine Name>"
+  target_version: "<version>"
+  compatibility: ">=<min> <<max>"
+  
+# Task definition (REQUIRED)
+task:
+  title: "<Human-readable task title>"
+  status: "pending"  # pending | in_progress | completed | blocked
+  priority: "P0"     # P0=Critical, P1=High, P2=Medium, P3=Low
+  estimated_duration: "<X weeks/days>"
+  
+  objectives:
+    - "<Objective 1>"
+    - "<Objective 2>"
+    # What this task aims to achieve
+  
+  deliverables:
+    - "<Deliverable 1>"
+    - "<Deliverable 2>"
+    # Concrete outputs expected
+  
+  acceptance_criteria:
+    - "✅ <Criterion 1>"
+    - "✅ <Criterion 2>"
+    # How to know the task is complete
+
+# Capabilities (task-specific overrides)
+capabilities:
+  allowed_actions:
+    - "<action.category>"
+  
+  allowed_tools:
+    - "fs"
+    - "git"
+    - "composer"
+  
+  policies:
+    must_use_command_router: false
+    dry_run_supported: true
+    commit_changes: false
+
+# Safety rails (task-specific paths)
+safety_rails:
+  fs_scope: 
+    - "<task-specific/path>"
+  tool_whitelist:
+    - "<allowed-command>"
+  timeouts:
+    action_seconds: 90
+    plan_seconds: 60
+
+# Telemetry (task-specific events)
+telemetry:
+  correlate_ids: true
+  emit_events:
+    - "task.started"
+    - "task.<custom-event>"
+    - "task.completed"
+  sinks:
+    - "db"
+
+# Context (task-specific docs)
+context:
+  reference_docs:
+    - "<spec-for-this-task.md>"
+  
+  constraints:
+    - "<Task-specific constraint>"
+
+# Prompts (task-specific guidance)
+prompts:
+  system:
+    - id: "<task.prompt.id>"
+      content: |
+        <Task-specific instructions>
+
+# Hooks (task-specific lifecycle)
+hooks:
+  on_start:
+    - "context.load.reference_docs"
+    - "telemetry.emit.task.started"
+  
+  on_complete:
+    - "telemetry.emit.task.completed"
+    - "agent_steps.update.last = <this-task-id>"
+    - "agent_steps.update.next = <next-task-id>"
+    - "context.sync"
+
+# MCP tools
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "git"
+    capability: "read"
+  - id: "composer"
+    capability: "install"
