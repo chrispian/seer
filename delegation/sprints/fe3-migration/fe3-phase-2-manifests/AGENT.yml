@@ -1,0 +1,128 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-2-manifests"
+task_hash: "c0dfe55d80a687c46290fd8ba05ec087128652af73f80ce3c632d5af9d0ab989"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "2"
+  
+agent_steps:
+  last: "fe3-phase-2-builders"
+  next: "fe3-phase-3-project-manager"
+
+engine:
+  name: Fragments Engine
+  target_version: "3.0"
+  compatibility: ">=3.0 <4.0"
+  
+task:
+  title: "Phase 2: Manifest JSON Schema & Validation"
+  status: "pending"
+  priority: "P0"
+  estimated_duration: "1 week"
+  
+  objectives:
+    - "Create JSON schema for module.json manifests"
+    - "Implement schema validation"
+    - "Add manifest examples"
+    - "Write validation tests"
+  
+  deliverables:
+    - "resources/schemas/module-manifest.schema.json"
+    - "Core/Services/ManifestValidator.php"
+    - "Example manifests for reference"
+    - "Validation error messages"
+    - "20+ validation tests"
+
+  acceptance_criteria:
+    - "JSON schema covers all manifest properties"
+    - "Validator uses justinrainbow/json-schema"
+    - "Clear error messages for invalid manifests"
+    - "All tests pass"
+    - "Example manifests validate successfully"
+
+capabilities:
+  allowed_actions:
+    - "scaffold.schema"
+    - "scaffold.validator"
+    - "test.write"
+  
+  allowed_tools:
+    - "fs"
+    - "git"
+    - "composer"
+    - "php-artisan"
+  
+  policies:
+    must_use_command_router: false
+    dry_run_supported: true
+    commit_changes: false
+
+safety_rails:
+  fs_scope: 
+    - "resources/schemas/"
+    - "app/Core/Services/"
+    - "tests/Unit/Core/Services/"
+  tool_whitelist:
+    - "composer"
+    - "php artisan test"
+  timeouts:
+    action_seconds: 90
+    plan_seconds: 60
+
+telemetry:
+  correlate_ids: true
+  emit_events:
+    - "task.started"
+    - "task.schema.completed"
+    - "task.tests.passed"
+    - "task.completed"
+  sinks:
+    - "db"
+
+context:
+  reference_docs:
+    - "delegation/Fragments Engine 3.0/ASSESSMENT_AND_PLAN.md"
+    - "delegation/Fragments Engine 3.0/fragments_engine_v_3_spec_prd_adrs_and_quickstart.md"
+  
+  constraints:
+    - "Use JSON Schema Draft 7"
+    - "Comprehensive validation rules"
+    - "User-friendly error messages"
+
+prompts:
+  system:
+    - id: "fe3.phase2.manifests"
+      content: |
+        Create JSON schema for module.json manifests and validation service.
+        
+        Schema should define:
+        - id, version, name, description
+        - types, commands, permissions arrays
+        - dependencies, config objects
+        - engine compatibility constraint
+        
+        Validator should provide helpful errors like:
+        "Module 'foo' requires engine >=3.0 but current is 2.5"
+
+hooks:
+  on_start:
+    - "context.load.reference_docs"
+    - "telemetry.emit.task.started"
+  
+  on_complete:
+    - "telemetry.emit.task.completed"
+    - "agent_steps.update.last = fe3-phase-2-manifests"
+    - "agent_steps.update.next = fe3-phase-3-project-manager"
+    - "context.sync"
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "git"
+    capability: "read"
+  - id: "composer"
+    capability: "install"
+  - id: "laravel"
+    capability: "artisan"

@@ -1,0 +1,172 @@
+pack_version: 3.0
+agent_version: 1.0
+hash: <hash>
+engine:
+  name: Fragments Engine
+  compatibility: ">=3.0 <4.0"
+  namespaces:
+    core: "Fe\\Core\\"
+    component: "Fe\\Component\\"
+    domain: "Fe\\Module\\"
+  module_classes:
+    - id: engine.*     # Core Modules (contracts/services only)
+    - id: component.*  # Component Modules (widgets/actions/rules/templates)
+    - id: module.*     # Domain Modules (business features)
+  conventions:
+    composition_over_inheritance: true
+    api_first: true
+    hashing_and_pinning: true   # all prompts/layouts/templates/actions
+    command_router_only: true   # all UI actions route through Command Router
+    hooks_always: true # Always perform hook actions during task lifecycle. 
+  packaging:
+    plugin_strategy:
+      composer_vendor: "hollis-labs"
+      package_id_format: "fe-<type>-<name>"
+      manifest: "module.json"
+      engine_constraint_key: "engine"
+      auto_discovery: true
+
+docs:
+  quickstart: "docs/quickstart.md"
+  adr_index: "docs/adr/README.md"
+  ui_dsl: "docs/ui-dsl/"
+  modules: "docs/modules/"
+  agents: "docs/agents/"
+  prompts: "docs/prompts/"
+  rules: "docs/rules/"
+  flows: "docs/flows/"
+  observability: "docs/observability/"
+  scaffolding: "docs/scaffolding/"
+
+registries:
+  core_modules:
+    - engine.context
+    - engine.agents
+    - engine.prompts
+    - engine.rules
+    - engine.widgets
+    - engine.command-router
+    - engine.telemetry
+    - engine.cas
+    - engine.vector
+  component_modules:
+    - component.widgets.table
+    - component.widgets.form
+    - component.actions.crud
+    - component.rules.common
+    - component.templates.object-list
+  domain_modules:
+    - module.project-manager   # reference module to finish first
+
+apis:
+  base_url: "http://localhost:8000/api/v1"
+  endpoints:
+    context: "/context"
+    agents: "/agents"
+    tasks: "/tasks"
+    actions: "/actions"
+    events_sse: "/events"
+    artifacts: "/artifacts"
+  auth:
+    type: "bearer"
+    env_key: "FE_API_TOKEN"
+
+capabilities:
+  planner:
+    allowed_modules:
+      - engine.*
+      - component.*
+      - module.project-manager
+    allowed_actions:
+      - "scaffold.*"
+      - "sprint.*"
+      - "task.*"
+      - "prompt.*"
+      - "rule.*"
+      - "widget.*"
+    policies:
+      must_use_command_router: true
+      dry_run_supported: true
+      explain_required_for_rules: true
+
+telemetry:
+  correlate_ids: true
+  emit_events:
+    - "sprint.viewed"
+    - "task.opened"
+    - "action.executed"
+    - "artifact.emitted"
+    - "task.completed"
+  sinks:
+    - "db"
+    - "sse"
+agent_steps:
+  - last: <task hash>
+  - next: <task hash>
+safety_rails:
+  fs_scope: "artifacts/"     # Postmaster moves into CAS
+  tool_whitelist:
+    - "git"
+    - "composer"
+    - "php-artisan"
+    - "node-pnpm"
+  timeouts:
+    action_seconds: 90
+    plan_seconds: 60
+
+scaffolding:
+  commands:
+    - "php artisan fe:make:module Invoicing --with=crud,actions,ui"
+    - "php artisan fe:make:action invoicing.invoice.create"
+    - "php artisan fe:make:widget invoicing.invoice.table"
+  templates_dir: "resources/templates"
+  outputs:
+    - "modules/<Name>/module.json"
+    - "modules/<Name>/UI/*.layout.json"
+    - "modules/<Name>/Actions/*.php"
+    - "modules/<Name>/Docs/*"
+
+ui_contracts:
+  json_schema_path: "docs/ui-dsl/schema.json"
+  planes: ["dashboard","detail","task"]
+  overlays: ["modal","drawer","slideover"]
+  events_bus: true
+
+seed_tasks:
+  - code: "M3-SPEC-01"
+    title: "Finalize module.project-manager as reference domain module"
+    description: "Complete module manifest, UI layout JSON, actions, policies, seeds, docs."
+    acceptance:
+      - "List/Detail/Task planes with Esc/Back/Close behaviors"
+      - "All UI actions route through Command Router"
+      - "Telemetry events emitted with correlation IDs"
+  - code: "M3-DSL-02"
+    title: "Fluent PHP → JSON UI compiler + snapshot tests"
+    description: "Compile server-side layout definitions to versioned JSON; add snapshot tests."
+  - code: "M3-AGENT-03"
+    title: "Postmaster agent + SSE dashboard"
+    description: "Artifacts routed to CAS; live events visible in dashboard."
+
+prompts:
+  system:
+    - id: "engine.planner.v1"
+      content: |
+        You are the Engine Planner. Honor module boundaries:
+        - engine.* and component.* are building blocks; never mix domain logic into them.
+        - module.* composes features and may depend on engine.* and component.* only.
+        Use Command Router for all actions, generate deterministic outputs, and pin hashes. 
+  snippets:
+    - id: "ui.dsl.rule"
+      content: "All layouts must declare planes, overlays, and Esc/Back/Close behaviors."
+  hooks:
+    - end_step: context.sync, orchestration.log.task.completed orchestration.log.next.step , emit.task.updated
+
+mcp_tools:
+  - id: "fs"
+    capability: "read"
+  - id: "git"
+    capability: "read-write"
+  - id: "composer"
+    capability: "install"
+  - id: "laravel"
+    capability: "artisan"

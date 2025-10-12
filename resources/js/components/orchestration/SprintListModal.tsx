@@ -24,23 +24,10 @@ interface Sprint {
   }
 }
 
-interface Task {
-  task_code: string
-  task_name: string
-  delegation_status: string
-  status: string
-  agent_recommendation?: string
-  current_agent?: string
-  estimate_text?: string
-  priority?: string
-  type?: string
-}
-
 interface SprintListModalProps {
   isOpen: boolean
   onClose: () => void
   sprints?: Sprint[]
-  unassigned_tasks?: Task[]
   loading?: boolean
   error?: string | null
   onRefresh?: () => void
@@ -53,7 +40,6 @@ export function SprintListModal({
   isOpen, 
   onClose, 
   sprints = [], 
-  unassigned_tasks = [],
   loading = false, 
   error = null,
   onRefresh,
@@ -188,23 +174,7 @@ export function SprintListModal({
     }
   ]
 
-  // Create virtual sprint for unassigned tasks
-  const unassignedSprint: Sprint | null = unassigned_tasks.length > 0 ? {
-    id: 'unassigned',
-    code: 'UNASSIGNED',
-    title: 'Tasks Without Sprint',
-    status: 'Unassigned',
-    task_count: unassigned_tasks.length,
-    completed_tasks: unassigned_tasks.filter(t => t.delegation_status === 'completed').length,
-    in_progress_tasks: unassigned_tasks.filter(t => t.delegation_status === 'in_progress' || t.delegation_status === 'assigned').length,
-    todo_tasks: unassigned_tasks.filter(t => t.delegation_status === 'unassigned').length,
-    backlog_tasks: 0,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  } : null
-
-  // Combine sprints with unassigned virtual sprint at top if it exists
-  const displaySprints = unassignedSprint ? [unassignedSprint, ...sprints] : sprints
+  const displaySprints = sprints
 
   const filters = [
     {
@@ -214,8 +184,7 @@ export function SprintListModal({
         { value: 'all', label: 'All', count: displaySprints.length },
         { value: 'active', label: 'Active', count: displaySprints.filter(s => !s.status || s.status.toLowerCase() === 'active').length },
         { value: 'completed', label: 'Completed', count: displaySprints.filter(s => s.status?.toLowerCase() === 'completed' || s.status?.toLowerCase() === 'done').length },
-        { value: 'planning', label: 'Planning', count: displaySprints.filter(s => s.status?.toLowerCase() === 'planning').length },
-        { value: 'unassigned', label: 'Unassigned', count: unassigned_tasks.length }
+        { value: 'planning', label: 'Planning', count: displaySprints.filter(s => s.status?.toLowerCase() === 'planning').length }
       ]
     },
     {

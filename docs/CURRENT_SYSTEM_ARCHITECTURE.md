@@ -9,7 +9,6 @@
 ## ⚠️ READ THIS FIRST
 
 **ALL** of the following tables are **CURRENT and ACTIVE**. None are legacy:
-- ✅ `fragment_type_registry` - CURRENT
 - ✅ `types_registry` - CURRENT  
 - ✅ `commands` - CURRENT
 

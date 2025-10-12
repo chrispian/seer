@@ -308,6 +308,7 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
         { key: 'total_tasks', label: 'Tasks' },
         { key: 'created_at', label: 'Created', sortable: true },
       ]
+      props.title = 'Sprints'
       props.searchFields = ['code', 'title']
       props.searchPlaceholder = 'Search sprints...'
     } else if (typeSlug === 'task' || typeSlug === 'tasks') {
@@ -460,7 +461,7 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
       props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
       
       // Also set component-specific handlers based on component name
-      if (componentName.includes('Task')) {
+      if (componentName.includes('Task') || componentName.includes('Backlog')) {
         props.onTaskSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
       } else if (componentName.includes('Sprint')) {
         props.onSprintSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)

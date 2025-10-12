@@ -1,0 +1,137 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-0-setup"
+task_hash: "eea01496721b4e1895e4718de0bd5f85633703aaec2141db5f881e6b3749c7b1"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "0"
+  
+agent_steps:
+  last: null  # No previous task (first in sprint)
+  next: "fe3-phase-1-contracts"  # Next task after completion
+
+engine:
+  name: Fragments Engine
+  target_version: "3.0"
+  compatibility: ">=3.0 <4.0"
+  
+task:
+  title: "Phase 0: Foundation & Planning"
+  status: "pending"
+  priority: "P0"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Establish FE 3.0 infrastructure and documentation scaffolding"
+    - "Write foundational ADRs"
+    - "Create config skeleton and database schema"
+    - "Set up feature flags"
+  
+  deliverables:
+    - "ADR-001: Module-Based Architecture"
+    - "ADR-002: Fluent PHP → JSON UI Contracts"
+    - "ADR-003: Command Router as Single Entry"
+    - "ADR-004: Hash Pinning for Artifacts"
+    - "config/engine.php skeleton"
+    - "Database migrations for module tables"
+    - "docs/fragments-engine-v3/ directory structure"
+    - "Feature flag setup (.env)"
+
+  acceptance_criteria:
+    - "All 4 ADRs written and reviewed"
+    - "config/engine.php exists with documented structure"
+    - "Migration files created (not yet run)"
+    - "Documentation structure established"
+    - "FE3_ENABLED feature flag available"
+
+capabilities:
+  allowed_actions:
+    - "scaffold.docs"
+    - "scaffold.config"
+    - "scaffold.migration"
+    - "write.adr"
+    - "create.directory"
+  
+  allowed_tools:
+    - "fs"
+    - "git"
+    - "php-artisan"
+  
+  policies:
+    must_use_command_router: false  # Phase 0: setup only
+    dry_run_supported: true
+    commit_changes: false  # Wait for review
+
+safety_rails:
+  fs_scope: 
+    - "delegation/sprints/fe3-migration/"
+    - "docs/fragments-engine-v3/"
+    - "config/"
+    - "database/migrations/"
+  tool_whitelist:
+    - "mkdir"
+    - "touch"
+    - "php artisan make:migration"
+  timeouts:
+    action_seconds: 60
+    plan_seconds: 30
+
+telemetry:
+  correlate_ids: true
+  emit_events:
+    - "task.started"
+    - "task.deliverable.completed"
+    - "task.completed"
+  sinks:
+    - "db"
+
+context:
+  reference_docs:
+    - "delegation/Fragments Engine 3.0/ASSESSMENT_AND_PLAN.md"
+    - "delegation/Fragments Engine 3.0/fragments_engine_v_3_spec_prd_adrs_and_quickstart.md"
+    - "delegation/Fragments Engine 3.0/AGENT.yml"
+  
+  constraints:
+    - "Follow PSR-12 coding standards"
+    - "Use 4-space indentation for PHP"
+    - "Use 2-space indentation for YAML/MD"
+    - "Follow Conventional Commit format"
+
+prompts:
+  system:
+    - id: "fe3.phase0.planner"
+      content: |
+        You are implementing Phase 0 of the Fragments Engine 3.0 migration.
+        Your task is to establish the foundation: ADRs, config files, migrations, and docs structure.
+        
+        Follow these principles:
+        - Write clear, concise ADRs following the template
+        - Create well-documented config skeletons
+        - Use descriptive migration names
+        - Organize docs for discoverability
+        
+        Do NOT implement actual functionality yet - this is scaffolding only.
+
+hooks:
+  on_start:
+    - "context.load.reference_docs"
+    - "telemetry.emit.task.started"
+  
+  on_deliverable_complete:
+    - "telemetry.emit.task.deliverable.completed"
+    - "context.update.progress"
+  
+  on_complete:
+    - "telemetry.emit.task.completed"
+    - "agent_steps.update.last = fe3-phase-0-setup"
+    - "agent_steps.update.next = fe3-phase-1-contracts"
+    - "context.sync"
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "git"
+    capability: "read"
+  - id: "laravel"
+    capability: "artisan"

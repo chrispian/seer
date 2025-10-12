@@ -1,0 +1,51 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-5-renderer"
+task_hash: "b5cc78c942d1a722f50b6fb7d4c1a8762c55f9b569c46ec1c52e3fe71863e048"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "5"
+  
+agent_steps:
+  last: "fe3-phase-4-snapshot-tests"
+  next: "fe3-phase-5-generic-components"
+
+engine:
+  name: Fragments Engine
+  target_version: "3.0"
+  
+task:
+  title: "Phase 5: React Renderer (JSON → Components)"
+  status: "pending"
+  priority: "P0"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Build React renderer that consumes JSON layouts"
+    - "Implement plane stack navigation"
+    - "Implement component registry"
+    - "Handle Esc/Back/Close behaviors"
+  
+  deliverables:
+    - "resources/js/fe3/LayoutRenderer.tsx"
+    - "resources/js/fe3/PlaneStack.tsx"
+    - "resources/js/fe3/ComponentRegistry.tsx"
+    - "Navigation behaviors"
+    - "E2E tests"
+
+  acceptance_criteria:
+    - "Renderer consumes JSON schemas"
+    - "Plane stack works (dashboard/detail/task)"
+    - "Esc/Back/Close navigation functional"
+    - "All tests pass"
+
+capabilities:
+  allowed_tools: ["fs", "git", "node-pnpm"]
+
+telemetry:
+  correlate_ids: true
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"

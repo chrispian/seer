@@ -1,0 +1,147 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-1-contracts"
+task_hash: "1546bfb53bb9313a29b23e3de22d0fdb0bd974d41f47ac8ecb661fa6b5c52966"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "1"
+  
+agent_steps:
+  last: "fe3-phase-0-setup"
+  next: "fe3-phase-1-registry"  # Updated: registry task now exists
+
+engine:
+  name: Fragments Engine
+  target_version: "3.0"
+  compatibility: ">=3.0 <4.0"
+  
+task:
+  title: "Phase 1: Core Contracts Implementation"
+  status: "pending"
+  priority: "P0"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Implement 7 core FE 3.0 contracts"
+    - "Create DTOs for module boundaries"
+    - "Establish service provider infrastructure"
+    - "Write comprehensive Pest tests"
+  
+  deliverables:
+    - "ContextRepositoryInterface + implementation stub"
+    - "AgentRegistryInterface + implementation stub"
+    - "PromptStoreInterface + implementation stub"
+    - "RuleEngineInterface + implementation stub"
+    - "WidgetRegistryInterface + implementation stub"
+    - "CommandRouterInterface + implementation stub"
+    - "TemplateRegistryInterface + implementation stub"
+    - "Core DTOs (ModuleDTO, TypeDTO, CommandDTO, etc.)"
+    - "FragmentsEngineServiceProvider"
+    - "20+ Pest tests"
+
+  acceptance_criteria:
+    - "All 7 interfaces exist in app/Core/Contracts/"
+    - "Each interface has comprehensive PHPDoc"
+    - "Basic stub implementations for each interface"
+    - "DTOs follow Data package pattern"
+    - "Service provider registers all contracts"
+    - "All tests pass (composer test:unit)"
+    - "PSR-12 compliant code"
+
+capabilities:
+  allowed_actions:
+    - "scaffold.interface"
+    - "scaffold.dto"
+    - "scaffold.service"
+    - "scaffold.provider"
+    - "test.write"
+  
+  allowed_tools:
+    - "fs"
+    - "git"
+    - "composer"
+    - "php-artisan"
+  
+  policies:
+    must_use_command_router: false
+    dry_run_supported: true
+    commit_changes: false
+
+safety_rails:
+  fs_scope: 
+    - "app/Core/"
+    - "app/Providers/"
+    - "tests/Unit/Core/"
+  tool_whitelist:
+    - "composer"
+    - "php artisan test"
+  timeouts:
+    action_seconds: 120
+    plan_seconds: 60
+
+telemetry:
+  correlate_ids: true
+  emit_events:
+    - "task.started"
+    - "task.interface.completed"
+    - "task.tests.passed"
+    - "task.completed"
+  sinks:
+    - "db"
+
+context:
+  reference_docs:
+    - "delegation/Fragments Engine 3.0/ASSESSMENT_AND_PLAN.md"
+    - "delegation/Fragments Engine 3.0/fragments_engine_v_3_spec_prd_adrs_and_quickstart.md"
+    - "app/Contracts/" # Existing contracts for reference
+  
+  constraints:
+    - "Follow PSR-12 coding standards"
+    - "Use strict types (declare(strict_types=1))"
+    - "Comprehensive PHPDoc with @param, @return, @throws"
+    - "Interfaces should be minimal and focused"
+
+prompts:
+  system:
+    - id: "fe3.phase1.contracts"
+      content: |
+        You are implementing Phase 1 of the Fragments Engine 3.0 migration: Core Contracts.
+        
+        Your goal is to define clear, minimal interfaces that establish boundaries between systems.
+        Each interface should:
+        - Have a single, well-defined responsibility
+        - Be implementation-agnostic
+        - Include comprehensive PHPDoc
+        - Throw typed exceptions
+        
+        Create stub implementations that throw "Not implemented" for now.
+        Write Pest tests that verify the contract signatures exist.
+
+hooks:
+  on_start:
+    - "context.load.reference_docs"
+    - "telemetry.emit.task.started"
+  
+  on_deliverable_complete:
+    - "telemetry.emit.task.interface.completed"
+    - "context.update.progress"
+  
+  on_tests_pass:
+    - "telemetry.emit.task.tests.passed"
+  
+  on_complete:
+    - "telemetry.emit.task.completed"
+    - "agent_steps.update.last = fe3-phase-1-contracts"
+    - "agent_steps.update.next = fe3-phase-1-registry"
+    - "context.sync"
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "git"
+    capability: "read"
+  - id: "composer"
+    capability: "install"
+  - id: "laravel"
+    capability: "artisan"

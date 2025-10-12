@@ -1,0 +1,62 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-4-ui-compiler"
+task_hash: "1c02695cbca84f53428b05c11b9821d1f0422551aa8fb3b53af4c77fc6d1cf84"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "4"
+  milestone: "M3-DSL-02"
+  
+agent_steps:
+  last: "fe3-phase-3-project-manager"
+  next: "fe3-phase-4-snapshot-tests"
+
+engine:
+  name: Fragments Engine
+  target_version: "3.0"
+  compatibility: ">=3.0 <4.0"
+  
+task:
+  title: "Phase 4: Fluent PHP → JSON UI Compiler"
+  status: "pending"
+  priority: "P0"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Implement fluent PHP UI builders (Layout, Row, Component, Slot, Primitive)"
+    - "Create JSON compiler for layouts"
+    - "Implement versioning and hashing"
+    - "Generate JSON schema for UI layouts"
+  
+  deliverables:
+    - "Core/UI/Builders/*.php (5 builders)"
+    - "Core/UI/Compilers/LayoutCompiler.php"
+    - "docs/ui-dsl/schema.json"
+    - "Example layouts compiled to JSON"
+    - "20+ tests"
+
+  acceptance_criteria:
+    - "Fluent PHP API for layout authoring"
+    - "Compiler generates valid JSON"
+    - "Layouts are versioned and hashed"
+    - "JSON schema validates all layouts"
+    - "All tests pass"
+
+capabilities:
+  allowed_tools: ["fs", "git", "composer", "php-artisan"]
+  
+telemetry:
+  correlate_ids: true
+  emit_events: ["task.started", "task.completed"]
+
+context:
+  reference_docs:
+    - "delegation/Fragments Engine 3.0/ASSESSMENT_AND_PLAN.md"
+    - "delegation/Fragments Engine 3.0/fragments_engine_v_3_spec_prd_adrs_and_quickstart.md"
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "composer"
+    capability: "install"

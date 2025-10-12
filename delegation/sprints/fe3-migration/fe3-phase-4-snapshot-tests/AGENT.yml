@@ -1,0 +1,54 @@
+pack_version: 3.0
+agent_version: 1.0
+task_id: "fe3-phase-4-snapshot-tests"
+task_hash: "62e300b446a31fa0b0eaa20ea63a4cd779be1eea1e15b316c2bde29aaac96829"
+
+parent:
+  sprint: "fe3-migration"
+  phase: "4"
+  
+agent_steps:
+  last: "fe3-phase-4-ui-compiler"
+  next: "fe3-phase-5-renderer"
+
+engine:
+  name: Fragments Engine
+  target_version: "3.0"
+  compatibility: ">=3.0 <4.0"
+  
+task:
+  title: "Phase 4: Snapshot Tests for Layouts"
+  status: "pending"
+  priority: "P1"
+  estimated_duration: "1 week"
+  
+  objectives:
+    - "Implement snapshot testing for UI layouts"
+    - "Prevent UI drift with contract tests"
+    - "Test layout compilation output"
+  
+  deliverables:
+    - "tests/Feature/Core/UI/LayoutSnapshotTest.php"
+    - "Snapshot test infrastructure"
+    - "20+ snapshot tests"
+
+  acceptance_criteria:
+    - "Snapshot tests detect layout changes"
+    - "All layouts have snapshot coverage"
+    - "Tests fail on unexpected JSON changes"
+
+capabilities:
+  allowed_tools: ["fs", "git", "composer", "php-artisan"]
+
+telemetry:
+  correlate_ids: true
+
+context:
+  reference_docs:
+    - "delegation/Fragments Engine 3.0/ASSESSMENT_AND_PLAN.md"
+
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "composer"
+    capability: "install"

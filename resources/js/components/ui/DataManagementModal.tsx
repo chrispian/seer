@@ -292,7 +292,7 @@ export function DataManagementModal<T extends DataItem>({
         const searchLower = searchQuery.toLowerCase()
         const matches = searchFields.some(field => {
           const value = item[field]
-          return String(value).toLowerCase().includes(searchLower)
+          return value != null && String(value).toLowerCase().includes(searchLower)
         })
         if (!matches) return false
       }
@@ -302,7 +302,7 @@ export function DataManagementModal<T extends DataItem>({
         if (filterValue === 'all') continue
         
         const itemValue = item[filterKey as keyof T]
-        if (String(itemValue) !== filterValue) {
+        if (itemValue == null || String(itemValue) !== filterValue) {
           return false
         }
       }
@@ -336,7 +336,7 @@ export function DataManagementModal<T extends DataItem>({
             </Badge>
           </DialogTitle>
           <DialogDescription className="sr-only">
-            Data management interface for {title.toLowerCase()}
+            Data management interface for {title?.toLowerCase() || 'items'}
           </DialogDescription>
           {customHeader}
         </DialogHeader>

@@ -18,7 +18,9 @@ import {
   Users,
   ArrowLeft,
   Clock,
-  RefreshCw
+  RefreshCw,
+  Calendar,
+  UserPlus
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -28,6 +30,8 @@ import { InlineEditSelect } from '@/components/ui/InlineEditSelect'
 import { TagEditor } from '@/components/ui/TagEditor'
 import { MarkdownEditor } from '@/components/ui/MarkdownEditor'
 import { CopyToClipboard } from '@/components/ui/CopyToClipboard'
+import { AssignSprintModal } from './AssignSprintModal'
+import { AssignAgentModal } from './AssignAgentModal'
 import { Edit } from 'lucide-react'
 
 interface Task {
@@ -132,14 +136,14 @@ export function TaskDetailModal({
 }: TaskDetailModalProps) {
   const [availableSprints, setAvailableSprints] = useState<Array<{ value: string; label: string }>>([])
   const [availableAgents, setAvailableAgents] = useState<Array<{ value: string; label: string }>>([])
-  const [loadingOptions, setLoadingOptions] = useState(false)
   const [editingContent, setEditingContent] = useState<string | null>(null)
+  const [showAssignSprintModal, setShowAssignSprintModal] = useState(false)
+  const [showAssignAgentModal, setShowAssignAgentModal] = useState(false)
 
   useEffect(() => {
     if (!isOpen) return
 
     const loadOptions = async () => {
-      setLoadingOptions(true)
       try {
         const [sprintsRes, agentsRes] = await Promise.all([
           fetch('/api/orchestration/tasks/sprints/available'),
@@ -167,8 +171,6 @@ export function TaskDetailModal({
         }
       } catch (error) {
         console.error('Failed to load options:', error)
-      } finally {
-        setLoadingOptions(false)
       }
     }
 
@@ -396,8 +398,31 @@ export function TaskDetailModal({
                   />
                 </div>
 
+                <div className="flex gap-2 pt-2 border-t border-border/50">
+                  <Button
+                    size="sm"
+                    variant={task.status === 'backlog' ? 'secondary' : 'outline'}
+                    onClick={() => handleSaveField('status', 'backlog')}
+                    disabled={task.status === 'backlog'}
+                    className="flex-1"
+                  >
+                    {task.status === 'backlog' ? 'In Backlog' : 'Send to Backlog'}
+                  </Button>
+                </div>
+
                 <div>
-                  <span className="text-sm font-medium">Sprint:</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Sprint:</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowAssignSprintModal(true)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      <Calendar className="h-3 w-3 mr-1" />
+                      Assign
+                    </Button>
+                  </div>
                   {availableSprints.length > 0 ? (
                     <InlineEditSelect
                       value={task.sprint_code || ''}
@@ -426,7 +451,18 @@ export function TaskDetailModal({
                 </div>
 
                 <div>
-                  <span className="text-sm font-medium">Assigned Agent:</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Assigned Agent:</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowAssignAgentModal(true)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      <UserPlus className="h-3 w-3 mr-1" />
+                      Assign
+                    </Button>
+                  </div>
                   {availableAgents.length > 0 ? (
                     <InlineEditSelect
                       value={task.assignee_id || ''}
@@ -618,6 +654,26 @@ export function TaskDetailModal({
           </Button>
         </div>
       </DialogContent>
+
+      <AssignSprintModal
+        isOpen={showAssignSprintModal}
+        onClose={() => setShowAssignSprintModal(false)}
+        taskCode={task.task_code}
+        currentSprintCode={task.sprint_code}
+        onAssign={async (sprintCode) => {
+          await handleSaveField('sprint_code', sprintCode)
+        }}
+      />
+
+      <AssignAgentModal
+        isOpen={showAssignAgentModal}
+        onClose={() => setShowAssignAgentModal(false)}
+        taskCode={task.task_code}
+        currentAgentId={task.assignee_id}
+        onAssign={async (agentId) => {
+          await handleSaveField('assignee_id', agentId)
+        }}
+      />
     </Dialog>
   )
 }
