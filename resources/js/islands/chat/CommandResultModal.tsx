@@ -50,6 +50,7 @@ import { BacklogListModal } from '@/components/orchestration/BacklogListModal'
 import { TodoManagementModal } from '@/islands/chat/TodoManagementModal'
 import { FragmentListModal } from '@/components/fragments/FragmentListModal'
 import { ChannelListModal } from '@/components/channels/ChannelListModal'
+import { SecurityDashboardModal } from '@/components/security/SecurityDashboardModal'
 import { RoutingInfoModal } from '@/components/routing/RoutingInfoModal'
 import { AgentProfileDashboard } from '@/pages/AgentProfileDashboard'
 import { AgentDashboard } from '@/pages/AgentDashboard'
@@ -76,6 +77,7 @@ const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
   'BookmarkListModal': BookmarkListModal,
   'FragmentListModal': FragmentListModal,
   'ChannelListModal': ChannelListModal,
+  'SecurityDashboardModal': SecurityDashboardModal,
   'SprintDetailModal': SprintDetailModal,
   'TaskDetailModal': TaskDetailModal,
   'UnifiedListModal': UnifiedListModal,
