@@ -540,28 +540,9 @@ class Fragment extends Model
      */
     protected function validateTypeSchema(): void
     {
-        // Skip validation if disabled or no type/state
-        if (! config('fragments.types.validation.enabled') || ! $this->type || ! $this->state) {
-            return;
-        }
-
-        try {
-            $validator = app(\App\Services\TypeSystem\TypePackValidator::class);
-            $this->state = $validator->validateFragmentState($this->state, $this->type);
-        } catch (\Exception $e) {
-            // In strict mode, throw the exception
-            if (config('fragments.types.validation.strict_mode')) {
-                throw $e;
-            }
-
-            // Otherwise, log the error and continue
-            \Log::warning('Fragment type validation failed', [
-                'fragment_id' => $this->id,
-                'type' => $this->type,
-                'error' => $e->getMessage(),
-                'state' => $this->state,
-            ]);
-        }
+        // TypePack validation removed - use types_registry table instead
+        // Type validation can be added here if needed in the future
+        return;
     }
 
     /**
@@ -569,17 +550,8 @@ class Fragment extends Model
      */
     public function hasValidState(): bool
     {
-        if (! $this->type || ! $this->state) {
-            return true; // No validation needed
-        }
-
-        try {
-            $validator = app(\App\Services\TypeSystem\TypePackValidator::class);
-
-            return $validator->isValidState($this->state, $this->type);
-        } catch (\Exception $e) {
-            return false;
-        }
+        // Always return true - validation can be added if needed
+        return true;
     }
 
     /**
@@ -587,17 +559,8 @@ class Fragment extends Model
      */
     public function getStateValidationErrors(): array
     {
-        if (! $this->type || ! $this->state) {
-            return [];
-        }
-
-        try {
-            $validator = app(\App\Services\TypeSystem\TypePackValidator::class);
-
-            return $validator->getValidationErrors($this->state, $this->type);
-        } catch (\Exception $e) {
-            return ['general' => [$e->getMessage()]];
-        }
+        // No validation currently - return empty array
+        return [];
     }
 
     public function getActivitylogOptions(): LogOptions
