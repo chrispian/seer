@@ -736,9 +736,17 @@ export function CommandResultModal({
   }
 
   // If this has config, use new rendering system
+  console.log('[CommandResultModal] Before renderComponent check')
+  console.log('[CommandResultModal] result.success:', result.success)
+  console.log('[CommandResultModal] result.config:', result.config)
+  console.log('[CommandResultModal] Will call renderComponent?', !!(result.success && result.config))
+  
   if (result.success && result.config) {
+    console.log('[CommandResultModal] Calling renderComponent!')
     return renderComponent(result, handlers, isOpen)
   }
+  
+  console.log('[CommandResultModal] Skipping renderComponent - using fallback rendering')
 
   const getTitle = () => {
     if (result.success) {
