@@ -97,6 +97,7 @@ interface CommandResult {
   shouldResetChat?: boolean
   shouldShowSuccessToast?: boolean
   toastData?: any
+  _command?: string
   config?: {
     type?: {
       slug?: string
@@ -589,6 +590,8 @@ export function CommandResultModal({
 
       if (detailResult.success) {
         console.log('Detail command result:', detailResult)
+        // Store the command that loaded this view
+        detailResult._command = detailCommand
         setViewStack(prev => [...prev, detailResult])
       } else {
         console.error('Detail command failed:', detailResult)
@@ -602,13 +605,59 @@ export function CommandResultModal({
     }
   }
 
+  const refreshCurrentView = async () => {
+    console.log('[CommandResultModal] Refreshing current view')
+    
+    // Determine which command to refresh
+    const currentView = viewStack.length > 0 ? viewStack[viewStack.length - 1] : null
+    const commandToRefresh = currentView?._command || command
+    
+    if (!commandToRefresh) {
+      console.warn('[CommandResultModal] No command to refresh')
+      return
+    }
+    
+    setIsLoadingDetail(true)
+    
+    try {
+      const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
+      const response = await fetch('/api/commands/execute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrf
+        },
+        body: JSON.stringify({ command: commandToRefresh })
+      })
+
+      const refreshedResult = await response.json()
+
+      if (refreshedResult.success) {
+        console.log('[CommandResultModal] Refresh successful')
+        refreshedResult._command = commandToRefresh
+        
+        if (viewStack.length > 0) {
+          // Update the current view in the stack
+          setViewStack(prev => [...prev.slice(0, -1), refreshedResult])
+        }
+        // Note: Root view refresh would need to be handled by parent component
+      } else {
+        console.error('[CommandResultModal] Refresh failed:', refreshedResult)
+      }
+    } catch (error) {
+      console.error('[CommandResultModal] Refresh error:', error)
+    } finally {
+      setIsLoadingDetail(false)
+    }
+  }
+
   // Debug current state
   const currentView = viewStack.length > 0 ? viewStack[viewStack.length - 1] : null
   console.log('[CommandResultModal v2.0 - NAVIGATION STACK] viewStack length:', viewStack.length, 'currentView:', currentView?.type, 'result.type:', result?.type)
 
   const handlers: ComponentHandlers = {
     onClose: onClose, // X/Close/ESC on root → close modal
-    onRefresh: () => console.log('[CommandResultModal] Refresh requested'),
+    onRefresh: refreshCurrentView,
     executeDetailCommand,
     onBackToList: handleBack, // Back button on stack views
   }

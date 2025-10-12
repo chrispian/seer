@@ -3,6 +3,7 @@ import { DataManagementModal, ColumnDefinition } from '@/components/ui/DataManag
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Calendar, CheckCircle, Clock, AlertCircle, BarChart3, Users, ArrowLeft } from 'lucide-react'
+import { CopyToClipboard } from '@/components/ui/CopyToClipboard'
 
 interface SprintDetail {
   id: string
@@ -251,7 +252,7 @@ export function SprintDetailModal({
       isOpen={isOpen}
       onClose={onClose}
       onBack={onBack}
-      title={`Sprint: ${sprint.code}`}
+      title={`Sprint: ${sprint.code} (ID: ${sprint.id})`}
       data={tasksWithNormalizedStatus}
       columns={columns}
       loading={loading}

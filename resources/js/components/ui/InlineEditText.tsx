@@ -79,9 +79,9 @@ export function InlineEditText({
     return (
       <div
         onClick={() => setIsEditing(true)}
-        className={`cursor-pointer hover:bg-muted/50 rounded px-2 py-1 transition-colors ${className}`}
+        className={`cursor-pointer hover:bg-muted/50 rounded px-2 py-1 transition-colors ${multiline ? 'whitespace-pre-wrap' : ''} ${className}`}
       >
-        {value || <span className="text-muted-foreground">{placeholder}</span>}
+        {value || <span className="text-muted-foreground italic">{placeholder}</span>}
       </div>
     )
   }

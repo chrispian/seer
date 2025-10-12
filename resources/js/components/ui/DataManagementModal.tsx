@@ -130,7 +130,7 @@ const DataRow = <T extends DataItem>({
                 </Button>
               )}
               {actionItems.length > 0 && (
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="ghost" 

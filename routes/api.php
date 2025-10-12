@@ -207,6 +207,10 @@ Route::prefix('orchestration')->group(function () {
     Route::get('/tasks/{taskId}/artifacts', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'listTaskArtifacts']);
     Route::get('/artifacts/{artifactId}/download', [\App\Http\Controllers\Orchestration\ArtifactsController::class, 'downloadArtifact']);
 
+    Route::patch('/tasks/{id}/field', [\App\Http\Controllers\Orchestration\TaskController::class, 'updateField']);
+    Route::patch('/tasks/{id}/tags', [\App\Http\Controllers\Orchestration\TaskController::class, 'updateTags']);
+    Route::get('/tasks/sprints/available', [\App\Http\Controllers\Orchestration\TaskController::class, 'getAvailableSprints']);
+    
     Route::get('/tasks/{taskId}/activities', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'index']);
     Route::post('/tasks/{taskId}/activities', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'store']);
     Route::get('/tasks/{taskId}/activities/summary', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'summary']);
