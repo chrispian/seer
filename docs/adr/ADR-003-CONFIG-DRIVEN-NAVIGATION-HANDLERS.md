@@ -1,10 +1,13 @@
 # ADR-003: Config-Driven Navigation Handlers
 
 ## Status
-Accepted
+✅ Accepted (Locked - Implementation Complete)
 
 ## Date
 2025-10-12
+
+## Locked
+2025-10-12 - Implemented, tested, and deployed to production
 
 ## Context
 The Fragments Engine uses a config-driven approach for command navigation, where navigation paths are stored in the database `navigation_config` field. However, component-specific click handlers (like `onTaskSelect`, `onSprintSelect`) were only being set in the legacy fallback path, not when using config-driven navigation. This caused clicking on rows in lists like `/tasks` to not navigate to detail views.
