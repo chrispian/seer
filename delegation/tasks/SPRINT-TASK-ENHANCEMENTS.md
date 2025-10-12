@@ -503,3 +503,104 @@ Module::make('project-manager')
 - High value when Module System exists (unlocks CRM, Inventory, etc.)
 - Can be tackled incrementally (migrate one view at a time)
 
+
+---
+
+## Ticket 11: Standardize /agents Command to Follow Sprint Pattern
+
+**Priority**: Medium  
+**Effort**: 2-3 hours  
+**Skills**: PHP, React, TypeScript
+
+### Description
+
+The `/agents` command currently uses a mix of old patterns (explicit `component` in handler) and generic `DataManagementModal` in the database. Need to standardize it to follow the `/sprints` pattern with a proper custom modal wrapper.
+
+### Current State
+
+**Handler** (`App\Commands\Orchestration\Agent\ListCommand`):
+```php
+return [
+    'type' => 'agent-profile',
+    'component' => 'AgentProfileListModal',  // Explicit override
+    'data' => $agents,
+];
+```
+
+**Database** (`commands` table):
+- `ui_modal_container`: `DataManagementModal` (generic)
+- `navigation_config`: Has `data_prop: "agents"` but doesn't match handler output
+
+**Available Components**:
+- `AgentProfileListModal.tsx` - Exists but may be outdated
+- `AgentProfileGridModal.tsx` - Exists, grid view option
+- `AssignAgentModal.tsx` - New combobox modal (just created)
+
+### Problem
+
+1. Handler explicitly returns `component: 'AgentProfileListModal'` which bypasses database config
+2. Database says `DataManagementModal` but command overrides it
+3. Handler returns flat `data` array, not `{ agents: [...] }` structure
+4. Doesn't follow standard pattern established by `/sprints`
+
+### Requirements
+
+1. **Remove explicit `component` from handler**:
+   - Change to use `$this->respond(['agents' => $agents])`
+   - Follow standard response pattern like Sprint/Backlog
+
+2. **Update database config**:
+   - Set `ui_modal_container: 'AgentProfileListModal'`
+   - Ensure `navigation_config.data_prop: "agents"` matches response
+
+3. **Verify/Update `AgentProfileListModal.tsx`**:
+   - Should wrap `DataManagementModal` like `SprintListModal` does
+   - Add filters: Status (active/inactive/all), Mode (implementation/coordination/enablement)
+   - Add search on name, slug, description
+   - Show agent cards or table rows with capabilities preview
+   - Click row → open agent detail (if detail view exists, else show expanded content)
+
+4. **Optional: Create `AgentDetailModal.tsx`** (if not exists):
+   - Show full agent profile
+   - List capabilities, constraints, tools
+   - Show assignment history (active_assignments, total_assignments)
+   - Inline edit capabilities similar to TaskDetailModal
+
+5. **Update `CommandsSeeder.php`**:
+   - Set correct `ui_modal_container`
+   - Add proper `navigation_config` with detail command if applicable
+
+### Acceptance Criteria
+
+- [ ] `/agents` command loads without explicit component override
+- [ ] Uses `AgentProfileListModal` (custom wrapper following sprint pattern)
+- [ ] Shows filter chips (status, mode, type)
+- [ ] Search works across name, slug, description
+- [ ] Rows clickable if detail view exists
+- [ ] Response structure: `{ agents: [...] }` not flat array
+- [ ] Database config matches actual implementation
+- [ ] No console errors or warnings
+
+### Files to Modify
+
+**Backend:**
+- `app/Commands/Orchestration/Agent/ListCommand.php` - Remove explicit component
+- `database/seeders/CommandsSeeder.php` - Update config
+
+**Frontend:**
+- `resources/js/components/orchestration/AgentProfileListModal.tsx` - Verify/update
+- `resources/js/components/orchestration/AgentDetailModal.tsx` - Create if needed
+
+### Success Metrics
+
+- `/agents` follows same pattern as `/sprints` and `/backlog`
+- Easy to understand for new developers (no magic overrides)
+- Consistent with established conventions
+- Ready for future module system migration
+
+### Related
+
+- See `docs/BACKLOG_SPRINT_ASSIGNMENT_IMPLEMENTATION.md` for pattern reference
+- See `/sprints` command as reference implementation
+- Related to technical debt: all commands should follow same pattern
+
