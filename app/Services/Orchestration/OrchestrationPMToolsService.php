@@ -86,6 +86,8 @@ class OrchestrationPMToolsService
 
         $taskModel = \App\Models\OrchestrationTask::where('task_code', $taskCode)->firstOrFail();
 
+        $oldStatus = $taskModel->status;
+
         $taskModel->status = $status;
         $taskModel->save();
 
@@ -105,7 +107,7 @@ class OrchestrationPMToolsService
         return [
             'success' => true,
             'task_code' => $taskCode,
-            'old_status' => $taskModel->getOriginal('status'),
+            'old_status' => $oldStatus,
             'new_status' => $status,
             'updated_at' => $taskModel->updated_at->toISOString(),
         ];
