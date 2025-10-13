@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\OrchestrationSprint;
 use App\Services\Orchestration\OrchestrationEventService;
+use App\Services\Orchestration\OrchestrationFileSyncService;
 use App\Services\Orchestration\OrchestrationHashService;
+use App\Services\Orchestration\OrchestrationTemplateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -13,7 +15,9 @@ class OrchestrationSprintController extends Controller
 {
     public function __construct(
         protected OrchestrationHashService $hashService,
-        protected OrchestrationEventService $eventService
+        protected OrchestrationEventService $eventService,
+        protected OrchestrationTemplateService $templateService,
+        protected OrchestrationFileSyncService $fileSyncService
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -108,6 +112,70 @@ class OrchestrationSprintController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Sprint deleted successfully',
+        ]);
+    }
+
+    public function createFromTemplate(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'template_name' => 'required|string',
+            'sprint_code' => 'required|string|unique:orchestration_sprints,sprint_code',
+            'title' => 'required|string|max:255',
+            'owner' => 'nullable|string|max:255',
+            'variables' => 'nullable|array',
+        ]);
+
+        $template = $this->templateService->loadTemplate('sprint', 'SPRINT_TEMPLATE.md');
+        
+        if (!$template) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Template not found',
+            ], 404);
+        }
+
+        $variables = array_merge([
+            'sprint_code' => $validated['sprint_code'],
+            'title' => $validated['title'],
+            'owner' => $validated['owner'] ?? '',
+            'start_date' => now()->toDateString(),
+            'status' => 'planning',
+        ], $validated['variables'] ?? []);
+
+        $parsedContent = $this->templateService->parseTemplate($template, $variables);
+
+        $sprint = OrchestrationSprint::create([
+            'sprint_code' => $validated['sprint_code'],
+            'title' => $validated['title'],
+            'status' => 'planning',
+            'owner' => $validated['owner'] ?? null,
+            'metadata' => $validated['variables'] ?? [],
+            'file_path' => "delegation/sprints/{$validated['sprint_code']}",
+        ]);
+
+        $this->fileSyncService->syncSprintToFile($sprint);
+
+        $this->eventService->emit('orchestration.sprint.generated', $sprint, [
+            'sprint_code' => $sprint->sprint_code,
+            'template_name' => $validated['template_name'],
+        ], $request->header('X-Session-Key'));
+
+        return response()->json([
+            'success' => true,
+            'sprint' => $sprint->load('tasks'),
+            'message' => 'Sprint created from template',
+        ], 201);
+    }
+
+    public function sync(string $code): JsonResponse
+    {
+        $sprint = OrchestrationSprint::where('sprint_code', $code)->firstOrFail();
+        
+        $success = $this->fileSyncService->syncSprintToFile($sprint);
+
+        return response()->json([
+            'success' => $success,
+            'message' => $success ? 'Sprint synced successfully' : 'Failed to sync sprint',
         ]);
     }
 }
