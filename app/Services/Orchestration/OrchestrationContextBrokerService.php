@@ -23,8 +23,8 @@ class OrchestrationContextBrokerService
             ->recent(50)
             ->get();
 
-        $sprintDir = base_path("delegation/sprints/{$sprintCode}");
-        $files = $this->gatherFiles($sprintDir);
+        $sprintDir = $this->sanitizePath(base_path("delegation/sprints"), $sprintCode);
+        $files = $sprintDir ? $this->gatherFiles($sprintDir) : [];
 
         return [
             'sprint' => [
@@ -75,9 +75,14 @@ class OrchestrationContextBrokerService
             ->get();
 
         $sprintCode = $task->sprint ? $task->sprint->sprint_code : null;
-        $taskDir = $sprintCode 
-            ? base_path("delegation/sprints/{$sprintCode}/{$taskCode}")
-            : null;
+        $taskDir = null;
+        
+        if ($sprintCode) {
+            $sprintDir = $this->sanitizePath(base_path("delegation/sprints"), $sprintCode);
+            if ($sprintDir) {
+                $taskDir = $this->sanitizePath($sprintDir, $taskCode);
+            }
+        }
         
         $files = $taskDir ? $this->gatherFiles($taskDir) : [];
         
@@ -85,11 +90,14 @@ class OrchestrationContextBrokerService
         $agentYmlContent = null;
         
         if ($taskDir) {
-            if (File::exists("{$taskDir}/TASK.md")) {
-                $taskMdContent = File::get("{$taskDir}/TASK.md");
+            $taskMdPath = $this->sanitizeFilePath($taskDir, 'TASK.md');
+            $agentYmlPath = $this->sanitizeFilePath($taskDir, 'AGENT.yml');
+            
+            if ($taskMdPath && File::exists($taskMdPath)) {
+                $taskMdContent = File::get($taskMdPath);
             }
-            if (File::exists("{$taskDir}/AGENT.yml")) {
-                $agentYmlContent = File::get("{$taskDir}/AGENT.yml");
+            if ($agentYmlPath && File::exists($agentYmlPath)) {
+                $agentYmlContent = File::get($agentYmlPath);
             }
         }
 
@@ -230,5 +238,67 @@ class OrchestrationContextBrokerService
         }
 
         return $files;
+    }
+
+    private function sanitizePath(string $baseDir, string $userPath): ?string
+    {
+        // Reject paths with directory traversal sequences
+        if (str_contains($userPath, '..') || str_contains($userPath, '/') || str_contains($userPath, '\\')) {
+            return null;
+        }
+
+        // Build the full path
+        $fullPath = rtrim($baseDir, '/') . '/' . $userPath;
+
+        // Verify the resolved path is within the base directory
+        $realBase = realpath($baseDir);
+        $realFull = realpath($fullPath);
+
+        if (!$realBase) {
+            return null;
+        }
+
+        // Allow non-existent paths but verify parent is safe
+        if (!$realFull) {
+            $parentDir = dirname($fullPath);
+            $realParent = realpath($parentDir);
+            if (!$realParent || !str_starts_with($realParent, $realBase)) {
+                return null;
+            }
+            return $fullPath;
+        }
+
+        // For existing paths, verify they're within base
+        if (!str_starts_with($realFull, $realBase)) {
+            return null;
+        }
+
+        return $fullPath;
+    }
+
+    private function sanitizeFilePath(string $directory, string $filename): ?string
+    {
+        // Only allow specific safe filenames
+        $allowedFiles = ['TASK.md', 'AGENT.yml', 'README.md', 'SPRINT.md'];
+        
+        if (!in_array($filename, $allowedFiles)) {
+            return null;
+        }
+
+        // Build and verify the path
+        $fullPath = rtrim($directory, '/') . '/' . $filename;
+        $realDir = realpath($directory);
+        
+        if (!$realDir) {
+            return null;
+        }
+
+        // Verify resolved path is within directory
+        $realPath = realpath($fullPath);
+        if ($realPath && !str_starts_with($realPath, $realDir)) {
+            return null;
+        }
+
+        return $fullPath;
     }
 }
