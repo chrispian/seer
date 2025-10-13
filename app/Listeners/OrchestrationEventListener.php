@@ -25,9 +25,3 @@ class OrchestrationEventListener implements ShouldQueue
         return true;
     }
 }
-
-    public function shouldQueue(OrchestrationEvent $event): bool
-    {
-        return true;
-    }
-}
