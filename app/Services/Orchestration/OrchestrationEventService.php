@@ -2,6 +2,7 @@
 
 namespace App\Services\Orchestration;
 
+use App\Events\OrchestrationEventCreated;
 use App\Models\OrchestrationEvent;
 use App\Models\OrchestrationSprint;
 use App\Models\OrchestrationTask;
@@ -36,7 +37,7 @@ class OrchestrationEventService
             $standardizedPayload['correlation_chain'] = $correlationChain;
         }
 
-        return OrchestrationEvent::create([
+        $event = OrchestrationEvent::create([
             'event_type' => $eventType,
             'entity_type' => $entityType,
             'entity_id' => $entity->id,
@@ -46,6 +47,10 @@ class OrchestrationEventService
             'payload' => $standardizedPayload,
             'emitted_at' => now(),
         ]);
+
+        event(new OrchestrationEventCreated($event));
+
+        return $event;
     }
 
     public function emitSprintCreated(OrchestrationSprint $sprint, ?string $sessionKey = null): OrchestrationEvent

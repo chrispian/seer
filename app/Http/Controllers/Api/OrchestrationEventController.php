@@ -101,31 +101,31 @@ class OrchestrationEventController extends Controller
 
     public function stats(Request $request)
     {
-        $query = OrchestrationEvent::query();
+        $baseQuery = OrchestrationEvent::query();
 
         if ($request->has('start_date') && $request->has('end_date')) {
-            $query->byDateRange($request->start_date, $request->end_date);
+            $baseQuery->byDateRange($request->start_date, $request->end_date);
         } else {
-            $query->where('emitted_at', '>=', now()->subDays(30));
+            $baseQuery->where('emitted_at', '>=', now()->subDays(30));
         }
 
-        $eventsByType = $query->select('event_type', DB::raw('count(*) as count'))
+        $eventsByType = (clone $baseQuery)->select('event_type', DB::raw('count(*) as count'))
             ->groupBy('event_type')
             ->get()
             ->pluck('count', 'event_type');
 
-        $eventsByEntity = $query->select('entity_type', DB::raw('count(*) as count'))
+        $eventsByEntity = (clone $baseQuery)->select('entity_type', DB::raw('count(*) as count'))
             ->groupBy('entity_type')
             ->get()
             ->pluck('count', 'entity_type');
 
-        $eventsByActor = $query->select('agent_id', DB::raw('count(*) as count'))
+        $eventsByActor = (clone $baseQuery)->select('agent_id', DB::raw('count(*) as count'))
             ->whereNotNull('agent_id')
             ->groupBy('agent_id')
             ->get()
             ->pluck('count', 'agent_id');
 
-        $totalEvents = $query->count();
+        $totalEvents = (clone $baseQuery)->count();
 
         return response()->json([
             'total_events' => $totalEvents,
