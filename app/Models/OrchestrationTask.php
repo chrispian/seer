@@ -58,10 +58,12 @@ class OrchestrationTask extends Model
 
     public function generateHash(): string
     {
+        $timestamp = $this->updated_at ? $this->updated_at->timestamp : now()->timestamp;
+        
         return hash('sha256', 
             $this->task_code . 
             json_encode($this->metadata ?? []) . 
-            $this->updated_at->timestamp
+            $timestamp
         );
     }
 
@@ -70,7 +72,13 @@ class OrchestrationTask extends Model
         parent::boot();
 
         static::saving(function ($task) {
-            if ($task->isDirty(['task_code', 'metadata'])) {
+            // Set updated_at if not already set (during creation)
+            if (!$task->updated_at) {
+                $task->updated_at = now();
+            }
+            
+            // Generate hash on create or when code/metadata changes
+            if (!$task->exists || $task->isDirty(['task_code', 'metadata'])) {
                 $task->hash = $task->generateHash();
             }
         });

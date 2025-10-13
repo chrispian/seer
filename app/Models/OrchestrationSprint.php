@@ -48,10 +48,12 @@ class OrchestrationSprint extends Model
 
     public function generateHash(): string
     {
+        $timestamp = $this->updated_at ? $this->updated_at->timestamp : now()->timestamp;
+        
         return hash('sha256', 
             $this->sprint_code . 
             json_encode($this->metadata ?? []) . 
-            $this->updated_at->timestamp
+            $timestamp
         );
     }
 
@@ -60,7 +62,13 @@ class OrchestrationSprint extends Model
         parent::boot();
 
         static::saving(function ($sprint) {
-            if ($sprint->isDirty(['sprint_code', 'metadata'])) {
+            // Set updated_at if not already set (during creation)
+            if (!$sprint->updated_at) {
+                $sprint->updated_at = now();
+            }
+            
+            // Generate hash on create or when code/metadata changes
+            if (!$sprint->exists || $sprint->isDirty(['sprint_code', 'metadata'])) {
                 $sprint->hash = $sprint->generateHash();
             }
         });
