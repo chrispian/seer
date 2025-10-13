@@ -7,11 +7,13 @@ use App\Events\Commands\CommandStarted;
 use App\Events\Fragments\FragmentCreated;
 use App\Events\Fragments\FragmentDeleted;
 use App\Events\Fragments\FragmentUpdated;
+use App\Events\OrchestrationEventCreated;
 use App\Events\Scheduler\ScheduleRunFinished;
 use App\Events\Scheduler\ScheduleRunStarted;
 use App\Events\Tools\ToolCompleted;
 use App\Events\Tools\ToolInvoked;
 use App\Listeners\Metrics\PipelineMetricsListener;
+use App\Listeners\OrchestrationEventListener;
 use App\Listeners\Projectors\CommandProjector;
 use App\Listeners\Projectors\FragmentLifecycleProjector;
 use App\Listeners\Projectors\SchedulerProjector;
@@ -53,6 +55,9 @@ class FragmentsPipelineEventServiceProvider extends ServiceProvider
         ],
         FragmentDeleted::class => [
             FragmentLifecycleProjector::class.'@onDeleted',
+        ],
+        OrchestrationEventCreated::class => [
+            OrchestrationEventListener::class,
         ],
     ];
 }
