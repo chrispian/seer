@@ -226,6 +226,10 @@ Route::prefix('orchestration')->group(function () {
     Route::post('/sprints/from-template', [\App\Http\Controllers\Api\OrchestrationSprintController::class, 'createFromTemplate']);
     Route::post('/sprints/{code}/sync', [\App\Http\Controllers\Api\OrchestrationSprintController::class, 'sync']);
     Route::post('/sprints/{code}/tasks/from-template', [\App\Http\Controllers\Api\OrchestrationTaskController::class, 'createFromTemplate']);
+    
+    Route::post('/agent/init', [\App\Http\Controllers\Api\OrchestrationAgentController::class, 'init']);
+    Route::get('/sessions/{sessionKey}/context', [\App\Http\Controllers\Api\OrchestrationAgentController::class, 'getSessionContext']);
+    Route::post('/sessions/{sessionKey}/activity', [\App\Http\Controllers\Api\OrchestrationAgentController::class, 'logActivity']);
 
     // Legacy orchestration routes
     Route::post('/agents/{agentId}/inbox', [\App\Http\Controllers\Orchestration\MessagingController::class, 'sendToAgent']);
