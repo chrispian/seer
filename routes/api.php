@@ -211,23 +211,15 @@ Route::prefix('orchestration')->group(function () {
     Route::put('/tasks/{code}', [\App\Http\Controllers\Api\OrchestrationTaskController::class, 'update']);
     Route::delete('/tasks/{code}', [\App\Http\Controllers\Api\OrchestrationTaskController::class, 'destroy']);
 
-    Route::get('/events', function (\Illuminate\Http\Request $request) {
-        $query = \App\Models\OrchestrationEvent::query();
-        
-        if ($request->has('entity_type')) {
-            $query->where('entity_type', $request->entity_type);
-        }
-        
-        if ($request->has('entity_id')) {
-            $query->where('entity_id', $request->entity_id);
-        }
-        
-        if ($request->has('event_type')) {
-            $query->where('event_type', $request->event_type);
-        }
-        
-        return response()->json($query->recent(50)->get());
-    });
+    Route::get('/events', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'index']);
+    Route::get('/events/correlation/{correlationId}', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'correlation']);
+    Route::get('/events/session/{sessionKey}', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'session']);
+    Route::get('/events/timeline', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'timeline']);
+    Route::get('/events/stats', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'stats']);
+    Route::post('/events/replay', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'replay']);
+    
+    Route::get('/sprints/{code}/history', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'sprintHistory']);
+    Route::get('/tasks/{code}/history', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'taskHistory']);
 
     // Legacy orchestration routes
     Route::post('/agents/{agentId}/inbox', [\App\Http\Controllers\Orchestration\MessagingController::class, 'sendToAgent']);

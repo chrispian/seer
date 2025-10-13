@@ -23,6 +23,7 @@ class OrchestrationEvent extends Model
     protected $casts = [
         'payload' => 'array',
         'emitted_at' => 'datetime',
+        'archived_at' => 'datetime',
         'agent_id' => 'integer',
     ];
 
@@ -45,6 +46,51 @@ class OrchestrationEvent extends Model
     {
         return $query->where('entity_type', $entityType)
                      ->where('entity_id', $entityId);
+    }
+
+    public function scopeByCorrelation($query, string $correlationId)
+    {
+        return $query->where('correlation_id', $correlationId)
+                     ->orderBy('emitted_at', 'asc');
+    }
+
+    public function scopeBySession($query, string $sessionKey)
+    {
+        return $query->where('session_key', $sessionKey)
+                     ->orderBy('emitted_at', 'asc');
+    }
+
+    public function scopeByDateRange($query, $start, $end)
+    {
+        return $query->whereBetween('emitted_at', [$start, $end]);
+    }
+
+    public function scopeByActor($query, int $actorId)
+    {
+        return $query->where('agent_id', $actorId)
+                     ->orWhereJsonContains('payload->actor', $actorId);
+    }
+
+    public function scopeByEntityChain($query, string $entityType, int $entityId)
+    {
+        $event = self::byEntity($entityType, $entityId)->first();
+        
+        if (!$event || !$event->correlation_id) {
+            return $query->where('id', -1);
+        }
+
+        return $query->where('correlation_id', $event->correlation_id)
+                     ->orderBy('emitted_at', 'asc');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->whereNotNull('archived_at');
     }
 
     protected static function boot()
