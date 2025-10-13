@@ -230,6 +230,11 @@ Route::prefix('orchestration')->group(function () {
     Route::post('/agent/init', [\App\Http\Controllers\Api\OrchestrationAgentController::class, 'init']);
     Route::get('/sessions/{sessionKey}/context', [\App\Http\Controllers\Api\OrchestrationAgentController::class, 'getSessionContext']);
     Route::post('/sessions/{sessionKey}/activity', [\App\Http\Controllers\Api\OrchestrationAgentController::class, 'logActivity']);
+    
+    Route::post('/pm-tools/adr', [\App\Http\Controllers\Api\OrchestrationPMToolsController::class, 'generateADR']);
+    Route::post('/pm-tools/bug-report', [\App\Http\Controllers\Api\OrchestrationPMToolsController::class, 'generateBugReport']);
+    Route::post('/pm-tools/task-status', [\App\Http\Controllers\Api\OrchestrationPMToolsController::class, 'updateTaskStatus']);
+    Route::get('/pm-tools/status-report', [\App\Http\Controllers\Api\OrchestrationPMToolsController::class, 'generateStatusReport']);
 
     // Legacy orchestration routes
     Route::post('/agents/{agentId}/inbox', [\App\Http\Controllers\Orchestration\MessagingController::class, 'sendToAgent']);
