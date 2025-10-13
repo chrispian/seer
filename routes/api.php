@@ -220,6 +220,12 @@ Route::prefix('orchestration')->group(function () {
     
     Route::get('/sprints/{code}/history', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'sprintHistory']);
     Route::get('/tasks/{code}/history', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'taskHistory']);
+    
+    Route::get('/templates', [\App\Http\Controllers\Api\OrchestrationTemplateController::class, 'index']);
+    Route::get('/templates/{type}/{name}', [\App\Http\Controllers\Api\OrchestrationTemplateController::class, 'show']);
+    Route::post('/sprints/from-template', [\App\Http\Controllers\Api\OrchestrationSprintController::class, 'createFromTemplate']);
+    Route::post('/sprints/{code}/sync', [\App\Http\Controllers\Api\OrchestrationSprintController::class, 'sync']);
+    Route::post('/sprints/{code}/tasks/from-template', [\App\Http\Controllers\Api\OrchestrationTaskController::class, 'createFromTemplate']);
 
     // Legacy orchestration routes
     Route::post('/agents/{agentId}/inbox', [\App\Http\Controllers\Orchestration\MessagingController::class, 'sendToAgent']);

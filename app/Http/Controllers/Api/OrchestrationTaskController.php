@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\OrchestrationSprint;
 use App\Models\OrchestrationTask;
 use App\Services\Orchestration\OrchestrationEventService;
+use App\Services\Orchestration\OrchestrationFileSyncService;
 use App\Services\Orchestration\OrchestrationHashService;
+use App\Services\Orchestration\OrchestrationTemplateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -13,7 +16,9 @@ class OrchestrationTaskController extends Controller
 {
     public function __construct(
         protected OrchestrationHashService $hashService,
-        protected OrchestrationEventService $eventService
+        protected OrchestrationEventService $eventService,
+        protected OrchestrationTemplateService $templateService,
+        protected OrchestrationFileSyncService $fileSyncService
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -136,5 +141,78 @@ class OrchestrationTaskController extends Controller
             'success' => true,
             'message' => 'Task deleted successfully',
         ]);
+    }
+
+    public function createFromTemplate(Request $request, string $sprintCode): JsonResponse
+    {
+        $sprint = OrchestrationSprint::where('sprint_code', $sprintCode)->firstOrFail();
+
+        $validated = $request->validate([
+            'template_name' => 'required|string',
+            'tasks' => 'required|array|min:1',
+            'tasks.*.task_code' => 'required|string',
+            'tasks.*.title' => 'required|string|max:255',
+            'tasks.*.priority' => 'sometimes|in:P0,P1,P2,P3',
+            'tasks.*.variables' => 'nullable|array',
+        ]);
+
+        $templateFileName = $validated['template_name'];
+        if (!str_ends_with($templateFileName, '.md')) {
+            $templateFileName .= '.md';
+        }
+
+        $template = $this->templateService->loadTemplate('task', $templateFileName);
+        
+        if (!$template) {
+            return response()->json([
+                'success' => false,
+                'message' => "Template '{$validated['template_name']}' not found",
+            ], 404);
+        }
+
+        $createdTasks = [];
+
+        foreach ($validated['tasks'] as $taskData) {
+            $taskCode = $taskData['task_code'];
+            
+            $existing = OrchestrationTask::where('task_code', $taskCode)->first();
+            if ($existing) {
+                continue;
+            }
+
+            $variables = array_merge([
+                'task_code' => $taskCode,
+                'title' => $taskData['title'],
+                'sprint_code' => $sprintCode,
+                'status' => 'pending',
+                'priority' => $taskData['priority'] ?? 'P2',
+            ], $taskData['variables'] ?? []);
+
+            $task = OrchestrationTask::create([
+                'task_code' => $taskCode,
+                'sprint_id' => $sprint->id,
+                'title' => $taskData['title'],
+                'status' => 'pending',
+                'priority' => $taskData['priority'] ?? 'P2',
+                'metadata' => $taskData['variables'] ?? [],
+                'agent_config' => [],
+                'file_path' => "delegation/sprints/{$sprintCode}/{$taskCode}",
+            ]);
+
+            $this->fileSyncService->syncTaskToFile($task);
+
+            $this->eventService->emit('orchestration.task.generated', $task, [
+                'task_code' => $task->task_code,
+                'template_name' => $validated['template_name'],
+            ], $request->header('X-Session-Key'));
+
+            $createdTasks[] = $task;
+        }
+
+        return response()->json([
+            'success' => true,
+            'tasks' => $createdTasks,
+            'message' => count($createdTasks) . ' task(s) created from template',
+        ], 201);
     }
 }
