@@ -20,8 +20,8 @@ class TaskStatusTool extends Tool implements SummarizesTool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'session_key' => $schema->string()->optional()->description('Optional session key (SESSION-XXX) to infer task from active context'),
-            'task' => $schema->string()->optional()->description('Task UUID or delegation task code. Required if session_key not provided or no active task'),
+            'session_key' => $schema->string()->description('Optional session key (SESSION-XXX) to infer task from active context'),
+            'task' => $schema->string()->description('Task UUID or delegation task code. Required if session_key not provided or no active task'),
             'status' => $schema->string()->enum([
                 'unassigned', 'assigned', 'in_progress', 'blocked', 'completed', 'cancelled',
             ])->required(),

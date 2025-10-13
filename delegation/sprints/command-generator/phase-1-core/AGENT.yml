@@ -1,0 +1,148 @@
+# Task-Level Agent Template
+# Inherits from AGENT_BASE.yml + adds task-specific configuration
+
+pack_version: 3.0
+agent_version: 1.0
+
+# Task identifiers (REQUIRED)
+task_id: "phase-1-core"
+task_hash: "7fa80122288479292506c67f005393d5dabb27ca0b3808a12abac554a3ca5646"
+
+# Parent context (REQUIRED for sprint tasks)
+parent:
+  sprint: "command-generator"
+  phase: "1"
+  
+# Tracing (REQUIRED)
+agent_steps:
+  last: "null"  # null if first task
+  next: "phase-2-handlers"      # null if last task
+
+# Engine configuration  
+engine:
+  name: "Seer Command Generator"
+  target_version: "1.0"
+  compatibility: ">=1.0 <2.0"
+  
+# Task definition (REQUIRED)
+task:
+  title: "Phase 1: Core Generator Framework"
+  status: "pending"
+  priority: "P0"
+  estimated_duration: "2 weeks"
+  
+  objectives:
+    - "Build foundational command generator infrastructure"
+    - "Create config schema and validation"
+    - "Implement main artisan command with dry-run mode"
+    - "Create base generator classes and stub system"
+  
+  deliverables:
+    - "config/command-generator.php with full schema"
+    - "app/Console/Commands/MakeCommandModule.php"
+    - "BaseGenerator and GeneratorConfig classes"
+    - "Stub directory structure"
+    - "Unit tests for config and rendering"
+  
+  acceptance_criteria:
+    - "✅ Can run generator in dry-run mode"
+    - "✅ Config validation catches invalid schemas"
+    - "✅ BaseGenerator renders stubs with variables"
+    - "✅ All tests pass"
+    - "✅ PSR-12 compliant code"
+
+# Capabilities (task-specific overrides)
+capabilities:
+  allowed_actions:
+    - "scaffold.command"
+    - "scaffold.config"
+    - "scaffold.generator"
+    - "test.write"
+  
+  allowed_tools:
+    - "fs"
+    - "git"
+    - "composer"
+    - "php-artisan"
+  
+  policies:
+    must_use_command_router: false
+    dry_run_supported: true
+    commit_changes: false
+
+# Safety rails
+safety_rails:
+  fs_scope: 
+    - "app/Console/Commands/"
+    - "config/"
+    - "resources/stubs/"
+    - "tests/Unit/"
+  tool_whitelist:
+    - "composer"
+    - "php artisan test"
+  timeouts:
+    action_seconds: 120
+    plan_seconds: 60
+
+# Telemetry (task-specific events)
+telemetry:
+  correlate_ids: true
+  emit_events:
+    - "task.started"
+    - "task.<custom-event>"
+    - "task.completed"
+  sinks:
+    - "db"
+
+# Context
+context:
+  reference_docs:
+    - "delegation/tasks/COMMAND-GENERATOR-SYSTEM.md"
+    - "docs/NAVIGATION_SYSTEM_COMPLETE_GUIDE.md"
+    - "app/Commands/Orchestration/Sprint/ListCommand.php"
+  
+  constraints:
+    - "Follow PSR-12 coding standards"
+    - "Use strict types (declare(strict_types=1))"
+    - "Comprehensive PHPDoc on all public methods"
+    - "Config must be JSON format (not PHP)"
+    - "Dry-run mode must be safe (no file writes)"
+
+# Prompts
+prompts:
+  system:
+    - id: "generator.phase1"
+      content: |
+        You are implementing Phase 1 of the Command Generator System.
+        
+        Goal: Create the foundational infrastructure for generating slash command modules.
+        
+        Key principles:
+        - Config-driven: Everything from JSON config
+        - Safe: Dry-run mode, validation, no overwrites without --force
+        - Reusable: Base classes that Phase 2+ will extend
+        - Testable: Unit tests for all validation and rendering
+        
+        Do NOT implement actual code generation yet (that's Phase 2).
+        Focus on infrastructure: config parsing, validation, stub loading, base classes.
+
+# Hooks (task-specific lifecycle)
+hooks:
+  on_start:
+    - "context.load.reference_docs"
+    - "telemetry.emit.task.started"
+  
+  on_complete:
+    - "telemetry.emit.task.completed"
+    - "agent_steps.update.last = phase-1-core"
+    - "agent_steps.update.next = phase-2-handlers"
+    - "context.sync"
+
+# MCP tools
+mcp_tools:
+  - id: "fs"
+    capability: "read-write"
+  - id: "git"
+    capability: "read"
+  - id: "composer"
+    capability: "install"

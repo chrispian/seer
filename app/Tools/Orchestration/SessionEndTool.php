@@ -22,7 +22,7 @@ class SessionEndTool extends Tool implements SummarizesTool
     {
         return [
             'session_key' => $schema->string()->required()->description('Session key (SESSION-XXX)'),
-            'summary' => $schema->string()->optional()->description('Session summary'),
+            'summary' => $schema->string()->description('Session summary'),
         ];
     }
 

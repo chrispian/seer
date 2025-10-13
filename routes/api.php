@@ -198,6 +198,38 @@ Route::prefix('schedules')->group(function () {
 
 // Orchestration Messaging API routes
 Route::prefix('orchestration')->group(function () {
+    // Orchestration API v2 - Database-backed sprints and tasks
+    Route::get('/sprints', [\App\Http\Controllers\Api\OrchestrationSprintController::class, 'index']);
+    Route::post('/sprints', [\App\Http\Controllers\Api\OrchestrationSprintController::class, 'store']);
+    Route::get('/sprints/{code}', [\App\Http\Controllers\Api\OrchestrationSprintController::class, 'show']);
+    Route::put('/sprints/{code}', [\App\Http\Controllers\Api\OrchestrationSprintController::class, 'update']);
+    Route::delete('/sprints/{code}', [\App\Http\Controllers\Api\OrchestrationSprintController::class, 'destroy']);
+
+    Route::get('/tasks', [\App\Http\Controllers\Api\OrchestrationTaskController::class, 'index']);
+    Route::post('/tasks', [\App\Http\Controllers\Api\OrchestrationTaskController::class, 'store']);
+    Route::get('/tasks/{code}', [\App\Http\Controllers\Api\OrchestrationTaskController::class, 'show']);
+    Route::put('/tasks/{code}', [\App\Http\Controllers\Api\OrchestrationTaskController::class, 'update']);
+    Route::delete('/tasks/{code}', [\App\Http\Controllers\Api\OrchestrationTaskController::class, 'destroy']);
+
+    Route::get('/events', function (\Illuminate\Http\Request $request) {
+        $query = \App\Models\OrchestrationEvent::query();
+        
+        if ($request->has('entity_type')) {
+            $query->where('entity_type', $request->entity_type);
+        }
+        
+        if ($request->has('entity_id')) {
+            $query->where('entity_id', $request->entity_id);
+        }
+        
+        if ($request->has('event_type')) {
+            $query->where('event_type', $request->event_type);
+        }
+        
+        return response()->json($query->recent(50)->get());
+    });
+
+    // Legacy orchestration routes
     Route::post('/agents/{agentId}/inbox', [\App\Http\Controllers\Orchestration\MessagingController::class, 'sendToAgent']);
     Route::get('/agents/{agentId}/inbox', [\App\Http\Controllers\Orchestration\MessagingController::class, 'listAgentInbox']);
     Route::post('/messages/{messageId}/read', [\App\Http\Controllers\Orchestration\MessagingController::class, 'markAsRead']);

@@ -20,8 +20,8 @@ class TaskSaveTool extends Tool implements SummarizesTool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'session_key' => $schema->string()->optional()->description('Optional session key (SESSION-XXX) to infer task from active context'),
-            'task_code' => $schema->string()->optional()->description('Task code (e.g., T-ART-02-CAS). Required if session_key not provided or no active task'),
+            'session_key' => $schema->string()->description('Optional session key (SESSION-XXX) to infer task from active context'),
+            'task_code' => $schema->string()->description('Task code (e.g., T-ART-02-CAS). Required if session_key not provided or no active task'),
             'task_name' => $schema->string()->description('Human-friendly task name'),
             'type' => $schema->string()->description('Task type (task, feature, bug, etc.)'),
             'status' => $schema->string()->description('Work item status (todo, in_progress, done, etc.)'),

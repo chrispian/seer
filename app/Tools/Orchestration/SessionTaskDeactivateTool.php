@@ -22,7 +22,7 @@ class SessionTaskDeactivateTool extends Tool implements SummarizesTool
     {
         return [
             'session_key' => $schema->string()->required()->description('Session key (SESSION-XXX)'),
-            'summary' => $schema->string()->optional()->description('Task summary or completion note'),
+            'summary' => $schema->string()->description('Task summary or completion note'),
         ];
     }
 
