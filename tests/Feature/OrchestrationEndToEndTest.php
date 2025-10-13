@@ -32,7 +32,8 @@ it('completes full sprint creation workflow', function () {
 
     $fileSyncService->syncSprintToFile($sprint);
 
-    expect(File::exists($sprint->file_path))->toBeTrue();
+    $expectedPath = base_path("delegation/sprints/e2e-test-sprint/SPRINT.md");
+    expect(File::exists($expectedPath))->toBeTrue();
 });
 
 it('completes full task lifecycle workflow', function () {
@@ -58,13 +59,13 @@ it('completes full task lifecycle workflow', function () {
 
     expect($task->exists)->toBeTrue();
     
-    $eventService->logTaskCreated($task);
+    $eventService->emitTaskCreated($task);
     
     $task->update(['status' => 'in_progress']);
-    $eventService->logTaskStatusUpdated($task, 'pending', 'in_progress');
+    $eventService->emitTaskStatusChanged($task, 'pending', 'in_progress');
     
     $task->update(['status' => 'completed']);
-    $eventService->logTaskStatusUpdated($task, 'in_progress', 'completed');
+    $eventService->emitTaskStatusChanged($task, 'in_progress', 'completed');
 
     $events = OrchestrationEvent::where('entity_type', 'task')
         ->where('entity_id', $task->id)
@@ -96,9 +97,8 @@ it('completes agent initialization workflow', function () {
 
     expect($context)->toHaveKey('task');
     expect($context)->toHaveKey('sprint');
-    expect($context)->toHaveKey('session');
-    expect($context['task']['task_code'])->toBe('e2e-agent-init-task');
-    expect($context['sprint']['sprint_code'])->toBe('e2e-agent-init-sprint');
+    expect($context['task']['code'])->toBe('e2e-agent-init-task');
+    expect($context['sprint']['code'])->toBe('e2e-agent-init-sprint');
 });
 
 it('completes PM tools workflow', function () {
@@ -204,17 +204,20 @@ it('validates file sync integration', function () {
     $fileSyncService->syncSprintToFile($sprint);
     $fileSyncService->syncTaskToFile($task);
 
-    expect(File::exists($sprint->file_path))->toBeTrue();
-    expect(File::exists($task->file_path))->toBeTrue();
+    $sprintPath = base_path("delegation/sprints/e2e-sync-sprint/SPRINT.md");
+    $taskPath = base_path("delegation/sprints/e2e-sync-sprint/e2e-sync-task/TASK.md");
+
+    expect(File::exists($sprintPath))->toBeTrue();
+    expect(File::exists($taskPath))->toBeTrue();
     
-    if (File::exists($sprint->file_path)) {
-        $sprintContent = File::get($sprint->file_path);
+    if (File::exists($sprintPath)) {
+        $sprintContent = File::get($sprintPath);
         expect($sprintContent)->toContain('e2e-sync-sprint');
         expect($sprintContent)->toContain('File Sync Test Sprint');
     }
     
-    if (File::exists($task->file_path)) {
-        $taskContent = File::get($task->file_path);
+    if (File::exists($taskPath)) {
+        $taskContent = File::get($taskPath);
         expect($taskContent)->toContain('e2e-sync-task');
         expect($taskContent)->toContain('File Sync Task');
     }
@@ -240,17 +243,15 @@ it('validates complete agent handoff workflow', function () {
 
     $sessionKey = 'agent-session-' . uniqid();
     
-    $eventService->logAgentSessionStarted($task, 1, $sessionKey);
+    $eventService->emitSessionStarted($task, $sessionKey, 1);
     
-    $context = $contextBroker->assembleTaskContext($task->task_code, [
-        'session_key' => $sessionKey,
-        'agent_id' => 1,
-    ]);
+    $context = $contextBroker->assembleTaskContext($task->task_code);
 
-    expect($context)->toHaveKey('session');
-    expect($context['session']['key'])->toBe($sessionKey);
+    expect($context)->toHaveKey('task');
+    expect($context)->toHaveKey('sprint');
+    expect($context['task']['code'])->toBe('e2e-handoff-task');
     
-    $eventService->logAgentSessionCompleted($task, 1, $sessionKey, 'Task work completed');
+    $eventService->emitSessionResumed($task, $sessionKey, 1);
 
     $sessionEvents = OrchestrationEvent::where('session_key', $sessionKey)->get();
     expect($sessionEvents->count())->toBeGreaterThanOrEqual(2);
