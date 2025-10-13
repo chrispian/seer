@@ -125,12 +125,17 @@ class OrchestrationSprintController extends Controller
             'variables' => 'nullable|array',
         ]);
 
-        $template = $this->templateService->loadTemplate('sprint', 'SPRINT_TEMPLATE.md');
+        $templateFileName = $validated['template_name'];
+        if (!str_ends_with($templateFileName, '.md')) {
+            $templateFileName .= '.md';
+        }
+
+        $template = $this->templateService->loadTemplate('sprint', $templateFileName);
         
         if (!$template) {
             return response()->json([
                 'success' => false,
-                'message' => 'Template not found',
+                'message' => "Template '{$validated['template_name']}' not found",
             ], 404);
         }
 

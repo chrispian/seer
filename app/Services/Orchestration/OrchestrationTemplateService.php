@@ -25,14 +25,28 @@ class OrchestrationTemplateService
 
     public function loadTemplate(string $type, string $name): ?string
     {
+        // Sanitize filename to prevent path traversal
+        $sanitizedName = basename($name);
+        if ($sanitizedName !== $name || str_contains($name, '..')) {
+            return null;
+        }
+
         $path = match($type) {
-            'sprint' => "{$this->templatesPath}/sprint-template/{$name}",
-            'task' => "{$this->templatesPath}/task-template/{$name}",
-            'agent' => "{$this->templatesPath}/agent-base/{$name}",
+            'sprint' => "{$this->templatesPath}/sprint-template/{$sanitizedName}",
+            'task' => "{$this->templatesPath}/task-template/{$sanitizedName}",
+            'agent' => "{$this->templatesPath}/agent-base/{$sanitizedName}",
             default => null,
         };
 
         if (!$path || !File::exists($path)) {
+            return null;
+        }
+
+        // Verify resolved path is still within templates directory
+        $realPath = realpath($path);
+        $realTemplatesPath = realpath($this->templatesPath);
+        
+        if (!$realPath || !$realTemplatesPath || !str_starts_with($realPath, $realTemplatesPath)) {
             return null;
         }
 
