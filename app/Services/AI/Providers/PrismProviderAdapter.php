@@ -133,8 +133,28 @@ class PrismProviderAdapter implements AIProviderInterface
                 $prismRequest->usingTopP($topP);
             }
 
+            $finalResponse = null;
+
             foreach ($prismRequest->asStream() as $chunk) {
                 yield $chunk->text;
+                
+                // Capture the final chunk which contains usage data
+                $finalResponse = $chunk;
+            }
+
+            // Return final response with usage data for telemetry
+            if ($finalResponse) {
+                return [
+                    'model' => $model,
+                    'provider' => $this->providerName,
+                    'finish_reason' => $finalResponse->finishReason->name ?? 'stop',
+                    'usage' => [
+                        'prompt_tokens' => $finalResponse->usage->promptTokens ?? 0,
+                        'completion_tokens' => $finalResponse->usage->completionTokens ?? 0,
+                        'total_tokens' => ($finalResponse->usage->promptTokens ?? 0) + ($finalResponse->usage->completionTokens ?? 0),
+                        'cached_tokens' => $finalResponse->usage->cacheReadInputTokens ?? 0,
+                    ],
+                ];
             }
 
         } catch (\Exception $e) {

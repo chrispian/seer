@@ -140,11 +140,7 @@ class Fragment extends Model
         return $this->hasMany(FragmentLink::class, 'to_id');
     }
 
-    // Article usage
-    public function articleUsages(): HasMany
-    {
-        return $this->hasMany(ArticleFragment::class);
-    }
+    // Article usage removed - ArticleFragment was unused
 
     // Typed object relationships
     public function todo(): HasOne

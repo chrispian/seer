@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\SeerLog;
+use App\Models\Fragment;
 
 test('can create a log', function () {
     $response = $this->postJson('/api/log', [
@@ -15,7 +15,7 @@ test('can create a log', function () {
 });
 
 test('can search logs', function () {
-    SeerLog::factory()->create(['message' => 'find me']);
+    Fragment::factory()->create(['message' => 'find me', 'type' => 'obs']);
 
     $response = $this->getJson('/api/search?q=find');
     $response->assertStatus(200)
