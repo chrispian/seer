@@ -762,7 +762,7 @@ class ChatApiController extends Controller
                 $aiProvider = null;
                 $aiModel = null;
 
-                foreach ($pipeline->executeStreaming($sessionId, $userMessage) as $event) {
+                foreach ($pipeline->executeStreaming($sessionId, $userMessage, $conversationId, $messageId) as $event) {
                     echo 'data: '.json_encode($event)."\n\n";
                     @ob_flush();
                     @flush();

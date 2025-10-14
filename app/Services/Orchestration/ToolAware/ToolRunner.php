@@ -16,7 +16,7 @@ class ToolRunner implements ToolRunnerInterface
         protected ToolRegistry $toolRegistry
     ) {}
 
-    public function execute(ToolPlan $plan, ?int $sessionId = null): ExecutionTrace
+    public function execute(ToolPlan $plan, ?int $sessionId = null, ?string $conversationId = null, ?string $messageId = null): ExecutionTrace
     {
         $trace = new ExecutionTrace;
         $maxSteps = Config::get('fragments.tool_aware_turn.limits.max_steps_per_turn', 10);
@@ -46,7 +46,7 @@ class ToolRunner implements ToolRunnerInterface
                 continue;
             }
 
-            $result = $this->executeSingleTool($toolId, $args, $trace->correlation_id, $sessionId);
+            $result = $this->executeSingleTool($toolId, $args, $trace->correlation_id, $sessionId, $conversationId, $messageId);
             $trace->addStep($result);
 
             $stepCount++;
@@ -62,7 +62,7 @@ class ToolRunner implements ToolRunnerInterface
         return $trace;
     }
 
-    public function executeStreaming(ToolPlan $plan, ?int $sessionId = null): \Generator
+    public function executeStreaming(ToolPlan $plan, ?int $sessionId = null, ?string $conversationId = null, ?string $messageId = null): \Generator
     {
         $trace = new ExecutionTrace;
         $maxSteps = Config::get('fragments.tool_aware_turn.limits.max_steps_per_turn', 10);
@@ -92,7 +92,7 @@ class ToolRunner implements ToolRunnerInterface
                 continue;
             }
 
-            $result = $this->executeSingleTool($toolId, $args, $trace->correlation_id, $sessionId);
+            $result = $this->executeSingleTool($toolId, $args, $trace->correlation_id, $sessionId, $conversationId, $messageId);
             $trace->addStep($result);
 
             yield [
@@ -119,7 +119,7 @@ class ToolRunner implements ToolRunnerInterface
         ];
     }
 
-    protected function executeSingleTool(string $toolId, array $args, string $correlationId, ?int $sessionId = null): ToolResult
+    protected function executeSingleTool(string $toolId, array $args, string $correlationId, ?int $sessionId = null, ?string $conversationId = null, ?string $messageId = null): ToolResult
     {
         $startTime = microtime(true);
 
@@ -144,6 +144,12 @@ class ToolRunner implements ToolRunnerInterface
             $context = ['correlation_id' => $correlationId];
             if ($sessionId !== null) {
                 $context['session_id'] = $sessionId;
+            }
+            if ($conversationId !== null) {
+                $context['conversation_id'] = $conversationId;
+            }
+            if ($messageId !== null) {
+                $context['message_id'] = $messageId;
             }
 
             $response = $tool->call($args, $context);
