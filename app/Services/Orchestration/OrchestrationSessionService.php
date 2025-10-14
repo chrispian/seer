@@ -34,19 +34,19 @@ class OrchestrationSessionService
     {
         $task = OrchestrationTask::where('task_code', $taskCode)->firstOrFail();
         
-        $sessionKey = $sessionKey ?? $this->generateSessionKey($taskCode);
-        
         $existingSession = $this->getSessionMetadata($task);
         if ($existingSession && ($existingSession['active'] ?? false)) {
             return new SessionState(
                 task: $task,
                 currentPhase: OrchestrationPhase::from($existingSession['current_phase']),
-                sessionKey: $sessionKey,
+                sessionKey: $existingSession['session_key'],
                 startedAt: $existingSession['started_at'],
                 active: true,
                 resuming: true
             );
         }
+        
+        $sessionKey = $sessionKey ?? $this->generateSessionKey($taskCode);
 
         $metadata = $task->metadata ?? [];
         $metadata['session'] = [
