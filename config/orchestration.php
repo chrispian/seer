@@ -88,4 +88,25 @@ return [
             ? explode(',', env('FE_REDACT_PATTERNS'))
             : [],
     ],
+
+    'search' => [
+        'driver' => env('ORCHESTRATION_SEARCH_DRIVER', 'fulltext'),
+        'cache_ttl' => (int) env('ORCHESTRATION_SEARCH_CACHE_TTL', 3600),
+        'index_fields' => ['event_type', 'entity_type', 'payload'],
+    ],
+
+    'workflow' => [
+        'allow_phase_skip' => false,
+        'allow_user_override' => true,
+        'require_artifact_validation' => true,
+        'sync_files_on_phase_complete' => false,
+        'sync_files_on_close' => true,
+    ],
+
+    'git' => [
+        'enabled' => env('ORCHESTRATION_GIT_ENABLED', true),
+        'auto_commit' => env('ORCHESTRATION_GIT_AUTO_COMMIT', false),
+        'commit_message_template' => 'feat({sprint_code}): {task_title} [TSK-{task_code}]',
+        'track_commits' => true,
+    ],
 ];
