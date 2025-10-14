@@ -20,7 +20,8 @@ class Router implements RouterInterface
             $promptTemplate
         );
 
-        $model = Config::get('fragments.tool_aware_turn.models.router', 'gpt-4o-mini');
+        // Use session model if available, otherwise fall back to config
+        $model = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.router', 'gpt-4o-mini');
         $retryOnFailure = Config::get('fragments.tool_aware_turn.features.retry_on_parse_failure', true);
 
         try {
@@ -63,7 +64,8 @@ class Router implements RouterInterface
 
     protected function callLLM(string $prompt, string $model): string
     {
-        $provider = Config::get('fragments.models.default_provider', 'openai');
+        // Parse model to determine provider (e.g., "gpt-4o-mini" -> openai, "claude-3" -> anthropic)
+        $provider = $this->getProviderForModel($model);
 
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 
@@ -72,13 +74,30 @@ class Router implements RouterInterface
 
         $response = $providerManager->generateText($fullPrompt, [
             'request_type' => 'tool_routing',
-        ], [
+            'provider' => $provider,
             'model' => $model,
+        ], [
             'temperature' => 0.1,
             'max_tokens' => 500,
         ]);
 
         return $response['text'] ?? '';
+    }
+
+    protected function getProviderForModel(string $model): string
+    {
+        if (str_starts_with($model, 'gpt-') || str_starts_with($model, 'o1-')) {
+            return 'openai';
+        }
+        if (str_starts_with($model, 'claude-')) {
+            return 'anthropic';
+        }
+        if (str_contains($model, '/')) {
+            // Format like "openai/gpt-4" or "anthropic/claude-3"
+            return explode('/', $model)[0];
+        }
+        
+        return Config::get('fragments.models.default_provider', 'openai');
     }
 
     protected function parseResponse(string $response): RouterDecision

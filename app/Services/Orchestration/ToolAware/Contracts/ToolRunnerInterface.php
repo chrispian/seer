@@ -10,5 +10,5 @@ interface ToolRunnerInterface
     /**
      * Execute tool plan and collect results
      */
-    public function execute(ToolPlan $plan): ExecutionTrace;
+    public function execute(ToolPlan $plan, ?int $sessionId = null, ?string $conversationId = null, ?string $messageId = null): ExecutionTrace;
 }

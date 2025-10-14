@@ -9,9 +9,12 @@ use Illuminate\Support\Facades\Log;
 
 class CreateChatFragment
 {
-    public function __invoke(string $content): Fragment
+    public function __invoke(string $content, string $source = 'chat-user', array $metadata = []): Fragment
     {
-        Log::debug('CreateChatFragment::invoke()', ['content_length' => strlen($content)]);
+        Log::debug('CreateChatFragment::invoke()', [
+            'content_length' => strlen($content),
+            'source' => $source,
+        ]);
 
         // Normalize input content and generate hash (same as RouteFragment)
         $normalization = app(NormalizeInput::class)($content);
@@ -48,7 +51,8 @@ class CreateChatFragment
             'project_id' => $defaultProject->id,
             'input_hash' => $normalization['hash'],
             'hash_bucket' => $normalization['bucket'],
-            'source' => 'chat-user', // Set source immediately
+            'source' => $source,
+            'metadata' => empty($metadata) ? null : $metadata,
         ]);
 
         Log::debug('Chat fragment created (bypassed deduplication)', [
@@ -57,6 +61,7 @@ class CreateChatFragment
             'project_id' => $defaultProject->id,
             'hash' => $normalization['hash'],
             'bucket' => $normalization['bucket'],
+            'source' => $source,
         ]);
 
         return $fragment;

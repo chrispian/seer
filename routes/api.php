@@ -109,9 +109,14 @@ Route::get('/chat-sessions/context', [ChatSessionController::class, 'getContext'
 Route::get('/chat-sessions/{chatSession}', [ChatSessionController::class, 'show']);
 Route::put('/chat-sessions/{chatSession}', [ChatSessionController::class, 'update']);
 Route::put('/chat-sessions/{chatSession}/model', [ChatSessionController::class, 'updateModel']);
+Route::put('/chat-sessions/{chatSession}/project', [ChatSessionController::class, 'updateProject']);
+Route::put('/chat-sessions/{chatSession}/paths', [ChatSessionController::class, 'updatePaths']);
 Route::delete('/chat-sessions/{chatSession}', [ChatSessionController::class, 'destroy']);
 Route::post('/chat-sessions/{chatSession}/pin', [ChatSessionController::class, 'togglePin']);
 Route::post('/chat-sessions/pin-order', [ChatSessionController::class, 'updatePinOrder']);
+
+// Chat-specific endpoints
+Route::get('/chat/projects', [ChatSessionController::class, 'getProjects']);
 
 // Vault endpoints
 Route::get('/vaults', [VaultController::class, 'index']);

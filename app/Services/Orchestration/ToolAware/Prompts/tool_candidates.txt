@@ -81,7 +81,37 @@ Response: {
   "inputs_needed": ["reply_content"]
 }
 
+Example 4 (File system - reading):
+Goal: "read the SESSION_ORCHESTRATION_SUMMARY.md file in docs/"
+Response: {
+  "selected_tool_ids": ["project_fs"],
+  "plan_steps": [
+    {
+      "tool_id": "project_fs",
+      "args": {"op": "read", "path": "docs/SESSION_ORCHESTRATION_SUMMARY.md"},
+      "why": "read file contents"
+    }
+  ],
+  "inputs_needed": []
+}
+
+Example 5 (File system - listing):
+Goal: "list files in docs folder"
+Response: {
+  "selected_tool_ids": ["project_fs"],
+  "plan_steps": [
+    {
+      "tool_id": "project_fs",
+      "args": {"op": "list", "path": "docs"},
+      "why": "list directory contents"
+    }
+  ],
+  "inputs_needed": []
+}
+
 ## Important
+
+- When using file system tools, ALWAYS include the full path from project root (e.g., "docs/file.md", not just "file.md")
 
 - Respond with ONLY the JSON object, no additional text
 - Ensure valid JSON syntax

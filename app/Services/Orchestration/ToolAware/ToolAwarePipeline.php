@@ -24,178 +24,15 @@ class ToolAwarePipeline
     ) {}
 
     /**
-     * Execute the full tool-aware turn pipeline
+     * Execute the pipeline with streaming output
      *
      * @param  int|null  $sessionId  Chat session ID
      * @param  string  $userMessage  User's message
-     * @return array ['message' => string, 'correlation_id' => string|null, 'used_tools' => bool, 'metadata' => array]
+     * @param  string|null  $conversationId  Conversation ID for approval requests
+     * @param  string|null  $messageId  Message ID for approval requests
+     * @return \Generator Yields events: router_decision, tool_plan, tool_result, outcome_summary, final_message
      */
-    public function execute(?int $sessionId, string $userMessage): array
-    {
-        $startTime = microtime(true);
-        $pipelineId = \Illuminate\Support\Str::uuid()->toString();
-
-        Log::info('Tool-aware pipeline started', [
-            'pipeline_id' => $pipelineId,
-            'session_id' => $sessionId,
-            'user_message_length' => strlen($userMessage),
-        ]);
-
-        try {
-            // Step 1: Assemble context
-            $context = $this->contextBroker->assemble($sessionId, $userMessage);
-
-            Log::debug('Context assembled', [
-                'pipeline_id' => $pipelineId,
-                'summary_length' => strlen($context->conversation_summary),
-                'tool_preview_count' => count($context->tool_registry_preview),
-            ]);
-
-            // Step 2: Router decision
-            $decision = $this->router->decide($context);
-
-            Log::info('Router decision', [
-                'pipeline_id' => $pipelineId,
-                'needs_tools' => $decision->needs_tools,
-                'goal' => $decision->high_level_goal,
-                'rationale' => $decision->rationale,
-            ]);
-
-            // If no tools needed, compose direct response
-            if (! $decision->needs_tools) {
-                $message = $this->composer->compose($context, null, null);
-
-                $totalTime = (microtime(true) - $startTime) * 1000;
-
-                Log::info('Pipeline completed (no tools)', [
-                    'pipeline_id' => $pipelineId,
-                    'total_time_ms' => round($totalTime, 2),
-                ]);
-
-                return [
-                    'message' => $message,
-                    'correlation_id' => null,
-                    'used_tools' => false,
-                    'metadata' => [
-                        'pipeline_id' => $pipelineId,
-                        'needs_tools' => false,
-                        'total_time_ms' => round($totalTime, 2),
-                    ],
-                ];
-            }
-
-            // Step 3: Select tools
-            $plan = $this->toolSelector->selectTools($decision->high_level_goal, $context);
-
-            if (! $plan->hasSteps()) {
-                Log::warning('Tool plan has no steps', [
-                    'pipeline_id' => $pipelineId,
-                    'inputs_needed' => $plan->inputs_needed,
-                ]);
-
-                // Fall back to no-tool response
-                $message = $this->composer->compose($context, null, null);
-
-                $totalTime = (microtime(true) - $startTime) * 1000;
-
-                return [
-                    'message' => $message,
-                    'correlation_id' => null,
-                    'used_tools' => false,
-                    'metadata' => [
-                        'pipeline_id' => $pipelineId,
-                        'needs_tools' => true,
-                        'plan_empty' => true,
-                        'inputs_needed' => $plan->inputs_needed,
-                        'total_time_ms' => round($totalTime, 2),
-                    ],
-                ];
-            }
-
-            Log::info('Tool plan created', [
-                'pipeline_id' => $pipelineId,
-                'selected_tools' => $plan->selected_tool_ids,
-                'step_count' => $plan->stepCount(),
-            ]);
-
-            // Step 4: Execute tools
-            $trace = $this->toolRunner->execute($plan);
-
-            Log::info('Tools executed', [
-                'pipeline_id' => $pipelineId,
-                'correlation_id' => $trace->correlation_id,
-                'steps_executed' => count($trace->steps),
-                'total_elapsed_ms' => $trace->total_elapsed_ms,
-                'has_errors' => $trace->hasErrors(),
-            ]);
-
-            // Step 5: Summarize outcome
-            $summary = $this->summarizer->summarize($trace);
-
-            Log::info('Outcome summarized', [
-                'pipeline_id' => $pipelineId,
-                'correlation_id' => $trace->correlation_id,
-                'confidence' => $summary->confidence,
-                'key_facts' => count($summary->key_facts),
-            ]);
-
-            // Step 6: Compose final response
-            $message = $this->composer->compose($context, $summary, $trace->correlation_id);
-
-            $totalTime = (microtime(true) - $startTime) * 1000;
-
-            Log::info('Pipeline completed (with tools)', [
-                'pipeline_id' => $pipelineId,
-                'correlation_id' => $trace->correlation_id,
-                'total_time_ms' => round($totalTime, 2),
-                'tool_time_ms' => round($trace->total_elapsed_ms, 2),
-            ]);
-
-            // Step 7: Audit logging
-            $this->auditLog($pipelineId, $context, $decision, $plan, $trace, $summary);
-
-            return [
-                'message' => $message,
-                'correlation_id' => $trace->correlation_id,
-                'used_tools' => true,
-                'metadata' => [
-                    'pipeline_id' => $pipelineId,
-                    'needs_tools' => true,
-                    'tools_used' => $plan->selected_tool_ids,
-                    'step_count' => count($trace->steps),
-                    'confidence' => $summary->confidence,
-                    'has_errors' => $trace->hasErrors(),
-                    'total_time_ms' => round($totalTime, 2),
-                    'tool_time_ms' => round($trace->total_elapsed_ms, 2),
-                ],
-            ];
-
-        } catch (\Exception $e) {
-            $totalTime = (microtime(true) - $startTime) * 1000;
-
-            Log::error('Pipeline failed', [
-                'pipeline_id' => $pipelineId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'total_time_ms' => round($totalTime, 2),
-            ]);
-
-            // Graceful degradation - return error message
-            return [
-                'message' => "I encountered an error while processing your request: {$e->getMessage()}",
-                'correlation_id' => null,
-                'used_tools' => false,
-                'metadata' => [
-                    'pipeline_id' => $pipelineId,
-                    'error' => true,
-                    'error_message' => $e->getMessage(),
-                    'total_time_ms' => round($totalTime, 2),
-                ],
-            ];
-        }
-    }
-
-    public function executeStreaming(?int $sessionId, string $userMessage): \Generator
+    public function executeStreaming(?int $sessionId, string $userMessage, ?string $conversationId = null, ?string $messageId = null): \Generator
     {
         $startTime = microtime(true);
         $pipelineId = \Illuminate\Support\Str::uuid()->toString();
@@ -234,10 +71,16 @@ class ToolAwarePipeline
             if (! $decision->needs_tools) {
                 $message = $this->composer->compose($context, null, null);
 
+                // Get the actual model used (from session or config)
+                $composerModel = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
+                $composerProvider = $this->getProviderForModel($composerModel);
+
                 yield [
                     'type' => 'final_message',
                     'message' => $message,
                     'used_tools' => false,
+                    'ai_provider' => $composerProvider,
+                    'ai_model' => $composerModel,
                 ];
 
                 yield ['type' => 'done'];
@@ -257,10 +100,16 @@ class ToolAwarePipeline
             if (! $plan->hasSteps()) {
                 $message = $this->composer->compose($context, null, null);
 
+                // Get the actual model used (from session or config)
+                $composerModel = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
+                $composerProvider = $this->getProviderForModel($composerModel);
+
                 yield [
                     'type' => 'final_message',
                     'message' => $message,
                     'used_tools' => false,
+                    'ai_provider' => $composerProvider,
+                    'ai_model' => $composerModel,
                 ];
 
                 yield ['type' => 'done'];
@@ -270,7 +119,7 @@ class ToolAwarePipeline
 
             // Step 4: Execute tools (streaming)
             $trace = null;
-            foreach ($this->toolRunner->executeStreaming($plan) as $event) {
+            foreach ($this->toolRunner->executeStreaming($plan, $sessionId, $conversationId, $messageId) as $event) {
                 if ($event['type'] === 'execution_complete') {
                     $trace = new ExecutionTrace($event['correlation_id']);
                     foreach ($event['trace']['steps'] as $stepData) {
@@ -291,7 +140,7 @@ class ToolAwarePipeline
             // Step 5: Summarize outcome
             yield ['type' => 'summarizing'];
 
-            $summary = $this->summarizer->summarize($trace);
+            $summary = $this->summarizer->summarize($trace, $context);
 
             yield [
                 'type' => 'summary',
@@ -305,12 +154,18 @@ class ToolAwarePipeline
 
             $totalTime = (microtime(true) - $startTime) * 1000;
 
+            // Get the actual model used (from session or config)
+            $composerModel = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
+            $composerProvider = $this->getProviderForModel($composerModel);
+
             yield [
                 'type' => 'final_message',
                 'message' => $message,
                 'used_tools' => true,
                 'correlation_id' => $trace->correlation_id,
                 'total_time_ms' => round($totalTime, 2),
+                'ai_provider' => $composerProvider,
+                'ai_model' => $composerModel,
             ];
 
             // Audit logging
@@ -397,5 +252,23 @@ class ToolAwarePipeline
         }
 
         return json_decode($jsonData, true) ?? $data;
+    }
+
+    /**
+     * Determine provider from model name
+     */
+    protected function getProviderForModel(string $model): string
+    {
+        if (str_starts_with($model, 'gpt-') || str_starts_with($model, 'o1-')) {
+            return 'openai';
+        }
+        if (str_starts_with($model, 'claude-')) {
+            return 'anthropic';
+        }
+        if (str_contains($model, '/')) {
+            return explode('/', $model)[0];
+        }
+        
+        return Config::get('fragments.models.default_provider', 'openai');
     }
 }

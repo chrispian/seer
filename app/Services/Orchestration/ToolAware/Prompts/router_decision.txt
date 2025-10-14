@@ -21,7 +21,7 @@ Return **ONLY valid JSON** in this exact format:
 
 ## Rules
 
-1. Set needs_tools = true ONLY if you cannot answer sufficiently from the conversation context OR you need to perform an action (send email, create event, fetch data, etc.)
+1. Set needs_tools = true ONLY if you cannot answer sufficiently from the conversation context OR you need to perform an action (read/write files, send email, create event, fetch data, execute commands, etc.)
 2. Set needs_tools = false if you can answer from the conversation context alone
 3. Keep rationale to ONE sentence
 4. If needs_tools is true, provide a clear high_level_goal (e.g., "fetch calendar events for next week", "send email to team")
@@ -40,6 +40,20 @@ Response: {"needs_tools": true, "rationale": "Need to fetch calendar data", "hig
 Example 3 (Tools needed for action):
 User: "Send an email to the team about tomorrow's meeting"
 Response: {"needs_tools": true, "rationale": "Need to send email via email tool", "high_level_goal": "send email to team about meeting"}
+
+Example 4 (Tools needed for file reading):
+User: "Read the README.md file and summarize it"
+Response: {"needs_tools": true, "rationale": "Need to read file from filesystem", "high_level_goal": "read README.md file contents"}
+
+Example 5 (Tools needed for file reading with path):
+User: "Read the SESSION_SUMMARY.md file in docs/ and summarize it"
+Response: {"needs_tools": true, "rationale": "Need to read file from filesystem", "high_level_goal": "read docs/SESSION_SUMMARY.md file contents"}
+
+Example 6 (Tools needed for directory listing):
+User: "List the files in the app/Models directory"
+Response: {"needs_tools": true, "rationale": "Need to list directory contents from filesystem", "high_level_goal": "list files in app/Models"}
+
+IMPORTANT: When the user specifies a file path with directory (e.g., "file.md in docs/"), ALWAYS include the full path in the goal (e.g., "docs/file.md").
 
 ## Important
 
