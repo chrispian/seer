@@ -1,0 +1,336 @@
+# Orchestration Workflow Configuration
+# Defines phases, artifacts, events, and next-step instructions for agent task execution
+
+phases:
+  intake:
+    order: 1
+    goal: "Clarify task requirements and confirm understanding with the user"
+    description: |
+      In this phase, the agent must:
+      1. Read and understand the task request
+      2. Ask clarifying questions if anything is unclear or ambiguous
+      3. Restate the task concisely to confirm understanding
+      4. Once confirmed, create an optimized TASK.md following the template
+      5. Ensure all required task metadata is captured (status, tags, project)
+    
+    artifacts:
+      required:
+        - name: TASK.md
+          description: "Detailed task specification with clear acceptance criteria"
+          template: task_template
+      optional: []
+    
+    validation:
+      required_fields:
+        - title
+        - status
+        - description
+        - acceptance_criteria
+      warn_if_missing:
+        - tags
+        - project_id
+        - estimated_effort
+    
+    events:
+      - intake.start
+      - intake.questions
+      - intake.confirmed
+      - intake.artifact_created
+      - intake.end
+    
+    next_step: |
+      ✓ Intake phase complete. All task details have been confirmed and documented.
+      
+      → Next Phase: RESEARCH
+      Goal: Gather necessary context from codebase, documentation, and related tasks.
+      
+      Actions:
+      1. Execute tool calls to explore relevant code
+      2. Search for related tasks, bugs, or documentation
+      3. Document findings in CONTEXT.md
+      
+      When ready: orchestration:phase-complete intake
+
+  research:
+    order: 2
+    goal: "Gather context from codebase, documentation, and related work"
+    description: |
+      In this phase, the agent must:
+      1. Search codebase for relevant files, functions, and patterns
+      2. Review related tasks, sprints, and documentation
+      3. Identify dependencies and constraints
+      4. Document all findings in CONTEXT.md with citations
+      5. Flag any blockers or missing information
+    
+    artifacts:
+      required:
+        - name: CONTEXT.md
+          description: "Comprehensive context gathered from research"
+          template: context_template
+      optional: []
+    
+    events:
+      - research.start
+      - research.tool_call
+      - research.finding
+      - research.artifact_created
+      - research.end
+    
+    next_step: |
+      ✓ Research phase complete. All necessary context has been gathered and documented.
+      
+      → Next Phase: PLAN
+      Goal: Create a detailed implementation plan with actionable steps.
+      
+      Actions:
+      1. Break down the task into concrete steps
+      2. Identify potential risks and mitigations
+      3. Document plan in PLAN.md
+      4. Create TODO.md with trackable checklist
+      
+      When ready: orchestration:phase-complete research
+
+  plan:
+    order: 3
+    goal: "Create detailed implementation plan with actionable steps"
+    description: |
+      In this phase, the agent must:
+      1. Analyze task requirements and research findings
+      2. Break work into logical, sequential steps
+      3. Identify files to modify, create, or delete
+      4. Consider edge cases, testing, and rollback strategy
+      5. Document plan in PLAN.md
+      6. Generate TODO.md with trackable checklist
+      7. Flag if task should be split into multiple tasks or sprints
+    
+    artifacts:
+      required:
+        - name: PLAN.md
+          description: "Detailed implementation plan with steps and considerations"
+          template: plan_template
+        - name: TODO.md
+          description: "Trackable checklist of action items"
+          template: todo_template
+      optional:
+        - name: TOOLS.md
+          description: "Special tools or commands needed for this task"
+        - name: RULES.md
+          description: "Task-specific constraints or conventions to follow"
+    
+    validation:
+      check_plan_completeness: true
+      warn_if_large_scope: true
+      suggest_sprint_split: true
+    
+    events:
+      - plan.start
+      - plan.step.defined
+      - plan.artifact_created
+      - plan.reviewed
+      - plan.end
+    
+    next_step: |
+      ✓ Plan phase complete. Implementation approach is documented and ready.
+      
+      → Next Phase: EXECUTE
+      Goal: Implement the planned changes step by step.
+      
+      Actions:
+      1. Note current git commit for tracking (if git enabled)
+      2. Execute each step from PLAN.md
+      3. Update TODO.md as steps are completed
+      4. Document any deviations or discoveries
+      5. Run tests and validation after changes
+      
+      When ready: orchestration:phase-complete plan
+
+  execute:
+    order: 4
+    goal: "Implement changes according to the plan"
+    description: |
+      In this phase, the agent must:
+      1. Capture current git commit hash for tracking
+      2. Execute each step from PLAN.md in order
+      3. Update TODO.md checklist as work progresses
+      4. Document any bugs encountered in BUGS.md
+      5. Handle unexpected issues:
+         - If bug found: check if duplicate, decide action with user
+         - If blocker found: document and escalate
+      6. Run tests and validation commands
+      7. Ensure all changes align with plan
+    
+    artifacts:
+      required: []
+      optional:
+        - name: BUGS.md
+          description: "Bugs discovered during implementation"
+        - name: TOOLS.md
+          description: "Tools or scripts created/used during execution"
+        - name: RULES.md
+          description: "Conventions or patterns followed"
+    
+    hooks:
+      on_start:
+        - git.capture_commit_hash
+      on_bug_found:
+        - bug.check_duplicate
+        - bug.prompt_user_action
+      on_end:
+        - test.run_validation
+        - git.capture_final_commit
+    
+    events:
+      - execute.start
+      - execute.step_complete
+      - execute.bug_found
+      - execute.test_run
+      - execute.commit_captured
+      - execute.end
+    
+    next_step: |
+      ✓ Execute phase complete. All planned changes have been implemented.
+      
+      → Next Phase: REVIEW
+      Goal: Test changes, gather feedback, and prepare summary.
+      
+      Actions:
+      1. Run full test suite
+      2. Review changes for quality and completeness
+      3. Generate CHANGES.md with summary of modifications
+      4. Present summary to user
+      5. Iterate on feedback (mark phase as review.iteration)
+      6. Wait for user approval
+      
+      When ready: orchestration:phase-complete execute
+
+  review:
+    order: 5
+    goal: "Test, review, and iterate until changes are approved"
+    description: |
+      In this phase, the agent must:
+      1. Run comprehensive tests (unit, integration, lint)
+      2. Review git diff for quality and completeness
+      3. Generate CHANGES.md summarizing:
+         - What was changed and why
+         - Files modified/added/deleted
+         - Testing results
+         - Any known limitations or follow-ups
+      4. Present summary to user
+      5. Iterate on feedback (multiple review cycles allowed)
+      6. Document final status and any outstanding items
+      7. Wait for explicit user approval before closing
+    
+    artifacts:
+      required:
+        - name: CHANGES.md
+          description: "Summary of changes, testing, and impact"
+          template: changes_template
+      optional: []
+    
+    validation:
+      require_user_approval: true
+      check_tests_passed: true
+      check_lint_passed: true
+    
+    events:
+      - review.start
+      - review.tests_run
+      - review.summary_generated
+      - review.iteration
+      - review.approved
+      - review.end
+    
+    next_step: |
+      ✓ Review phase complete. Changes have been tested and approved.
+      
+      → Next Phase: CLOSE
+      Goal: Finalize documentation and orchestration artifacts.
+      
+      Actions:
+      1. Update project documentation (README.md if needed)
+      2. Finalize TASK.md, PLAN.md, CONTEXT.md with outcomes
+      3. Commit changes if git auto-commit enabled
+      4. Link PR to task if applicable
+      5. Update task status to completed
+      6. Archive session artifacts
+      
+      When ready: orchestration:phase-complete review
+
+  close:
+    order: 6
+    goal: "Finalize documentation and complete task tracking"
+    description: |
+      In this phase, the agent must:
+      1. Update project-level documentation (README.md, ADRs, etc.)
+      2. Finalize all task artifacts with outcomes and learnings
+      3. Sync all files to disk (TASK.md, PLAN.md, CONTEXT.md, etc.)
+      4. Commit changes if git.auto_commit is enabled
+      5. Link PR to task metadata if PR exists
+      6. Update task status to completed
+      7. Log final session summary
+      8. Clean up ephemeral memory (compact to postop)
+    
+    artifacts:
+      required: []
+      optional:
+        - name: README.md
+          description: "Updated project documentation"
+        - name: ADR-*.md
+          description: "Architectural decision records if needed"
+    
+    hooks:
+      on_start:
+        - files.sync_all_to_disk
+      on_end:
+        - git.commit_if_enabled
+        - git.link_pr_if_exists
+        - task.mark_completed
+        - memory.compact_to_postop
+        - session.archive
+    
+    events:
+      - close.start
+      - close.docs_updated
+      - close.files_synced
+      - close.committed
+      - close.pr_linked
+      - close.task_completed
+      - close.end
+    
+    next_step: |
+      ✓ Task complete! All work has been documented and finalized.
+      
+      Session closed. All artifacts have been saved.
+      
+      To start a new task: orchestration:session-start <task-code>
+
+# Configuration Options
+settings:
+  allow_phase_skip: false
+  allow_user_override: true
+  require_artifact_validation: true
+  sync_files_on_phase_complete: false
+  sync_files_on_close: true
+  log_all_events: true
+  
+  validation:
+    block_on_missing_required: true
+    warn_on_missing_optional: true
+    prompt_user_on_validation_fail: true
+  
+  git:
+    capture_commits: true
+    auto_commit: false
+    commit_message_template: "feat({sprint_code}): {task_title} [TSK-{task_code}]"
+  
+  memory:
+    compact_ephemeral_on_close: true
+    preserve_postop: true
+    ttl_ephemeral_seconds: 86400
+
+# Sprint Configuration
+sprint_detection:
+  enabled: true
+  suggest_split_if_steps_exceed: 10
+  suggest_split_if_files_exceed: 15
+  prompt_user_on_split: true
