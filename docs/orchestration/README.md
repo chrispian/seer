@@ -1,40 +1,97 @@
 # Orchestration System Documentation
 
-**Last Updated**: 2025-10-07
+**Last Updated**: 2025-10-13  
+**Version**: 2.0
 
 ## Overview
 
-The Fragments Engine Orchestration System provides task management, agent coordination, activity logging, and context storage for AI-driven development workflows.
+The Fragments Engine Orchestration System provides comprehensive task management, agent coordination, activity logging, and context storage for AI-driven development workflows. Version 2.0 adds phase-driven workflows, bug tracking, context search, and git integration.
 
-## Core Components
+## 📚 Documentation Index
 
-### 1. Task Context & Activity Logging
+### Start Here
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete system architecture guide (read this first!)
+- **[Session State Machine](./SESSION_STATE_MACHINE_IMPLEMENTATION.md)** - Phase-driven workflow implementation
+- **[Task Session Lifecycle](./TASK_SESSION_LIFECYCLE.md)** - Detailed session flow analysis
+
+### Reference
+- **[API Reference](./API_REFERENCE.md)** - Complete API documentation
+- **[Agent Command Reference](./AGENT_COMMAND_REFERENCE.md)** - CLI commands for agents
+- **[Agent Workflow Process](./AGENT_WORKFLOW_PROCESS.md)** - Step-by-step agent guidance
+- **[Performance Considerations](./PERFORMANCE_CONSIDERATIONS.md)** - Optimization and scaling
+
+### Implementation Guides
+- [Task Context & Activity Logging](./task-context-and-activity-logging.md)
+- [Postmaster & Agent INIT](./postmaster-and-init.md)
+- [Documentation Knowledge Base](./documentation-knowledge-base.md)
+
+## Core Components (v2.0)
+
+### 1. Session State Machine ✅ NEW
+**Status**: ✅ Production Ready  
+**Docs**: [ARCHITECTURE.md#1-session-state-machine](./ARCHITECTURE.md#1-session-state-machine)
+
+- 6-phase workflow: Intake → Research → Plan → Execute → Review → Close
+- Template-driven configuration via workflow.yaml
+- Phase validation with user override
+- Next-step instructions for agents
+- **CLI**: `session-start`, `session-end`, `phase-complete`
+
+### 2. Bug Tracking System ✅ NEW
+**Status**: ✅ Production Ready  
+**Docs**: [ARCHITECTURE.md#2-bug-tracking-system](./ARCHITECTURE.md#2-bug-tracking-system)
+
+- Smart hashing for automatic deduplication
+- Occurrence tracking (single record per bug)
+- Interactive user prompts
+- Error type classification
+- **CLI**: `bug-log`
+
+### 3. Context Search ✅ NEW
+**Status**: ✅ Production Ready  
+**Docs**: [ARCHITECTURE.md#3-context-search](./ARCHITECTURE.md#3-context-search)
+
+- Full-text search across orchestration events
+- Scope filtering (SESSION/TASK/SPRINT/PROJECT)
+- Relevance scoring + caching
+- Summary statistics
+- **CLI**: `context-search`
+
+### 4. Git Integration ✅ NEW
+**Status**: ✅ Production Ready  
+**Docs**: [ARCHITECTURE.md#4-git-integration](./ARCHITECTURE.md#4-git-integration)
+
+- Automatic commit tracking
+- PR linking with metadata
+- CHANGES.md generation
+- Configurable auto-commit
+- **CLI**: `git-link-pr`
+
+### 5. Task Context & Activity Logging
 **Status**: ✅ Implemented  
 **Docs**: [task-context-and-activity-logging.md](./task-context-and-activity-logging.md)
 
-- Self-contained tasks with all context in database
+- Self-contained tasks with database storage
 - Complete activity audit trail
-- Automatic logging on status changes and assignments
-- Large content overflow to Artifacts (>10MB)
-- RESTful API and MCP tools
+- Automatic logging on changes
+- Large content overflow to Artifacts
 
-### 2. Postmaster & Agent INIT
+### 6. Postmaster & Agent INIT
 **Status**: ✅ Implemented  
 **Docs**: [postmaster-and-init.md](./postmaster-and-init.md)
 
-- Content-addressable storage for large files
-- PM→Agent messaging system
+- Content-addressable storage
+- PM→Agent messaging
 - Agent initialization protocol
 - Secret redaction
 
-### 3. Documentation Knowledge Base
+### 7. Documentation Knowledge Base
 **Status**: 📋 Planned  
 **Docs**: [documentation-knowledge-base.md](./documentation-knowledge-base.md)
 
-- Semantic tagging system (#danger, #solution, #common-issue)
-- Multi-dimensional organization (namespace, subsystem, purpose)
+- Semantic tagging system
+- Multi-dimensional organization
 - Agent research workflows
-- Refactor targeting
 
 ## Quick Start
 
