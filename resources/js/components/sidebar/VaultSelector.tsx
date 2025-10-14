@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { Archive, ChevronDown, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 interface Vault {
-  id: string
+  id: number
   name: string
 }
 
@@ -18,7 +18,23 @@ interface VaultSelectorProps {
   currentVault: Vault | null
   vaults: Vault[]
   isLoading?: boolean
-  onVaultChange: (vaultId: string) => void
+  onVaultChange: (vaultId: number) => void
+  onCreateVault: () => void
+}
+
+interface VaultSelectorProps {
+  currentVault: Vault | null
+  vaults: Vault[]
+  isLoading?: boolean
+  onVaultChange: (vaultId: number) => void
+  onCreateVault: () => void
+}
+
+interface VaultSelectorProps {
+  currentVault: Vault | null
+  vaults: Vault[]
+  isLoading?: boolean
+  onVaultChange: (vaultId: number) => void
   onCreateVault: () => void
 }
 

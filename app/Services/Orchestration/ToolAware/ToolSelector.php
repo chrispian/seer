@@ -27,12 +27,13 @@ class ToolSelector implements ToolSelectorInterface
             $promptTemplate
         );
 
-        // Use session model if available, otherwise fall back to config
+        // Use session model and provider if available, otherwise fall back to config
         $model = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.candidate_selector', 'gpt-4o-mini');
+        $provider = $context->agent_prefs['model_provider'] ?? $this->getProviderForModel($model);
         $retryOnFailure = Config::get('fragments.tool_aware_turn.features.retry_on_parse_failure', true);
 
         try {
-            $response = $this->callLLM($prompt, $model);
+            $response = $this->callLLM($prompt, $model, $provider);
             $plan = $this->parseResponse($response);
 
             // Apply permission filtering and arg resolution
@@ -56,7 +57,7 @@ class ToolSelector implements ToolSelectorInterface
             $retryPrompt = $prompt."\n\nIMPORTANT: Respond with ONLY valid JSON, no additional text.";
 
             try {
-                $response = $this->callLLM($retryPrompt, $model);
+                $response = $this->callLLM($retryPrompt, $model, $provider);
                 $plan = $this->parseResponse($response);
 
                 $plan = $this->filterByPermissions($plan);
@@ -161,10 +162,12 @@ class ToolSelector implements ToolSelectorInterface
         return $plan;
     }
 
-    protected function callLLM(string $prompt, string $model): string
+    protected function callLLM(string $prompt, string $model, ?string $provider = null): string
     {
-        // Parse model to determine provider
-        $provider = $this->getProviderForModel($model);
+        // Use provided provider or infer from model name
+        if ($provider === null) {
+            $provider = $this->getProviderForModel($model);
+        }
 
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 

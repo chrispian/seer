@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Check, ChevronsUpDown, Bot } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -95,7 +95,8 @@ export function CompactModelPicker({
   // Get display text for the selected model
   const getDisplayText = () => {
     if (selectedModel) {
-      const provider = providers.find(p => p.models.some(m => m.value === value))
+      // Find provider by checking if any of its models match the selected model ID
+      const provider = providers.find(p => p.models.some(m => m.id === selectedModelId || m.value === value))
       return `${provider?.provider_name}: ${selectedModel.label}`
     }
     return loading ? 'Loading...' : 'Select model'

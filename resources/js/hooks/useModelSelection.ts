@@ -9,9 +9,10 @@ interface ModelSelectionState {
 interface UseModelSelectionProps {
   sessionId?: number | null
   defaultModel?: string | number
+  transformModelForApi?: (model: string) => { modelKey: string; providerSlug: string }
 }
 
-export function useModelSelection({ sessionId, defaultModel = '' }: UseModelSelectionProps) {
+export function useModelSelection({ sessionId, defaultModel = '', transformModelForApi }: UseModelSelectionProps) {
   const [state, setState] = useState<ModelSelectionState>({
     selectedModel: String(defaultModel || ''),
     isLoading: false,

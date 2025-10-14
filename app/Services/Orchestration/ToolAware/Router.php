@@ -20,12 +20,24 @@ class Router implements RouterInterface
             $promptTemplate
         );
 
-        // Use session model if available, otherwise fall back to config
-        $model = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.router', 'gpt-4o-mini');
+        // Use session model and provider if available, otherwise fall back to config
+        $sessionModel = $context->agent_prefs['model_name'] ?? null;
+        $sessionProvider = $context->agent_prefs['model_provider'] ?? null;
+        $model = $sessionModel ?? Config::get('fragments.tool_aware_turn.models.router', 'gpt-4o-mini');
+        $provider = $sessionProvider ?? $this->getProviderForModel($model);
         $retryOnFailure = Config::get('fragments.tool_aware_turn.features.retry_on_parse_failure', true);
 
+        Log::info('Router::decide - Model selection', [
+            'component' => 'ToolAware/Router',
+            'session_model' => $sessionModel,
+            'session_provider' => $sessionProvider,
+            'selected_model' => $model,
+            'selected_provider' => $provider,
+            'used_session_prefs' => $sessionModel !== null,
+        ]);
+
         try {
-            $response = $this->callLLM($prompt, $model);
+            $response = $this->callLLM($prompt, $model, $provider);
             $decision = $this->parseResponse($response);
 
             Log::info('Router decision made', [
@@ -46,7 +58,7 @@ class Router implements RouterInterface
             $retryPrompt = $prompt."\n\nIMPORTANT: Respond with ONLY valid JSON, no additional text or formatting.";
 
             try {
-                $response = $this->callLLM($retryPrompt, $model);
+                $response = $this->callLLM($retryPrompt, $model, $provider);
                 $decision = $this->parseResponse($response);
 
                 Log::info('Router decision made on retry', [
@@ -62,10 +74,12 @@ class Router implements RouterInterface
         }
     }
 
-    protected function callLLM(string $prompt, string $model): string
+    protected function callLLM(string $prompt, string $model, ?string $provider = null): string
     {
-        // Parse model to determine provider (e.g., "gpt-4o-mini" -> openai, "claude-3" -> anthropic)
-        $provider = $this->getProviderForModel($model);
+        // Use provided provider or infer from model name
+        if ($provider === null) {
+            $provider = $this->getProviderForModel($model);
+        }
 
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 

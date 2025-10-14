@@ -50,11 +50,11 @@ export function ChatComposer({
   const [speechSupported, setSpeechSupported] = useState(false)
   const [pendingAttachments, setPendingAttachments] = useState<Array<{markdown: string, url: string, filename: string}>>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<any>(null)
 
   React.useEffect(() => {
     // Check for speech recognition support
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (SpeechRecognition) {
       setSpeechSupported(true)
       const recognition = new SpeechRecognition()
@@ -62,7 +62,7 @@ export function ChatComposer({
       recognition.interimResults = false
       recognition.lang = 'en-US'
 
-      recognition.onresult = (event) => {
+      recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript
         if (editor && transcript) {
           editor.commands.insertContent(transcript + ' ')
@@ -132,7 +132,7 @@ export function ChatComposer({
         placeholder
       }
     },
-    onUpdate: ({ editor }) => {
+    onUpdate: () => {
       // Auto-resize behavior could be added here if needed
     }
   })
@@ -140,7 +140,7 @@ export function ChatComposer({
   const handleSend = () => {
     if (!editor || disabled) return
 
-    const markdown = editor.storage.markdown.getMarkdown()
+    const markdown = (editor.storage as any).markdown.getMarkdown()
     const trimmed = markdown.trim()
 
     // Check if this is a slash command
@@ -234,7 +234,7 @@ export function ChatComposer({
     event.target.value = ''
   }
 
-  const [isEmpty, setIsEmpty] = useState(true)
+  const [, setIsEmpty] = useState(true)
 
   // Update isEmpty when editor content changes
   React.useEffect(() => {

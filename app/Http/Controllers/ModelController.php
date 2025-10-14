@@ -57,7 +57,7 @@ class ModelController extends Controller
                 usort($models, fn ($a, $b) => strcasecmp($a['label'], $b['label']));
 
                 $availableModels[] = [
-                    'provider' => $provider->id,
+                    'provider' => $provider->provider,  // Provider slug (e.g., 'openai', 'anthropic')
                     'provider_name' => $provider->name,
                     'models' => $models,
                 ];
