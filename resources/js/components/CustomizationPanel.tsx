@@ -35,7 +35,7 @@ import {
   RotateCcw,
   Layout,
   Palette,
-  Spacing,
+  Space,
   Monitor,
   Eye,
   EyeOff,

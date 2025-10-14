@@ -58,6 +58,16 @@ class ToolAwarePipeline
             ];
 
             // Step 2: Router decision
+            yield [
+                'type' => 'status',
+                'component' => 'ToolAware/Router',
+                'action' => 'Analyzing request',
+                'session_model' => $context->agent_prefs['model_name'] ?? null,
+                'session_provider' => $context->agent_prefs['model_provider'] ?? null,
+                'selected_model' => $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.router', 'gpt-4o-mini'),
+                'selected_provider' => $context->agent_prefs['model_provider'] ?? 'openai',
+            ];
+            
             $decision = $this->router->decide($context);
 
             yield [
@@ -69,11 +79,21 @@ class ToolAwarePipeline
 
             // If no tools needed, compose direct response
             if (! $decision->needs_tools) {
-                $message = $this->composer->compose($context, null, null);
-
                 // Get the actual model used (from session or config)
                 $composerModel = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
-                $composerProvider = $this->getProviderForModel($composerModel);
+                $composerProvider = $context->agent_prefs['model_provider'] ?? $this->getProviderForModel($composerModel);
+                
+                yield [
+                    'type' => 'status',
+                    'component' => 'ToolAware/FinalComposer',
+                    'action' => 'Composing direct response (no tools needed)',
+                    'session_model' => $context->agent_prefs['model_name'] ?? null,
+                    'session_provider' => $context->agent_prefs['model_provider'] ?? null,
+                    'selected_model' => $composerModel,
+                    'selected_provider' => $composerProvider,
+                ];
+                
+                $message = $this->composer->compose($context, null, null);
 
                 yield [
                     'type' => 'final_message',
@@ -89,6 +109,17 @@ class ToolAwarePipeline
             }
 
             // Step 3: Select tools
+            yield [
+                'type' => 'status',
+                'component' => 'ToolAware/ToolSelector',
+                'action' => 'Selecting tools',
+                'goal' => $decision->high_level_goal,
+                'session_model' => $context->agent_prefs['model_name'] ?? null,
+                'session_provider' => $context->agent_prefs['model_provider'] ?? null,
+                'selected_model' => $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.candidate_selector', 'gpt-4o-mini'),
+                'selected_provider' => $context->agent_prefs['model_provider'] ?? 'openai',
+            ];
+            
             $plan = $this->toolSelector->selectTools($decision->high_level_goal, $context);
 
             yield [
@@ -98,11 +129,21 @@ class ToolAwarePipeline
             ];
 
             if (! $plan->hasSteps()) {
-                $message = $this->composer->compose($context, null, null);
-
                 // Get the actual model used (from session or config)
                 $composerModel = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
-                $composerProvider = $this->getProviderForModel($composerModel);
+                $composerProvider = $context->agent_prefs['model_provider'] ?? $this->getProviderForModel($composerModel);
+                
+                yield [
+                    'type' => 'status',
+                    'component' => 'ToolAware/FinalComposer',
+                    'action' => 'Composing response (no tools available)',
+                    'session_model' => $context->agent_prefs['model_name'] ?? null,
+                    'session_provider' => $context->agent_prefs['model_provider'] ?? null,
+                    'selected_model' => $composerModel,
+                    'selected_provider' => $composerProvider,
+                ];
+                
+                $message = $this->composer->compose($context, null, null);
 
                 yield [
                     'type' => 'final_message',
@@ -138,6 +179,16 @@ class ToolAwarePipeline
             }
 
             // Step 5: Summarize outcome
+            yield [
+                'type' => 'status',
+                'component' => 'ToolAware/OutcomeSummarizer',
+                'action' => 'Summarizing results',
+                'session_model' => $context->agent_prefs['model_name'] ?? null,
+                'session_provider' => $context->agent_prefs['model_provider'] ?? null,
+                'selected_model' => $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.summarizer', 'gpt-4o-mini'),
+                'selected_provider' => $context->agent_prefs['model_provider'] ?? 'openai',
+            ];
+            
             yield ['type' => 'summarizing'];
 
             $summary = $this->summarizer->summarize($trace, $context);
@@ -148,6 +199,16 @@ class ToolAwarePipeline
             ];
 
             // Step 6: Compose final response
+            yield [
+                'type' => 'status',
+                'component' => 'ToolAware/FinalComposer',
+                'action' => 'Composing response',
+                'session_model' => $context->agent_prefs['model_name'] ?? null,
+                'session_provider' => $context->agent_prefs['model_provider'] ?? null,
+                'selected_model' => $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o'),
+                'selected_provider' => $context->agent_prefs['model_provider'] ?? 'openai',
+            ];
+            
             yield ['type' => 'composing'];
 
             $message = $this->composer->compose($context, $summary, $trace->correlation_id);

@@ -178,6 +178,7 @@ class CommandController extends Controller
             $fragment->message = $commandText;
             $fragment->title = "Command: /{$commandName}";
             $fragment->type = 'command';
+            $fragment->source = 'command-execution';
 
             // Build metadata for activity tracking
             $responseType = null;

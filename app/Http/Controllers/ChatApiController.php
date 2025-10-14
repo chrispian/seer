@@ -820,11 +820,31 @@ class ChatApiController extends Controller
                 \Log::error('Tool-aware streaming failed', [
                     'message_id' => $messageId,
                     'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
+
+                // Extract user-friendly error message
+                $errorMessage = $e->getMessage();
+                
+                // Check for common error patterns
+                if (str_contains($errorMessage, 'credit balance is too low')) {
+                    $errorMessage = 'Insufficient API credits for the selected AI provider. Please add credits or switch to a different model.';
+                } elseif (str_contains($errorMessage, 'API key')) {
+                    $errorMessage = 'API authentication failed. Please check your API credentials.';
+                } elseif (str_contains($errorMessage, 'rate limit')) {
+                    $errorMessage = 'API rate limit exceeded. Please wait a moment and try again.';
+                } elseif (str_contains($errorMessage, 'timeout')) {
+                    $errorMessage = 'Request timed out. Please try again.';
+                } else {
+                    // For other errors, provide the actual error but truncate if too long
+                    if (strlen($errorMessage) > 200) {
+                        $errorMessage = substr($errorMessage, 0, 200) . '... (error truncated)';
+                    }
+                }
 
                 echo 'data: '.json_encode([
                     'type' => 'error',
-                    'error' => 'I encountered an error while processing your request. The error has been logged.',
+                    'error' => $errorMessage,
                 ])."\n\n";
 
                 echo 'data: '.json_encode(['type' => 'done'])."\n\n";

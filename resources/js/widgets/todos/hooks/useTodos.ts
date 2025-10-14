@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 
 interface TodoItem {
@@ -36,67 +36,23 @@ export function useTodos() {
     return response.json()
   }, [])
 
-  const transformFragmentToTodo = useCallback((fragment: any): TodoItem => {
-    const state = fragment.state || {}
-    
-    // Parse tags - handle both array and PostgreSQL array formats
-    let tags: string[] = []
-    if (Array.isArray(fragment.tags)) {
-      tags = fragment.tags.flatMap(tag => {
-        if (typeof tag === 'string') {
-          // Handle PostgreSQL array format like '{"work","important","todo"}'
-          if (tag.startsWith('{') && tag.endsWith('}')) {
-            const cleaned = tag.slice(1, -1) // Remove { }
-            return cleaned.split(',').map(t => t.replace(/"/g, '').trim()).filter(t => t)
-          }
-          // Handle JSON arrays like '["work","important","todo"]'
-          try {
-            const parsed = JSON.parse(tag)
-            return Array.isArray(parsed) ? parsed : [tag]
-          } catch {
-            return [tag]
-          }
-        }
-        return tag
-      }).filter(tag => tag && tag !== 'todo') // Remove empty tags and default 'todo' tag
-    }
 
-    // Clean up title - remove "Todo: " prefix if present
-    let title = fragment.title || fragment.message?.split('\n')[0] || 'Untitled Todo'
-    if (title.startsWith('Todo: ')) {
-      title = title.substring(6)
-    }
-    
-    return {
-      id: fragment.id.toString(),
-      fragment_id: fragment.id.toString(),
-      title: title.trim(),
-      message: fragment.message || '',
-      status: state.status === 'complete' ? 'completed' : (state.status || 'open'),
-      priority: state.priority || 'medium',
-      tags: tags,
-      created_at: fragment.created_at,
-      completed_at: state.completed_at,
-      due_at: state.due_at,
-      is_pinned: fragment.pinned || false,
-    }
-  }, [])
 
   // Fetch todos
   const { data: todos = [], isLoading, error, refetch } = useQuery({
     queryKey: ['widget-todos', searchQuery],
     queryFn: async () => {
-      let command = 'todo list limit:10' // Limit for widget
+      let command = '/todos' // Use correct registered command
       if (searchQuery) {
         command += ` search:"${searchQuery}"`
       }
       
       const result = await executeCommand(command)
       
-      if (result.success && result.panelData?.fragments) {
-        const todoItems = result.panelData.fragments.map(transformFragmentToTodo)
+      if (result.success && result.data?.items) {
+        const todoItems: TodoItem[] = result.data.items
         // Sort to show pinned first, then by priority and date
-        return todoItems.sort((a, b) => {
+        return todoItems.sort((a: TodoItem, b: TodoItem) => {
           if (a.is_pinned && !b.is_pinned) return -1
           if (!a.is_pinned && b.is_pinned) return 1
           if (a.status === 'completed' && b.status !== 'completed') return 1
@@ -113,7 +69,7 @@ export function useTodos() {
   // Toggle todo status
   const toggleStatusMutation = useMutation({
     mutationFn: async (todoId: string) => {
-      const todo = todos.find(t => t.id === todoId)
+      const todo = todos.find((t: TodoItem) => t.id === todoId)
       if (!todo) throw new Error('Todo not found')
 
       const newStatus = todo.status === 'completed' ? 'open' : 'completed'

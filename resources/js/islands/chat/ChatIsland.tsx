@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { ChatComposer } from './ChatComposer'
 import { ChatTranscript, ChatMessage } from './ChatTranscript'
 import { CommandResultModal } from './CommandResultModal'
@@ -98,7 +98,6 @@ export default function ChatIsland() {
 
   // Get current session from store (includes messages if loaded)
   const currentSession = getCurrentSession()
-  const isLoadingSession = sessionDetailsQuery.isLoading
 
   // Model selection state - use session details data which includes model info
   const sessionData = sessionDetailsQuery.data?.session
@@ -267,29 +266,19 @@ export default function ChatIsland() {
 
     return firstAvailableModel
   }, [availableModelValues, availableProviders, firstAvailableModel, sessionModelValue, userDefaultModel, userDefaultProvider])
-  
-  const normaliseModelForApi = useMemo(() => {
-    return (value: string): string => {
-      const parsed = parseModelIdentifier(value)
-      const fallbackProvider = parsed?.[0] ?? ''
-      const fallbackModelKey = parsed?.[1] ?? ''
-
-      const providerSlug = modelValueToProviderSlug.get(value) ?? fallbackProvider
-      const modelKey = modelValueToModelKey.get(value) ?? fallbackModelKey
-
-      if (providerSlug && modelKey) {
-        return `${providerSlug}/${modelKey}`
-      }
-
-      return value
-    }
-  }, [modelValueToModelKey, modelValueToProviderSlug])
 
   const { selectedModel, updateModel } = useModelSelection({
     sessionId: currentSessionId,
     defaultModel: initialModelValue,
-    transformModelForApi: normaliseModelForApi,
   })
+
+  // Wrapper to convert string model value to number for updateModel
+  const handleModelChange = (modelValue: string) => {
+    const modelId = parseInt(modelValue, 10)
+    if (!isNaN(modelId)) {
+      updateModel(modelId)
+    }
+  }
 
   // Load messages from current session (loaded via React Query)
   useEffect(() => {
@@ -540,6 +529,24 @@ export default function ChatIsland() {
             return
           }
           
+          // Handle status messages from pipeline components
+          if (data.type === 'status') {
+            const { component, action, session_model, session_provider, selected_model, selected_provider } = data
+            const modelInfo = session_model 
+              ? `${session_provider}/${session_model}` 
+              : `${selected_provider}/${selected_model} (default)`
+            
+            acc = `_${component}: ${action}_\n_Model: ${modelInfo}_\n\n`
+            setMessages(m => {
+              const last = m[m.length - 1]
+              if (last?.id === assistantId) {
+                const copy = [...m]; copy[copy.length - 1] = { ...last, md: acc }; return copy
+              }
+              return [...m, { id: assistantId, role: 'assistant', md: acc, messageId: message_id }]
+            })
+            return
+          }
+          
           if (data.type === 'router_decision') {
             if (data.needs_tools) {
               acc = `_Selecting tools for: ${data.goal}_\n\n`
@@ -585,6 +592,19 @@ export default function ChatIsland() {
           
           if (data.type === 'final_message') {
             acc = data.message
+            setMessages(m => {
+              const last = m[m.length - 1]
+              if (last?.id === assistantId) {
+                const copy = [...m]; copy[copy.length - 1] = { ...last, md: acc }; return copy
+              }
+              return [...m, { id: assistantId, role: 'assistant', md: acc, messageId: message_id }]
+            })
+            return
+          }
+          
+          if (data.type === 'error') {
+            const errorMessage = data.error || 'An error occurred while processing your request.'
+            acc = `⚠️ **Error**: ${errorMessage}`
             setMessages(m => {
               const last = m[m.length - 1]
               if (last?.id === assistantId) {
@@ -903,7 +923,7 @@ export default function ChatIsland() {
               : "Select a chat session to start messaging"
           }
           selectedModel={selectedModel}
-          onModelChange={updateModel}
+          onModelChange={handleModelChange}
           selectedProject={selectedProject}
           onProjectChange={handleProjectChange}
           onPathsManage={handlePathsManage}

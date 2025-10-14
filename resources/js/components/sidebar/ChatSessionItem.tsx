@@ -11,7 +11,7 @@ import {
 
 export interface ChatSessionItemProps {
   session: {
-    id: string
+    id: number
     channel_display: string
     message_count: number
     is_pinned?: boolean
@@ -22,9 +22,9 @@ export interface ChatSessionItemProps {
   keyPrefix?: string
   isDragOver?: boolean
   isDeleting?: boolean
-  onSessionClick: (sessionId: string) => void
-  onTogglePin: (sessionId: string, e: React.MouseEvent) => void
-  onDelete: (sessionId: string, e: React.MouseEvent) => void
+  onSessionClick: (sessionId: number) => void
+  onTogglePin: (sessionId: number, e: React.MouseEvent) => void
+  onDelete: (sessionId: number, e: React.MouseEvent) => void
   onDragStart?: (e: React.DragEvent, session: any) => void
   onDragEnd?: (e: React.DragEvent) => void
   onDragOver?: (e: React.DragEvent, index: number) => void

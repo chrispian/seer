@@ -1,7 +1,6 @@
-import React from 'react'
 import { CompactModelPicker } from './CompactModelPicker'
 import { CompactProjectPicker } from './CompactProjectPicker'
-import { Menubar, MenubarMenu, MenubarTrigger, MenubarSeparator } from '@/components/ui/menubar'
+import { Menubar, MenubarMenu, MenubarTrigger } from '@/components/ui/menubar'
 import { Bot, Settings, FolderOpen } from 'lucide-react'
 
 interface ChatToolbarProps {

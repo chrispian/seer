@@ -22,6 +22,9 @@ return [
     ],
 
     'models' => [
+        // Use Prism for AI provider abstraction (set to true to use Prism, false for custom providers)
+        'use_prism' => env('AI_USE_PRISM', false),
+        
         // Global model selection settings
         'default_provider' => env('AI_DEFAULT_PROVIDER', 'openai'),
         'default_text_model' => env('AI_DEFAULT_TEXT_MODEL', 'gpt-4o-mini'),

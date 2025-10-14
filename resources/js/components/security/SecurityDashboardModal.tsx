@@ -1,4 +1,3 @@
-import React from 'react'
 import { useState } from 'react'
 import { DataManagementModal, ColumnDefinition } from '@/components/ui/DataManagementModal'
 import { Badge } from '@/components/ui/badge'

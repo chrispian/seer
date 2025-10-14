@@ -28,11 +28,12 @@ class FinalComposer implements ComposerInterface
             $promptTemplate
         );
 
-        // Use session model if available, otherwise fall back to config
+        // Use session model and provider if available, otherwise fall back to config
         $model = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
+        $provider = $context->agent_prefs['model_provider'] ?? $this->getProviderForModel($model);
 
         try {
-            $response = $this->callLLM($prompt, $model);
+            $response = $this->callLLM($prompt, $model, $provider);
 
             Log::info('Final response composed', [
                 'correlation_id' => $correlationId,
@@ -54,9 +55,9 @@ class FinalComposer implements ComposerInterface
 
     protected function directResponse(ContextBundle $context): string
     {
-        // Use session model if available, otherwise fall back to config
+        // Use session model and provider if available, otherwise fall back to config
         $model = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
-        $provider = $this->getProviderForModel($model);
+        $provider = $context->agent_prefs['model_provider'] ?? $this->getProviderForModel($model);
 
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 
@@ -72,8 +73,9 @@ class FinalComposer implements ComposerInterface
 
         $response = $providerManager->generateText($fullPrompt, [
             'request_type' => 'final_composition',
-        ], [
+            'provider' => $provider,
             'model' => $model,
+        ], [
             'temperature' => 0.7,
             'max_tokens' => 1000,
         ]);
@@ -106,10 +108,12 @@ class FinalComposer implements ComposerInterface
         return trim($response);
     }
 
-    protected function callLLM(string $prompt, string $model): string
+    protected function callLLM(string $prompt, string $model, ?string $provider = null): string
     {
-        // Parse model to determine provider
-        $provider = $this->getProviderForModel($model);
+        // Use provided provider or infer from model name
+        if ($provider === null) {
+            $provider = $this->getProviderForModel($model);
+        }
 
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 

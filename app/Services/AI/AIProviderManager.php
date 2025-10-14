@@ -7,6 +7,7 @@ use App\Services\AI\Providers\AnthropicProvider;
 use App\Services\AI\Providers\OllamaProvider;
 use App\Services\AI\Providers\OpenAIProvider;
 use App\Services\AI\Providers\OpenRouterProvider;
+use App\Services\AI\Providers\PrismProviderAdapter;
 use App\Services\Telemetry\CorrelationContext;
 use Illuminate\Support\Facades\Log;
 
@@ -49,6 +50,19 @@ class AIProviderManager
      */
     protected function createProvider(string $name, array $config): ?AIProviderInterface
     {
+        // Check if we should use Prism for this provider
+        $usePrism = config('fragments.models.use_prism', false);
+        
+        if ($usePrism) {
+            // Use Prism adapter for all supported providers
+            // Prism v0.86+ supports: openai, anthropic, ollama, openrouter, mistral, groq, xai, gemini, deepseek, elevenlabs, voyageai
+            $prismSupportedProviders = ['openai', 'anthropic', 'ollama', 'openrouter'];
+            if (in_array($name, $prismSupportedProviders)) {
+                return new PrismProviderAdapter($name, $config);
+            }
+        }
+        
+        // Use custom provider implementations (fallback when Prism disabled)
         return match ($name) {
             'openai' => new OpenAIProvider($config),
             'anthropic' => new AnthropicProvider($config),

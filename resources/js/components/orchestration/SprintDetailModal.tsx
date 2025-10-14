@@ -129,8 +129,8 @@ export function SprintDetailModal({
       'backlog': 6
     }
     
-    const aOrder = statusOrder[a.status?.toLowerCase()] || 999
-    const bOrder = statusOrder[b.status?.toLowerCase()] || 999
+    const aOrder = statusOrder[a.status?.toLowerCase() as keyof typeof statusOrder] || 999
+    const bOrder = statusOrder[b.status?.toLowerCase() as keyof typeof statusOrder] || 999
     
     if (aOrder !== bOrder) {
       return aOrder - bOrder

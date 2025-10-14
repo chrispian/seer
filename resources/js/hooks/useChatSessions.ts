@@ -27,6 +27,7 @@ interface ChatSessionResponse {
     metadata: any;
     model_provider: string;
     model_name: string;
+    additional_paths?: string[];
     vault: {
       id: number;
       name: string;
@@ -124,7 +125,7 @@ const createChatSession = async (data: CreateChatSessionData): Promise<ChatSessi
   }
 };
 
-const updateChatSession = async ({ id, ...data }: { id: number } & Partial<CreateChatSessionData>): Promise<ChatSessionResponse> => {
+const updateChatSession = async ({ id, ...data }: { id: number } & Partial<CreateChatSessionData & { messages?: any[] }>): Promise<ChatSessionResponse> => {
   const response = await fetch(`${API_BASE}/chat-sessions/${id}`, {
     method: 'PUT',
     headers: {
@@ -259,8 +260,6 @@ export const useChatSessionDetails = (sessionId: number | null) => {
         sort_order: query.data.session.sort_order,
         vault_id: query.data.session.vault_id,
         project_id: query.data.session.project_id,
-        messages: query.data.session.messages,
-        metadata: query.data.session.metadata,
       };
       
       // Update the session in the store with full details

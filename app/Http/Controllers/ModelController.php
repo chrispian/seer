@@ -41,7 +41,8 @@ class ModelController extends Controller
                     $contextLength = $limits['context_length'] ?? null;
 
                     $models[] = [
-                        'value' => "{$provider->id}/{$model->model_id}",
+                        'id' => $model->id,  // Primary key for new FK-based approach
+                        'value' => "{$provider->id}/{$model->model_id}",  // Legacy for backward compatibility
                         'label' => $model->name,
                         'model_key' => $model->model_id,
                         'context_length' => $contextLength,
@@ -56,7 +57,7 @@ class ModelController extends Controller
                 usort($models, fn ($a, $b) => strcasecmp($a['label'], $b['label']));
 
                 $availableModels[] = [
-                    'provider' => $provider->id,
+                    'provider' => $provider->provider,  // Provider slug (e.g., 'openai', 'anthropic')
                     'provider_name' => $provider->name,
                     'models' => $models,
                 ];

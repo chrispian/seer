@@ -22,13 +22,16 @@ class OutcomeSummarizer
             $promptTemplate
         );
 
-        // Use session model if available, otherwise fall back to config
+        // Use session model and provider if available, otherwise fall back to config
         $model = $context && isset($context->agent_prefs['model_name'])
             ? $context->agent_prefs['model_name']
             : Config::get('fragments.tool_aware_turn.models.summarizer', 'gpt-4o-mini');
+        $provider = $context && isset($context->agent_prefs['model_provider'])
+            ? $context->agent_prefs['model_provider']
+            : $this->getProviderForModel($model);
 
         try {
-            $response = $this->callLLM($prompt, $model);
+            $response = $this->callLLM($prompt, $model, $provider);
             $summary = $this->parseResponse($response);
 
             Log::info('Outcome summary created', [
@@ -107,10 +110,12 @@ class OutcomeSummarizer
         return "Successfully executed {$successCount} tool(s).";
     }
 
-    protected function callLLM(string $prompt, string $model): string
+    protected function callLLM(string $prompt, string $model, ?string $provider = null): string
     {
-        // Parse model to determine provider
-        $provider = $this->getProviderForModel($model);
+        // Use provided provider or infer from model name
+        if ($provider === null) {
+            $provider = $this->getProviderForModel($model);
+        }
 
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 

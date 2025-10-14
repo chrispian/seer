@@ -331,25 +331,24 @@ class ChatSessionController extends Controller
     public function updateModel(Request $request, ChatSession $chatSession)
     {
         $request->validate([
-            'model_value' => 'required|string',
+            'ai_model_id' => 'required|integer|exists:models,id',
         ]);
 
-        $modelValue = $request->input('model_value');
+        $aiModelId = $request->input('ai_model_id');
+        $aiModel = \App\Models\AIModel::with('provider')->findOrFail($aiModelId);
 
-        // Parse the model value (format: "provider:model_name")
-        if (strpos($modelValue, ':') !== false) {
-            [$provider, $modelName] = explode(':', $modelValue, 2);
-
-            $chatSession->update([
-                'model_provider' => $provider,
-                'model_name' => $modelName,
-            ]);
-        }
+        // Update with FK and maintain legacy columns for backward compatibility
+        $chatSession->update([
+            'ai_model_id' => $aiModel->id,
+            'model_provider' => $aiModel->provider->provider,  // Keep for backward compatibility
+            'model_name' => $aiModel->model_id,  // Keep for backward compatibility
+        ]);
 
         return response()->json([
             'success' => true,
             'data' => [
                 'id' => $chatSession->id,
+                'ai_model_id' => $chatSession->ai_model_id,
                 'model_provider' => $chatSession->model_provider,
                 'model_name' => $chatSession->model_name,
             ],

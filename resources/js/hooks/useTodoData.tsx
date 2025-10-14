@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { useState, useCallback } from 'react'
 
 export interface TodoItem {
@@ -64,7 +64,7 @@ export function useTodoData(): UseTodoDataReturn {
     // Parse tags - handle both array and PostgreSQL array formats
     let tags: string[] = []
     if (Array.isArray(fragment.tags)) {
-      tags = fragment.tags.flatMap(tag => {
+      tags = fragment.tags.flatMap((tag: any) => {
         if (typeof tag === 'string') {
           // Handle PostgreSQL array format like '{"work","important","todo"}'
           if (tag.startsWith('{') && tag.endsWith('}')) {
@@ -80,7 +80,7 @@ export function useTodoData(): UseTodoDataReturn {
           }
         }
         return tag
-      }).filter(tag => tag && tag !== 'todo') // Remove empty tags and default 'todo' tag
+      }).filter((tag: string) => tag && tag !== 'todo') // Remove empty tags and default 'todo' tag
     }
     
     // Clean up title - remove "Todo: " prefix if present
