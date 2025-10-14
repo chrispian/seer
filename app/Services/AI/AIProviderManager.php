@@ -3,10 +3,7 @@
 namespace App\Services\AI;
 
 use App\Contracts\AIProviderInterface;
-use App\Services\AI\Providers\AnthropicProvider;
-use App\Services\AI\Providers\OllamaProvider;
-use App\Services\AI\Providers\OpenAIProvider;
-use App\Services\AI\Providers\OpenRouterProvider;
+use App\Services\AI\Providers\PrismProviderAdapter;
 use App\Services\Telemetry\CorrelationContext;
 use Illuminate\Support\Facades\Log;
 
@@ -49,13 +46,11 @@ class AIProviderManager
      */
     protected function createProvider(string $name, array $config): ?AIProviderInterface
     {
-        return match ($name) {
-            'openai' => new OpenAIProvider($config),
-            'anthropic' => new AnthropicProvider($config),
-            'ollama' => new OllamaProvider($config),
-            'openrouter' => new OpenRouterProvider($config),
-            default => null,
-        };
+        if (in_array($name, ['openai', 'anthropic', 'ollama', 'openrouter'])) {
+            return new PrismProviderAdapter($name, $config);
+        }
+
+        return null;
     }
 
     /**
