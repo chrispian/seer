@@ -2,6 +2,7 @@
 
 namespace App\Services\Orchestration\ToolAware;
 
+use App\Services\Orchestration\ToolAware\DTOs\ContextBundle;
 use App\Services\Orchestration\ToolAware\DTOs\ExecutionTrace;
 use App\Services\Orchestration\ToolAware\DTOs\OutcomeSummary;
 use Illuminate\Support\Facades\Config;
@@ -9,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class OutcomeSummarizer
 {
-    public function summarize(ExecutionTrace $trace): OutcomeSummary
+    public function summarize(ExecutionTrace $trace, ?ContextBundle $context = null): OutcomeSummary
     {
         $redactedResults = $this->redactResults($trace);
 
@@ -21,7 +22,10 @@ class OutcomeSummarizer
             $promptTemplate
         );
 
-        $model = Config::get('fragments.tool_aware_turn.models.summarizer', 'gpt-4o-mini');
+        // Use session model if available, otherwise fall back to config
+        $model = $context && isset($context->agent_prefs['model_name'])
+            ? $context->agent_prefs['model_name']
+            : Config::get('fragments.tool_aware_turn.models.summarizer', 'gpt-4o-mini');
 
         try {
             $response = $this->callLLM($prompt, $model);
@@ -105,7 +109,8 @@ class OutcomeSummarizer
 
     protected function callLLM(string $prompt, string $model): string
     {
-        $provider = Config::get('fragments.models.default_provider', 'openai');
+        // Parse model to determine provider
+        $provider = $this->getProviderForModel($model);
 
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 
@@ -114,13 +119,29 @@ class OutcomeSummarizer
 
         $response = $providerManager->generateText($fullPrompt, [
             'request_type' => 'outcome_summarization',
-        ], [
+            'provider' => $provider,
             'model' => $model,
+        ], [
             'temperature' => 0.3,
             'max_tokens' => 800,
         ]);
 
         return $response['text'] ?? '';
+    }
+
+    protected function getProviderForModel(string $model): string
+    {
+        if (str_starts_with($model, 'gpt-') || str_starts_with($model, 'o1-')) {
+            return 'openai';
+        }
+        if (str_starts_with($model, 'claude-')) {
+            return 'anthropic';
+        }
+        if (str_contains($model, '/')) {
+            return explode('/', $model)[0];
+        }
+        
+        return Config::get('fragments.models.default_provider', 'openai');
     }
 
     protected function parseResponse(string $response): OutcomeSummary

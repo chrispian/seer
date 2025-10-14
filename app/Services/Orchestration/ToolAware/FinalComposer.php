@@ -28,7 +28,8 @@ class FinalComposer implements ComposerInterface
             $promptTemplate
         );
 
-        $model = Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
+        // Use session model if available, otherwise fall back to config
+        $model = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
 
         try {
             $response = $this->callLLM($prompt, $model);
@@ -53,8 +54,9 @@ class FinalComposer implements ComposerInterface
 
     protected function directResponse(ContextBundle $context): string
     {
-        $provider = Config::get('fragments.models.default_provider', 'openai');
-        $model = Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
+        // Use session model if available, otherwise fall back to config
+        $model = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
+        $provider = $this->getProviderForModel($model);
 
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 
@@ -106,7 +108,8 @@ class FinalComposer implements ComposerInterface
 
     protected function callLLM(string $prompt, string $model): string
     {
-        $provider = Config::get('fragments.models.default_provider', 'openai');
+        // Parse model to determine provider
+        $provider = $this->getProviderForModel($model);
 
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 
@@ -115,12 +118,28 @@ class FinalComposer implements ComposerInterface
 
         $response = $providerManager->generateText($fullPrompt, [
             'request_type' => 'direct_response',
-        ], [
+            'provider' => $provider,
             'model' => $model,
+        ], [
             'temperature' => 0.7,
             'max_tokens' => 1000,
         ]);
 
         return $response['text'] ?? '';
+    }
+
+    protected function getProviderForModel(string $model): string
+    {
+        if (str_starts_with($model, 'gpt-') || str_starts_with($model, 'o1-')) {
+            return 'openai';
+        }
+        if (str_starts_with($model, 'claude-')) {
+            return 'anthropic';
+        }
+        if (str_contains($model, '/')) {
+            return explode('/', $model)[0];
+        }
+        
+        return Config::get('fragments.models.default_provider', 'openai');
     }
 }

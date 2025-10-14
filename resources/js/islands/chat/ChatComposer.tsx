@@ -30,6 +30,9 @@ interface ChatComposerProps {
   placeholder?: string
   selectedModel?: string
   onModelChange?: (model: string) => void
+  selectedProject?: number | null
+  onProjectChange?: (projectId: number | null) => void
+  onPathsManage?: () => void
 }
 
 export function ChatComposer({
@@ -38,7 +41,10 @@ export function ChatComposer({
   disabled = false,
   placeholder = "Type a message... Use / for commands, [[ for links, # for tags. Press Enter to send, Shift+Enter for new line.",
   selectedModel = '',
-  onModelChange
+  onModelChange,
+  selectedProject = null,
+  onProjectChange,
+  onPathsManage
 }: ChatComposerProps) {
   const [isListening, setIsListening] = useState(false)
   const [speechSupported, setSpeechSupported] = useState(false)
@@ -324,6 +330,9 @@ export function ChatComposer({
         <ChatToolbar
           selectedModel={selectedModel}
           onModelChange={onModelChange}
+          selectedProject={selectedProject}
+          onProjectChange={onProjectChange}
+          onPathsManage={onPathsManage}
           disabled={disabled}
         />
       </div>

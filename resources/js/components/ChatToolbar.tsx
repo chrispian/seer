@@ -1,17 +1,24 @@
 import React from 'react'
 import { CompactModelPicker } from './CompactModelPicker'
+import { CompactProjectPicker } from './CompactProjectPicker'
 import { Menubar, MenubarMenu, MenubarTrigger, MenubarSeparator } from '@/components/ui/menubar'
-import { Bot, Settings } from 'lucide-react'
+import { Bot, Settings, FolderOpen } from 'lucide-react'
 
 interface ChatToolbarProps {
   selectedModel?: string
   onModelChange?: (model: string) => void
+  selectedProject?: number | null
+  onProjectChange?: (projectId: number | null) => void
+  onPathsManage?: () => void
   disabled?: boolean
 }
 
 export function ChatToolbar({
   selectedModel = '',
   onModelChange,
+  selectedProject = null,
+  onProjectChange,
+  onPathsManage,
   disabled = false,
 }: ChatToolbarProps) {
   return (
@@ -23,6 +30,27 @@ export function ChatToolbar({
           onValueChange={onModelChange}
           disabled={disabled}
         />
+        
+        {/* Project Picker */}
+        <CompactProjectPicker
+          value={selectedProject}
+          onValueChange={onProjectChange}
+          disabled={disabled}
+        />
+        
+        {/* File Paths Button */}
+        <Menubar className="h-6 bg-black border-0 rounded-sm p-0.5">
+          <MenubarMenu>
+            <MenubarTrigger
+              className="px-2 py-1 text-white hover:bg-gray-800 data-[state=open]:bg-gray-800 rounded-sm border-0 text-xs"
+              disabled={disabled}
+              onClick={onPathsManage}
+              title="Manage additional file paths"
+            >
+              <FolderOpen className="w-3 h-3" />
+            </MenubarTrigger>
+          </MenubarMenu>
+        </Menubar>
         
         {/* Agent and Mode Selectors */}
         <div className="flex items-center gap-2">

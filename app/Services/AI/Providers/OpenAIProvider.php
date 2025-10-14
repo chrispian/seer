@@ -43,9 +43,15 @@ class OpenAIProvider extends AbstractAIProvider
             'messages' => [
                 ['role' => 'user', 'content' => $prompt],
             ],
-            'max_tokens' => $maxTokens,
             'temperature' => $temperature,
         ];
+
+        // GPT-5 and o1 models use max_completion_tokens instead of max_tokens
+        if (str_starts_with($model, 'gpt-5') || str_starts_with($model, 'o1')) {
+            $request['max_completion_tokens'] = $maxTokens;
+        } else {
+            $request['max_tokens'] = $maxTokens;
+        }
 
         // Add top_p if specified (OpenAI supports this parameter)
         if ($topP !== null) {
@@ -172,10 +178,16 @@ class OpenAIProvider extends AbstractAIProvider
         $request = [
             'model' => $model,
             'messages' => $messages,
-            'max_tokens' => $maxTokens,
             'temperature' => $temperature,
             'stream' => true,
         ];
+
+        // GPT-5 and o1 models use max_completion_tokens instead of max_tokens
+        if (str_starts_with($model, 'gpt-5') || str_starts_with($model, 'o1')) {
+            $request['max_completion_tokens'] = $maxTokens;
+        } else {
+            $request['max_tokens'] = $maxTokens;
+        }
 
         // Add top_p if specified
         if ($topP !== null) {

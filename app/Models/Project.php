@@ -16,6 +16,7 @@ class Project extends Model
         'vault_id',
         'name',
         'description',
+        'path',
         'is_default',
         'sort_order',
         'metadata',
@@ -62,5 +63,23 @@ class Project extends Model
     {
         return static::forVault($vaultId)->default()->first()
             ?? static::forVault($vaultId)->first();
+    }
+
+    public function getResolvedPathAttribute(): ?string
+    {
+        if (! $this->path) {
+            return null;
+        }
+
+        if (str_starts_with($this->path, '/') || preg_match('/^[a-zA-Z]:/', $this->path)) {
+            return $this->path;
+        }
+
+        return base_path($this->path);
+    }
+
+    public function hasPath(): bool
+    {
+        return ! empty($this->path);
     }
 }

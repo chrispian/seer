@@ -303,7 +303,7 @@ return [
         // Tool system configuration
         'allowed' => env('FRAGMENT_TOOLS_ALLOWED') ?
             explode(',', env('FRAGMENT_TOOLS_ALLOWED')) :
-            [], // Empty by default for security
+            ['project_fs'], // Enable project_fs by default
 
         // Exec tool configuration (chat-triggered shell execution)
         'exec_tool' => [
@@ -344,6 +344,14 @@ return [
                 //     'headers' => ['Authorization' => 'Bearer token'],
                 // ],
             ],
+        ],
+
+        // Project File System tool configuration
+        'project_fs' => [
+            'enabled' => env('FRAGMENT_TOOLS_PROJECT_FS_ENABLED', true),
+            'max_file_size' => env('FRAGMENT_TOOLS_PROJECT_FS_MAX_FILE_SIZE', 10 * 1024 * 1024), // 10MB
+            'max_write_size' => env('FRAGMENT_TOOLS_PROJECT_FS_MAX_WRITE_SIZE', 10 * 1024 * 1024), // 10MB
+            'require_approval_for_writes' => env('FRAGMENT_TOOLS_PROJECT_FS_REQUIRE_APPROVAL', true),
         ],
     ],
 

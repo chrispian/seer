@@ -152,7 +152,26 @@ class ModelSelectionService
         $startTime = microtime(true);
         $context['operation_type'] = 'text';
 
-        // Check for operation-specific configuration first
+        // Check for explicit provider/model override in context FIRST
+        if (isset($context['provider'])) {
+            $provider = $context['provider'];
+            $model = $context['model'] ?? $this->getDefaultModelForProvider($provider);
+            
+            Log::info('ModelSelection: Using explicit provider override', [
+                'provider' => $provider,
+                'model' => $model,
+                'context' => $context,
+            ]);
+            
+            return [
+                'provider' => $provider,
+                'model' => $model,
+                'source' => 'explicit_context_override',
+                'parameters' => $this->getAIParameters($context),
+            ];
+        }
+
+        // Check for operation-specific configuration
         $operationSelection = $this->selectModelForOperation($context);
         if ($operationSelection) {
             // Add AI parameters based on operation context

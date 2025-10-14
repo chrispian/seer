@@ -551,17 +551,14 @@ class ChatApiController extends Controller
             }
             $toolOutput .= "\n[exit code: {$exitCode}]";
 
-            $assistantFragment = $createChatFragment($toolOutput);
-            $assistantFragment->update([
-                'metadata' => array_merge($assistantFragment->metadata ?? [], [
-                    'turn' => 'completion',
-                    'conversation_id' => $conversationId,
-                    'session_id' => $sessionId,
-                    'tool' => 'exec',
-                    'command' => $command,
-                    'exit_code' => $exitCode,
-                    'user_fragment_id' => $userFragmentId,
-                ]),
+            $assistantFragment = $createChatFragment($toolOutput, 'chat-agent', [
+                'turn' => 'completion',
+                'conversation_id' => $conversationId,
+                'session_id' => $sessionId,
+                'tool' => 'exec',
+                'command' => $command,
+                'exit_code' => $exitCode,
+                'user_fragment_id' => $userFragmentId,
             ]);
 
             if ($sessionId) {
@@ -606,17 +603,14 @@ class ChatApiController extends Controller
 
             $errorMessage = "Tool execution failed: {$e->getMessage()}";
 
-            $assistantFragment = $createChatFragment($errorMessage);
-            $assistantFragment->update([
-                'metadata' => array_merge($assistantFragment->metadata ?? [], [
-                    'turn' => 'completion',
-                    'conversation_id' => $conversationId,
-                    'session_id' => $sessionId,
-                    'tool' => 'exec',
-                    'command' => $command,
-                    'error' => true,
-                    'user_fragment_id' => $userFragmentId,
-                ]),
+            $assistantFragment = $createChatFragment($errorMessage, 'chat-agent', [
+                'turn' => 'completion',
+                'conversation_id' => $conversationId,
+                'session_id' => $sessionId,
+                'tool' => 'exec',
+                'command' => $command,
+                'error' => true,
+                'user_fragment_id' => $userFragmentId,
             ]);
 
             if ($sessionId) {
@@ -708,16 +702,13 @@ class ChatApiController extends Controller
 
             $errorMessage = "I encountered an error while processing your request: {$e->getMessage()}";
 
-            $assistantFragment = $createChatFragment($errorMessage);
-            $assistantFragment->update([
-                'metadata' => array_merge($assistantFragment->metadata ?? [], [
-                    'turn' => 'completion',
-                    'conversation_id' => $conversationId,
-                    'session_id' => $sessionId,
-                    'tool_aware' => true,
-                    'error' => true,
-                    'user_fragment_id' => $userFragmentId,
-                ]),
+            $assistantFragment = $createChatFragment($errorMessage, 'chat-agent', [
+                'turn' => 'completion',
+                'conversation_id' => $conversationId,
+                'session_id' => $sessionId,
+                'tool_aware' => true,
+                'error' => true,
+                'user_fragment_id' => $userFragmentId,
             ]);
 
             if ($sessionId) {
@@ -768,6 +759,9 @@ class ChatApiController extends Controller
 
                 $userMessage = $session['messages'][0]['content'] ?? '';
 
+                $aiProvider = null;
+                $aiModel = null;
+
                 foreach ($pipeline->executeStreaming($sessionId, $userMessage) as $event) {
                     echo 'data: '.json_encode($event)."\n\n";
                     @ob_flush();
@@ -777,23 +771,32 @@ class ChatApiController extends Controller
                         $finalMessage = $event['message'];
                         $usedTools = $event['used_tools'] ?? false;
                         $correlationId = $event['correlation_id'] ?? null;
+                        $aiProvider = $event['ai_provider'] ?? null;
+                        $aiModel = $event['ai_model'] ?? null;
                     }
                 }
 
-                // Create assistant fragment
+                // Create assistant fragment with chat-agent source
                 if (! empty($finalMessage)) {
-                    $assistantFragment = $createChatFragment($finalMessage);
-                    $assistantFragment->update([
-                        'metadata' => array_merge($assistantFragment->metadata ?? [], [
-                            'turn' => 'completion',
-                            'conversation_id' => $conversationId,
-                            'session_id' => $sessionId,
-                            'tool_aware' => true,
-                            'used_tools' => $usedTools,
-                            'correlation_id' => $correlationId,
-                            'user_fragment_id' => $userFragmentId,
-                        ]),
-                    ]);
+                    $fragmentMetadata = [
+                        'turn' => 'completion',
+                        'conversation_id' => $conversationId,
+                        'session_id' => $sessionId,
+                        'tool_aware' => true,
+                        'used_tools' => $usedTools,
+                        'correlation_id' => $correlationId,
+                        'user_fragment_id' => $userFragmentId,
+                    ];
+
+                    // Add AI provider/model info if available
+                    if ($aiProvider) {
+                        $fragmentMetadata['ai_provider'] = $aiProvider;
+                    }
+                    if ($aiModel) {
+                        $fragmentMetadata['ai_model'] = $aiModel;
+                    }
+
+                    $assistantFragment = $createChatFragment($finalMessage, 'chat-agent', $fragmentMetadata);
 
                     // Add to chat session
                     if ($sessionId) {

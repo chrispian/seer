@@ -355,4 +355,82 @@ class ChatSessionController extends Controller
             ],
         ]);
     }
+
+    public function getProjects()
+    {
+        $defaultVault = Vault::where('is_default', true)->first();
+
+        if (! $defaultVault) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No default vault found',
+            ], 404);
+        }
+
+        $projects = Project::where('vault_id', $defaultVault->id)
+            ->ordered()
+            ->get()
+            ->map(fn ($project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+                'description' => $project->description,
+                'path' => $project->path,
+                'is_default' => $project->is_default,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $projects,
+        ]);
+    }
+
+    public function updateProject(Request $request, ChatSession $chatSession)
+    {
+        $request->validate([
+            'project_id' => 'nullable|integer|exists:projects,id',
+        ]);
+
+        $chatSession->update([
+            'project_id' => $request->input('project_id'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $chatSession->id,
+                'project_id' => $chatSession->project_id,
+            ],
+        ]);
+    }
+
+    public function updatePaths(Request $request, ChatSession $chatSession)
+    {
+        $request->validate([
+            'additional_paths' => 'nullable|array',
+            'additional_paths.*' => 'string|max:500',
+        ]);
+
+        $paths = $request->input('additional_paths', []);
+
+        foreach ($paths as $path) {
+            if (strpos($path, '..') !== false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Path traversal attempts are not allowed',
+                ], 400);
+            }
+        }
+
+        $chatSession->update([
+            'additional_paths' => $paths,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $chatSession->id,
+                'additional_paths' => $chatSession->additional_paths,
+            ],
+        ]);
+    }
 }

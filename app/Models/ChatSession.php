@@ -21,6 +21,7 @@ class ChatSession extends Model
         'summary',
         'messages',
         'metadata',
+        'additional_paths',
         'message_count',
         'last_activity_at',
         'is_active',
@@ -35,6 +36,7 @@ class ChatSession extends Model
         'project_id' => 'integer',
         'messages' => 'array',
         'metadata' => 'array',
+        'additional_paths' => 'array',
         'last_activity_at' => 'datetime',
         'is_active' => 'boolean',
         'is_pinned' => 'boolean',
@@ -299,5 +301,47 @@ class ChatSession extends Model
 
             return "#{$this->short_code} {$truncatedName}";
         }
+    }
+
+    public function addPath(string $path): void
+    {
+        $paths = $this->additional_paths ?? [];
+        
+        if (! in_array($path, $paths)) {
+            $paths[] = $path;
+            $this->additional_paths = $paths;
+            $this->save();
+        }
+    }
+
+    public function removePath(string $path): void
+    {
+        $paths = $this->additional_paths ?? [];
+        $paths = array_values(array_filter($paths, fn($p) => $p !== $path));
+        $this->additional_paths = $paths;
+        $this->save();
+    }
+
+    public function getAllAccessiblePaths(): array
+    {
+        $paths = [];
+
+        if ($this->project?->hasPath()) {
+            $paths[] = [
+                'path' => $this->project->resolved_path,
+                'source' => 'project',
+                'label' => $this->project->name,
+            ];
+        }
+
+        foreach ($this->additional_paths ?? [] as $path) {
+            $paths[] = [
+                'path' => $path,
+                'source' => 'additional',
+                'label' => basename($path),
+            ];
+        }
+
+        return $paths;
     }
 }

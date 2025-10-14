@@ -6,6 +6,7 @@ import { TodoManagementModal } from './TodoManagementModal'
 import { InboxModal } from '../system/InboxModal'
 import { TypeSystemModal } from '../system/TypeSystemModal'
 import { SchedulerModal } from '../system/SchedulerModal'
+import { AdditionalPathsModal } from '@/components/AdditionalPathsModal'
 import { useAppStore } from '@/stores/useAppStore'
 import { useChatSessionDetails, useUpdateChatSession } from '@/hooks/useChatSessions'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -52,6 +53,12 @@ export default function ChatIsland() {
   const [isTypeSystemModalOpen, setIsTypeSystemModalOpen] = useState(false)
   const [isSchedulerModalOpen, setIsSchedulerModalOpen] = useState(false)
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false)
+  
+  // Project and paths management
+  const [selectedProject, setSelectedProject] = useState<number | null>(null)
+  const [isPathsModalOpen, setIsPathsModalOpen] = useState(false)
+  const [additionalPaths, setAdditionalPaths] = useState<string[]>([])
+  
   const csrf = useCsrf()
   const activeStreamRef = useRef<{ eventSource: EventSource; sessionId: number } | null>(null)
   const queryClient = useQueryClient()
@@ -325,6 +332,15 @@ export default function ChatIsland() {
       setMessages([])
     }
   }, [sessionDetailsQuery.data, currentSession, sessionDetailsQuery.isLoading, isSending])
+
+  // Load project and paths from session
+  useEffect(() => {
+    if (sessionDetailsQuery.data?.session) {
+      const session = sessionDetailsQuery.data.session
+      setSelectedProject(session.project_id || null)
+      setAdditionalPaths(session.additional_paths || [])
+    }
+  }, [sessionDetailsQuery.data])
 
   // Cleanup active streams when session changes
   useEffect(() => {
@@ -801,6 +817,33 @@ export default function ChatIsland() {
     }
   }
 
+  const handleProjectChange = async (projectId: number | null) => {
+    setSelectedProject(projectId)
+    
+    if (!currentSessionId) return
+
+    try {
+      await fetch(`/api/chat-sessions/${currentSessionId}/project`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrf,
+        },
+        body: JSON.stringify({ project_id: projectId }),
+      })
+    } catch (error) {
+      console.error('Failed to update project:', error)
+    }
+  }
+
+  const handlePathsManage = () => {
+    setIsPathsModalOpen(true)
+  }
+
+  const handlePathsChange = (paths: string[]) => {
+    setAdditionalPaths(paths)
+  }
+
   // Show "no session selected" only when there's truly no session selected
   if (!currentSessionId) {
     return (
@@ -861,6 +904,9 @@ export default function ChatIsland() {
           }
           selectedModel={selectedModel}
           onModelChange={updateModel}
+          selectedProject={selectedProject}
+          onProjectChange={handleProjectChange}
+          onPathsManage={handlePathsManage}
         />
       </div>
 
@@ -891,6 +937,14 @@ export default function ChatIsland() {
       <TodoManagementModal
         isOpen={isTodoModalOpen}
         onClose={() => setIsTodoModalOpen(false)}
+      />
+      
+      <AdditionalPathsModal
+        isOpen={isPathsModalOpen}
+        onClose={() => setIsPathsModalOpen(false)}
+        sessionId={currentSessionId}
+        initialPaths={additionalPaths}
+        onPathsChange={handlePathsChange}
       />
         </div>
       </div>

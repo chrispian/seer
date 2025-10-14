@@ -5,6 +5,7 @@ namespace App\Services\Tools;
 use App\Services\Tools\Contracts\Tool;
 use App\Services\Tools\Providers\FileSystemTool;
 use App\Services\Tools\Providers\MCPTool;
+use App\Services\Tools\Providers\ProjectFileSystemTool;
 use App\Services\Tools\Providers\ShellTool;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -137,6 +138,7 @@ class ToolRegistry
         $this->register(new ShellTool);
         $this->register(new FileSystemTool);
         $this->register(new MCPTool);
+        $this->register(new ProjectFileSystemTool);
 
         $this->initialized = true;
     }

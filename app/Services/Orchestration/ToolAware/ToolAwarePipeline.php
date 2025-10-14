@@ -119,7 +119,7 @@ class ToolAwarePipeline
             ]);
 
             // Step 4: Execute tools
-            $trace = $this->toolRunner->execute($plan);
+            $trace = $this->toolRunner->execute($plan, $sessionId);
 
             Log::info('Tools executed', [
                 'pipeline_id' => $pipelineId,
@@ -130,7 +130,7 @@ class ToolAwarePipeline
             ]);
 
             // Step 5: Summarize outcome
-            $summary = $this->summarizer->summarize($trace);
+            $summary = $this->summarizer->summarize($trace, $context);
 
             Log::info('Outcome summarized', [
                 'pipeline_id' => $pipelineId,
@@ -234,10 +234,16 @@ class ToolAwarePipeline
             if (! $decision->needs_tools) {
                 $message = $this->composer->compose($context, null, null);
 
+                // Get the actual model used (from session or config)
+                $composerModel = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
+                $composerProvider = $this->getProviderForModel($composerModel);
+
                 yield [
                     'type' => 'final_message',
                     'message' => $message,
                     'used_tools' => false,
+                    'ai_provider' => $composerProvider,
+                    'ai_model' => $composerModel,
                 ];
 
                 yield ['type' => 'done'];
@@ -257,10 +263,16 @@ class ToolAwarePipeline
             if (! $plan->hasSteps()) {
                 $message = $this->composer->compose($context, null, null);
 
+                // Get the actual model used (from session or config)
+                $composerModel = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
+                $composerProvider = $this->getProviderForModel($composerModel);
+
                 yield [
                     'type' => 'final_message',
                     'message' => $message,
                     'used_tools' => false,
+                    'ai_provider' => $composerProvider,
+                    'ai_model' => $composerModel,
                 ];
 
                 yield ['type' => 'done'];
@@ -270,7 +282,7 @@ class ToolAwarePipeline
 
             // Step 4: Execute tools (streaming)
             $trace = null;
-            foreach ($this->toolRunner->executeStreaming($plan) as $event) {
+            foreach ($this->toolRunner->executeStreaming($plan, $sessionId) as $event) {
                 if ($event['type'] === 'execution_complete') {
                     $trace = new ExecutionTrace($event['correlation_id']);
                     foreach ($event['trace']['steps'] as $stepData) {
@@ -291,7 +303,7 @@ class ToolAwarePipeline
             // Step 5: Summarize outcome
             yield ['type' => 'summarizing'];
 
-            $summary = $this->summarizer->summarize($trace);
+            $summary = $this->summarizer->summarize($trace, $context);
 
             yield [
                 'type' => 'summary',
@@ -305,12 +317,18 @@ class ToolAwarePipeline
 
             $totalTime = (microtime(true) - $startTime) * 1000;
 
+            // Get the actual model used (from session or config)
+            $composerModel = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.composer', 'gpt-4o');
+            $composerProvider = $this->getProviderForModel($composerModel);
+
             yield [
                 'type' => 'final_message',
                 'message' => $message,
                 'used_tools' => true,
                 'correlation_id' => $trace->correlation_id,
                 'total_time_ms' => round($totalTime, 2),
+                'ai_provider' => $composerProvider,
+                'ai_model' => $composerModel,
             ];
 
             // Audit logging
@@ -397,5 +415,23 @@ class ToolAwarePipeline
         }
 
         return json_decode($jsonData, true) ?? $data;
+    }
+
+    /**
+     * Determine provider from model name
+     */
+    protected function getProviderForModel(string $model): string
+    {
+        if (str_starts_with($model, 'gpt-') || str_starts_with($model, 'o1-')) {
+            return 'openai';
+        }
+        if (str_starts_with($model, 'claude-')) {
+            return 'anthropic';
+        }
+        if (str_contains($model, '/')) {
+            return explode('/', $model)[0];
+        }
+        
+        return Config::get('fragments.models.default_provider', 'openai');
     }
 }

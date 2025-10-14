@@ -16,7 +16,7 @@ class ToolRunner implements ToolRunnerInterface
         protected ToolRegistry $toolRegistry
     ) {}
 
-    public function execute(ToolPlan $plan): ExecutionTrace
+    public function execute(ToolPlan $plan, ?int $sessionId = null): ExecutionTrace
     {
         $trace = new ExecutionTrace;
         $maxSteps = Config::get('fragments.tool_aware_turn.limits.max_steps_per_turn', 10);
@@ -24,6 +24,7 @@ class ToolRunner implements ToolRunnerInterface
         Log::info('Starting tool execution', [
             'correlation_id' => $trace->correlation_id,
             'plan_steps' => count($plan->plan_steps),
+            'session_id' => $sessionId,
         ]);
 
         $stepCount = 0;
@@ -45,7 +46,7 @@ class ToolRunner implements ToolRunnerInterface
                 continue;
             }
 
-            $result = $this->executeSingleTool($toolId, $args, $trace->correlation_id);
+            $result = $this->executeSingleTool($toolId, $args, $trace->correlation_id, $sessionId);
             $trace->addStep($result);
 
             $stepCount++;
@@ -61,7 +62,7 @@ class ToolRunner implements ToolRunnerInterface
         return $trace;
     }
 
-    public function executeStreaming(ToolPlan $plan): \Generator
+    public function executeStreaming(ToolPlan $plan, ?int $sessionId = null): \Generator
     {
         $trace = new ExecutionTrace;
         $maxSteps = Config::get('fragments.tool_aware_turn.limits.max_steps_per_turn', 10);
@@ -69,6 +70,7 @@ class ToolRunner implements ToolRunnerInterface
         Log::info('Starting streaming tool execution', [
             'correlation_id' => $trace->correlation_id,
             'plan_steps' => count($plan->plan_steps),
+            'session_id' => $sessionId,
         ]);
 
         $stepCount = 0;
@@ -90,7 +92,7 @@ class ToolRunner implements ToolRunnerInterface
                 continue;
             }
 
-            $result = $this->executeSingleTool($toolId, $args, $trace->correlation_id);
+            $result = $this->executeSingleTool($toolId, $args, $trace->correlation_id, $sessionId);
             $trace->addStep($result);
 
             yield [
@@ -117,7 +119,7 @@ class ToolRunner implements ToolRunnerInterface
         ];
     }
 
-    protected function executeSingleTool(string $toolId, array $args, string $correlationId): ToolResult
+    protected function executeSingleTool(string $toolId, array $args, string $correlationId, ?int $sessionId = null): ToolResult
     {
         $startTime = microtime(true);
 
@@ -136,9 +138,15 @@ class ToolRunner implements ToolRunnerInterface
                 'correlation_id' => $correlationId,
                 'tool_id' => $toolId,
                 'args' => $args,
+                'session_id' => $sessionId,
             ]);
 
-            $response = $tool->call($args, ['correlation_id' => $correlationId]);
+            $context = ['correlation_id' => $correlationId];
+            if ($sessionId !== null) {
+                $context['session_id'] = $sessionId;
+            }
+
+            $response = $tool->call($args, $context);
 
             $elapsedMs = (microtime(true) - $startTime) * 1000;
 

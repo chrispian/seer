@@ -27,7 +27,8 @@ class ToolSelector implements ToolSelectorInterface
             $promptTemplate
         );
 
-        $model = Config::get('fragments.tool_aware_turn.models.candidate_selector', 'gpt-4o-mini');
+        // Use session model if available, otherwise fall back to config
+        $model = $context->agent_prefs['model_name'] ?? Config::get('fragments.tool_aware_turn.models.candidate_selector', 'gpt-4o-mini');
         $retryOnFailure = Config::get('fragments.tool_aware_turn.features.retry_on_parse_failure', true);
 
         try {
@@ -78,15 +79,26 @@ class ToolSelector implements ToolSelectorInterface
     {
         $this->checkAndRefreshMcpCache();
 
-        $toolDefinitions = \App\Models\ToolDefinition::enabled()->get();
+        // Only get builtin tools from tool_definitions (exclude MCP tools to reduce prompt size)
+        // Also exclude the generic 'mcp' wrapper tool since we're not using MCP tools in this pipeline
+        $toolDefinitions = \App\Models\ToolDefinition::enabled()
+            ->where('source', 'builtin')
+            ->whereNotIn('slug', ['mcp'])  // Exclude MCP wrapper tool
+            ->get();
 
         $slice = [];
         foreach ($toolDefinitions as $toolDef) {
             $slice[] = $toolDef->toPromptFormat();
         }
 
+        Log::info('Tool selection slice prepared', [
+            'goal' => substr($goal, 0, 100),
+            'tool_count' => count($slice),
+            'tools' => array_column($slice, 'name'),
+        ]);
+
         // TODO: In future, use semantic matching to filter by goal
-        // For MVP, return all enabled tool definitions
+        // For now, return only builtin native tools (shell, fs, project_fs)
         return $slice;
     }
 
@@ -151,7 +163,8 @@ class ToolSelector implements ToolSelectorInterface
 
     protected function callLLM(string $prompt, string $model): string
     {
-        $provider = Config::get('fragments.models.default_provider', 'openai');
+        // Parse model to determine provider
+        $provider = $this->getProviderForModel($model);
 
         $providerManager = app(\App\Services\AI\AIProviderManager::class);
 
@@ -160,13 +173,29 @@ class ToolSelector implements ToolSelectorInterface
 
         $response = $providerManager->generateText($fullPrompt, [
             'request_type' => 'tool_selection',
-        ], [
+            'provider' => $provider,
             'model' => $model,
+        ], [
             'temperature' => 0.2,
             'max_tokens' => 1000,
         ]);
 
         return $response['text'] ?? '';
+    }
+
+    protected function getProviderForModel(string $model): string
+    {
+        if (str_starts_with($model, 'gpt-') || str_starts_with($model, 'o1-')) {
+            return 'openai';
+        }
+        if (str_starts_with($model, 'claude-')) {
+            return 'anthropic';
+        }
+        if (str_contains($model, '/')) {
+            return explode('/', $model)[0];
+        }
+        
+        return Config::get('fragments.models.default_provider', 'openai');
     }
 
     protected function parseResponse(string $response): ToolPlan
