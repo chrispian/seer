@@ -17,7 +17,8 @@ import {
 } from '@/components/ui/popover'
 
 interface Model {
-  value: string
+  id: number
+  value: string  // Legacy - kept for backward compatibility
   label: string
   model_key: string
   context_length?: number
@@ -80,12 +81,14 @@ export function CompactModelPicker({
   }, [])
 
   // Find the selected model across all providers
+  const selectedModelId = parseInt(value, 10)
   const selectedModel = providers
     .flatMap(provider => provider.models)
-    .find(model => model.value === value)
+    .find(model => model.id === selectedModelId || model.value === value) // Support both ID and legacy value
 
-  const handleSelect = (selectedValue: string) => {
-    onValueChange?.(selectedValue === value ? '' : selectedValue)
+  const handleSelect = (modelId: number) => {
+    // Send the model ID (integer) instead of string value
+    onValueChange?.(String(modelId))
     setOpen(false)
   }
 
@@ -143,14 +146,14 @@ export function CompactModelPicker({
                   <CommandItem
                     key={model.value}
                     value={`${model.label} ${provider.provider_name}`}
-                    onSelect={() => handleSelect(model.value)}
+                    onSelect={() => handleSelect(model.id)}
                     className="flex items-center justify-between text-xs"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <Check
                         className={cn(
                           'h-3 w-3',
-                          value === model.value ? 'opacity-100' : 'opacity-0'
+                          selectedModelId === model.id || value === model.value ? 'opacity-100' : 'opacity-0'
                         )}
                       />
                       <div className="min-w-0">

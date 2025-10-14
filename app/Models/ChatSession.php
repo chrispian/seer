@@ -29,6 +29,7 @@ class ChatSession extends Model
         'sort_order',
         'model_provider',
         'model_name',
+        'ai_model_id',
     ];
 
     protected $casts = [
@@ -125,6 +126,11 @@ class ChatSession extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function aiModel(): BelongsTo
+    {
+        return $this->belongsTo(AIModel::class, 'ai_model_id');
     }
 
     public function scopeRecent($query, int $limit = 10)

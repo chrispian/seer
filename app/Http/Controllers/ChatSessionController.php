@@ -331,35 +331,24 @@ class ChatSessionController extends Controller
     public function updateModel(Request $request, ChatSession $chatSession)
     {
         $request->validate([
-            'model_value' => 'required|string',
+            'ai_model_id' => 'required|integer|exists:models,id',
         ]);
 
-        $modelValue = $request->input('model_value');
+        $aiModelId = $request->input('ai_model_id');
+        $aiModel = \App\Models\AIModel::with('provider')->findOrFail($aiModelId);
 
-        // Parse the model value (format: "provider_id:model_id")
-        if (strpos($modelValue, ':') !== false) {
-            [$providerId, $modelId] = explode(':', $modelValue, 2);
-
-            // Look up the provider to get the slug
-            $provider = \App\Models\Provider::find($providerId);
-            
-            if (!$provider) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Provider not found',
-                ], 404);
-            }
-
-            $chatSession->update([
-                'model_provider' => $provider->provider,
-                'model_name' => $modelId,
-            ]);
-        }
+        // Update with FK and maintain legacy columns for backward compatibility
+        $chatSession->update([
+            'ai_model_id' => $aiModel->id,
+            'model_provider' => $aiModel->provider->provider,  // Keep for backward compatibility
+            'model_name' => $aiModel->model_id,  // Keep for backward compatibility
+        ]);
 
         return response()->json([
             'success' => true,
             'data' => [
                 'id' => $chatSession->id,
+                'ai_model_id' => $chatSession->ai_model_id,
                 'model_provider' => $chatSession->model_provider,
                 'model_name' => $chatSession->model_name,
             ],

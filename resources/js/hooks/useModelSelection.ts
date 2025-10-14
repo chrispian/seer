@@ -8,44 +8,19 @@ interface ModelSelectionState {
 
 interface UseModelSelectionProps {
   sessionId?: number | null
-  defaultModel?: string
-  transformModelForApi?: (value: string) => string
+  defaultModel?: string | number
 }
 
-const toUiValue = (value: string): string => {
-  if (!value) return ''
-  if (value.includes('/')) return value
-
-  const [provider, ...rest] = value.split(':')
-  if (!provider || rest.length === 0) {
-    return value
-  }
-
-  return `${provider}/${rest.join(':')}`
-}
-
-const toApiValue = (value: string): string => {
-  if (!value) return ''
-  if (value.includes(':')) return value
-
-  const [provider, ...rest] = value.split('/')
-  if (!provider || rest.length === 0) {
-    return value
-  }
-
-  return `${provider}:${rest.join('/')}`
-}
-
-export function useModelSelection({ sessionId, defaultModel = '', transformModelForApi }: UseModelSelectionProps) {
+export function useModelSelection({ sessionId, defaultModel = '' }: UseModelSelectionProps) {
   const [state, setState] = useState<ModelSelectionState>({
-    selectedModel: toUiValue(defaultModel),
+    selectedModel: String(defaultModel || ''),
     isLoading: false,
     error: null,
   })
 
   // Update selected model when sessionId or defaultModel changes
   useEffect(() => {
-    const nextModel = toUiValue(defaultModel)
+    const nextModel = String(defaultModel || '')
 
     setState(prev => {
       if (prev.selectedModel === nextModel) {
@@ -59,26 +34,12 @@ export function useModelSelection({ sessionId, defaultModel = '', transformModel
     })
   }, [defaultModel, sessionId])
 
-  const updateModel = async (modelValue: string) => {
-    const uiValue = toUiValue(modelValue)
-
+  const updateModel = async (aiModelId: number) => {
     if (!sessionId) {
       // Just update local state if no session
       setState(prev => ({
         ...prev,
-        selectedModel: uiValue,
-      }))
-      return
-    }
-
-    const transformedValue = transformModelForApi ? transformModelForApi(modelValue) : modelValue
-    const apiValue = toApiValue(transformedValue)
-
-    if (!apiValue) {
-      setState(prev => ({
-        ...prev,
-        selectedModel: uiValue,
-        error: 'Invalid model selection',
+        selectedModel: String(aiModelId),
       }))
       return
     }
@@ -87,7 +48,7 @@ export function useModelSelection({ sessionId, defaultModel = '', transformModel
       ...prev,
       isLoading: true,
       error: null,
-      selectedModel: uiValue,
+      selectedModel: String(aiModelId),
     }))
 
     try {
@@ -97,7 +58,7 @@ export function useModelSelection({ sessionId, defaultModel = '', transformModel
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
-        body: JSON.stringify({ model_value: apiValue }),
+        body: JSON.stringify({ ai_model_id: aiModelId }),
       })
 
       const result = await response.json()
@@ -110,7 +71,7 @@ export function useModelSelection({ sessionId, defaultModel = '', transformModel
       } else {
         setState(prev => ({
           ...prev,
-          error: 'Failed to update model',
+          error: result.error || 'Failed to update model',
           isLoading: false,
         }))
       }
