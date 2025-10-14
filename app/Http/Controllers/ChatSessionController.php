@@ -336,13 +336,23 @@ class ChatSessionController extends Controller
 
         $modelValue = $request->input('model_value');
 
-        // Parse the model value (format: "provider:model_name")
+        // Parse the model value (format: "provider_id:model_id")
         if (strpos($modelValue, ':') !== false) {
-            [$provider, $modelName] = explode(':', $modelValue, 2);
+            [$providerId, $modelId] = explode(':', $modelValue, 2);
+
+            // Look up the provider to get the slug
+            $provider = \App\Models\Provider::find($providerId);
+            
+            if (!$provider) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Provider not found',
+                ], 404);
+            }
 
             $chatSession->update([
-                'model_provider' => $provider,
-                'model_name' => $modelName,
+                'model_provider' => $provider->provider,
+                'model_name' => $modelId,
             ]);
         }
 
