@@ -595,6 +595,19 @@ export default function ChatIsland() {
             return
           }
           
+          if (data.type === 'error') {
+            const errorMessage = data.error || 'An error occurred while processing your request.'
+            acc = `⚠️ **Error**: ${errorMessage}`
+            setMessages(m => {
+              const last = m[m.length - 1]
+              if (last?.id === assistantId) {
+                const copy = [...m]; copy[copy.length - 1] = { ...last, md: acc }; return copy
+              }
+              return [...m, { id: assistantId, role: 'assistant', md: acc, messageId: message_id }]
+            })
+            return
+          }
+          
           // Standard LLM streaming
           if (data.type === 'assistant_delta') {
             acc += data.content
