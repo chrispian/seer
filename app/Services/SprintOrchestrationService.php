@@ -2,9 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Sprint;
-use App\Models\SprintItem;
-use App\Models\WorkItem;
+use App\Models\OrchestrationSprint;
+use App\Models\OrchestrationTask;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
@@ -15,25 +14,25 @@ use InvalidArgumentException;
 class SprintOrchestrationService
 {
     /**
-     * Locate a sprint by code or UUID.
+     * Locate a sprint by code or ID.
      */
-    public function resolveSprint(string|Sprint $sprint): Sprint
+    public function resolveSprint(string|int|OrchestrationSprint $sprint): OrchestrationSprint
     {
-        if ($sprint instanceof Sprint) {
+        if ($sprint instanceof OrchestrationSprint) {
             return $sprint;
         }
 
-        $identifier = trim($sprint);
-        $query = Sprint::query();
+        $identifier = is_string($sprint) ? trim($sprint) : $sprint;
+        $query = OrchestrationSprint::query();
 
-        if (Str::isUuid($identifier)) {
+        if (is_numeric($identifier)) {
             $model = $query->whereKey($identifier)->first();
         } else {
-            $model = $query->where('code', $this->normaliseCode($identifier))->first();
+            $model = $query->where('sprint_code', $this->normaliseCode($identifier))->first();
         }
 
         if (! $model) {
-            throw (new ModelNotFoundException)->setModel(Sprint::class, [$identifier]);
+            throw (new ModelNotFoundException)->setModel(OrchestrationSprint::class, [$identifier]);
         }
 
         return $model;
@@ -42,9 +41,9 @@ class SprintOrchestrationService
     /**
      * Create a sprint; optionally update when code already exists.
      */
-    public function create(array $attributes, bool $updateIfExists = false): Sprint
+    public function create(array $attributes, bool $updateIfExists = false): OrchestrationSprint
     {
-        $code = $this->normaliseCode($attributes['code'] ?? '');
+        $code = $this->normaliseCode($attributes['code'] ?? $attributes['sprint_code'] ?? '');
 
         if ($code === '') {
             throw new InvalidArgumentException('Sprint code is required.');
@@ -52,20 +51,20 @@ class SprintOrchestrationService
 
         $payload = $this->prepareAttributes($attributes, $code);
 
-        if ($updateIfExists && Sprint::where('code', $code)->exists()) {
+        if ($updateIfExists && OrchestrationSprint::where('sprint_code', $code)->exists()) {
             return $this->update($code, $attributes);
         }
 
-        return Sprint::create($payload);
+        return OrchestrationSprint::create($payload);
     }
 
     /**
-     * Update meta/dates for an existing sprint.
+     * Update metadata/dates for an existing sprint.
      */
-    public function update(string|Sprint $sprint, array $attributes): Sprint
+    public function update(string|int|OrchestrationSprint $sprint, array $attributes): OrchestrationSprint
     {
         $sprint = $this->resolveSprint($sprint);
-        $payload = $this->prepareAttributes($attributes, $sprint->code, $sprint);
+        $payload = $this->prepareAttributes($attributes, $sprint->sprint_code, $sprint);
 
         $sprint->fill($payload);
         $sprint->save();
@@ -74,21 +73,21 @@ class SprintOrchestrationService
     }
 
     /**
-     * Update sprint status (stored in meta) and optionally append a note.
+     * Update sprint status and optionally append a note.
      */
-    public function updateStatus(string|Sprint $sprint, string $status, ?string $note = null): Sprint
+    public function updateStatus(string|int|OrchestrationSprint $sprint, string $status, ?string $note = null): OrchestrationSprint
     {
         $sprint = $this->resolveSprint($sprint);
-        $meta = $sprint->meta ?? [];
-        $meta['status'] = Str::of($status)->trim()->lower()->headline();
+        $sprint->status = Str::of($status)->trim()->lower();
 
         if ($note) {
-            $notes = Arr::get($meta, 'notes', []);
+            $metadata = $sprint->metadata ?? [];
+            $notes = Arr::get($metadata, 'notes', []);
             $notes[] = $note;
-            $meta['notes'] = array_values(array_unique($notes));
+            $metadata['notes'] = array_values(array_unique($notes));
+            $sprint->metadata = $metadata;
         }
 
-        $sprint->meta = $meta;
         $sprint->save();
 
         return $sprint->fresh();
@@ -97,7 +96,7 @@ class SprintOrchestrationService
     /**
      * Attach one or more tasks to a sprint; returns summary payload.
      */
-    public function attachTasks(string|Sprint $sprint, array $tasks, array $options = []): array
+    public function attachTasks(string|int|OrchestrationSprint $sprint, array $tasks, array $options = []): array
     {
         $sprint = $this->resolveSprint($sprint);
         $taskService = app(TaskOrchestrationService::class);
@@ -108,24 +107,16 @@ class SprintOrchestrationService
         }
 
         DB::transaction(function () use ($sprint, $taskService, $codes) {
-            $position = (int) SprintItem::where('sprint_id', $sprint->id)->max('position') + 1;
-
             foreach ($codes as $code) {
-                $workItem = $taskService->resolveTask($code);
-
-                $metadata = $workItem->metadata ?? [];
-                $metadata['sprint_code'] = $sprint->code;
-                $workItem->metadata = $metadata;
-
-                $context = $workItem->delegation_context ?? [];
-                $context['sprint_code'] = $sprint->code;
-                $workItem->delegation_context = $context;
-                $workItem->save();
-
-                SprintItem::updateOrCreate(
-                    ['sprint_id' => $sprint->id, 'work_item_id' => $workItem->id],
-                    ['position' => $position++]
-                );
+                $task = $taskService->resolveTask($code);
+                
+                $task->sprint_id = $sprint->id;
+                
+                $context = $task->delegation_context ?? [];
+                $context['sprint_code'] = $sprint->sprint_code;
+                $task->delegation_context = $context;
+                
+                $task->save();
             }
         });
 
@@ -135,7 +126,7 @@ class SprintOrchestrationService
     /**
      * Retrieve a detailed snapshot for a sprint.
      */
-    public function detail(string|Sprint $sprint, array $options = []): array
+    public function detail(string|int|OrchestrationSprint $sprint, array $options = []): array
     {
         $sprint = $this->resolveSprint($sprint);
         $withTasks = (bool) ($options['include_tasks'] ?? true);
@@ -152,15 +143,10 @@ class SprintOrchestrationService
     /**
      * Generate sprint summary identical to list output but reusable.
      */
-    public function summarise(Sprint $sprint, bool $withTasks = false, int $tasksLimit = 5, bool $includeAssignments = false): array
+    public function summarise(OrchestrationSprint $sprint, bool $withTasks = false, int $tasksLimit = 5, bool $includeAssignments = false): array
     {
-        // Get tasks via sprint_items relationship AND legacy metadata approach
-        $taskQuery = WorkItem::query()->where(function ($query) use ($sprint) {
-            $query->where('metadata->sprint_code', $sprint->code)
-                ->orWhereHas('sprintItems', function ($subQuery) use ($sprint) {
-                    $subQuery->where('sprint_id', $sprint->id);
-                });
-        });
+        // Get tasks by sprint_id
+        $taskQuery = OrchestrationTask::query()->where('sprint_id', $sprint->id);
 
         $total = (clone $taskQuery)->count();
         $completed = (clone $taskQuery)->where('delegation_status', 'completed')->count();
@@ -180,7 +166,7 @@ class SprintOrchestrationService
                 $taskCollection->load(['currentAssignment.agent']);
             }
 
-            $tasks = $taskCollection->map(function (WorkItem $item) use ($includeAssignments) {
+            $tasks = $taskCollection->map(function (OrchestrationTask $item) use ($includeAssignments) {
                 $metadata = $item->metadata ?? [];
                 $context = $item->delegation_context ?? [];
                 $assignment = null;
@@ -195,8 +181,8 @@ class SprintOrchestrationService
 
                 return [
                     'id' => $item->id,
-                    'task_code' => Arr::get($metadata, 'task_code'),
-                    'task_name' => Arr::get($metadata, 'task_name'),
+                    'task_code' => $item->task_code,
+                    'task_name' => $item->title,
                     'status' => $item->status,
                     'delegation_status' => $item->delegation_status,
                     'agent_recommendation' => Arr::get($context, 'agent_recommendation'),
@@ -206,25 +192,28 @@ class SprintOrchestrationService
                         'slug' => $assignment->agent?->slug,
                         'status' => $assignment->status,
                     ] : null,
-                    'estimate_text' => Arr::get($metadata, 'estimate_text'),
+                    'estimate_text' => $item->estimated_hours ? "{$item->estimated_hours}h" : null,
+                    'estimated_hours' => $item->estimated_hours,
                     'todo_progress' => Arr::get($metadata, 'todo_progress', []),
                     'updated_at' => optional($item->updated_at)->toIso8601String(),
                 ];
             })->values()->all();
         }
 
-        $meta = $sprint->meta ?? [];
+        $metadata = $sprint->metadata ?? [];
 
         return [
             'id' => $sprint->id,
-            'code' => $sprint->code,
-            'title' => Arr::get($meta, 'title', $sprint->code),
-            'priority' => Arr::get($meta, 'priority'),
-            'status' => Arr::get($meta, 'status'),
-            'estimate' => Arr::get($meta, 'estimate'),
-            'notes' => Arr::get($meta, 'notes', []),
-            'starts_on' => optional($this->asCarbon($sprint->starts_on))->toDateString(),
-            'ends_on' => optional($this->asCarbon($sprint->ends_on))->toDateString(),
+            'code' => $sprint->sprint_code,
+            'sprint_code' => $sprint->sprint_code,
+            'title' => $sprint->title,
+            'owner' => $sprint->owner,
+            'priority' => Arr::get($metadata, 'priority'),
+            'status' => $sprint->status ?? 'planning',
+            'estimate' => Arr::get($metadata, 'estimate'),
+            'notes' => Arr::get($metadata, 'notes', []),
+            'starts_on' => $sprint->starts_on?->toDateString(),
+            'ends_on' => $sprint->ends_on?->toDateString(),
             'stats' => [
                 'total' => $total,
                 'completed' => $completed,
@@ -233,16 +222,40 @@ class SprintOrchestrationService
                 'unassigned' => $unassigned,
             ],
             'tasks' => $tasks,
-            'updated_at' => optional($this->asCarbon($sprint->updated_at))->toIso8601String(),
+            'updated_at' => optional($sprint->updated_at)->toIso8601String(),
         ];
     }
 
-    private function prepareAttributes(array $attributes, string $code, ?Sprint $existing = null): array
+    private function prepareAttributes(array $attributes, string $code, ?OrchestrationSprint $existing = null): array
     {
         $payload = [
-            'code' => $code,
+            'sprint_code' => $code,
         ];
 
+        // Title is now a direct field
+        if (array_key_exists('title', $attributes)) {
+            $payload['title'] = $attributes['title'];
+        } elseif ($existing) {
+            $payload['title'] = $existing->title;
+        } else {
+            $payload['title'] = $code;
+        }
+
+        // Owner
+        if (array_key_exists('owner', $attributes)) {
+            $payload['owner'] = $attributes['owner'];
+        } elseif ($existing) {
+            $payload['owner'] = $existing->owner;
+        }
+
+        // Status is now a direct field
+        if (array_key_exists('status', $attributes)) {
+            $payload['status'] = $attributes['status'];
+        } elseif ($existing) {
+            $payload['status'] = $existing->status;
+        }
+
+        // Dates
         if (array_key_exists('starts_on', $attributes)) {
             $payload['starts_on'] = $this->normaliseDate($attributes['starts_on']);
         } elseif ($existing) {
@@ -255,22 +268,23 @@ class SprintOrchestrationService
             $payload['ends_on'] = $existing->ends_on;
         }
 
-        $meta = $existing?->meta ?? [];
-        $meta = array_merge($meta, Arr::only($attributes, ['title', 'priority', 'estimate', 'notes', 'status']));
+        // Everything else goes in metadata
+        $metadata = $existing?->metadata ?? [];
+        $metadata = array_merge($metadata, Arr::only($attributes, ['priority', 'estimate', 'notes']));
 
         if (isset($attributes['notes']) && is_string($attributes['notes'])) {
-            $meta['notes'] = array_filter(array_map('trim', preg_split('/[\r\n]+/', $attributes['notes'])));
+            $metadata['notes'] = array_filter(array_map('trim', preg_split('/[\r\n]+/', $attributes['notes'])));
         }
 
         if (isset($attributes['notes']) && is_array($attributes['notes'])) {
-            $meta['notes'] = array_values(array_filter($attributes['notes']));
+            $metadata['notes'] = array_values(array_filter($attributes['notes']));
         }
 
-        if (! empty($attributes['meta']) && is_array($attributes['meta'])) {
-            $meta = array_merge($meta, $attributes['meta']);
+        if (! empty($attributes['metadata']) && is_array($attributes['metadata'])) {
+            $metadata = array_merge($metadata, $attributes['metadata']);
         }
 
-        $payload['meta'] = $meta;
+        $payload['metadata'] = $metadata;
 
         return $payload;
     }

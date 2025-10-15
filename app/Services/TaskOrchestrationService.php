@@ -3,9 +3,10 @@
 namespace App\Services;
 
 use App\Models\AgentProfile;
+use App\Models\OrchestrationSprint;
+use App\Models\OrchestrationTask;
 use App\Models\TaskActivity;
 use App\Models\TaskAssignment;
-use App\Models\WorkItem;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
@@ -33,7 +34,7 @@ class TaskOrchestrationService
         'cancelled' => 'cancelled',
     ];
 
-    public function create(array $data, bool $upsert = true): WorkItem
+    public function create(array $data, bool $upsert = true): OrchestrationTask
     {
         $taskCode = $data['task_code'] ?? null;
 
@@ -43,8 +44,8 @@ class TaskOrchestrationService
 
         $existing = null;
         if ($upsert) {
-            $existing = WorkItem::query()
-                ->where('metadata->task_code', $taskCode)
+            $existing = OrchestrationTask::query()
+                ->where('task_code', $taskCode)
                 ->first();
         }
 
@@ -52,11 +53,14 @@ class TaskOrchestrationService
             throw new InvalidArgumentException("Task with code [{$taskCode}] already exists");
         }
 
-        $model = $existing ?? new WorkItem;
+        $model = $existing ?? new OrchestrationTask;
+        $model->task_code = $taskCode;
         $model->type = $data['type'] ?? 'task';
         $model->status = $data['status'] ?? 'todo';
         $model->priority = $data['priority'] ?? 'medium';
         $model->delegation_status = $data['delegation_status'] ?? 'unassigned';
+        $model->title = $data['task_name'] ?? $data['title'] ?? null;
+        $model->description = $data['description'] ?? null;
 
         if (isset($data['tags'])) {
             $model->tags = is_array($data['tags']) ? $data['tags'] : [$data['tags']];
@@ -64,26 +68,21 @@ class TaskOrchestrationService
             $model->tags = ['orchestration'];
         }
 
-        $metadata = $model->metadata ?? [];
-        $metadata['task_code'] = $taskCode;
-
-        if (isset($data['task_name'])) {
-            $metadata['task_name'] = $data['task_name'];
-            $metadata['description'] = $data['task_name'];
-        }
-
-        if (isset($data['description'])) {
-            $metadata['description'] = $data['description'];
-        }
-
         if (isset($data['sprint_code'])) {
-            $metadata['sprint_code'] = $data['sprint_code'];
+            $sprint = OrchestrationSprint::where('sprint_code', $data['sprint_code'])->first();
+            if ($sprint) {
+                $model->sprint_id = $sprint->id;
+            }
         }
 
-        if (isset($data['estimate_text'])) {
-            $metadata['estimate_text'] = $data['estimate_text'];
+        if (isset($data['estimated_hours'])) {
+            $model->estimated_hours = $data['estimated_hours'];
+        } elseif (isset($data['estimate_text'])) {
+            $hours = (float) preg_replace('/[^0-9.]/', '', $data['estimate_text']);
+            $model->estimated_hours = $hours > 0 ? $hours : null;
         }
 
+        $metadata = $model->metadata ?? [];
         if (isset($data['dependencies'])) {
             $metadata['dependencies'] = is_array($data['dependencies'])
                 ? $data['dependencies']
@@ -109,28 +108,57 @@ class TaskOrchestrationService
         return $model->fresh();
     }
 
-    public function resolveTask(string|WorkItem $task): WorkItem
+    public function resolveTask(string|OrchestrationTask $task): OrchestrationTask
     {
-        if ($task instanceof WorkItem) {
+        if ($task instanceof OrchestrationTask) {
             return $task;
         }
 
         $identifier = trim($task);
-        $query = WorkItem::query();
+        $model = null;
 
+        // Priority 1: Row ID (numeric)
+        if (is_numeric($identifier)) {
+            $model = OrchestrationTask::where('id', $identifier)->first();
+            if ($model) {
+                return $model;
+            }
+        }
+
+        // Priority 2: Task Code (exact match)
+        $model = OrchestrationTask::where('task_code', $identifier)
+            ->orWhere('task_code', strtoupper($identifier))
+            ->first();
+        if ($model) {
+            return $model;
+        }
+
+        // Priority 3: UUID (if used as ID)
         if (Str::isUuid($identifier)) {
-            $model = $query->whereKey($identifier)->first();
-        } else {
-            $model = $query->where('metadata->task_code', $identifier)
-                ->orWhere('metadata->task_code', strtoupper($identifier))
-                ->first();
+            $model = OrchestrationTask::where('id', $identifier)->first();
+            if ($model) {
+                return $model;
+            }
         }
 
-        if (! $model) {
-            throw (new ModelNotFoundException)->setModel(WorkItem::class, [$identifier]);
+        // Priority 4: Fuzzy matching - find similar task codes
+        $similarTasks = OrchestrationTask::where('task_code', 'like', "%{$identifier}%")
+            ->limit(10)
+            ->get(['id', 'task_code', 'title']);
+
+        if ($similarTasks->isNotEmpty()) {
+            // Return multiple matches for user to select
+            $exception = new ModelNotFoundException;
+            $exception->setModel(OrchestrationTask::class, [$identifier]);
+            $exception->similarMatches = $similarTasks->map(fn($t) => [
+                'id' => $t->id,
+                'task_code' => $t->task_code,
+                'task_name' => $t->title,
+            ])->toArray();
+            throw $exception;
         }
 
-        return $model;
+        throw (new ModelNotFoundException)->setModel(OrchestrationTask::class, [$identifier]);
     }
 
     public function resolveAgent(string|AgentProfile $agent): AgentProfile
@@ -162,7 +190,7 @@ class TaskOrchestrationService
      *
      * @param  array{status?:string, note?:string, context?:array, assignment_status?:string}  $options
      */
-    public function assignAgent(string|WorkItem $task, string|AgentProfile $agent, array $options = []): array
+    public function assignAgent(string|OrchestrationTask $task, string|AgentProfile $agent, array $options = []): array
     {
         $task = $this->resolveTask($task);
         $agent = $this->resolveAgent($agent);
@@ -252,7 +280,7 @@ class TaskOrchestrationService
      *
      * @param  array{note?:string, assignment_status?:string}  $options
      */
-    public function updateStatus(string|WorkItem $task, string $status, array $options = []): WorkItem
+    public function updateStatus(string|OrchestrationTask $task, string $status, array $options = []): OrchestrationTask
     {
         $task = $this->resolveTask($task);
         $delegationStatus = $this->normaliseDelegationStatus($status);
@@ -318,46 +346,42 @@ class TaskOrchestrationService
      *
      * @param  array{assignments_limit?:int, include_history?:bool}  $options
      */
-    public function detail(string|WorkItem $task, array $options = []): array
+    public function detail(string|OrchestrationTask $task, array $options = []): array
     {
         $task = $this->resolveTask($task);
         $limit = (int) ($options['assignments_limit'] ?? 10);
         $includeHistory = (bool) ($options['include_history'] ?? true);
 
-        $task->loadMissing(['assignments' => function ($query) use ($limit) {
-            $query->with('agent')->orderByDesc('assigned_at')->limit($limit);
-        }, 'assignedAgent', 'activities' => function ($query) {
-            $query->with(['agent:id,name,slug', 'user:id,name'])->orderByDesc('created_at')->limit(50);
-        }]);
+        $sprintCode = null;
+        if ($task->sprint_id) {
+            $sprint = OrchestrationSprint::find($task->sprint_id);
+            $sprintCode = $sprint?->sprint_code;
+        }
 
-        $current = $task->currentAssignment;
+        $agentName = null;
+        if ($task->assignee_id) {
+            if ($task->assignee_type && strtolower($task->assignee_type) === 'agent') {
+                $agent = AgentProfile::find($task->assignee_id);
+                $agentName = $agent?->name;
+            }
+        }
 
-        return [
-            'task' => [
-                'id' => $task->id,
-                'task_code' => Arr::get($task->metadata, 'task_code'),
-                'task_name' => Arr::get($task->metadata, 'task_name'),
-                'status' => $task->status,
-                'delegation_status' => $task->delegation_status,
-                'priority' => $task->priority,
-                'metadata' => $task->metadata,
-                'delegation_context' => $task->delegation_context,
-                'delegation_history' => $includeHistory ? ($task->delegation_history ?? []) : null,
-                'todo_progress' => Arr::get($task->metadata, 'todo_progress', []),
-                'updated_at' => optional($task->updated_at)->toIso8601String(),
-                'created_at' => optional($task->created_at)->toIso8601String(),
-                'completed_at' => optional($task->completed_at)->toIso8601String(),
-            ],
-            'current_assignment' => $current ? $this->presentAssignment($current) : null,
-            'assignments' => $task->assignments->map(fn (TaskAssignment $assignment) => $this->presentAssignment($assignment))->all(),
-            'content' => [
-                'agent' => $task->agent_content,
-                'plan' => $task->plan_content,
-                'context' => $task->context_content,
-                'todo' => $task->todo_content,
-                'summary' => $task->summary_content,
-            ],
-            'activities' => $task->activities->map(function ($activity) {
+        // Load assignments
+        $currentAssignment = $task->currentAssignment;
+        $assignments = $task->assignments()
+            ->with('agent')
+            ->orderBy('assigned_at', 'desc')
+            ->limit($limit)
+            ->get()
+            ->map(fn($a) => $this->presentAssignment($a))
+            ->all();
+
+        // Load activities
+        $activities = $task->activities()
+            ->with(['agent', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($activity) {
                 return [
                     'id' => $activity->id,
                     'task_id' => $activity->task_id,
@@ -379,7 +403,41 @@ class TaskOrchestrationService
                         'name' => $activity->user->name,
                     ] : null,
                 ];
-            })->all(),
+            })
+            ->all();
+
+        return [
+            'task' => [
+                'id' => $task->id,
+                'task_code' => $task->task_code,
+                'task_name' => $task->title,
+                'description' => $task->description,
+                'status' => $task->status,
+                'delegation_status' => $task->delegation_status ?? 'unassigned',
+                'priority' => $task->priority,
+                'sprint_code' => $sprintCode,
+                'assignee_id' => $task->assignee_id,
+                'assignee_name' => $agentName,
+                'assignee_type' => $task->assignee_type,
+                'estimate_text' => $task->estimated_hours ? $task->estimated_hours . ' hours' : null,
+                'tags' => $task->tags ?? [],
+                'metadata' => $task->metadata ?? [],
+                'delegation_context' => $task->delegation_context ?? [],
+                'delegation_history' => $includeHistory ? ($task->delegation_history ?? []) : null,
+                'updated_at' => optional($task->updated_at)->toIso8601String(),
+                'created_at' => optional($task->created_at)->toIso8601String(),
+                'completed_at' => optional($task->completed_at)->toIso8601String(),
+            ],
+            'current_assignment' => $currentAssignment ? $this->presentAssignment($currentAssignment) : null,
+            'assignments' => $assignments,
+            'content' => [
+                'agent' => $task->agent_content ?? null,
+                'plan' => $task->plan_content ?? null,
+                'context' => $task->context_content ?? null,
+                'todo' => $task->todo_content ?? null,
+                'summary' => $task->summary_content ?? null,
+            ],
+            'activities' => $activities,
         ];
     }
 
@@ -417,7 +475,7 @@ class TaskOrchestrationService
         return self::ASSIGNMENT_STATUS_MAP[$delegation] ?? 'assigned';
     }
 
-    private function appendHistory(WorkItem $task, array $entry): array
+    private function appendHistory(OrchestrationTask $task, array $entry): array
     {
         $history = $task->delegation_history ?? [];
         $history[] = array_merge($entry, [

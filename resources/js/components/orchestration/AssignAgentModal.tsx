@@ -42,10 +42,14 @@ export function AssignAgentModal({
     const loadAgents = async () => {
       setLoading(true)
       try {
-        const response = await fetch('/api/agents')
+        const response = await fetch('/api/agent-profiles')
         if (response.ok) {
           const data = await response.json()
-          setAgents(data.data || data.agents || [])
+          console.log('[AssignAgentModal] Loaded agent profiles:', data)
+          // API returns array directly, not wrapped in {data: ...}
+          setAgents(Array.isArray(data) ? data : (data.data || data.agents || []))
+        } else {
+          console.error('[AssignAgentModal] Failed to fetch agent profiles:', response.status)
         }
       } catch (error) {
         console.error('Failed to load agents:', error)

@@ -1,0 +1,43 @@
+{
+  "id": "page.agent.table.modal",
+  "overlay": "modal",
+  "title": "Agents",
+  "components": [
+    {
+      "id": "component.search.bar.agent",
+      "type": "search.bar",
+      "dataSource": "Agent",
+      "resolver": "DataSourceResolver::class",
+      "submit": false,
+      "result": { "target": "component.table.agent", "open": "inline" }
+    },
+    {
+      "id": "component.table.agent",
+      "type": "table",
+      "dataSource": "Agent",
+      "columns": [
+        { "key": "name", "label": "Name", "sortable": true },
+        { "key": "role", "label": "Role", "filterable": true },
+        { "key": "provider", "label": "Provider", "filterable": true },
+        { "key": "model", "label": "Model", "filterable": true },
+        { "key": "status", "label": "Status", "filterable": true },
+        { "key": "updated_at", "label": "Updated", "sortable": true }
+      ],
+      "rowAction": {
+        "type": "command",
+        "command": "/orch-agent",
+        "params": { "id": "{{row.id}}" }
+      },
+      "toolbar": [
+        {
+          "id": "component.button.icon.add-agent",
+          "type": "button.icon",
+          "props": { "icon": "plus", "label": "New Agent" },
+          "actions": {
+            "click": { "type": "command", "command": "/orch-agent-new" }
+          }
+        }
+      ]
+    }
+  ]
+}

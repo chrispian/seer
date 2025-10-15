@@ -8,21 +8,21 @@ use Laravel\Mcp\Request;
 
 class DetailCommand extends BaseCommand
 {
-    protected ?string $code = null;
+    protected ?string $identifier = null;
 
     public function __construct(array $options = [])
     {
-        // Support both 'code' parameter and first positional argument
-        $this->code = $options['code'] ?? $options[0] ?? null;
+        // Support 'code', 'id', or first positional argument
+        $this->identifier = $options['code'] ?? $options['id'] ?? $options[0] ?? null;
     }
 
     public function handle(): array
     {
-        $taskCode = $this->code;
+        $taskIdentifier = $this->identifier;
 
-        if (! $taskCode) {
+        if (! $taskIdentifier) {
             return $this->respond(
-                ['error' => 'Please provide a task code. Usage: /task-detail T-ART-02-CAS'],
+                ['error' => 'Please provide a task code or ID. Usage: /orch-task 123 or /orch-task TASK-001'],
                 null
             );
         }
@@ -30,7 +30,7 @@ class DetailCommand extends BaseCommand
         try {
             $tool = app(TaskDetailTool::class);
             $request = new Request([
-                'task' => $taskCode,
+                'task' => $taskIdentifier,
                 'include_history' => true,
                 'assignments_limit' => 20,
             ], 'command-session');
@@ -40,11 +40,32 @@ class DetailCommand extends BaseCommand
             $data = json_decode((string) $content, true);
 
             return $this->respond($data, 'TaskDetailModal');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Check for similar matches
+            if (property_exists($e, 'similarMatches') && !empty($e->similarMatches)) {
+                $message = "Task '{$taskIdentifier}' not found. Did you mean one of these?\n\n";
+                foreach ($e->similarMatches as $match) {
+                    $message .= "- {$match['task_code']}: {$match['task_name']} (ID: {$match['id']})\n";
+                }
+                $message .= "\nUse: /orch-task [id|task-code]";
+                
+                return [
+                    'type' => 'message',
+                    'component' => null,
+                    'message' => $message,
+                ];
+            }
+            
+            return [
+                'type' => 'message',
+                'component' => null,
+                'message' => "Task '{$taskIdentifier}' not found. Use /orch-tasks to see available tasks.",
+            ];
         } catch (\Exception $e) {
             return [
                 'type' => 'message',
                 'component' => null,
-                'message' => "Task '{$taskCode}' not found. Use /tasks to see available tasks.",
+                'message' => "Error loading task: " . $e->getMessage(),
             ];
         }
     }
@@ -61,7 +82,7 @@ class DetailCommand extends BaseCommand
 
     public static function getUsage(): string
     {
-        return '/task-detail [task-code]';
+        return '/orch-task [id|task-code]';
     }
 
     public static function getCategory(): string

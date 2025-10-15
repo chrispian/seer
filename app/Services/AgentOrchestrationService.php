@@ -143,4 +143,34 @@ class AgentOrchestrationService
             default => throw new InvalidArgumentException(sprintf('Unsupported agent status [%s].', $status)),
         };
     }
+
+    public function list(array $options = []): array
+    {
+        $query = AgentProfile::query();
+
+        if (isset($options['status'])) {
+            $query->where('status', $options['status']);
+        }
+
+        if (isset($options['search'])) {
+            $search = $options['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('slug', 'like', "%{$search}%");
+            });
+        }
+
+        $limit = $options['limit'] ?? 100;
+        $agents = $query->limit($limit)->get();
+
+        return [
+            'data' => $agents->map(fn($agent) => [
+                'id' => $agent->id,
+                'name' => $agent->name,
+                'slug' => $agent->slug,
+                'designation' => $agent->designation ?? null,
+                'status' => $agent->status,
+            ])->toArray()
+        ];
+    }
 }

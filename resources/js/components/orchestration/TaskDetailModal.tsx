@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -46,6 +46,7 @@ interface Task {
   estimate_text?: string
   sprint_code?: string
   assignee_id?: string | null
+  assignee_name?: string | null
   assignee_type?: string | null
   tags?: string[]
   created_at: string
@@ -117,10 +118,10 @@ interface TaskDetailModalProps {
 export function TaskDetailModal({ 
   isOpen, 
   onClose, 
-  task,
+  task: initialTask,
   currentAssignment,
   assignments = [],
-  content = {},
+  content: initialContent = {},
   contentLoading = false,
   contentError = null,
   onRefreshContent,
@@ -134,11 +135,23 @@ export function TaskDetailModal({
   onBack,
   editMode = false
 }: TaskDetailModalProps) {
+  const [task, setTask] = useState<Task>(initialTask)
+  const [content, setContent] = useState<TaskContent>(initialContent)
   const [availableSprints, setAvailableSprints] = useState<Array<{ value: string; label: string }>>([])
   const [availableAgents, setAvailableAgents] = useState<Array<{ value: string; label: string }>>([])
   const [editingContent, setEditingContent] = useState<string | null>(null)
   const [showAssignSprintModal, setShowAssignSprintModal] = useState(false)
   const [showAssignAgentModal, setShowAssignAgentModal] = useState(false)
+  const isOpeningChildModal = useRef(false)
+
+  // Update local state when props change
+  useEffect(() => {
+    setTask(initialTask)
+  }, [initialTask])
+
+  useEffect(() => {
+    setContent(initialContent)
+  }, [initialContent])
 
   useEffect(() => {
     if (!isOpen) return
@@ -152,10 +165,7 @@ export function TaskDetailModal({
 
         if (sprintsRes.ok) {
           const sprintsData = await sprintsRes.json()
-          setAvailableSprints([
-            { value: '', label: 'No sprint' },
-            ...(sprintsData.sprints || []),
-          ])
+          setAvailableSprints(sprintsData.sprints || [])
         }
 
         if (agentsRes.ok) {
@@ -164,10 +174,7 @@ export function TaskDetailModal({
             value: agent.id,
             label: agent.name || agent.designation,
           }))
-          setAvailableAgents([
-            { value: '', label: 'Unassigned' },
-            ...agents,
-          ])
+          setAvailableAgents(agents)
         }
       } catch (error) {
         console.error('Failed to load options:', error)
@@ -259,7 +266,25 @@ export function TaskDetailModal({
       throw new Error('Failed to save field')
     }
 
-    onRefresh?.()
+    // Get updated task from response
+    const data = await response.json()
+    
+    // Update local task state with the response (which includes sprint_code, assignee_name, etc.)
+    if (data.success && data.task) {
+      // Map backend fields to frontend Task interface
+      setTask(prev => ({
+        ...prev,
+        ...data.task,
+        task_name: data.task.title || prev.task_name,
+        task_code: data.task.task_code || prev.task_code,
+        updated_at: data.task.updated_at || new Date().toISOString(),
+      }))
+      
+      // Optionally refresh activities
+      if (onRefreshActivities) {
+        onRefreshActivities()
+      }
+    }
   }
 
   const handleSaveTags = async (tags: string[]) => {
@@ -281,7 +306,7 @@ export function TaskDetailModal({
     onRefresh?.()
   }
 
-  const handleSaveContent = async (contentKey: string, content: string) => {
+  const handleSaveContent = async (contentKey: string, contentValue: string) => {
     const fieldMap: Record<string, string> = {
       'agent': 'agent_content',
       'plan': 'plan_content',
@@ -293,7 +318,14 @@ export function TaskDetailModal({
     const field = fieldMap[contentKey]
     if (!field) return
 
-    await handleSaveField(field, content)
+    // Update local content state immediately (optimistic update)
+    setContent(prev => ({
+      ...prev,
+      [contentKey]: contentValue,
+    }))
+
+    // Save to backend
+    await handleSaveField(field, contentValue)
     setEditingContent(null)
   }
 
@@ -310,9 +342,10 @@ export function TaskDetailModal({
   ]
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
+    <Dialog modal={false} open={isOpen} onOpenChange={(open) => {
       console.log('[TaskDetailModal] Dialog onOpenChange, open:', open, 'onBack exists?', !!onBack)
-      if (!open) {
+      // Don't close if child modals are open or being opened
+      if (!open && !showAssignSprintModal && !showAssignAgentModal && !isOpeningChildModal.current) {
         if (onBack) {
           onBack()
         } else {
@@ -416,28 +449,23 @@ export function TaskDetailModal({
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => setShowAssignSprintModal(true)}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        e.preventDefault();
+                        console.log('[TaskDetailModal] Assign Sprint clicked');
+                        isOpeningChildModal.current = true;
+                        setShowAssignSprintModal(true);
+                        setTimeout(() => { isOpeningChildModal.current = false; }, 100);
+                      }}
                       className="h-6 px-2 text-xs"
                     >
                       <Calendar className="h-3 w-3 mr-1" />
                       Assign
                     </Button>
                   </div>
-                  {availableSprints.length > 0 ? (
-                    <InlineEditSelect
-                      value={task.sprint_code || ''}
-                      options={availableSprints}
-                      onSave={(value) => handleSaveField('sprint_code', value)}
-                      className="mt-1"
-                    />
-                  ) : (
-                    <InlineEditText 
-                      value={task.sprint_code || ''}
-                      onSave={(value) => handleSaveField('sprint_code', value)}
-                      placeholder="No sprint assigned"
-                      className="text-sm text-muted-foreground mt-1"
-                    />
-                  )}
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {task.sprint_code || 'No sprint assigned'}
+                  </p>
                 </div>
 
                 <div>
@@ -456,25 +484,23 @@ export function TaskDetailModal({
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => setShowAssignAgentModal(true)}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        e.preventDefault();
+                        console.log('[TaskDetailModal] Assign Agent clicked');
+                        isOpeningChildModal.current = true;
+                        setShowAssignAgentModal(true);
+                        setTimeout(() => { isOpeningChildModal.current = false; }, 100);
+                      }}
                       className="h-6 px-2 text-xs"
                     >
                       <UserPlus className="h-3 w-3 mr-1" />
                       Assign
                     </Button>
                   </div>
-                  {availableAgents.length > 0 ? (
-                    <InlineEditSelect
-                      value={task.assignee_id || ''}
-                      options={availableAgents}
-                      onSave={(value) => handleSaveField('assignee_id', value)}
-                      className="mt-1"
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {task.assignee_id || 'Unassigned'}
-                    </p>
-                  )}
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {task.assignee_name || 'Unassigned'}
+                  </p>
                 </div>
 
                 {task.agent_recommendation && (
@@ -575,7 +601,17 @@ export function TaskDetailModal({
                 </TabsList>
                 
                 {contentTabs.map(tab => (
-                  <TabsContent key={tab.key} value={tab.key} className="flex-1 mt-0 overflow-hidden">
+                  <TabsContent 
+                    key={tab.key} 
+                    value={tab.key} 
+                    className="flex-1 mt-0 overflow-hidden"
+                    onFocusCapture={(e) => {
+                      // Prevent TabsContent from stealing focus from editor
+                      if (editingContent === tab.key) {
+                        e.stopPropagation()
+                      }
+                    }}
+                  >
                     {tab.isActivity ? (
                       <div className="h-full rounded-md border bg-muted/20 p-4">
                         <TaskActivityTimeline
@@ -588,7 +624,11 @@ export function TaskDetailModal({
                         />
                       </div>
                     ) : editingContent === tab.key ? (
-                      <div className="h-full rounded-md border bg-muted/20 p-4">
+                      <div 
+                        className="h-full rounded-md border bg-muted/20 p-4"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <MarkdownEditor
                           content={tab.content || ''}
                           onSave={(content) => handleSaveContent(tab.key, content)}

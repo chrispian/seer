@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Orchestration;
 
 use App\Http\Controllers\Controller;
+use App\Models\OrchestrationSprint;
+use App\Models\OrchestrationTask;
 use App\Models\TaskActivity;
 use App\Models\WorkItem;
 use Illuminate\Http\Request;
@@ -17,17 +19,17 @@ class TaskController extends Controller
             'value' => 'nullable|string',
         ]);
 
-        $task = WorkItem::findOrFail($id);
+        $task = OrchestrationTask::findOrFail($id);
         $field = $validated['field'];
         $value = $validated['value'];
 
         $oldValue = match ($field) {
-            'task_name' => Arr::get($task->metadata, 'task_name'),
-            'description' => Arr::get($task->metadata, 'description'),
+            'task_name' => $task->title,
+            'description' => $task->metadata['description'] ?? null,
             'status' => $task->status,
             'priority' => $task->priority,
-            'sprint_code' => Arr::get($task->metadata, 'sprint_code'),
-            'estimate_text' => Arr::get($task->metadata, 'estimate_text'),
+            'sprint_code' => $task->sprint_id ? OrchestrationSprint::find($task->sprint_id)?->sprint_code : null,
+            'estimate_text' => $task->estimated_hours,
             'assignee_id' => $task->assignee_id,
             'agent_content' => $task->agent_content,
             'plan_content' => $task->plan_content,
@@ -40,8 +42,7 @@ class TaskController extends Controller
             $task->status = $value;
             $task->save();
 
-            TaskActivity::create([
-                'task_id' => $task->id,
+            $this->logActivity($task->id, [
                 'user_id' => auth()->id(),
                 'activity_type' => 'status_change',
                 'action' => 'status_updated',
@@ -56,8 +57,7 @@ class TaskController extends Controller
             $task->priority = $value;
             $task->save();
 
-            TaskActivity::create([
-                'task_id' => $task->id,
+            $this->logActivity($task->id, [
                 'user_id' => auth()->id(),
                 'activity_type' => 'content_update',
                 'action' => 'field_updated',
@@ -73,8 +73,7 @@ class TaskController extends Controller
             $task->assignee_type = $value ? 'agent' : null;
             $task->save();
 
-            TaskActivity::create([
-                'task_id' => $task->id,
+            $this->logActivity($task->id, [
                 'user_id' => auth()->id(),
                 'activity_type' => 'assignment',
                 'action' => 'agent_assigned',
@@ -91,8 +90,7 @@ class TaskController extends Controller
 
             $fieldLabel = str_replace('_content', '', $field);
 
-            TaskActivity::create([
-                'task_id' => $task->id,
+            $this->logActivity($task->id, [
                 'user_id' => auth()->id(),
                 'activity_type' => 'content_update',
                 'action' => 'content_updated',
@@ -103,7 +101,56 @@ class TaskController extends Controller
                     'new_value' => substr($value ?? '', 0, 100),
                 ],
             ]);
+        } elseif ($field === 'task_name') {
+            $task->title = $value;
+            $task->save();
+
+            $this->logActivity($task->id, [
+                'user_id' => auth()->id(),
+                'activity_type' => 'content_update',
+                'action' => 'field_updated',
+                'description' => "Task name changed from {$oldValue} to {$value}",
+                'changes' => [
+                    'field' => 'title',
+                    'old_value' => $oldValue,
+                    'new_value' => $value,
+                ],
+            ]);
+        } elseif ($field === 'sprint_code') {
+            // Find sprint by code and set sprint_id
+            $sprint = OrchestrationSprint::where('sprint_code', $value)->first();
+            $task->sprint_id = $sprint?->id;
+            $task->save();
+
+            $this->logActivity($task->id, [
+                'user_id' => auth()->id(),
+                'activity_type' => 'content_update',
+                'action' => 'sprint_assigned',
+                'description' => "Sprint changed to {$value}",
+                'changes' => [
+                    'field' => 'sprint_id',
+                    'old_value' => $oldValue,
+                    'new_value' => $value,
+                ],
+            ]);
+        } elseif ($field === 'estimate_text') {
+            // Convert estimate text to hours if numeric
+            $task->estimated_hours = is_numeric($value) ? floatval($value) : null;
+            $task->save();
+
+            $this->logActivity($task->id, [
+                'user_id' => auth()->id(),
+                'activity_type' => 'content_update',
+                'action' => 'field_updated',
+                'description' => "Estimate updated to {$value}",
+                'changes' => [
+                    'field' => 'estimated_hours',
+                    'old_value' => $oldValue,
+                    'new_value' => $value,
+                ],
+            ]);
         } else {
+            // Fallback: store in metadata JSON
             $metadata = $task->metadata ?? [];
             $metadata[$field] = $value;
             $task->metadata = $metadata;
@@ -111,8 +158,7 @@ class TaskController extends Controller
 
             $fieldLabel = str_replace('_', ' ', $field);
 
-            TaskActivity::create([
-                'task_id' => $task->id,
+            $this->logActivity($task->id, [
                 'user_id' => auth()->id(),
                 'activity_type' => 'content_update',
                 'action' => 'field_updated',
@@ -127,9 +173,41 @@ class TaskController extends Controller
 
         $task->refresh();
 
+        // Get sprint_code if sprint_id is set
+        $sprintCode = null;
+        if ($task->sprint_id) {
+            $sprint = OrchestrationSprint::find($task->sprint_id);
+            $sprintCode = $sprint?->sprint_code;
+        }
+
+        // Get assignee_name if assignee_id is set
+        $assigneeName = null;
+        if ($task->assignee_id && $task->assignee_type && strtolower($task->assignee_type) === 'agent') {
+            $agent = \App\Models\AgentProfile::find($task->assignee_id);
+            $assigneeName = $agent?->name;
+        }
+
         return response()->json([
             'success' => true,
-            'task' => $task,
+            'task' => [
+                'id' => $task->id,
+                'task_code' => $task->task_code,
+                'task_name' => $task->title,
+                'description' => $task->description,
+                'status' => $task->status,
+                'delegation_status' => $task->delegation_status,
+                'priority' => $task->priority,
+                'sprint_code' => $sprintCode,
+                'assignee_id' => $task->assignee_id,
+                'assignee_name' => $assigneeName,
+                'assignee_type' => $task->assignee_type,
+                'estimate_text' => $task->estimated_hours ? $task->estimated_hours . ' hours' : null,
+                'tags' => $task->tags ?? [],
+                'created_at' => $task->created_at?->toIso8601String(),
+                'updated_at' => $task->updated_at?->toIso8601String(),
+                'completed_at' => $task->completed_at?->toIso8601String(),
+                'metadata' => $task->metadata ?? [],
+            ],
         ]);
     }
 
@@ -140,7 +218,7 @@ class TaskController extends Controller
             'tags.*' => 'string',
         ]);
 
-        $task = WorkItem::findOrFail($id);
+        $task = OrchestrationTask::findOrFail($id);
         $oldTags = $task->tags ?? [];
         $newTags = $validated['tags'];
 
@@ -159,8 +237,7 @@ class TaskController extends Controller
             $description = 'Tags removed: '.implode(', ', $removed);
         }
 
-        TaskActivity::create([
-            'task_id' => $task->id,
+        $this->logActivity($task->id, [
             'user_id' => auth()->id(),
             'activity_type' => 'content_update',
             'action' => 'tags_updated',
@@ -182,13 +259,19 @@ class TaskController extends Controller
 
     public function getAvailableSprints()
     {
-        $sprints = WorkItem::where('type', 'sprint')
-            ->orderBy('created_at', 'desc')
+        $sprints = OrchestrationSprint::orderBy('created_at', 'desc')
             ->get()
             ->map(function ($sprint) {
                 return [
-                    'value' => Arr::get($sprint->metadata, 'code'),
-                    'label' => Arr::get($sprint->metadata, 'code').' - '.Arr::get($sprint->metadata, 'title', 'Untitled'),
+                    'id' => $sprint->id,
+                    'code' => $sprint->sprint_code,
+                    'title' => $sprint->title,
+                    'status' => $sprint->status,
+                    'task_count' => $sprint->tasks()->count(),
+                    'completed_tasks' => $sprint->tasks()->where('status', 'completed')->count(),
+                    // For InlineEditSelect compatibility
+                    'value' => $sprint->sprint_code,
+                    'label' => $sprint->sprint_code.' - '.($sprint->title ?? 'Untitled'),
                 ];
             })
             ->filter(fn ($sprint) => ! empty($sprint['value']));
@@ -196,5 +279,21 @@ class TaskController extends Controller
         return response()->json([
             'sprints' => $sprints->values(),
         ]);
+    }
+
+    /**
+     * Safely create task activity (skip if UUID mismatch for OrchestrationTask)
+     */
+    private function logActivity(int $taskId, array $data): void
+    {
+        try {
+            TaskActivity::create(array_merge(['task_id' => $taskId], $data));
+        } catch (\Exception $e) {
+            // TODO: Update task_activities table to support integer task_id for OrchestrationTask
+            \Log::warning('Failed to log task activity', [
+                'task_id' => $taskId,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }

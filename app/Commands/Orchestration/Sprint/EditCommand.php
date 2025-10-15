@@ -3,9 +3,8 @@
 namespace App\Commands\Orchestration\Sprint;
 
 use App\Commands\BaseCommand;
-use App\Models\Sprint;
-use App\Models\WorkItem;
-use Illuminate\Support\Arr;
+use App\Models\OrchestrationSprint;
+use App\Models\OrchestrationTask;
 
 class EditCommand extends BaseCommand
 {
@@ -18,35 +17,31 @@ class EditCommand extends BaseCommand
 
     public function handle(): array
     {
-        $sprint = Sprint::where('code', $this->code)->firstOrFail();
+        $sprint = OrchestrationSprint::where('sprint_code', $this->code)->firstOrFail();
 
-        // Get unassigned tasks (same pattern as ListCommand)
-        $unassignedTasks = WorkItem::where(function($query) {
-                $query->whereNull('metadata->sprint_code')
-                      ->orWhere('metadata->sprint_code', '');
-            })
+        // Get unassigned tasks
+        $unassignedTasks = OrchestrationTask::whereNull('sprint_id')
             ->orderByDesc('created_at')
             ->limit(100)
             ->get()
             ->map(fn($task) => [
                 'id' => $task->id,
-                'task_code' => Arr::get($task->metadata, 'task_code'),
-                'task_name' => Arr::get($task->metadata, 'task_name'),
+                'task_code' => $task->task_code,
+                'task_name' => $task->title,
                 'status' => $task->status,
-                'priority' => Arr::get($task->metadata, 'priority'),
+                'priority' => $task->priority,
             ])
             ->toArray();
 
         // Get current sprint tasks
-        $currentTasks = $sprint->sprintItems()
-            ->with('workItem')
+        $currentTasks = OrchestrationTask::where('sprint_id', $sprint->id)
             ->get()
-            ->map(fn ($item) => [
-                'id' => $item->workItem->id,
-                'task_code' => Arr::get($item->workItem->metadata, 'task_code'),
-                'task_name' => Arr::get($item->workItem->metadata, 'task_name'),
-                'status' => $item->workItem->status,
-                'priority' => Arr::get($item->workItem->metadata, 'priority'),
+            ->map(fn($task) => [
+                'id' => $task->id,
+                'task_code' => $task->task_code,
+                'task_name' => $task->title,
+                'status' => $task->status,
+                'priority' => $task->priority,
             ])
             ->toArray();
 
@@ -54,12 +49,12 @@ class EditCommand extends BaseCommand
             'mode' => 'edit',
             'sprint' => [
                 'id' => $sprint->id,
-                'code' => $sprint->code,
+                'code' => $sprint->sprint_code,
                 'starts_on' => $sprint->starts_on?->format('Y-m-d'),
                 'ends_on' => $sprint->ends_on?->format('Y-m-d'),
-                'status' => $sprint->meta['status'] ?? 'planned',
-                'priority' => $sprint->meta['priority'] ?? 'medium',
-                'title' => $sprint->meta['title'] ?? null,
+                'status' => $sprint->status ?? 'planned',
+                'priority' => ($sprint->metadata['priority'] ?? 'medium'),
+                'title' => $sprint->title,
             ],
             'available_tasks' => $unassignedTasks,
             'current_tasks' => $currentTasks,
@@ -80,7 +75,7 @@ class EditCommand extends BaseCommand
 
     public static function getUsage(): string
     {
-        return '/sprint-edit <code>';
+        return '/orch-sprint-edit <code>';
     }
 
     public static function getCategory(): string

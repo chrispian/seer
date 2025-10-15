@@ -3,8 +3,8 @@
 namespace App\Commands\Orchestration\Sprint;
 
 use App\Commands\BaseCommand;
-use App\Models\Sprint;
-use App\Models\WorkItem;
+use App\Models\OrchestrationSprint;
+use App\Models\OrchestrationTask;
 use Illuminate\Support\Arr;
 
 class ListCommand extends BaseCommand
@@ -35,35 +35,37 @@ class ListCommand extends BaseCommand
 
     private function fetchSprints()
     {
-        return Sprint::query()
-            ->when($this->codes, fn($q) => $q->whereIn('code', $this->codes))
+        return OrchestrationSprint::query()
+            ->when($this->codes, fn($q) => $q->whereIn('sprint_code', $this->codes))
             ->orderByDesc('created_at')
             ->orderByDesc('updated_at')
             ->limit($this->limit)
             ->get();
     }
 
-    private function formatSprint(Sprint $sprint): array
+    private function formatSprint(OrchestrationSprint $sprint): array
     {
         $stats = $this->calculateStats($sprint);
-        $meta = $sprint->meta ?? [];
+        $metadata = $sprint->metadata ?? [];
 
         $formatted = [
             'id' => $sprint->id,
-            'code' => $sprint->code,
-            'title' => Arr::get($meta, 'title', $sprint->code),
-            'status' => Arr::get($meta, 'status', 'active'),
-            'priority' => Arr::get($meta, 'priority'),
-            'estimate' => Arr::get($meta, 'estimate'),
-            'starts_on' => Arr::get($meta, 'starts_on'),
-            'ends_on' => Arr::get($meta, 'ends_on'),
-            'notes' => Arr::get($meta, 'notes', []),
+            'code' => $sprint->sprint_code,
+            'sprint_code' => $sprint->sprint_code,
+            'title' => $sprint->title,
+            'status' => $sprint->status ?? 'planning',
+            'owner' => $sprint->owner,
+            'priority' => Arr::get($metadata, 'priority'),
+            'estimate' => Arr::get($metadata, 'estimate'),
+            'starts_on' => $sprint->starts_on?->toDateString(),
+            'ends_on' => $sprint->ends_on?->toDateString(),
+            'notes' => Arr::get($metadata, 'notes', []),
             'stats' => $stats,
             'created_at' => $sprint->created_at?->toIso8601String(),
             'updated_at' => $sprint->updated_at?->toIso8601String(),
             // Legacy fields for backward compatibility
             'task_count' => $stats['total'],
-            'total_tasks' => $stats['total'], // Alternative naming
+            'total_tasks' => $stats['total'],
             'completed_tasks' => $stats['completed'],
             'in_progress_tasks' => $stats['in_progress'],
             'todo_tasks' => $stats['unassigned'],
@@ -71,7 +73,7 @@ class ListCommand extends BaseCommand
             'progress_percentage' => $stats['total'] > 0 
                 ? round(($stats['completed'] / $stats['total']) * 100) 
                 : 0,
-            'meta' => $meta,
+            'metadata' => $metadata,
         ];
 
         if ($this->includeDetails) {
@@ -81,9 +83,9 @@ class ListCommand extends BaseCommand
         return $formatted;
     }
 
-    private function calculateStats(Sprint $sprint): array
+    private function calculateStats(OrchestrationSprint $sprint): array
     {
-        $query = WorkItem::where('metadata->sprint_code', $sprint->code);
+        $query = OrchestrationTask::where('sprint_id', $sprint->id);
 
         return [
             'total' => (clone $query)->count(),
@@ -94,19 +96,20 @@ class ListCommand extends BaseCommand
         ];
     }
 
-    private function fetchTasks(Sprint $sprint): array
+    private function fetchTasks(OrchestrationSprint $sprint): array
     {
-        return WorkItem::where('metadata->sprint_code', $sprint->code)
+        return OrchestrationTask::where('sprint_id', $sprint->id)
             ->orderByDesc('created_at')
             ->limit($this->tasksLimit)
             ->get()
             ->map(fn($task) => [
-                'task_code' => Arr::get($task->metadata, 'task_code'),
-                'task_name' => Arr::get($task->metadata, 'task_name'),
+                'task_code' => $task->task_code,
+                'task_name' => $task->title,
                 'delegation_status' => $task->delegation_status,
                 'status' => $task->status,
                 'agent_recommendation' => Arr::get($task->delegation_context, 'agent_recommendation'),
-                'estimate_text' => Arr::get($task->metadata, 'estimate_text'),
+                'estimate_text' => $task->estimated_hours ? "{$task->estimated_hours}h" : null,
+                'estimated_hours' => $task->estimated_hours,
             ])
             ->toArray();
     }
@@ -123,7 +126,7 @@ class ListCommand extends BaseCommand
 
     public static function getUsage(): string
     {
-        return '/sprints [options]';
+        return '/orch [options]';
     }
 
     public static function getCategory(): string
