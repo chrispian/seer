@@ -3,7 +3,6 @@ import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
 import type { ComponentConfig } from '../types'
-import { useDataSource } from '../hooks/useDataSource'
 import { slotBinder } from '../SlotBinder'
 
 interface SearchBarComponentProps {
@@ -13,23 +12,12 @@ interface SearchBarComponentProps {
 export function SearchBarComponent({ config }: SearchBarComponentProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const debouncedSearch = useDebounce(searchTerm, 300)
-  const { data, meta, fetch } = useDataSource({
-    dataSource: config.dataSource || '',
-    search: debouncedSearch,
-    autoFetch: false,
-  })
 
   useEffect(() => {
-    if (debouncedSearch !== undefined) {
-      fetch({ search: debouncedSearch })
+    if (config.result) {
+      slotBinder.update(config.result, { search: debouncedSearch })
     }
-  }, [debouncedSearch, fetch])
-
-  useEffect(() => {
-    if (config.result && data) {
-      slotBinder.update(config.result, { data, meta })
-    }
-  }, [data, meta, config.result])
+  }, [debouncedSearch, config.result])
 
   return (
     <div className="relative">

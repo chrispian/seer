@@ -21,9 +21,11 @@ export function TableComponent({ config }: TableComponentProps) {
   const { execute } = useAction()
 
   useEffect(() => {
-    const unsubscribe = slotBinder.subscribe(config.id, () => {
-      setSearchTerm('')
-      fetch({ search: '' })
+    const unsubscribe = slotBinder.subscribe(config.id, (update: any) => {
+      if (update.search !== undefined) {
+        setSearchTerm(update.search)
+        fetch({ search: update.search })
+      }
     })
 
     return () => {

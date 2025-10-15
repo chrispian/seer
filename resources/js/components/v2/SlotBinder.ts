@@ -1,6 +1,6 @@
-import type { ResultConfig, DataSourceResult } from './types'
+import type { ResultConfig } from './types'
 
-type SlotUpdateCallback = (data: DataSourceResult) => void
+type SlotUpdateCallback = (data: any) => void
 
 export class SlotBinder {
   private static instance: SlotBinder
@@ -29,11 +29,13 @@ export class SlotBinder {
     }
   }
 
-  update(result: ResultConfig, data: DataSourceResult): void {
-    const callbacks = this.slots.get(result.target)
+  update(result: ResultConfig | string, data: any): void {
+    const targetId = typeof result === 'string' ? result : result.target
+
+    const callbacks = this.slots.get(targetId)
 
     if (!callbacks || callbacks.length === 0) {
-      console.warn(`No subscribers for slot: ${result.target}`)
+      console.warn(`No subscribers for slot: ${targetId}`)
       return
     }
 
