@@ -12,15 +12,16 @@ class AgentController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'designation' => 'required|string|max:255',
             'agent_profile_id' => 'nullable|uuid|exists:agent_profiles,id',
             'persona' => 'nullable|string',
             'status' => 'nullable|in:active,inactive',
         ]);
 
+        $designation = strtoupper(substr(md5($validated['name'].time()), 0, 5));
+
         $agent = Agent::create([
             'name' => $validated['name'],
-            'designation' => $validated['designation'],
+            'designation' => $designation,
             'agent_profile_id' => $validated['agent_profile_id'] ?? null,
             'persona' => $validated['persona'] ?? null,
             'status' => $validated['status'] ?? 'active',

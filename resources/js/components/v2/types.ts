@@ -27,7 +27,7 @@ export interface ColumnConfig {
 }
 
 export interface ActionConfig {
-  type: 'command' | 'navigate' | 'datasource' | 'api'
+  type: 'command' | 'navigate' | 'datasource' | 'api' | 'modal'
   command?: string
   route?: string
   params?: Record<string, any>
@@ -35,6 +35,18 @@ export interface ActionConfig {
   url?: string
   method?: string
   data?: Record<string, any>
+  modal?: string
+  title?: string
+  fields?: Array<{
+    name: string
+    label: string
+    type: string
+    required?: boolean
+    placeholder?: string
+  }>
+  submitUrl?: string
+  submitMethod?: string
+  submitLabel?: string
 }
 
 export interface ResultConfig {
