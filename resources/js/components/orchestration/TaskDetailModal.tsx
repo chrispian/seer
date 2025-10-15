@@ -601,7 +601,17 @@ export function TaskDetailModal({
                 </TabsList>
                 
                 {contentTabs.map(tab => (
-                  <TabsContent key={tab.key} value={tab.key} className="flex-1 mt-0 overflow-hidden">
+                  <TabsContent 
+                    key={tab.key} 
+                    value={tab.key} 
+                    className="flex-1 mt-0 overflow-hidden"
+                    onFocusCapture={(e) => {
+                      // Prevent TabsContent from stealing focus from editor
+                      if (editingContent === tab.key) {
+                        e.stopPropagation()
+                      }
+                    }}
+                  >
                     {tab.isActivity ? (
                       <div className="h-full rounded-md border bg-muted/20 p-4">
                         <TaskActivityTimeline
@@ -614,7 +624,11 @@ export function TaskDetailModal({
                         />
                       </div>
                     ) : editingContent === tab.key ? (
-                      <div className="h-full rounded-md border bg-muted/20 p-4">
+                      <div 
+                        className="h-full rounded-md border bg-muted/20 p-4"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <MarkdownEditor
                           content={tab.content || ''}
                           onSave={(content) => handleSaveContent(tab.key, content)}
