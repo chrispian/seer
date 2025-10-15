@@ -1,0 +1,12 @@
+export * from './types';
+export * from './ComponentRegistry';
+export { ButtonComponent } from './primitives/ButtonComponent';
+export { InputComponent } from './primitives/InputComponent';
+export { LabelComponent } from './primitives/LabelComponent';
+export { BadgeComponent } from './primitives/BadgeComponent';
+export { AvatarComponent } from './primitives/AvatarComponent';
+export { SkeletonComponent } from './primitives/SkeletonComponent';
+export { SpinnerComponent } from './primitives/SpinnerComponent';
+export { SeparatorComponent } from './primitives/SeparatorComponent';
+export { KbdComponent } from './primitives/KbdComponent';
+export { TypographyComponent } from './primitives/TypographyComponent';
