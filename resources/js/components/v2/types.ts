@@ -40,9 +40,11 @@ export interface ActionConfig {
   fields?: Array<{
     name: string
     label: string
-    type: string
+    type: 'text' | 'textarea' | 'select' | 'file'
     required?: boolean
     placeholder?: string
+    options?: Array<{ value: string; label: string }>
+    accept?: string
   }>
   submitUrl?: string
   submitMethod?: string

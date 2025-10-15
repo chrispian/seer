@@ -15,6 +15,7 @@ class AgentController extends Controller
             'agent_profile_id' => 'nullable|uuid|exists:agent_profiles,id',
             'persona' => 'nullable|string',
             'status' => 'nullable|in:active,inactive',
+            'avatar' => 'nullable|image|max:2048',
         ]);
 
         $designation = strtoupper(substr(md5($validated['name'].time()), 0, 5));
@@ -28,12 +29,18 @@ class AgentController extends Controller
             ], 422);
         }
 
+        $avatarPath = null;
+        if ($request->hasFile('avatar')) {
+            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+        }
+
         $agent = Agent::create([
             'name' => $validated['name'],
             'designation' => $designation,
             'agent_profile_id' => $profileId,
             'persona' => $validated['persona'] ?? null,
             'status' => $validated['status'] ?? 'active',
+            'avatar_path' => $avatarPath,
             'tool_config' => [],
             'metadata' => [],
         ]);
