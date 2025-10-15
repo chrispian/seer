@@ -19,10 +19,19 @@ class AgentController extends Controller
 
         $designation = strtoupper(substr(md5($validated['name'].time()), 0, 5));
 
+        $profileId = $validated['agent_profile_id'] ?? \App\Models\AgentProfile::first()?->id;
+
+        if (!$profileId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No agent profile available. Please create an agent profile first.',
+            ], 422);
+        }
+
         $agent = Agent::create([
             'name' => $validated['name'],
             'designation' => $designation,
-            'agent_profile_id' => $validated['agent_profile_id'] ?? null,
+            'agent_profile_id' => $profileId,
             'persona' => $validated['persona'] ?? null,
             'status' => $validated['status'] ?? 'active',
             'tool_config' => [],
