@@ -10,22 +10,16 @@ class UiPageController extends Controller
 {
     public function show(string $key): JsonResponse
     {
-
-        $page = FeUiPage::where('key', $key)->first();
-
-        if (! $page) {
-            return response()->json([
-                'error' => 'Page not found',
-                'message' => "Page with key '{$key}' does not exist",
-            ], 404);
-        }
+        $page = FeUiPage::where('key', $key)->firstOrFail();
 
         return response()->json([
             'id' => $page->id,
             'key' => $page->key,
-            'config' => $page->config,
+            'layout_tree_json' => $page->layout_tree_json ?? $page->config ?? [],
             'hash' => $page->hash,
             'version' => $page->version,
+            'enabled' => $page->enabled ?? true,
+            'module_key' => $page->module_key,
             'timestamp' => $page->updated_at->toIso8601String(),
         ]);
     }

@@ -3,20 +3,17 @@
 namespace App\Http\Controllers\V2;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Contracts\View\View;
 
 class V2ShellController extends Controller
 {
-    public function show(string $key)
+    public function show(string $key): View
     {
-        $isAuthenticated = Auth::check();
-        $hasUsers = \App\Models\User::query()->exists();
-
         return view('v2.shell', [
-            'isAuthenticated' => $isAuthenticated,
-            'hasUsers' => $hasUsers,
-            'user' => $isAuthenticated ? Auth::user()->only(['id', 'name', 'email']) : null,
             'pageKey' => $key,
+            'isAuthenticated' => auth()->check(),
+            'hasUsers' => \App\Models\User::exists(),
+            'user' => auth()->user()?->only(['id', 'name', 'email']),
         ]);
     }
 }

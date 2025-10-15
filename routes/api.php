@@ -299,13 +299,14 @@ Route::middleware(['web'])->post('/approvals/{id}/timeout', function ($id) {
     return response()->json(['success' => true]);
 });
 
-// UI Builder v2 API routes
+// FE Types API routes (v2/ui prefix)
 Route::prefix('v2/ui')->group(function () {
     Route::get('/pages/{key}', [\App\Http\Controllers\V2\UiPageController::class, 'show']);
-    Route::post('/datasource/{alias}/query', [\App\Http\Controllers\V2\UiDataSourceController::class, 'query']);
-    Route::post('/action', [\App\Http\Controllers\V2\UiActionController::class, 'execute']);
     
-    // Direct v2 actions (bypass command system)
-    Route::post('/agents', [\App\Http\Controllers\V2\AgentController::class, 'store']);
-    Route::get('/agents/{id}', [\App\Http\Controllers\V2\AgentController::class, 'show']);
+    Route::get('/types/{alias}/query', [\App\Http\Controllers\Api\TypesController::class, 'query']);
+    Route::get('/types/{alias}/{id}', [\App\Http\Controllers\Api\TypesController::class, 'show']);
+    
+    Route::get('/datasource/{alias}/query', [\App\Http\Controllers\Api\DataSourceController::class, 'query']);
+    Route::post('/datasource/{alias}', [\App\Http\Controllers\Api\DataSourceController::class, 'store']);
+    Route::get('/datasource/{alias}/capabilities', [\App\Http\Controllers\Api\DataSourceController::class, 'capabilities']);
 });

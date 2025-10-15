@@ -8,7 +8,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.tsx',
-                'resources/js/v2-app.tsx',
+                'resources/js/v2/main.tsx'
             ],
             refresh: true,
         }),

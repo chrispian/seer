@@ -4,7 +4,6 @@ use App\Http\Controllers\AppShellController;
 use App\Http\Controllers\Settings\ImportExportController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SetupController;
-use App\Http\Controllers\V2\V2ShellController;
 use Illuminate\Support\Facades\Route;
 
 // Setup wizard routes
@@ -43,7 +42,7 @@ Route::middleware([\App\Http\Middleware\EnsureDefaultUser::class])->group(functi
 
     // UI Builder v2 routes
     Route::prefix('v2')->name('v2.')->group(function () {
-        Route::get('/pages/{key}', [V2ShellController::class, 'show'])->name('pages.show');
+        Route::get('/pages/{key}', [\App\Http\Controllers\V2\V2ShellController::class, 'show'])->name('pages.show');
     });
 });
 

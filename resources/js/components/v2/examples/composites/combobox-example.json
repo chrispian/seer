@@ -1,0 +1,59 @@
+{
+  "id": "combobox-1",
+  "type": "combobox",
+  "props": {
+    "placeholder": "Select a framework...",
+    "emptyText": "No framework found.",
+    "searchPlaceholder": "Search frameworks...",
+    "searchable": true,
+    "disabled": false,
+    "options": [
+      {
+        "value": "next",
+        "label": "Next.js",
+        "icon": "Zap"
+      },
+      {
+        "value": "react",
+        "label": "React",
+        "icon": "Atom"
+      },
+      {
+        "value": "vue",
+        "label": "Vue.js",
+        "icon": "Component"
+      },
+      {
+        "value": "nuxt",
+        "label": "Nuxt.js",
+        "icon": "Layers"
+      },
+      {
+        "value": "remix",
+        "label": "Remix",
+        "icon": "Music"
+      },
+      {
+        "value": "astro",
+        "label": "Astro",
+        "icon": "Rocket"
+      },
+      {
+        "value": "svelte",
+        "label": "Svelte",
+        "icon": "Sparkles"
+      },
+      {
+        "value": "angular",
+        "label": "Angular",
+        "icon": "Shield"
+      }
+    ]
+  },
+  "actions": {
+    "onChange": {
+      "type": "emit",
+      "event": "framework:selected"
+    }
+  }
+}

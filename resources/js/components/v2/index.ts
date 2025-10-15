@@ -1,20 +1,24 @@
-export { V2ShellPage } from './V2ShellPage'
-export { PageRenderer } from './PageRenderer'
-export { componentRegistry, ComponentRegistry } from './ComponentRegistry'
-export { actionDispatcher, ActionDispatcher } from './ActionDispatcher'
-export { slotBinder, SlotBinder } from './SlotBinder'
-export { registerComponents } from './registerComponents'
+export * from './types';
+export * from './ComponentRegistry';
+export { ButtonComponent } from './primitives/ButtonComponent';
+export { InputComponent } from './primitives/InputComponent';
+export { LabelComponent } from './primitives/LabelComponent';
+export { BadgeComponent } from './primitives/BadgeComponent';
+export { AvatarComponent } from './primitives/AvatarComponent';
+export { SkeletonComponent } from './primitives/SkeletonComponent';
+export { SpinnerComponent } from './primitives/SpinnerComponent';
+export { SeparatorComponent } from './primitives/SeparatorComponent';
+export { KbdComponent } from './primitives/KbdComponent';
+export { TypographyComponent } from './primitives/TypographyComponent';
 
-export { usePageConfig } from './hooks/usePageConfig'
-export { useDataSource } from './hooks/useDataSource'
-export { useAction } from './hooks/useAction'
+export { CardComponent } from './layouts/CardComponent';
+export { ScrollAreaComponent } from './layouts/ScrollAreaComponent';
+export { ResizableComponent } from './layouts/ResizableComponent';
+export { AspectRatioComponent } from './layouts/AspectRatioComponent';
+export { CollapsibleComponent } from './layouts/CollapsibleComponent';
+export { AccordionComponent } from './layouts/AccordionComponent';
 
-export { TableComponent } from './primitives/TableComponent'
-export { SearchBarComponent } from './primitives/SearchBarComponent'
-export { ButtonIconComponent } from './primitives/ButtonIconComponent'
-
-export { ModalLayout } from './layouts/ModalLayout'
-export { RowsLayout } from './layouts/RowsLayout'
-export { ColumnsLayout } from './layouts/ColumnsLayout'
-
-export type * from './types'
+export { DataTableComponent } from './advanced/DataTableComponent';
+export { ChartComponent } from './advanced/ChartComponent';
+export { CarouselComponent } from './advanced/CarouselComponent';
+export { SonnerComponent } from './advanced/SonnerComponent';

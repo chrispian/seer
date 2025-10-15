@@ -6,30 +6,36 @@ use Illuminate\Database\Eloquent\Model;
 
 class FeUiComponent extends Model
 {
+    protected $table = 'fe_ui_components';
+
     protected $fillable = [
         'key',
         'type',
+        'kind',
         'config',
+        'variant',
+        'schema_json',
+        'defaults_json',
+        'capabilities_json',
         'hash',
         'version',
     ];
 
-    protected function casts(): array
+    protected $casts = [
+        'config' => 'array',
+        'schema_json' => 'array',
+        'defaults_json' => 'array',
+        'capabilities_json' => 'array',
+        'version' => 'integer',
+    ];
+
+    public function scopeByKind($query, string $kind)
     {
-        return [
-            'config' => 'array',
-            'version' => 'integer',
-        ];
+        return $query->where('kind', $kind);
     }
 
-    protected static function booted(): void
+    public function scopeByType($query, string $type)
     {
-        static::saving(function (FeUiComponent $component) {
-            $component->hash = hash('sha256', json_encode($component->config));
-
-            if ($component->exists && $component->isDirty('config')) {
-                $component->version++;
-            }
-        });
+        return $query->where('type', $type);
     }
 }

@@ -6,29 +6,40 @@ use Illuminate\Database\Eloquent\Model;
 
 class FeUiPage extends Model
 {
+    protected $table = 'fe_ui_pages';
+
     protected $fillable = [
         'key',
-        'config',
+        'layout_tree_json',
+        'route',
+        'meta_json',
+        'module_key',
+        'guards_json',
+        'enabled',
         'hash',
         'version',
     ];
 
-    protected function casts(): array
+    protected $casts = [
+        'layout_tree_json' => 'array',
+        'meta_json' => 'array',
+        'guards_json' => 'array',
+        'enabled' => 'boolean',
+        'version' => 'integer',
+    ];
+
+    public function module()
     {
-        return [
-            'config' => 'array',
-            'version' => 'integer',
-        ];
+        return $this->belongsTo(FeUiModule::class, 'module_key', 'key');
     }
 
-    protected static function booted(): void
+    public function scopeEnabled($query)
     {
-        static::saving(function (FeUiPage $page) {
-            $page->hash = hash('sha256', json_encode($page->config));
+        return $query->where('enabled', true);
+    }
 
-            if ($page->exists && $page->isDirty('config')) {
-                $page->version++;
-            }
-        });
+    public function scopeByRoute($query, string $route)
+    {
+        return $query->where('route', $route);
     }
 }
