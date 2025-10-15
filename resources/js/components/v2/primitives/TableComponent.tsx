@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { ComponentConfig } from '../types'
 import { useDataSource } from '../hooks/useDataSource'
 import { useAction } from '../hooks/useAction'
@@ -106,7 +107,16 @@ export function TableComponent({ config }: TableComponentProps) {
                   className={config.rowAction ? 'cursor-pointer hover:bg-muted/50' : ''}
                 >
                   {config.columns?.map(column => (
-                    <TableCell key={column.key}>{row[column.key]}</TableCell>
+                    <TableCell key={column.key}>
+                      {column.key === 'avatar_url' ? (
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={row[column.key]} alt={row.name} />
+                          <AvatarFallback>{row.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        row[column.key]
+                      )}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))

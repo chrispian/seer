@@ -46,6 +46,8 @@ class AgentDataSourceResolver
         $data = $paginated->items();
 
         $transformedData = array_map(function ($agent) {
+            $agent->append('avatar_url');
+            
             return [
                 'id' => $agent->id,
                 'name' => $agent->name,
@@ -54,6 +56,8 @@ class AgentDataSourceResolver
                 'model' => $agent->agentProfile->model ?? null,
                 'status' => $agent->status,
                 'updated_at' => $agent->updated_at->toIso8601String(),
+                'avatar_url' => $agent->avatar_url,
+                'avatar_path' => $agent->avatar_path,
             ];
         }, $data);
 

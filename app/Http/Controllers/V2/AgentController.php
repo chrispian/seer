@@ -45,6 +45,8 @@ class AgentController extends Controller
             'metadata' => [],
         ]);
 
+        $agent->append('avatar_url');
+
         return response()->json([
             'success' => true,
             'message' => "Agent '{$agent->name}' created successfully",
@@ -55,6 +57,7 @@ class AgentController extends Controller
     public function show(string $id)
     {
         $agent = Agent::with('agentProfile')->findOrFail($id);
+        $agent->append('avatar_url');
 
         return response()->json([
             'success' => true,
