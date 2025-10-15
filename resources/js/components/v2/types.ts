@@ -27,11 +27,14 @@ export interface ColumnConfig {
 }
 
 export interface ActionConfig {
-  type: 'command' | 'navigate' | 'datasource'
+  type: 'command' | 'navigate' | 'datasource' | 'api'
   command?: string
   route?: string
   params?: Record<string, any>
   dataSource?: string
+  url?: string
+  method?: string
+  data?: Record<string, any>
 }
 
 export interface ResultConfig {

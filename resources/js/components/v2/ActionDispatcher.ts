@@ -47,6 +47,10 @@ export class ActionDispatcher {
       return this.handleCommand(action.command!, params)
     }
 
+    if (action.type === 'api') {
+      return this.handleApi(action, params)
+    }
+
     throw new Error(`Unknown action type: ${action.type}`)
   }
 
@@ -113,6 +117,34 @@ export class ActionDispatcher {
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Navigation failed',
+      }
+    }
+  }
+
+  private async handleApi(action: any, params: Record<string, any>): Promise<ActionResult> {
+    try {
+      const data = action.data ? { ...action.data, ...params } : params
+
+      const response = await window.fetch(action.url, {
+        method: action.method || 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': getCSRFToken(),
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `API call failed: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      return result
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'API call failed',
       }
     }
   }
