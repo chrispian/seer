@@ -24,6 +24,7 @@ class ComponentRegistry {
 }
 
 export const registry = new ComponentRegistry();
+export { registry as componentRegistry };
 
 export function registerPrimitiveComponents() {
   import('./primitives/ButtonComponent').then(({ ButtonComponent }) => {
@@ -221,6 +222,10 @@ export function registerCompositeComponents() {
 
   import('./composites/HoverCardComponent').then(({ HoverCardComponent }) => {
     registry.register('hover-card', HoverCardComponent as ComponentRenderer);
+  });
+
+  import('./composites/SearchBarComponent').then(({ SearchBarComponent }) => {
+    registry.register('search.bar', SearchBarComponent as ComponentRenderer);
   });
 }
 

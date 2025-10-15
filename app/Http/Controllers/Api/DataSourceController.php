@@ -50,4 +50,18 @@ class DataSourceController extends Controller
             ], 404);
         }
     }
+
+    public function store(Request $request, string $alias): JsonResponse
+    {
+        try {
+            $data = $request->all();
+            $result = $this->resolver->create($alias, $data);
+
+            return response()->json($result, 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+            ], 400);
+        }
+    }
 }

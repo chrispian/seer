@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Http\Controllers\V2;
+
+use App\Http\Controllers\Controller;
+use App\Models\FeUiPage;
+use Illuminate\Http\JsonResponse;
+
+class UiPageController extends Controller
+{
+    public function show(string $key): JsonResponse
+    {
+        $page = FeUiPage::where('key', $key)->firstOrFail();
+
+        return response()->json([
+            'id' => $page->id,
+            'key' => $page->key,
+            'layout_tree_json' => $page->layout_tree_json ?? $page->config ?? [],
+            'hash' => $page->hash,
+            'version' => $page->version,
+            'enabled' => $page->enabled ?? true,
+            'module_key' => $page->module_key,
+            'timestamp' => $page->updated_at->toIso8601String(),
+        ]);
+    }
+}

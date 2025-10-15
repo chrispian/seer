@@ -7,12 +7,19 @@ export interface BaseComponentConfig {
 }
 
 export interface ActionConfig {
-  type: 'command' | 'navigate' | 'emit' | 'http';
+  type: 'command' | 'navigate' | 'emit' | 'http' | 'modal';
   command?: string;
   url?: string;
   event?: string;
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   payload?: Record<string, any>;
+  modal?: 'form' | 'detail';
+  title?: string;
+  fields?: any[];
+  submitUrl?: string;
+  submitMethod?: string;
+  submitLabel?: string;
+  refreshTarget?: string;
 }
 
 export interface ComponentConfig extends BaseComponentConfig {}

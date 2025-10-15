@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ChevronDown, ChevronUp, MoreHorizontal, ChevronsUpDown } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { ComponentConfig, ActionConfig } from '../types';
 
 interface DataTableColumnConfig {
@@ -46,7 +50,10 @@ interface DataTableConfig extends ComponentConfig {
   type: 'data-table';
   props: {
     columns: DataTableColumnConfig[];
-    data: any[];
+    data?: any[];
+    dataSource?: string;
+    toolbar?: ComponentConfig[];
+    rowAction?: any;
     pagination?: {
       enabled: boolean;
       pageSize: number;
@@ -112,18 +119,67 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
   const { props } = config;
   const {
     columns: columnConfigs,
-    data = [],
+    data: staticData,
+    dataSource,
+    toolbar,
+    rowAction,
     pagination = { enabled: false, pageSize: 10 },
     selection = { enabled: false, type: 'multiple' },
     actions,
-    loading = false,
+    loading: propLoading = false,
     emptyText = 'No data available',
     className,
   } = props;
 
+  const [fetchedData, setFetchedData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(propLoading);
+  const [error, setError] = useState<string | null>(null);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [formModalConfig, setFormModalConfig] = useState<any>(null);
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailModalData, setDetailModalData] = useState<any>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  // Fetch data from dataSource if provided
+  useEffect(() => {
+    if (dataSource && !staticData) {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+      
+      fetch(`/api/v2/ui/datasource/${dataSource}/query?${params}`)
+        .then(res => res.json())
+        .then(result => {
+          setFetchedData(result.data || []);
+          setLoading(false);
+        })
+        .catch(err => {
+          setError(err.message);
+          setLoading(false);
+        });
+    }
+  }, [dataSource, staticData, searchTerm]);
+
+  // Listen for search events
+  useEffect(() => {
+    const handleSearch = (event: CustomEvent) => {
+      if (event.detail.target === config.id) {
+        setSearchTerm(event.detail.search);
+      }
+    };
+
+    window.addEventListener('component:search', handleSearch as EventListener);
+    return () => window.removeEventListener('component:search', handleSearch as EventListener);
+  }, [config.id]);
+
+  const data = staticData || fetchedData;
 
   const columns = React.useMemo<ColumnDef<any>[]>(() => {
     const cols: ColumnDef<any>[] = [];
@@ -253,6 +309,14 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
     );
   }
 
+  if (error) {
+    return (
+      <div className="w-full h-64 flex items-center justify-center border rounded-lg">
+        <div className="text-destructive">Error: {error}</div>
+      </div>
+    );
+  }
+
   if (!data.length) {
     return (
       <div className="w-full h-64 flex items-center justify-center border rounded-lg">
@@ -263,8 +327,70 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
     );
   }
 
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!formModalConfig) return;
+
+    setFormSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch(formModalConfig.submitUrl, {
+        method: formModalConfig.submitMethod || 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        setFormModalOpen(false);
+        // Refresh table data if refreshTarget specified
+        if (formModalConfig.refreshTarget && dataSource) {
+          const result = await fetch(`/api/v2/ui/datasource/${dataSource}/query`);
+          const refreshedData = await result.json();
+          setFetchedData(refreshedData.data || []);
+        }
+      } else {
+        alert('Failed to submit form');
+      }
+    } catch (err) {
+      alert('Error submitting form');
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
+  const handleToolbarClick = (item: ComponentConfig) => {
+    const clickAction = item.actions?.click;
+    if (clickAction?.type === 'modal' && clickAction?.modal === 'form') {
+      setFormModalConfig(clickAction);
+      setFormModalOpen(true);
+    }
+  };
+
+  const renderToolbarItem = (item: ComponentConfig) => {
+    if (item.type === 'button.icon') {
+      return (
+        <Button 
+          key={item.id} 
+          variant="default" 
+          size="sm"
+          onClick={() => handleToolbarClick(item)}
+        >
+          {item.props?.label || 'Action'}
+        </Button>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className={cn('space-y-4', className)}>
+      {toolbar && toolbar.length > 0 && (
+        <div className="flex justify-end gap-2">
+          {toolbar.map(item => renderToolbarItem(item))}
+        </div>
+      )}
       <div className="rounded-md border">
         <div className="relative w-full overflow-auto">
           <table className="w-full caption-bottom text-sm">
@@ -293,9 +419,25 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
                     actions?.rowClick && 'cursor-pointer',
                     row.getIsSelected() && 'bg-muted'
                   )}
-                  onClick={(e) => {
-                    if (actions?.rowClick && !(e.target as HTMLElement).closest('button, input')) {
-                      executeAction(actions.rowClick, row.original);
+                  onClick={async (e) => {
+                    const clickAction = rowAction || actions?.rowClick;
+                    if (clickAction && !(e.target as HTMLElement).closest('button, input')) {
+                      if (rowAction?.type === 'modal') {
+                        setDetailLoading(true);
+                        setDetailModalOpen(true);
+                        try {
+                          const url = rowAction.url.replace('{{row.id}}', row.original.id);
+                          const response = await fetch(url);
+                          const data = await response.json();
+                          setDetailModalData(data);
+                        } catch (err) {
+                          console.error('Failed to load details:', err);
+                        } finally {
+                          setDetailLoading(false);
+                        }
+                      } else {
+                        executeAction(clickAction, row.original);
+                      }
                     }
                   }}
                 >
@@ -368,6 +510,102 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
           </div>
         </div>
       )}
+
+      {/* Form Modal */}
+      <Dialog open={formModalOpen} onOpenChange={setFormModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <form onSubmit={handleFormSubmit}>
+            <DialogHeader>
+              <DialogTitle>{formModalConfig?.title || 'Form'}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+            {formModalConfig?.fields?.map((field: any) => (
+              <div key={field.name} className="space-y-2">
+                <Label htmlFor={field.name}>
+                  {field.label}
+                  {field.required && <span className="text-destructive ml-1">*</span>}
+                </Label>
+                {field.type === 'textarea' ? (
+                  <Textarea
+                    id={field.name}
+                    name={field.name}
+                    placeholder={field.placeholder}
+                    required={field.required}
+                  />
+                ) : field.type === 'select' ? (
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder={field.placeholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {field.options?.map((opt: any) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    required={field.required}
+                    accept={field.accept}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+            <DialogFooter>
+              <Button variant="outline" type="button" onClick={() => setFormModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={formSubmitting}>
+                {formSubmitting ? 'Submitting...' : (formModalConfig?.submitLabel || 'Submit')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail Modal */}
+      <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{rowAction?.title || 'Details'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {detailLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="text-muted-foreground">Loading...</div>
+              </div>
+            ) : detailModalData ? (
+              <div className="space-y-3">
+                {rowAction?.fields?.map((field: any) => (
+                  <div key={field.key} className="grid grid-cols-3 gap-4">
+                    <div className="font-medium text-muted-foreground">{field.label}:</div>
+                    <div className="col-span-2">
+                      {field.type === 'date' 
+                        ? new Date(detailModalData[field.key]).toLocaleString()
+                        : detailModalData[field.key] || '—'
+                      }
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-muted-foreground">No data available</div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailModalOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

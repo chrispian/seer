@@ -136,6 +136,16 @@ class GenericDataSourceResolver
         return $config['capabilities'];
     }
 
+    public function create(string $alias, array $data): array
+    {
+        $config = $this->getConfig($alias);
+        $modelClass = $config['model'];
+
+        $instance = $modelClass::create($data);
+
+        return $this->transformItem($instance, $config['transform']);
+    }
+
     public function clearCache(string $alias): void
     {
         Cache::forget("datasource.{$alias}");
