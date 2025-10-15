@@ -1,0 +1,15 @@
+{
+  "agent": "FE-Core",
+  "stream": "FE",
+  "task": "WO-FE-CORE-001",
+  "status": "in_progress",
+  "pins": {
+    "config_sha": "<sha256-of-config>",
+    "spec_sha": "<sha256-of-spec>"
+  },
+  "artifacts": [],
+  "risks": [],
+  "next": [
+    "Implement ActionDispatcher POST to /api/v2/ui/action"
+  ]
+}

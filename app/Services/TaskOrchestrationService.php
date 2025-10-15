@@ -54,6 +54,7 @@ class TaskOrchestrationService
         }
 
         $model = $existing ?? new OrchestrationTask;
+        $model->task_code = $taskCode;
         $model->type = $data['type'] ?? 'task';
         $model->status = $data['status'] ?? 'todo';
         $model->priority = $data['priority'] ?? 'medium';
@@ -365,6 +366,46 @@ class TaskOrchestrationService
             }
         }
 
+        // Load assignments
+        $currentAssignment = $task->currentAssignment;
+        $assignments = $task->assignments()
+            ->with('agent')
+            ->orderBy('assigned_at', 'desc')
+            ->limit($limit)
+            ->get()
+            ->map(fn($a) => $this->presentAssignment($a))
+            ->all();
+
+        // Load activities
+        $activities = $task->activities()
+            ->with(['agent', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'id' => $activity->id,
+                    'task_id' => $activity->task_id,
+                    'agent_id' => $activity->agent_id,
+                    'user_id' => $activity->user_id,
+                    'activity_type' => $activity->activity_type,
+                    'action' => $activity->action,
+                    'description' => $activity->description,
+                    'changes' => $activity->changes,
+                    'metadata' => $activity->metadata,
+                    'created_at' => $activity->created_at->toIso8601String(),
+                    'agent' => $activity->agent ? [
+                        'id' => $activity->agent->id,
+                        'name' => $activity->agent->name,
+                        'slug' => $activity->agent->slug ?? null,
+                    ] : null,
+                    'user' => $activity->user ? [
+                        'id' => $activity->user->id,
+                        'name' => $activity->user->name,
+                    ] : null,
+                ];
+            })
+            ->all();
+
         return [
             'task' => [
                 'id' => $task->id,
@@ -387,8 +428,8 @@ class TaskOrchestrationService
                 'created_at' => optional($task->created_at)->toIso8601String(),
                 'completed_at' => optional($task->completed_at)->toIso8601String(),
             ],
-            'current_assignment' => null,
-            'assignments' => [],
+            'current_assignment' => $currentAssignment ? $this->presentAssignment($currentAssignment) : null,
+            'assignments' => $assignments,
             'content' => [
                 'agent' => $task->agent_content ?? null,
                 'plan' => $task->plan_content ?? null,
@@ -396,29 +437,7 @@ class TaskOrchestrationService
                 'todo' => $task->todo_content ?? null,
                 'summary' => $task->summary_content ?? null,
             ],
-            'activities' => collect([])->map(function ($activity) {
-                return [
-                    'id' => $activity->id,
-                    'task_id' => $activity->task_id,
-                    'agent_id' => $activity->agent_id,
-                    'user_id' => $activity->user_id,
-                    'activity_type' => $activity->activity_type,
-                    'action' => $activity->action,
-                    'description' => $activity->description,
-                    'changes' => $activity->changes,
-                    'metadata' => $activity->metadata,
-                    'created_at' => $activity->created_at->toIso8601String(),
-                    'agent' => $activity->agent ? [
-                        'id' => $activity->agent->id,
-                        'name' => $activity->agent->name,
-                        'slug' => $activity->agent->slug ?? null,
-                    ] : null,
-                    'user' => $activity->user ? [
-                        'id' => $activity->user->id,
-                        'name' => $activity->user->name,
-                    ] : null,
-                ];
-            })->all(),
+            'activities' => $activities,
         ];
     }
 
