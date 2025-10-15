@@ -298,3 +298,9 @@ Route::middleware(['web'])->post('/approvals/{id}/timeout', function ($id) {
 
     return response()->json(['success' => true]);
 });
+
+// FE Types API routes (v2/ui prefix)
+Route::prefix('v2/ui')->group(function () {
+    Route::get('/types/{alias}/query', [\App\Http\Controllers\Api\TypesController::class, 'query']);
+    Route::get('/types/{alias}/{id}', [\App\Http\Controllers\Api\TypesController::class, 'show']);
+});
