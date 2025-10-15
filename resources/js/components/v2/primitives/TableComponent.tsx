@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { ComponentConfig } from '../types'
 import { useDataSource } from '../hooks/useDataSource'
 import { useAction } from '../hooks/useAction'
@@ -36,14 +37,6 @@ export function TableComponent({ config }: TableComponentProps) {
     }
   }
 
-  if (loading) {
-    return <div className="p-4 text-center text-muted-foreground">Loading...</div>
-  }
-
-  if (error) {
-    return <div className="p-4 text-center text-destructive">Error: {error.message}</div>
-  }
-
   const ToolbarComponent = componentRegistry.get('button.icon')
 
   return (
@@ -59,7 +52,7 @@ export function TableComponent({ config }: TableComponentProps) {
         </div>
       )}
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg min-h-[24rem]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -69,9 +62,25 @@ export function TableComponent({ config }: TableComponentProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.length === 0 ? (
+            {loading ? (
+              Array.from({ length: 10 }).map((_, index) => (
+                <TableRow key={`skeleton-${index}`}>
+                  {config.columns?.map((column) => (
+                    <TableCell key={column.key}>
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : error ? (
               <TableRow>
-                <TableCell colSpan={config.columns?.length || 1} className="text-center text-muted-foreground">
+                <TableCell colSpan={config.columns?.length || 1} className="text-center text-destructive h-64">
+                  Error: {error.message}
+                </TableCell>
+              </TableRow>
+            ) : data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={config.columns?.length || 1} className="text-center text-muted-foreground h-64">
                   No data available
                 </TableCell>
               </TableRow>
@@ -80,7 +89,7 @@ export function TableComponent({ config }: TableComponentProps) {
                 <TableRow
                   key={row.id || index}
                   onClick={() => handleRowClick(row)}
-                  className={config.rowAction ? 'cursor-pointer' : ''}
+                  className={config.rowAction ? 'cursor-pointer hover:bg-muted/50' : ''}
                 >
                   {config.columns?.map(column => (
                     <TableCell key={column.key}>{row[column.key]}</TableCell>
