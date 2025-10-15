@@ -30,7 +30,21 @@ class TypesController extends Controller
     public function show(string $alias, mixed $id): JsonResponse
     {
         try {
-            $result = $this->resolver->show($alias, $id);
+            // Simple direct implementation for v2 UI system
+            $modelMap = [
+                'Agent' => \App\Models\Agent::class,
+                'Model' => \App\Models\AIModel::class,
+            ];
+
+            if (!isset($modelMap[$alias])) {
+                // Fall back to resolver if available
+                $result = $this->resolver->show($alias, $id);
+            } else {
+                // Direct model lookup for v2 system
+                $modelClass = $modelMap[$alias];
+                $model = $modelClass::find($id);
+                $result = $model ? $model->toArray() : null;
+            }
 
             if (!$result) {
                 return response()->json([

@@ -28,6 +28,18 @@ class FeUiPage extends Model
         'version' => 'integer',
     ];
 
+    // Add auto-hashing on save
+    protected static function booted()
+    {
+        static::saving(function ($page) {
+            $newHash = hash('sha256', json_encode($page->layout_tree_json));
+            if ($page->hash !== $newHash) {
+                $page->hash = $newHash;
+                $page->version = ($page->version ?? 0) + 1;
+            }
+        });
+    }
+
     public function module()
     {
         return $this->belongsTo(FeUiModule::class, 'module_key', 'key');

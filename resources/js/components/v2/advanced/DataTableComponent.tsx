@@ -73,10 +73,12 @@ interface DataTableConfig extends ComponentConfig {
 }
 
 function executeAction(action: ActionConfig, data?: any) {
-  const { type, command, url, event: eventName, payload } = action;
-  const finalPayload = { ...payload, ...data };
+  const { type, command, url, event: eventName, payload, params } = action as any;
+  // Merge params, payload, and data
+  const finalPayload = { ...params, ...payload, ...data };
 
   if (type === 'command' && command) {
+    console.log('Executing command:', command, 'with payload:', finalPayload);
     window.dispatchEvent(new CustomEvent('command:execute', { detail: { command, payload: finalPayload } }));
   } else if (type === 'navigate' && url) {
     window.location.href = url;
@@ -362,9 +364,14 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
 
   const handleToolbarClick = (item: ComponentConfig) => {
     const clickAction = item.actions?.click;
-    if (clickAction?.type === 'modal' && clickAction?.modal === 'form') {
-      setFormModalConfig(clickAction);
-      setFormModalOpen(true);
+    if (clickAction) {
+      if (clickAction.type === 'modal' && clickAction.modal === 'form') {
+        setFormModalConfig(clickAction);
+        setFormModalOpen(true);
+      } else {
+        // Handle other action types (command, navigate, etc.)
+        executeAction(clickAction);
+      }
     }
   };
 
@@ -416,25 +423,48 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
                   key={row.id}
                   className={cn(
                     'border-b transition-colors hover:bg-muted/50',
-                    actions?.rowClick && 'cursor-pointer',
+                    (rowAction || actions?.rowClick) && 'cursor-pointer',
                     row.getIsSelected() && 'bg-muted'
                   )}
                   onClick={async (e) => {
                     const clickAction = rowAction || actions?.rowClick;
                     if (clickAction && !(e.target as HTMLElement).closest('button, input')) {
-                      if (rowAction?.type === 'modal') {
+                      if (clickAction.type === 'modal') {
                         setDetailLoading(true);
                         setDetailModalOpen(true);
                         try {
-                          const url = rowAction.url.replace('{{row.id}}', row.original.id);
+                          const url = clickAction.url.replace('{{row.id}}', row.original.id);
+                          console.log('Fetching details from:', url);
                           const response = await fetch(url);
-                          const data = await response.json();
-                          setDetailModalData(data);
+                          const result = await response.json();
+                          console.log('Detail response:', result);
+                          // Handle both wrapped and unwrapped responses
+                          setDetailModalData(result.data || result);
                         } catch (err) {
                           console.error('Failed to load details:', err);
+                          setDetailModalData(null);
                         } finally {
                           setDetailLoading(false);
                         }
+                      } else if (clickAction.type === 'command') {
+                        // Handle command type with template replacement in params
+                        const processedAction = { ...clickAction };
+                        if (processedAction.params) {
+                          // Replace template variables in params
+                          const processedParams: any = {};
+                          for (const [key, value] of Object.entries(processedAction.params)) {
+                            if (typeof value === 'string' && value.includes('{{')) {
+                              // Replace {{row.field}} with actual values
+                              processedParams[key] = value.replace(/\{\{row\.([^}]+)\}\}/g, (match, field) => {
+                                return row.original[field] || match;
+                              });
+                            } else {
+                              processedParams[key] = value;
+                            }
+                          }
+                          processedAction.params = processedParams;
+                        }
+                        executeAction(processedAction, row.original);
                       } else {
                         executeAction(clickAction, row.original);
                       }

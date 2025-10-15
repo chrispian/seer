@@ -30,7 +30,7 @@ class V2UiBuilderSeeder extends Seeder
 
         $page = FeUiPage::updateOrCreate(
             ['key' => $pageKey],
-            ['config' => $config]
+            ['layout_tree_json' => $config]
         );
 
         $this->command->info("✓ Seeded page: {$pageKey}");

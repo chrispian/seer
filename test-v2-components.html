@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>V2 Component Test</title>
+    <script>
+        // Test page loading
+        async function testPage() {
+            console.log('Testing V2 Page API...');
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v2/ui/pages/page.agent.table.modal');
+                const data = await response.json();
+                
+                console.log('Page config loaded:', data);
+                console.log('Components:', data.layout_tree_json?.components);
+                
+                // Check table component
+                const tableComponent = data.layout_tree_json?.components?.find(c => c.id === 'component.table.agent');
+                console.log('Table component config:', tableComponent);
+                console.log('Table type:', tableComponent?.type);
+                console.log('Table toolbar:', tableComponent?.toolbar);
+                
+                // Test datasource
+                console.log('\nTesting DataSource API...');
+                const dsResponse = await fetch('http://localhost:8000/api/v2/ui/datasource/Agent/query?page=1&per_page=5');
+                const dsData = await dsResponse.json();
+                console.log('DataSource response:', dsData);
+                
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        window.onload = testPage;
+    </script>
+</head>
+<body>
+    <h1>V2 Component Test</h1>
+    <p>Check the browser console for results.</p>
+    <p>Open the actual page: <a href="http://localhost:8000/v2/pages/page.agent.table.modal">Open Agent Modal</a></p>
+</body>
+</html>
