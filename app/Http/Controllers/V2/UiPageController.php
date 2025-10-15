@@ -10,6 +10,7 @@ class UiPageController extends Controller
 {
     public function show(string $key): JsonResponse
     {
+
         $page = FeUiPage::where('key', $key)->first();
 
         if (! $page) {
