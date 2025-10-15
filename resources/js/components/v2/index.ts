@@ -17,3 +17,8 @@ export { ResizableComponent } from './layouts/ResizableComponent';
 export { AspectRatioComponent } from './layouts/AspectRatioComponent';
 export { CollapsibleComponent } from './layouts/CollapsibleComponent';
 export { AccordionComponent } from './layouts/AccordionComponent';
+
+export { DataTableComponent } from './advanced/DataTableComponent';
+export { ChartComponent } from './advanced/ChartComponent';
+export { CarouselComponent } from './advanced/CarouselComponent';
+export { SonnerComponent } from './advanced/SonnerComponent';

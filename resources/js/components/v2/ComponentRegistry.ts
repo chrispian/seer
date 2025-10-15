@@ -224,6 +224,62 @@ export function registerCompositeComponents() {
   });
 }
 
+export function registerAdvancedComponents() {
+  import('./advanced/DataTableComponent').then(({ DataTableComponent }) => {
+    registry.register('data-table', DataTableComponent as ComponentRenderer);
+  });
+
+  import('./advanced/ChartComponent').then(({ ChartComponent }) => {
+    registry.register('chart', ChartComponent as ComponentRenderer);
+  });
+
+  import('./advanced/CarouselComponent').then(({ CarouselComponent }) => {
+    registry.register('carousel', CarouselComponent as ComponentRenderer);
+  });
+
+  import('./advanced/SonnerComponent').then(({ SonnerComponent }) => {
+    registry.register('sonner', SonnerComponent as ComponentRenderer);
+  });
+}
+
+export function registerFormComponents() {
+  import('./forms/FormComponent').then(({ FormComponent }) => {
+    registry.register('form', FormComponent as ComponentRenderer);
+  });
+
+  import('./forms/InputGroupComponent').then(({ InputGroupComponent }) => {
+    registry.register('input-group', InputGroupComponent as ComponentRenderer);
+  });
+
+  import('./forms/InputOTPComponent').then(({ InputOTPComponent }) => {
+    registry.register('input-otp', InputOTPComponent as ComponentRenderer);
+  });
+
+  import('./forms/DatePickerComponent').then(({ DatePickerComponent }) => {
+    registry.register('date-picker', DatePickerComponent as ComponentRenderer);
+  });
+
+  import('./forms/CalendarComponent').then(({ CalendarComponent }) => {
+    registry.register('calendar', CalendarComponent as ComponentRenderer);
+  });
+
+  import('./forms/ButtonGroupComponent').then(({ ButtonGroupComponent }) => {
+    registry.register('button-group', ButtonGroupComponent as ComponentRenderer);
+  });
+
+  import('./forms/ToggleComponent').then(({ ToggleComponent }) => {
+    registry.register('toggle', ToggleComponent as ComponentRenderer);
+  });
+
+  import('./forms/ToggleGroupComponent').then(({ ToggleGroupComponent }) => {
+    registry.register('toggle-group', ToggleGroupComponent as ComponentRenderer);
+  });
+
+  import('./forms/ItemComponent').then(({ ItemComponent }) => {
+    registry.register('item', ItemComponent as ComponentRenderer);
+  });
+}
+
 export function renderComponent(config: ComponentConfig): React.ReactElement | null {
   const Component = registry.get(config.type);
   if (!Component) {

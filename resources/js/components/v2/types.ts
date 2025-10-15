@@ -598,3 +598,210 @@ export interface HoverCardConfig extends BaseComponentConfig {
     className?: string;
   };
 }
+
+export interface FormFieldValidation {
+  required?: boolean;
+  min?: number;
+  max?: number;
+  pattern?: string;
+  custom?: string;
+}
+
+export interface FormField {
+  name: string;
+  label: string;
+  field: ComponentConfig;
+  validation?: FormFieldValidation;
+  helperText?: string;
+}
+
+export interface FormConfig extends BaseComponentConfig {
+  type: 'form';
+  props: {
+    fields: FormField[];
+    submitButton?: ComponentConfig;
+    onSubmit?: ActionConfig;
+    className?: string;
+  };
+}
+
+export interface InputGroupConfig extends BaseComponentConfig {
+  type: 'input-group';
+  props: {
+    prefix?: string | ComponentConfig;
+    suffix?: string | ComponentConfig;
+    input: ComponentConfig;
+    className?: string;
+  };
+}
+
+export interface InputOTPConfig extends BaseComponentConfig {
+  type: 'input-otp';
+  props: {
+    length?: number;
+    className?: string;
+  };
+}
+
+export interface DatePickerConfig extends BaseComponentConfig {
+  type: 'date-picker';
+  props: {
+    value?: string;
+    placeholder?: string;
+    format?: string;
+    disabled?: boolean;
+    className?: string;
+  };
+}
+
+export interface CalendarConfig extends BaseComponentConfig {
+  type: 'calendar';
+  props: {
+    value?: string | string[];
+    mode?: 'single' | 'multiple' | 'range';
+    className?: string;
+  };
+}
+
+export interface ButtonGroupButton {
+  value: string;
+  label: string;
+  icon?: string;
+}
+
+export interface ButtonGroupConfig extends BaseComponentConfig {
+  type: 'button-group';
+  props: {
+    buttons: ButtonGroupButton[];
+    value?: string;
+    className?: string;
+  };
+}
+
+export interface ToggleConfig extends BaseComponentConfig {
+  type: 'toggle';
+  props: {
+    pressed?: boolean;
+    label?: string;
+    icon?: string;
+    variant?: 'default' | 'outline';
+    size?: 'default' | 'sm' | 'lg';
+    disabled?: boolean;
+  };
+}
+
+export interface ToggleGroupItem {
+  value: string;
+  label: string;
+  icon?: string;
+}
+
+export interface ToggleGroupConfig extends BaseComponentConfig {
+  type: 'toggle-group';
+  props: {
+    type?: 'single' | 'multiple';
+    items: ToggleGroupItem[];
+    value?: string | string[];
+    variant?: 'default' | 'outline';
+    size?: 'default' | 'sm' | 'lg';
+    className?: string;
+  };
+}
+
+export interface ItemConfig extends BaseComponentConfig {
+  type: 'item';
+  props: {
+    title: string;
+    description?: string;
+    icon?: string;
+    avatar?: string;
+    badge?: string;
+    trailing?: ComponentConfig;
+    className?: string;
+  };
+}
+
+export interface DataTableColumnConfig {
+  key: string;
+  label: string;
+  sortable?: boolean;
+  filterable?: boolean;
+  render?: 'text' | 'badge' | 'avatar' | 'actions' | 'custom';
+  width?: string;
+  align?: 'left' | 'center' | 'right';
+}
+
+export interface DataTableConfig extends BaseComponentConfig {
+  type: 'data-table';
+  props: {
+    columns: DataTableColumnConfig[];
+    data: any[];
+    pagination?: {
+      enabled: boolean;
+      pageSize: number;
+    };
+    selection?: {
+      enabled: boolean;
+      type: 'single' | 'multiple';
+    };
+    actions?: {
+      rowClick?: ActionConfig;
+      rowActions?: ComponentConfig[];
+    };
+    loading?: boolean;
+    emptyText?: string;
+    className?: string;
+  };
+}
+
+export interface ChartDataPoint {
+  label: string;
+  value: number;
+  [key: string]: any;
+}
+
+export interface ChartConfig extends BaseComponentConfig {
+  type: 'chart';
+  props: {
+    chartType: 'bar' | 'line' | 'pie' | 'area' | 'donut';
+    data: ChartDataPoint[];
+    title?: string;
+    legend?: boolean;
+    colors?: string[];
+    height?: number;
+    xAxisKey?: string;
+    yAxisKey?: string;
+    showGrid?: boolean;
+    showTooltip?: boolean;
+    className?: string;
+  };
+}
+
+export interface CarouselConfig extends BaseComponentConfig {
+  type: 'carousel';
+  props: {
+    items: ComponentConfig[];
+    autoplay?: boolean;
+    interval?: number;
+    loop?: boolean;
+    showDots?: boolean;
+    showArrows?: boolean;
+    className?: string;
+  };
+}
+
+export interface SonnerConfig extends BaseComponentConfig {
+  type: 'sonner';
+  props: {
+    message: string;
+    description?: string;
+    action?: {
+      label: string;
+      action: ActionConfig;
+    };
+    duration?: number;
+    position?: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+    variant?: 'default' | 'success' | 'error' | 'warning' | 'info';
+    className?: string;
+  };
+}
