@@ -303,4 +303,7 @@ Route::middleware(['web'])->post('/approvals/{id}/timeout', function ($id) {
 Route::prefix('v2/ui')->group(function () {
     Route::get('/types/{alias}/query', [\App\Http\Controllers\Api\TypesController::class, 'query']);
     Route::get('/types/{alias}/{id}', [\App\Http\Controllers\Api\TypesController::class, 'show']);
+    
+    Route::get('/datasource/{alias}/query', [\App\Http\Controllers\Api\DataSourceController::class, 'query']);
+    Route::get('/datasource/{alias}/capabilities', [\App\Http\Controllers\Api\DataSourceController::class, 'capabilities']);
 });

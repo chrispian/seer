@@ -11,6 +11,7 @@ class FeUiDatasource extends Model
     protected $fillable = [
         'alias',
         'model_class',
+        'handler',
         'resolver_class',
         'capabilities',
         'default_params_json',
