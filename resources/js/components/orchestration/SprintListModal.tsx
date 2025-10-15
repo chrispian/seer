@@ -200,8 +200,7 @@ export function SprintListModal({
   ]
 
   const actionItems = [
-    { key: 'view', label: 'View Sprint' },
-    { key: 'tasks', label: 'View Tasks' }
+    { key: 'view', label: 'View Sprint' }
   ]
 
   return (
@@ -218,7 +217,7 @@ export function SprintListModal({
         searchPlaceholder="Search sprints..."
         searchFields={['code', 'title']}
         onAction={(action, sprint) => {
-          if (action === 'view' || action === 'tasks') {
+          if (action === 'view') {
             onSprintSelect?.(sprint)
           }
         }}

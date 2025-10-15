@@ -243,8 +243,7 @@ export function SprintDetailModal({
   ]
 
   const actionItems = [
-    { key: 'view', label: 'View Details' },
-    { key: 'assign', label: 'Assign Agent' }
+    { key: 'view', label: 'View Task Details' }
   ]
 
   return (
@@ -261,7 +260,7 @@ export function SprintDetailModal({
       searchPlaceholder="Search tasks..."
       searchFields={['task_code', 'task_name', 'current_agent', 'agent_recommendation']}
       onAction={(action, task) => {
-        if (action === 'view' || action === 'assign') {
+        if (action === 'view') {
           onTaskSelect?.(task)
         }
       }}

@@ -83,7 +83,7 @@ export function InlineEditSelect({
 
   return (
     <Select
-      value={localValue}
+      value={localValue || undefined}
       onValueChange={handleValueChange}
       onOpenChange={handleOpenChange}
       open={isEditing}

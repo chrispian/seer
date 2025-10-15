@@ -1,65 +1,59 @@
 /**
  * CommandResultModal - Config-Driven Command Result Renderer
  * Hash: #PM-CACHE-2025-10-11
- * 
+ *
  * ═══════════════════════════════════════════════════════════════
  * CURRENT SYSTEM (All tables below are ACTIVE, none are legacy)
  * ═══════════════════════════════════════════════════════════════
- * 
+ *
  * DATABASE TABLES:
  *   1. commands - Slash command registry (/sprints, /tasks, etc.)
  *      Fields: ui_modal_container, navigation_config, type_slug
- *   
+ *
  *   2. types_registry - Model-backed types (sprints, tasks, agents)
  *      Fields: slug, model_class, default_card_component
- *   
+ *
  *   3. fragment_type_registry - Fragment-backed types (notes, bookmarks)
  *      Fields: slug, container_component, schema
- * 
+ *
  * COMPONENT RESOLUTION:
  *   config.ui.modal_container → commands.ui_modal_container
  *   This is 100% database-driven, no hardcoding.
- * 
+ *
  * CACHE WARNING:
  *   CommandRegistry caches for 1 hour. After database changes:
  *   php artisan cache:clear
- * 
+ *
  * See: docs/POST_MORTEM_SPRINT_NAVIGATION_CACHE_BUG.md
  * ═══════════════════════════════════════════════════════════════
  */
 
-import React, { useState, useEffect } from 'react'
+import React, {useEffect, useState} from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { SprintListModal } from '@/components/orchestration/SprintListModal'
-import { SprintDetailModal } from '@/components/orchestration/SprintDetailModal'
-import { SprintFormModal } from '@/components/orchestration/SprintFormModal'
-import { TaskListModal } from '@/components/orchestration/TaskListModal'
-import { TaskDetailModal } from '@/components/orchestration/TaskDetailModal'
-import { AgentProfileGridModal } from '@/components/orchestration/AgentProfileGridModal'
-import { BacklogListModal } from '@/components/orchestration/BacklogListModal'
-import { TodoManagementModal } from '@/islands/chat/TodoManagementModal'
-import { FragmentListModal } from '@/components/fragments/FragmentListModal'
-import { ChannelListModal } from '@/components/channels/ChannelListModal'
-import { SecurityDashboardModal } from '@/components/security/SecurityDashboardModal'
-import { RoutingInfoModal } from '@/components/routing/RoutingInfoModal'
-import { AgentProfileDashboard } from '@/pages/AgentProfileDashboard'
-import { AgentDashboard } from '@/pages/AgentDashboard'
-import { TypeManagementModal } from '@/components/types/TypeManagementModal'
-import { UnifiedListModal } from '@/components/unified/UnifiedListModal'
-import { ProjectListModal } from '@/components/projects/ProjectListModal'
-import { VaultListModal } from '@/components/vaults/VaultListModal'
-import { BookmarkListModal } from '@/components/bookmarks/BookmarkListModal'
-import { DataManagementModal } from '@/components/ui/DataManagementModal'
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog'
+import {Button} from '@/components/ui/button'
+import {ScrollArea} from '@/components/ui/scroll-area'
+import {SprintListModal} from '@/components/orchestration/SprintListModal'
+import {SprintDetailModal} from '@/components/orchestration/SprintDetailModal'
+import {SprintFormModal} from '@/components/orchestration/SprintFormModal'
+import {TaskListModal} from '@/components/orchestration/TaskListModal'
+import {TaskDetailModal} from '@/components/orchestration/TaskDetailModal'
+import {AgentProfileGridModal} from '@/components/orchestration/AgentProfileGridModal'
+import {BacklogListModal} from '@/components/orchestration/BacklogListModal'
+import {TodoManagementModal} from '@/islands/chat/TodoManagementModal'
+import {FragmentListModal} from '@/components/fragments/FragmentListModal'
+import {ChannelListModal} from '@/components/channels/ChannelListModal'
+import {SecurityDashboardModal} from '@/components/security/SecurityDashboardModal'
+import {RoutingInfoModal} from '@/components/routing/RoutingInfoModal'
+import {AgentProfileDashboard} from '@/pages/AgentProfileDashboard'
+import {AgentDashboard} from '@/pages/AgentDashboard'
+import {TypeManagementModal} from '@/components/types/TypeManagementModal'
+import {UnifiedListModal} from '@/components/unified/UnifiedListModal'
+import {ProjectListModal} from '@/components/projects/ProjectListModal'
+import {VaultListModal} from '@/components/vaults/VaultListModal'
+import {BookmarkListModal} from '@/components/bookmarks/BookmarkListModal'
+import {DataManagementModal} from '@/components/ui/DataManagementModal'
 
 /**
  * Central registry mapping component names to React components.
@@ -164,27 +158,25 @@ function getComponentName(result: CommandResult): string {
   if (result.component) {
     return result.component
   }
-  
+
   // Priority 2: Config-based resolution
   if (!result.config) {
     console.warn('[CommandResultModal] No config provided - using fallback')
     return 'UnifiedListModal'
   }
-  
+
   if (result.config.ui?.modal_container) {
     return result.config.ui.modal_container
   }
-  
+
   if (result.config.ui?.card_component) {
-    const transformed = transformCardToModal(result.config.ui.card_component)
-    return transformed
+      return transformCardToModal(result.config.ui.card_component)
   }
-  
+
   if (result.config.type?.default_card_component) {
-    const transformed = transformCardToModal(result.config.type.default_card_component)
-    return transformed
+      return transformCardToModal(result.config.type.default_card_component)
   }
-  
+
   return 'UnifiedListModal'
 }
 
@@ -193,16 +185,16 @@ function capitalize(str: string): string {
 }
 
 function buildComponentProps(result: CommandResult, componentName: string, handlers: ComponentHandlers, isOpen: boolean = true): Record<string, any> {
-  
+
   const props: Record<string, any> = {
     isOpen: isOpen,
     onClose: handlers.onClose,
     data: result.data,
     config: result.config,
   }
-  
+
   const navConfig = result.config?.ui?.navigation
-  
+
   // Handle Detail modals - they expect data spread as individual props
   if (componentName.includes('Detail')) {
     // Spread data object properties as individual props (sprint, tasks, stats, etc.)
@@ -213,7 +205,7 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
   } else if (navConfig?.data_prop) {
     // CONFIG-DRIVEN: Use navigation config to set data props
     const dataProp = navConfig.data_prop
-    
+
     // Handle new structure: {sprints, unassigned_tasks} or legacy array
     if (result.data && typeof result.data === 'object' && dataProp in result.data) {
       // For DataManagementModal, the 'data' prop must be an array
@@ -268,41 +260,41 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
       props.channels = result.data
     }
   }
-  
+
   if (handlers.onRefresh) {
     props.onRefresh = handlers.onRefresh
   }
-  
+
   // Configure DataManagementModal specific props
   if (componentName === 'DataManagementModal') {
-    
+
     // Set up columns based on the type
     const typeSlug = (result.config as any)?.type_slug || result.config?.type?.slug
-    
-    if (typeSlug === 'sprint' || typeSlug === 'sprints') {
+
+    if (typeSlug === 'sprint' || typeSlug === 'sprints' || typeSlug === 'orch') {
       // Sprint-specific columns
       props.columns = [
-        { 
-          key: 'code', 
-          label: 'Sprint', 
+        {
+          key: 'code',
+          label: 'Sprint',
           sortable: true,
         },
-        { 
-          key: 'title', 
-          label: 'Title', 
+        {
+          key: 'title',
+          label: 'Title',
           sortable: true,
           render: (_item: any, value: any) => value || 'No title'
         },
-        { 
-          key: 'status', 
-          label: 'Status', 
+        {
+          key: 'status',
+          label: 'Status',
           sortable: true,
           render: (_item: any, value: any) => value || 'Active'
         },
-        { 
-          key: 'progress_percentage', 
-          label: 'Progress', 
-          render: (_item: any, value: any) => `${value || 0}%` 
+        {
+          key: 'progress_percentage',
+          label: 'Progress',
+          render: (_item: any, value: any) => `${value || 0}%`
         },
         { key: 'total_tasks', label: 'Tasks' },
         { key: 'created_at', label: 'Created', sortable: true },
@@ -313,15 +305,15 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
     } else if (typeSlug === 'task' || typeSlug === 'tasks') {
       // Task-specific columns
       props.columns = [
-        { 
-          key: 'task_code', 
-          label: 'Code', 
+        {
+          key: 'task_code',
+          label: 'Code',
           sortable: true,
           width: 'w-24'
         },
-        { 
-          key: 'task_name', 
-          label: 'Task', 
+        {
+          key: 'task_name',
+          label: 'Task',
           sortable: true,
           render: (item: any, value: any) => (
             <div className="flex flex-col">
@@ -334,16 +326,16 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
             </div>
           )
         },
-        { 
-          key: 'sprint_code', 
+        {
+          key: 'sprint_code',
           label: 'Sprint',
           sortable: true,
           width: 'w-24',
           render: (_item: any, value: any) => value || '-'
         },
-        { 
-          key: 'delegation_status', 
-          label: 'Status', 
+        {
+          key: 'delegation_status',
+          label: 'Status',
           sortable: true,
           width: 'w-28',
           render: (_item: any, value: any) => {
@@ -357,8 +349,8 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
             return <span className={statusColors[value] || 'text-gray-500'}>{value || 'unknown'}</span>
           }
         },
-        { 
-          key: 'priority', 
+        {
+          key: 'priority',
           label: 'Priority',
           sortable: true,
           width: 'w-20',
@@ -371,15 +363,15 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
             return <span className={priorityColors[value] || 'text-gray-500'}>{value || 'medium'}</span>
           }
         },
-        { 
-          key: 'assigned_to', 
+        {
+          key: 'assigned_to',
           label: 'Assigned To',
           width: 'w-32',
           render: (_item: any, value: any) => value || 'Unassigned'
         },
-        { 
-          key: 'updated_at', 
-          label: 'Updated', 
+        {
+          key: 'updated_at',
+          label: 'Updated',
           sortable: true,
           width: 'w-28',
           render: (_item: any, value: any) => {
@@ -390,7 +382,7 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
       ]
       props.searchFields = ['task_code', 'task_name', 'description']
       props.searchPlaceholder = 'Search tasks...'
-      
+
       // Add action items for CRUD
       props.actionItems = [
         { key: 'view', label: 'View Details' },
@@ -398,7 +390,7 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
         { key: 'assign', label: 'Assign Agent' },
         { key: 'delete', label: 'Delete', className: 'text-red-600' },
       ]
-      
+
       // Handle actions
       props.onAction = (action: string, item: any) => {
         switch(action) {
@@ -423,15 +415,15 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
       }
     } else if (props.data && Array.isArray(props.data) && props.data.length > 0) {
       // Auto-generate columns from first data item (use props.data, not result.data!)
-      
+
       const firstItem = props.data[0]
-      
-      const keys = Object.keys(firstItem).filter(key => 
-        key !== 'id' && 
-        key !== 'metadata' && 
+
+      const keys = Object.keys(firstItem).filter(key =>
+        key !== 'id' &&
+        key !== 'metadata' &&
         !key.startsWith('_')
       )
-      
+
       props.columns = keys.slice(0, 6).map(key => ({
         key,
         label: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
@@ -443,11 +435,11 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
       }
       props.columns = []
     }
-    
+
     // Enable clickable rows for navigation if we have navigation config
     if (navConfig) {
       props.clickableRows = true
-      
+
       // Set up row click handler using navigation config
       if (navConfig.detail_command && navConfig.item_key && handlers.executeDetailCommand) {
         const itemKey = navConfig.item_key as string
@@ -457,25 +449,25 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
       }
     }
   }
-  
+
   if (handlers.executeDetailCommand && navConfig) {
     // CONFIG-DRIVEN: Use navigation config for item selection handlers
     if (navConfig.detail_command && navConfig.item_key) {
       const itemKey = navConfig.item_key
       props.onItemSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
-      
+
       // Also set component-specific handlers based on component name
       if (componentName.includes('Task') || componentName.includes('Backlog')) {
         props.onTaskSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
       } else if (componentName.includes('Sprint')) {
         props.onSprintSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
         // Add create handler for Sprint list
-        props.onCreate = () => handlers.executeDetailCommand!('/sprint-create')
+        props.onCreate = () => handlers.executeDetailCommand!('/orch-sprint-new')
       } else if (componentName.includes('Agent')) {
         props.onAgentSelect = (item: any) => handlers.executeDetailCommand!(`${navConfig.detail_command} ${item[itemKey]}`)
       }
     }
-    
+
     // Add child handlers for drill-down navigation
     if (navConfig.children) {
       navConfig.children.forEach((child: any) => {
@@ -497,22 +489,22 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
       props.onAgentSelect = (item: any) => handlers.executeDetailCommand!(`/agent-profile-detail ${item.slug}`)
     }
   }
-  
+
   if (componentName.includes('Detail') || componentName.includes('Form')) {
     // Detail and Form modals get both onClose (for X/Close buttons) and onBack (for Back button/ESC)
     if (handlers.onBackToList) {
       props.onBack = handlers.onBackToList
     }
-    
+
     // Add edit handler for detail modals
     if (componentName.includes('Detail') && handlers.executeDetailCommand) {
       if (componentName.includes('Sprint')) {
-        props.onEdit = (item: any) => handlers.executeDetailCommand!(`/sprint-edit ${item.code}`)
+        props.onEdit = (item: any) => handlers.executeDetailCommand!(`/orch-sprint-edit ${item.code}`)
       } else if (componentName.includes('Task')) {
         props.onEdit = (item: any) => handlers.executeDetailCommand!(`/task-edit ${item.task_code}`)
       }
     }
-    
+
     // Add drill-down handlers for detail views
     if (componentName.includes('Detail') && navConfig?.children && handlers.executeDetailCommand) {
       // CONFIG-DRIVEN: Use children config
@@ -525,20 +517,22 @@ function buildComponentProps(result: CommandResult, componentName: string, handl
       props.onTaskSelect = (item: any) => handlers.executeDetailCommand!(`/task-detail ${item.task_code}`)
     }
   }
-  
+
   return props
 }
 
 function renderComponent(result: CommandResult, handlers: ComponentHandlers, isOpen: boolean = true): React.ReactNode {
   const componentName = getComponentName(result)
+  console.log('[CommandResultModal] Resolved component name:', componentName, 'for type:', result.config?.type?.slug)
   let Component = COMPONENT_MAP[componentName]
-  
+
   if (!Component) {
     console.warn(`[CommandResultModal] Component "${componentName}" not found in registry`)
     Component = COMPONENT_MAP['UnifiedListModal']
   }
-  
+
   const props = buildComponentProps(result, componentName, handlers, isOpen)
+  console.log('[CommandResultModal] Component props:', { componentName, hasOnCreate: !!props.onCreate, dataKeys: Object.keys(props.data || props.sprints || {}) })
   return <Component {...props} />
 }
 
@@ -551,7 +545,7 @@ export function CommandResultModal({
   console.log('isOpen:', isOpen)
   console.log('result:', result)
   console.log('command:', command)
-  
+
   const [viewStack, setViewStack] = useState<CommandResult[]>([])
   const [_isLoadingDetail, setIsLoadingDetail] = useState(false)
 
@@ -565,21 +559,21 @@ export function CommandResultModal({
   if (!result || !isOpen) {
     return null
   }
-  
+
   console.log('result.success:', result.success)
   console.log('result.config:', !!result.config)
   console.log('result.data keys:', Object.keys(result.data || {}))
 
   const handleBack = () => {
     console.log('CommandResultModal: Going back one level', 'stack length:', viewStack.length)
-    
+
     // If stack is empty, we're on the root view - close modal
     if (viewStack.length === 0) {
       console.log('CommandResultModal: On root view - closing modal')
       onClose()
       return
     }
-    
+
     // Otherwise, pop the stack to go back one level
     setViewStack(prev => prev.slice(0, -1))
   }
@@ -619,18 +613,18 @@ export function CommandResultModal({
   }
 
   const refreshCurrentView = async () => {
-    
+
     // Determine which command to refresh
     const currentView = viewStack.length > 0 ? viewStack[viewStack.length - 1] : null
     const commandToRefresh = currentView?._command || command
-    
+
     if (!commandToRefresh) {
       console.warn('[CommandResultModal] No command to refresh')
       return
     }
-    
+
     setIsLoadingDetail(true)
-    
+
     try {
       const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
       const response = await fetch('/api/commands/execute', {
@@ -646,7 +640,7 @@ export function CommandResultModal({
 
       if (refreshedResult.success) {
         refreshedResult._command = commandToRefresh
-        
+
         if (viewStack.length > 0) {
           // Update the current view in the stack
           setViewStack(prev => [...prev.slice(0, -1), refreshedResult])
@@ -718,11 +712,11 @@ export function CommandResultModal({
   }
 
   // If this has config, use new rendering system
-  
+
   if (result.success && result.config) {
     return renderComponent(result, handlers, isOpen)
   }
-  
+
 
   const getTitle = () => {
     if (result.success) {

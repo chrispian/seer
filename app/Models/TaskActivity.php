@@ -51,6 +51,11 @@ class TaskActivity extends Model
         return $this->belongsTo(WorkItem::class, 'task_id');
     }
 
+    public function orchestrationTask(): BelongsTo
+    {
+        return $this->belongsTo(OrchestrationTask::class, 'task_id');
+    }
+
     public function agent(): BelongsTo
     {
         return $this->belongsTo(AgentProfile::class, 'agent_id');

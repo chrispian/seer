@@ -32,6 +32,27 @@ class AutocompleteController extends Controller
             ];
         }, $allCommands);
 
+        // Sort results: exact matches first, then starts-with, then contains
+        if (! empty($query)) {
+            usort($results, function ($a, $b) use ($query) {
+                $aCmd = strtolower($a['value']);
+                $bCmd = strtolower($b['value']);
+                $queryLower = strtolower($query);
+
+                $aExact = $aCmd === $queryLower;
+                $bExact = $bCmd === $queryLower;
+                if ($aExact && !$bExact) return -1;
+                if ($bExact && !$aExact) return 1;
+
+                $aStarts = str_starts_with($aCmd, $queryLower);
+                $bStarts = str_starts_with($bCmd, $queryLower);
+                if ($aStarts && !$bStarts) return -1;
+                if ($bStarts && !$aStarts) return 1;
+
+                return strcmp($aCmd, $bCmd);
+            });
+        }
+
         return response()->json(['results' => array_values($results)]);
     }
 

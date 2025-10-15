@@ -16,6 +16,8 @@ class OrchestrationSprint extends Model
         'title',
         'status',
         'owner',
+        'starts_on',
+        'ends_on',
         'hash',
         'metadata',
         'file_path',
@@ -23,6 +25,8 @@ class OrchestrationSprint extends Model
 
     protected $casts = [
         'metadata' => 'array',
+        'starts_on' => 'date',
+        'ends_on' => 'date',
     ];
 
     public function tasks(): HasMany

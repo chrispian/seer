@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OrchestrationTask extends Model
@@ -13,21 +14,48 @@ class OrchestrationTask extends Model
 
     protected $fillable = [
         'sprint_id',
+        'type',
+        'parent_id',
+        'assignee_type',
+        'assignee_id',
+        'project_id',
         'task_code',
         'title',
+        'description',
         'status',
+        'delegation_status',
         'priority',
         'phase',
+        'tags',
+        'state',
+        'delegation_context',
+        'delegation_history',
+        'estimated_hours',
+        'actual_hours',
         'hash',
         'metadata',
         'agent_config',
+        'agent_content',
+        'plan_content',
+        'context_content',
+        'todo_content',
+        'summary_content',
         'file_path',
+        'pr_url',
+        'completed_at',
     ];
 
     protected $casts = [
         'metadata' => 'array',
         'agent_config' => 'array',
+        'tags' => 'array',
+        'state' => 'array',
+        'delegation_context' => 'array',
+        'delegation_history' => 'array',
         'phase' => 'integer',
+        'estimated_hours' => 'decimal:2',
+        'actual_hours' => 'decimal:2',
+        'completed_at' => 'datetime',
     ];
 
     public function sprint(): BelongsTo
@@ -54,6 +82,64 @@ class OrchestrationTask extends Model
     public function scopeByPriority($query, string $priority)
     {
         return $query->where('priority', $priority);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(OrchestrationTask::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(OrchestrationTask::class, 'parent_id');
+    }
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(TaskAssignment::class, 'work_item_id', 'id');
+    }
+
+    public function currentAssignment(): HasOne
+    {
+        return $this->hasOne(TaskAssignment::class, 'work_item_id', 'id')
+            ->whereIn('status', ['assigned', 'started'])
+            ->latest('assigned_at');
+    }
+
+    public function assignedAgent(): BelongsTo
+    {
+        return $this->belongsTo(AgentProfile::class, 'assignee_id');
+    }
+
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assignee_id')
+            ->where('assignee_type', 'user');
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(TaskActivity::class, 'task_id', 'id');
+    }
+
+    public function scopeAssignedToAgents($query)
+    {
+        return $query->where('assignee_type', 'agent');
+    }
+
+    public function scopeAssignedToUsers($query)
+    {
+        return $query->where('assignee_type', 'user');
+    }
+
+    public function scopeByDelegationStatus($query, string $status)
+    {
+        return $query->where('delegation_status', $status);
+    }
+
+    public function scopeUnassigned($query)
+    {
+        return $query->where('delegation_status', 'unassigned');
     }
 
     public function generateHash(): string

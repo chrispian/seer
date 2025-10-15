@@ -42,6 +42,14 @@ class TaskAssignment extends Model
     }
 
     /**
+     * Get the orchestration task for this assignment
+     */
+    public function orchestrationTask(): BelongsTo
+    {
+        return $this->belongsTo(OrchestrationTask::class, 'work_item_id');
+    }
+
+    /**
      * Get the assigned agent
      */
     public function agent(): BelongsTo

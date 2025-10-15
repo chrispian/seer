@@ -3,25 +3,24 @@
 namespace App\Commands\Orchestration\Sprint;
 
 use App\Commands\BaseCommand;
-use App\Models\WorkItem;
+use App\Models\OrchestrationTask;
 
 class CreateCommand extends BaseCommand
 {
     public function handle(): array
     {
         // Get unassigned tasks for potential sprint assignment
-        $unassignedTasks = WorkItem::query()
-            ->whereDoesntHave('sprintItems')
+        $unassignedTasks = OrchestrationTask::query()
+            ->whereNull('sprint_id')
             ->where('status', '!=', 'completed')
             ->orderBy('created_at', 'desc')
             ->limit(50)
             ->get()
             ->map(function ($task) {
-                $metadata = $task->metadata ?? [];
                 return [
                     'id' => $task->id,
-                    'task_code' => $metadata['task_code'] ?? $task->id,
-                    'task_name' => $metadata['task_name'] ?? 'Untitled Task',
+                    'task_code' => $task->task_code,
+                    'task_name' => $task->title,
                     'status' => $task->status,
                     'priority' => $task->priority ?? 'medium',
                 ];
@@ -67,7 +66,7 @@ class CreateCommand extends BaseCommand
 
     public static function getUsage(): string
     {
-        return '/sprint-create';
+        return '/orch-sprint-new';
     }
 
     public static function getCategory(): string

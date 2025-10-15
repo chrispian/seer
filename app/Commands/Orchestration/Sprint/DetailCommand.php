@@ -65,7 +65,7 @@ class DetailCommand extends BaseCommand
             return [
                 'type' => 'message',
                 'component' => null,
-                'message' => "Sprint '{$sprintCode}' not found. Use /sprints to see available sprints.\n\nError: ".$e->getMessage(),
+                'message' => "Sprint '{$sprintCode}' not found. Use /orch to see available sprints.\n\nError: ".$e->getMessage(),
             ];
         }
     }
@@ -82,7 +82,7 @@ class DetailCommand extends BaseCommand
 
     public static function getUsage(): string
     {
-        return '/sprint-detail [sprint-code]';
+        return '/orch-sprint [sprint-code]';
     }
 
     public static function getCategory(): string

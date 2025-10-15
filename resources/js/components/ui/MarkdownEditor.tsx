@@ -29,9 +29,11 @@ export function MarkdownEditor({
       Markdown,
     ],
     content,
+    editable: true,
+    autofocus: 'end',
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none focus:outline-none h-full px-3 py-2',
+        class: 'prose prose-sm max-w-none focus:outline-none h-full px-3 py-2 cursor-text',
       },
     },
   })

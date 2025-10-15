@@ -3,6 +3,8 @@
 namespace App\Commands\Orchestration\Task;
 
 use App\Commands\BaseCommand;
+use App\Models\OrchestrationTask;
+use Illuminate\Support\Arr;
 
 class ListCommand extends BaseCommand
 {
@@ -14,27 +16,26 @@ class ListCommand extends BaseCommand
         $limit = 100;
 
         // Build query
-        $query = \App\Models\WorkItem::query()->with('assignedAgent');
+        $query = OrchestrationTask::query()->with('assignedAgent', 'sprint');
 
         // Apply sprint filtering
         if ($sprintFilter) {
-            $query->whereJsonContains('metadata->sprint_code', $sprintFilter);
+            $query->whereHas('sprint', function($q) use ($sprintFilter) {
+                $q->where('sprint_code', $sprintFilter);
+            });
         }
 
         // Apply status filtering
         if ($status) {
             if ($status === 'unassigned') {
-                $query->where(function($q) {
-                    $q->whereNull('metadata->sprint_code')
-                      ->orWhere('metadata->sprint_code', '');
-                });
+                $query->whereNull('sprint_id');
             } else {
                 $query->where('delegation_status', $status);
             }
         }
 
-        // Apply status-based ordering (todo, backlog, others) then by created_at
-        $query->orderByRaw("CASE WHEN status = 'todo' THEN 1 WHEN status = 'backlog' THEN 2 ELSE 3 END")
+        // Apply status-based ordering (pending=todo, others) then by created_at
+        $query->orderByRaw("CASE WHEN status = 'pending' THEN 1 WHEN status = 'in_progress' THEN 2 ELSE 3 END")
             ->orderBy('created_at', 'desc')
             ->limit($limit);
 
@@ -46,18 +47,19 @@ class ListCommand extends BaseCommand
 
             return [
                 'id' => $task->id,
-                'task_code' => $metadata['task_code'] ?? $task->id,
-                'task_name' => $metadata['task_name'] ?? 'Untitled Task',
-                'description' => $metadata['description'] ?? null,
-                'sprint_code' => $metadata['sprint_code'] ?? null,
+                'task_code' => $task->task_code,
+                'task_name' => $task->title,
+                'description' => Arr::get($metadata, 'description'),
+                'sprint_code' => $task->sprint?->sprint_code,
                 'status' => $task->status,
                 'delegation_status' => $task->delegation_status,
-                'priority' => $task->priority ?? 'medium',
-                'agent_recommendation' => $metadata['agent_recommendation'] ?? null,
+                'priority' => $task->priority ?? 'P2',
+                'type' => $task->type,
+                'agent_recommendation' => Arr::get($task->delegation_context, 'agent_recommendation'),
                 'assigned_to' => ($task->assignee_type == 'agent' && $task->assignedAgent) 
                     ? $task->assignedAgent->name 
                     : ($task->assignee_id ?: 'Unassigned'),
-                'estimate_text' => $metadata['estimate_text'] ?? null,
+                'estimate_text' => $task->estimated_hours ? "{$task->estimated_hours}h" : null,
                 'estimated_hours' => $task->estimated_hours,
                 'tags' => $task->tags ?? [],
                 'has_agent_content' => !empty($task->agent_content),
@@ -103,7 +105,7 @@ class ListCommand extends BaseCommand
 
     public static function getUsage(): string
     {
-        return '/tasks';
+        return '/orch-tasks';
     }
 
     public static function getCategory(): string
