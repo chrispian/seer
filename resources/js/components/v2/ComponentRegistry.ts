@@ -174,6 +174,56 @@ export function registerNavigationComponents() {
   });
 }
 
+export function registerCompositeComponents() {
+  import('./composites/DialogComponent').then(({ DialogComponent }) => {
+    registry.register('dialog', DialogComponent as ComponentRenderer);
+  });
+
+  import('./composites/PopoverComponent').then(({ PopoverComponent }) => {
+    registry.register('popover', PopoverComponent as ComponentRenderer);
+  });
+
+  import('./composites/TooltipComponent').then(({ TooltipComponent }) => {
+    registry.register('tooltip', TooltipComponent as ComponentRenderer);
+  });
+
+  import('./composites/SheetComponent').then(({ SheetComponent }) => {
+    registry.register('sheet', SheetComponent as ComponentRenderer);
+  });
+
+  import('./composites/DrawerComponent').then(({ DrawerComponent }) => {
+    registry.register('drawer', DrawerComponent as ComponentRenderer);
+  });
+
+  import('./composites/NavigationMenuComponent').then(({ NavigationMenuComponent }) => {
+    registry.register('navigation-menu', NavigationMenuComponent as ComponentRenderer);
+  });
+
+  import('./composites/CommandComponent').then(({ CommandComponent }) => {
+    registry.register('command', CommandComponent as ComponentRenderer);
+  });
+
+  import('./composites/ComboboxComponent').then(({ ComboboxComponent }) => {
+    registry.register('combobox', ComboboxComponent as ComponentRenderer);
+  });
+
+  import('./composites/DropdownMenuComponent').then(({ DropdownMenuComponent }) => {
+    registry.register('dropdown-menu', DropdownMenuComponent as ComponentRenderer);
+  });
+
+  import('./composites/ContextMenuComponent').then(({ ContextMenuComponent }) => {
+    registry.register('context-menu', ContextMenuComponent as ComponentRenderer);
+  });
+
+  import('./composites/MenubarComponent').then(({ MenubarComponent }) => {
+    registry.register('menubar', MenubarComponent as ComponentRenderer);
+  });
+
+  import('./composites/HoverCardComponent').then(({ HoverCardComponent }) => {
+    registry.register('hover-card', HoverCardComponent as ComponentRenderer);
+  });
+}
+
 export function renderComponent(config: ComponentConfig): React.ReactElement | null {
   const Component = registry.get(config.type);
   if (!Component) {

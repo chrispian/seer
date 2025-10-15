@@ -415,3 +415,186 @@ export interface SidebarConfig extends BaseComponentConfig {
     className?: string;
   };
 }
+
+export interface DialogConfig extends BaseComponentConfig {
+  type: 'dialog';
+  props: {
+    title: string;
+    description?: string;
+    trigger?: ComponentConfig;
+    content: ComponentConfig[];
+    footer?: ComponentConfig[];
+    size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+    closeButton?: boolean;
+    defaultOpen?: boolean;
+    className?: string;
+  };
+}
+
+export interface PopoverConfig extends BaseComponentConfig {
+  type: 'popover';
+  props: {
+    trigger: ComponentConfig;
+    content: ComponentConfig[];
+    side?: 'top' | 'right' | 'bottom' | 'left';
+    align?: 'start' | 'center' | 'end';
+    defaultOpen?: boolean;
+    className?: string;
+  };
+}
+
+export interface TooltipConfig extends BaseComponentConfig {
+  type: 'tooltip';
+  props: {
+    content: string | ComponentConfig;
+    side?: 'top' | 'right' | 'bottom' | 'left';
+    delay?: number;
+    className?: string;
+  };
+}
+
+export interface SheetConfig extends BaseComponentConfig {
+  type: 'sheet';
+  props: {
+    title: string;
+    description?: string;
+    side?: 'top' | 'right' | 'bottom' | 'left';
+    trigger?: ComponentConfig;
+    content: ComponentConfig[];
+    footer?: ComponentConfig[];
+    defaultOpen?: boolean;
+    className?: string;
+  };
+}
+
+export interface DrawerConfig extends BaseComponentConfig {
+  type: 'drawer';
+  props: {
+    title: string;
+    description?: string;
+    trigger?: ComponentConfig;
+    content: ComponentConfig[];
+    footer?: ComponentConfig[];
+    direction?: 'bottom' | 'left' | 'right';
+    defaultOpen?: boolean;
+    className?: string;
+  };
+}
+
+export interface NavigationMenuConfig extends BaseComponentConfig {
+  type: 'navigation-menu';
+  props: {
+    items: Array<{
+      label: string;
+      trigger?: 'hover' | 'click';
+      content?: ComponentConfig[];
+      href?: string;
+      items?: Array<{
+        label: string;
+        href: string;
+        description?: string;
+        icon?: string;
+      }>;
+    }>;
+    orientation?: 'horizontal' | 'vertical';
+    className?: string;
+  };
+}
+
+export interface CommandConfig extends BaseComponentConfig {
+  type: 'command';
+  props: {
+    placeholder?: string;
+    emptyText?: string;
+    groups: Array<{
+      heading?: string;
+      items: Array<{
+        label: string;
+        icon?: string;
+        shortcut?: string;
+        value?: string;
+        disabled?: boolean;
+      }>;
+    }>;
+    open?: boolean;
+    defaultOpen?: boolean;
+    showShortcut?: boolean;
+    className?: string;
+  };
+}
+
+export interface ComboboxConfig extends BaseComponentConfig {
+  type: 'combobox';
+  props: {
+    placeholder?: string;
+    emptyText?: string;
+    searchPlaceholder?: string;
+    options: Array<{
+      value: string;
+      label: string;
+      icon?: string;
+      disabled?: boolean;
+    }>;
+    value?: string;
+    defaultValue?: string;
+    searchable?: boolean;
+    disabled?: boolean;
+    className?: string;
+  };
+}
+
+export interface MenuItemConfig {
+  type: 'item' | 'checkbox' | 'radio' | 'separator' | 'label' | 'submenu';
+  label?: string;
+  icon?: string;
+  shortcut?: string;
+  disabled?: boolean;
+  checked?: boolean;
+  value?: string;
+  items?: MenuItemConfig[];
+  action?: ActionConfig;
+}
+
+export interface DropdownMenuConfig extends BaseComponentConfig {
+  type: 'dropdown-menu';
+  props: {
+    trigger: ComponentConfig;
+    items: MenuItemConfig[];
+    align?: 'start' | 'center' | 'end';
+    side?: 'top' | 'right' | 'bottom' | 'left';
+    className?: string;
+  };
+}
+
+export interface ContextMenuConfig extends BaseComponentConfig {
+  type: 'context-menu';
+  props: {
+    items: MenuItemConfig[];
+    className?: string;
+  };
+  children?: ComponentConfig[];
+}
+
+export interface MenubarConfig extends BaseComponentConfig {
+  type: 'menubar';
+  props: {
+    menus: Array<{
+      label: string;
+      items: MenuItemConfig[];
+    }>;
+    className?: string;
+  };
+}
+
+export interface HoverCardConfig extends BaseComponentConfig {
+  type: 'hover-card';
+  props: {
+    trigger: ComponentConfig;
+    content: ComponentConfig[];
+    openDelay?: number;
+    closeDelay?: number;
+    side?: 'top' | 'right' | 'bottom' | 'left';
+    align?: 'start' | 'center' | 'end';
+    className?: string;
+  };
+}
