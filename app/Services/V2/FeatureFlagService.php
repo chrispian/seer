@@ -80,7 +80,8 @@ class FeatureFlagService
     protected function evaluatePercentage(int $percentage, object $context): bool
     {
         $identifier = $this->getContextIdentifier($context);
-        $hash = crc32($identifier);
+        // Cast to unsigned to avoid negative modulo results
+        $hash = sprintf('%u', crc32($identifier));
         $bucket = $hash % 100;
 
         return $bucket < $percentage;
