@@ -130,6 +130,50 @@ export function registerPrimitiveComponents() {
   });
 }
 
+export function registerLayoutComponents() {
+  import('./layouts/CardComponent').then(({ CardComponent }) => {
+    registry.register('card', CardComponent as ComponentRenderer);
+  });
+
+  import('./layouts/ScrollAreaComponent').then(({ ScrollAreaComponent }) => {
+    registry.register('scroll-area', ScrollAreaComponent as ComponentRenderer);
+  });
+
+  import('./layouts/ResizableComponent').then(({ ResizableComponent }) => {
+    registry.register('resizable', ResizableComponent as ComponentRenderer);
+  });
+
+  import('./layouts/AspectRatioComponent').then(({ AspectRatioComponent }) => {
+    registry.register('aspect-ratio', AspectRatioComponent as ComponentRenderer);
+  });
+
+  import('./layouts/CollapsibleComponent').then(({ CollapsibleComponent }) => {
+    registry.register('collapsible', CollapsibleComponent as ComponentRenderer);
+  });
+
+  import('./layouts/AccordionComponent').then(({ AccordionComponent }) => {
+    registry.register('accordion', AccordionComponent as ComponentRenderer);
+  });
+}
+
+export function registerNavigationComponents() {
+  import('./navigation/TabsComponent').then(({ TabsComponent }) => {
+    registry.register('tabs', TabsComponent as ComponentRenderer);
+  });
+
+  import('./navigation/BreadcrumbComponent').then(({ BreadcrumbComponent }) => {
+    registry.register('breadcrumb', BreadcrumbComponent as ComponentRenderer);
+  });
+
+  import('./navigation/PaginationComponent').then(({ PaginationComponent }) => {
+    registry.register('pagination', PaginationComponent as ComponentRenderer);
+  });
+
+  import('./navigation/SidebarComponent').then(({ SidebarComponent }) => {
+    registry.register('sidebar', SidebarComponent as ComponentRenderer);
+  });
+}
+
 export function renderComponent(config: ComponentConfig): React.ReactElement | null {
   const Component = registry.get(config.type);
   if (!Component) {

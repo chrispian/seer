@@ -10,3 +10,10 @@ export { SpinnerComponent } from './primitives/SpinnerComponent';
 export { SeparatorComponent } from './primitives/SeparatorComponent';
 export { KbdComponent } from './primitives/KbdComponent';
 export { TypographyComponent } from './primitives/TypographyComponent';
+
+export { CardComponent } from './layouts/CardComponent';
+export { ScrollAreaComponent } from './layouts/ScrollAreaComponent';
+export { ResizableComponent } from './layouts/ResizableComponent';
+export { AspectRatioComponent } from './layouts/AspectRatioComponent';
+export { CollapsibleComponent } from './layouts/CollapsibleComponent';
+export { AccordionComponent } from './layouts/AccordionComponent';

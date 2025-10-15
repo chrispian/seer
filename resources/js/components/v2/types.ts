@@ -260,3 +260,158 @@ export interface EmptyConfig extends BaseComponentConfig {
     className?: string;
   };
 }
+
+export interface CardConfig extends BaseComponentConfig {
+  type: 'card';
+  props: {
+    title?: string;
+    description?: string;
+    footer?: ComponentConfig;
+    className?: string;
+  };
+  children?: ComponentConfig[];
+}
+
+export interface ScrollAreaConfig extends BaseComponentConfig {
+  type: 'scroll-area';
+  props: {
+    height?: string;
+    maxHeight?: string;
+    orientation?: 'vertical' | 'horizontal';
+    className?: string;
+  };
+  children?: ComponentConfig[];
+}
+
+export interface ResizableConfig extends BaseComponentConfig {
+  type: 'resizable';
+  props: {
+    direction?: 'horizontal' | 'vertical';
+    panels: Array<{
+      id: string;
+      defaultSize?: number;
+      minSize?: number;
+      maxSize?: number;
+      content: ComponentConfig[];
+    }>;
+    withHandle?: boolean;
+    className?: string;
+  };
+}
+
+export interface AspectRatioConfig extends BaseComponentConfig {
+  type: 'aspect-ratio';
+  props: {
+    ratio?: number | string;
+    className?: string;
+  };
+  children?: ComponentConfig[];
+}
+
+export interface CollapsibleConfig extends BaseComponentConfig {
+  type: 'collapsible';
+  props: {
+    title: string;
+    defaultOpen?: boolean;
+    disabled?: boolean;
+    triggerClassName?: string;
+    contentClassName?: string;
+    className?: string;
+  };
+  children?: ComponentConfig[];
+}
+
+export interface AccordionConfig extends BaseComponentConfig {
+  type: 'accordion';
+  props: {
+    type?: 'single' | 'multiple';
+    collapsible?: boolean;
+    defaultValue?: string | string[];
+    items: Array<{
+      value: string;
+      title: string;
+      content: ComponentConfig[];
+      disabled?: boolean;
+    }>;
+    className?: string;
+  };
+}
+
+export interface TabsConfig extends BaseComponentConfig {
+  type: 'tabs';
+  props: {
+    defaultValue: string;
+    tabs: Array<{
+      value: string;
+      label: string;
+      content: ComponentConfig[];
+      disabled?: boolean;
+    }>;
+    className?: string;
+    listClassName?: string;
+  };
+}
+
+export interface BreadcrumbConfig extends BaseComponentConfig {
+  type: 'breadcrumb';
+  props: {
+    items: Array<{
+      label: string;
+      href?: string;
+      current?: boolean;
+    }>;
+    separator?: 'chevron' | 'slash' | 'none';
+    className?: string;
+  };
+}
+
+export interface PaginationConfig extends BaseComponentConfig {
+  type: 'pagination';
+  props: {
+    currentPage: number;
+    totalPages: number;
+    onPageChange?: ActionConfig;
+    showFirstLast?: boolean;
+    showPrevNext?: boolean;
+    maxVisible?: number;
+    className?: string;
+  };
+}
+
+export interface SidebarConfig extends BaseComponentConfig {
+  type: 'sidebar';
+  props: {
+    collapsible?: boolean;
+    defaultOpen?: boolean;
+    side?: 'left' | 'right';
+    variant?: 'sidebar' | 'floating' | 'inset';
+    items?: Array<{
+      label: string;
+      icon?: string;
+      href?: string;
+      badge?: string;
+      active?: boolean;
+      children?: Array<{
+        label: string;
+        href: string;
+        active?: boolean;
+      }>;
+    }>;
+    groups?: Array<{
+      label: string;
+      items: Array<{
+        label: string;
+        icon?: string;
+        href?: string;
+        badge?: string;
+        active?: boolean;
+        children?: Array<{
+          label: string;
+          href: string;
+          active?: boolean;
+        }>;
+      }>;
+    }>;
+    className?: string;
+  };
+}
