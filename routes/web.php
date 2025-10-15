@@ -4,6 +4,7 @@ use App\Http\Controllers\AppShellController;
 use App\Http\Controllers\Settings\ImportExportController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SetupController;
+use App\Http\Controllers\V2\V2ShellController;
 use Illuminate\Support\Facades\Route;
 
 // Setup wizard routes
@@ -38,6 +39,11 @@ Route::middleware([\App\Http\Middleware\EnsureDefaultUser::class])->group(functi
         Route::post('/import', [ImportExportController::class, 'import'])->name('import');
         Route::post('/reset', [ImportExportController::class, 'reset'])->name('reset');
         Route::post('/reset-token', [ImportExportController::class, 'generateResetToken'])->name('reset.token');
+    });
+
+    // UI Builder v2 routes
+    Route::prefix('v2')->name('v2.')->group(function () {
+        Route::get('/pages/{key}', [V2ShellController::class, 'show'])->name('pages.show');
     });
 });
 

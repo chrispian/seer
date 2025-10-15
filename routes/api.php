@@ -298,3 +298,10 @@ Route::middleware(['web'])->post('/approvals/{id}/timeout', function ($id) {
 
     return response()->json(['success' => true]);
 });
+
+// UI Builder v2 API routes
+Route::prefix('v2/ui')->group(function () {
+    Route::get('/pages/{key}', [\App\Http\Controllers\V2\UiPageController::class, 'show']);
+    Route::post('/datasource/{alias}/query', [\App\Http\Controllers\V2\UiDataSourceController::class, 'query']);
+    Route::post('/action', [\App\Http\Controllers\V2\UiActionController::class, 'execute']);
+});
