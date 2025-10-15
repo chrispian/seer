@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { ComponentConfig } from '../types'
 import { useDataSource } from '../hooks/useDataSource'
 import { useAction } from '../hooks/useAction'
@@ -13,6 +14,8 @@ interface TableComponentProps {
 
 export function TableComponent({ config }: TableComponentProps) {
   const [searchTerm, setSearchTerm] = useState('')
+  const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const [selectedRow, setSelectedRow] = useState<any>(null)
   const { data, loading, error, fetch } = useDataSource({
     dataSource: config.dataSource || '',
     search: searchTerm,
@@ -37,14 +40,21 @@ export function TableComponent({ config }: TableComponentProps) {
 
   const handleRowClick = async (row: any) => {
     if (config.rowAction) {
-      await execute(config.rowAction, { row })
+      if (config.rowAction.type === 'modal') {
+        setSelectedRow(row)
+        setDetailModalOpen(true)
+      } else {
+        await execute(config.rowAction, { row })
+      }
     }
   }
 
   const ToolbarComponent = componentRegistry.get('button.icon')
+  const DetailModalComponent = componentRegistry.get('detail')
 
   return (
-    <div className="space-y-4">
+    <>
+      <div className="space-y-4">
       {config.toolbar && config.toolbar.length > 0 && (
         <div className="flex justify-end gap-2">
           {config.toolbar.map(toolbarItem => {
@@ -104,6 +114,27 @@ export function TableComponent({ config }: TableComponentProps) {
           </TableBody>
         </Table>
       </div>
-    </div>
+      </div>
+
+      {/* Detail Modal */}
+      {config.rowAction?.type === 'modal' && DetailModalComponent && (
+        <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
+          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{config.rowAction.title || 'Details'}</DialogTitle>
+            </DialogHeader>
+            <DetailModalComponent
+              config={{
+                id: 'detail-modal',
+                type: 'detail',
+                url: config.rowAction.url?.replace('{{row.id}}', selectedRow?.id),
+                fields: config.rowAction.fields,
+              }}
+              data={selectedRow}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   )
 }

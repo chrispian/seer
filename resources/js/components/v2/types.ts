@@ -9,14 +9,21 @@ export interface ComponentConfig {
   id: string
   type: string
   dataSource?: string
-  resolver?: string
-  props?: Record<string, any>
-  actions?: Record<string, ActionConfig>
-  result?: ResultConfig
   columns?: ColumnConfig[]
   rowAction?: ActionConfig
   toolbar?: ComponentConfig[]
+  actions?: {
+    click?: ActionConfig
+  }
+  props?: Record<string, any>
+  result?: ResultConfig
   submit?: boolean
+  url?: string
+  fields?: Array<{
+    key: string
+    label: string
+    type?: 'text' | 'date' | 'badge'
+  }>
 }
 
 export interface ColumnConfig {
