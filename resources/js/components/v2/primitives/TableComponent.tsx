@@ -25,6 +25,8 @@ export function TableComponent({ config }: TableComponentProps) {
       if (update.search !== undefined) {
         setSearchTerm(update.search)
         fetch({ search: update.search })
+      } else if (update.refresh) {
+        fetch({})
       }
     })
 

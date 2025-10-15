@@ -47,6 +47,7 @@ export interface ActionConfig {
   submitUrl?: string
   submitMethod?: string
   submitLabel?: string
+  refreshTarget?: string
 }
 
 export interface ResultConfig {

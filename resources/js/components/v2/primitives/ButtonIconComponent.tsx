@@ -4,6 +4,7 @@ import { Plus, Edit, Trash, Eye, Settings, Search, X } from 'lucide-react'
 import type { ComponentConfig } from '../types'
 import { useAction } from '../hooks/useAction'
 import { FormModal } from '../modals/FormModal'
+import { slotBinder } from '../SlotBinder'
 
 interface ButtonIconComponentProps {
   config: ComponentConfig
@@ -47,13 +48,15 @@ export function ButtonIconComponent({ config }: ButtonIconComponentProps) {
         <FormModal
           title={clickAction.title || 'Form'}
           fields={clickAction.fields || []}
-          submitUrl={clickAction.submitUrl}
+          submitUrl={clickAction.submitUrl || ''}
           submitMethod={clickAction.submitMethod}
           submitLabel={clickAction.submitLabel}
           open={modalOpen}
           onOpenChange={setModalOpen}
           onSuccess={() => {
-            window.location.reload()
+            if (clickAction.refreshTarget) {
+              slotBinder.update(clickAction.refreshTarget, { refresh: true })
+            }
           }}
         />
       )}
