@@ -121,7 +121,7 @@ export function TaskDetailModal({
   task: initialTask,
   currentAssignment,
   assignments = [],
-  content = {},
+  content: initialContent = {},
   contentLoading = false,
   contentError = null,
   onRefreshContent,
@@ -136,6 +136,7 @@ export function TaskDetailModal({
   editMode = false
 }: TaskDetailModalProps) {
   const [task, setTask] = useState<Task>(initialTask)
+  const [content, setContent] = useState<TaskContent>(initialContent)
   const [availableSprints, setAvailableSprints] = useState<Array<{ value: string; label: string }>>([])
   const [availableAgents, setAvailableAgents] = useState<Array<{ value: string; label: string }>>([])
   const [editingContent, setEditingContent] = useState<string | null>(null)
@@ -143,10 +144,14 @@ export function TaskDetailModal({
   const [showAssignAgentModal, setShowAssignAgentModal] = useState(false)
   const isOpeningChildModal = useRef(false)
 
-  // Update local task state when prop changes
+  // Update local state when props change
   useEffect(() => {
     setTask(initialTask)
   }, [initialTask])
+
+  useEffect(() => {
+    setContent(initialContent)
+  }, [initialContent])
 
   useEffect(() => {
     if (!isOpen) return
@@ -301,7 +306,7 @@ export function TaskDetailModal({
     onRefresh?.()
   }
 
-  const handleSaveContent = async (contentKey: string, content: string) => {
+  const handleSaveContent = async (contentKey: string, contentValue: string) => {
     const fieldMap: Record<string, string> = {
       'agent': 'agent_content',
       'plan': 'plan_content',
@@ -313,7 +318,14 @@ export function TaskDetailModal({
     const field = fieldMap[contentKey]
     if (!field) return
 
-    await handleSaveField(field, content)
+    // Update local content state immediately (optimistic update)
+    setContent(prev => ({
+      ...prev,
+      [contentKey]: contentValue,
+    }))
+
+    // Save to backend
+    await handleSaveField(field, contentValue)
     setEditingContent(null)
   }
 
