@@ -61,7 +61,7 @@ export function V2ShellPage({ pageKey }: V2ShellPageProps) {
   if (config.overlay === 'modal') {
     return (
       <Dialog open={true} onOpenChange={() => window.history.back()}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl min-w-[56rem] min-h-[32rem] max-h-[80vh] overflow-y-auto">
           {config.title && (
             <DialogHeader>
               <DialogTitle>{config.title}</DialogTitle>

@@ -12,7 +12,7 @@ interface ModalLayoutProps {
 export function ModalLayout({ title, open, onOpenChange, children }: ModalLayoutProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl min-w-[56rem] min-h-[32rem] max-h-[90vh] overflow-y-auto">
         {title && (
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
