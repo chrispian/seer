@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Modules\UiBuilder\app\Models\Page;
+use HollisLabs\UiBuilder\Models\Page;
 use Illuminate\Support\Facades\File;
 
 class SyncUiPages extends Command
