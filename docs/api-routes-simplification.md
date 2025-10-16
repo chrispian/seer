@@ -1,76 +1,84 @@
-# API Routes Simplification (Oct 2025)
+# API Routes - Standard REST (Oct 2025)
 
-## Decision: Remove `/query` Suffix
-
-### Old Pattern (removed)
-```
-POST /api/v2/ui/datasources/{alias}/query
-GET  /api/v2/ui/datasources/{alias}/query
-```
-
-### New Pattern (current)
-```
-POST /api/v2/ui/datasources/{alias}
-GET  /api/v2/ui/datasources/{alias}
-```
-
-## Rationale
-
-1. **Simpler URLs** - RESTful pattern where POST/GET to same resource performs the query
-2. **Forward-only** - No backward compatibility burden
-3. **Consistent** - Matches standard REST conventions
-
-## The `/query` suffix was redundant
-
-- Querying a datasource is the primary action
-- No need for `/query` suffix when that's the main purpose
-- POST to datasource = query with parameters
-- GET to datasource = query with URL params
-
-## Controller Method
-
-Both GET and POST map to the same controller method:
-```php
-DataSourceController::query(Request $request, string $alias)
-```
-
-The method name is `query()` but the route doesn't need `/query` in the URL.
-
-## If You Need to Restore `/query`
-
-If for some reason the `/query` suffix needs to come back:
-
-1. **Update routes** in `modules/UiBuilder/routes/api.php`:
-   ```php
-   Route::get('{alias}/query', [DataSourceController::class, 'query']);
-   Route::post('{alias}/query', [DataSourceController::class, 'query']);
-   ```
-
-2. **Update frontend** in:
-   - `resources/js/components/v2/hooks/useDataSource.ts`
-   - `resources/js/components/v2/advanced/DataTableComponent.tsx`
-   
-   Change:
-   ```ts
-   `/api/v2/ui/datasources/${alias}`
-   ```
-   To:
-   ```ts
-   `/api/v2/ui/datasources/${alias}/query`
-   ```
-
-3. **Rebuild**:
-   ```bash
-   php artisan route:clear
-   npm run build
-   ```
-
-## Current Routes
+## Current Pattern (Standard REST)
 
 ```
-GET  /api/v2/ui/datasources/{alias}             - Query datasource
-POST /api/v2/ui/datasources/{alias}             - Query datasource with filters
+GET  /api/v2/ui/datasources/{alias}             - Query/list records
+POST /api/v2/ui/datasources/{alias}             - Create new record
 GET  /api/v2/ui/datasources/{alias}/capabilities - Get datasource capabilities
 ```
 
-Clean, simple, RESTful. ✨
+## Controller Methods
+
+- `GET  /{alias}` → `DataSourceController::query()` - Query with URL params
+- `POST /{alias}` → `DataSourceController::store()` - Create new record
+- `GET  /{alias}/capabilities` → `DataSourceController::capabilities()`
+
+## Rationale
+
+1. **Standard REST** - GET for reading, POST for creating
+2. **No ambiguity** - Clear separation between querying and creating
+3. **URL parameters for queries** - Search, filters, sorting via query string
+4. **Request body for creates** - Model data in POST body
+
+## Query Parameters
+
+GET requests accept these query parameters:
+
+```
+?search=term                    - Full-text search
+&filters[field]=value           - Filter by field
+&sort[field]=name              - Sort field
+&sort[direction]=asc|desc      - Sort direction  
+&page=1                        - Page number
+&per_page=15                   - Results per page
+```
+
+Example:
+```
+GET /api/v2/ui/datasources/Agent?search=john&filters[status]=active&page=1&per_page=10
+```
+
+## Request/Response Examples
+
+### Query (GET)
+```bash
+GET /api/v2/ui/datasources/Agent?search=john&filters[status]=active&page=1
+```
+
+Response:
+```json
+{
+  "data": [...],
+  "meta": {
+    "total": 42,
+    "page": 1,
+    "per_page": 15,
+    "last_page": 3
+  },
+  "hash": "..."
+}
+```
+
+### Create (POST)
+```bash
+POST /api/v2/ui/datasources/Agent
+Content-Type: application/json
+
+{
+  "name": "Test Agent",
+  "designation": "T-123",
+  "status": "active"
+}
+```
+
+Response:
+```json
+{
+  "id": "uuid",
+  "name": "Test Agent",
+  "designation": "T-123",
+  "status": "active",
+  "updated_at": "2025-10-16T..."
+}
+```
