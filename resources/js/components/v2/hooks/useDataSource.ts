@@ -45,7 +45,7 @@ export function useDataSource<T = any>(options: UseDataSourceOptions): UseDataSo
     }
 
     try {
-      const response = await window.fetch(`/api/v2/ui/datasource/${query.dataSource}/query`, {
+      const response = await window.fetch(`/api/v2/ui/datasources/${query.dataSource}/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
