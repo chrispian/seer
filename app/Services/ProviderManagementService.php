@@ -50,7 +50,7 @@ class ProviderManagementService
         return [
             'name' => $provider->name,
             'display_name' => $provider->name,
-            'config' => $provider,
+            
             'capabilities' => $provider->capabilities ?? [],
             'credentials' => $provider->credentials ?? collect(),
             'active_credentials' => $provider->credentials->where('is_active', true) ?? collect(),
@@ -239,7 +239,7 @@ class ProviderManagementService
         $configKeys = $providerData['config_requirements'];
 
         // Check if provider is enabled
-        if (! $providerData['config']->enabled) {
+        if (! $provider->enabled) {
             $errors[] = 'Provider is disabled';
         }
 
@@ -270,7 +270,7 @@ class ProviderManagementService
             'valid' => empty($errors),
             'errors' => $errors,
             'provider' => $provider,
-            'config' => $providerData['config'],
+            'provider_model' => $provider,
         ];
     }
 }

@@ -44,7 +44,7 @@ class ModelController extends Controller
                     $models[] = [
                         'id' => "{$providerName}:{$modelKey}",
                         'provider' => $providerName,
-                        'provider_display_name' => $providerData['config']->getDisplayName(),
+                        'provider_display_name' => $providerData['display_name'],
                         'model' => $modelKey,
                         'name' => $modelInfo['name'] ?? $modelKey,
                         'type' => 'text',
@@ -54,7 +54,7 @@ class ModelController extends Controller
                             'streaming' => $capabilities['supports_streaming'] ?? false,
                             'function_calling' => $capabilities['supports_function_calling'] ?? false,
                         ],
-                        'provider_enabled' => $providerData['config']->enabled,
+                        'provider_enabled' => $providerData['enabled'],
                         'provider_health' => $providerData['health_status'],
                     ];
                 }
@@ -64,7 +64,7 @@ class ModelController extends Controller
                     $models[] = [
                         'id' => "{$providerName}:{$modelKey}",
                         'provider' => $providerName,
-                        'provider_display_name' => $providerData['config']->getDisplayName(),
+                        'provider_display_name' => $providerData['display_name'],
                         'model' => $modelKey,
                         'name' => $modelInfo['name'] ?? $modelKey,
                         'type' => 'embedding',
@@ -72,7 +72,7 @@ class ModelController extends Controller
                         'capabilities' => [
                             'embedding_generation' => true,
                         ],
-                        'provider_enabled' => $providerData['config']->enabled,
+                        'provider_enabled' => $providerData['enabled'],
                         'provider_health' => $providerData['health_status'],
                     ];
                 }
@@ -181,7 +181,7 @@ class ModelController extends Controller
                 'meta' => [
                     'provider' => $provider,
                     'provider_display_name' => $providerData['display_name'],
-                    'provider_enabled' => $providerData['config']->enabled,
+                    'provider_enabled' => $providerData['enabled'],
                     'provider_available' => $providerData['is_available'],
                     'provider_health' => $providerData['health_status'],
                     'total_models' => count($models),
@@ -267,7 +267,7 @@ class ModelController extends Controller
                         'function_calling' => $capabilities['supports_function_calling'] ?? false,
                     ],
                     'provider_status' => [
-                        'enabled' => $providerData['config']->enabled,
+                        'enabled' => $providerData['enabled'],
                         'available' => $providerData['is_available'],
                         'health' => $providerData['health_status'],
                     ],
