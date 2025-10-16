@@ -6,7 +6,7 @@ class SimpleTypeResolver extends TypeResolver
 {
     protected $modelMap = [
         'Agent' => \App\Models\Agent::class,
-        'Model' => \App\Models\AIModel::class,
+        'Model' => \App\Models\AiModel::class,
         'Task' => \App\Models\OrchestrationTask::class,
         'Sprint' => \App\Models\OrchestrationSprint::class,
     ];

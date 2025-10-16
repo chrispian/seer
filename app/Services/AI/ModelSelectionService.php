@@ -2,7 +2,7 @@
 
 namespace App\Services\AI;
 
-use App\Models\AICredential;
+use App\Models\AiCredential;
 use App\Models\Project;
 use App\Models\Provider;
 use App\Models\Vault;
@@ -485,7 +485,7 @@ class ModelSelectionService
         }
 
         // Check if provider has valid credentials
-        $credential = AICredential::getActiveEnabledCredential($provider);
+        $credential = AiCredential::getActiveEnabledCredential($provider);
         $hasCredentials = false;
 
         if ($credential) {

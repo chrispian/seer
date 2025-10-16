@@ -37,8 +37,8 @@ class SyncProvidersAndModelsCommand extends Command
                 $this->info('✅ Sync completed successfully!');
 
                 // Show stats
-                $providerCount = \App\Models\Provider::count();
-                $modelCount = \App\Models\AIModel::count();
+                $providerCount = \App\Models\AiProvider::count();
+                $modelCount = \App\Models\AiModel::count();
 
                 $this->table(
                     ['Type', 'Count'],

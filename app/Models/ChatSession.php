@@ -130,7 +130,7 @@ class ChatSession extends Model
 
     public function aiModel(): BelongsTo
     {
-        return $this->belongsTo(AIModel::class, 'ai_model_id');
+        return $this->belongsTo(AiModel::class, 'ai_model_id');
     }
 
     public function scopeRecent($query, int $limit = 10)

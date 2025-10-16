@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\AI;
 
-use App\Models\AICredential;
+use App\Models\AiCredential;
 use Illuminate\Console\Command;
 
 use function Laravel\Prompts\confirm;
@@ -25,7 +25,7 @@ class CredentialsRemove extends Command
 
         // If no provider specified, show available ones
         if (! $provider) {
-            $credentials = AICredential::where('is_active', true)->get();
+            $credentials = AiCredential::where('is_active', true)->get();
 
             if ($credentials->isEmpty()) {
                 $this->info('No active credentials found.');
@@ -44,7 +44,7 @@ class CredentialsRemove extends Command
         }
 
         // Find the credential
-        $credential = AICredential::getActiveCredential($provider, $type);
+        $credential = AiCredential::getActiveCredential($provider, $type);
 
         if (! $credential) {
             $this->error("No active credentials found for {$provider} ({$type})");

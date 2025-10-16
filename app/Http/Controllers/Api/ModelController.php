@@ -330,7 +330,7 @@ class ModelController extends Controller
     /**
      * Update a model's configuration
      */
-    public function updateModel(Request $request, \App\Models\AIModel $model): JsonResponse
+    public function updateModel(Request $request, \App\Models\AiModel $model): JsonResponse
     {
         try {
             $validated = $request->validate([

@@ -5,7 +5,35 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Provider extends Model
+/**
+ * AiProvider represents an AI service provider in the system.
+ * 
+ * This model stores configuration for AI providers (companies/services that offer AI models)
+ * such as OpenAI, Anthropic, Google, etc. Each provider can have multiple AI models
+ * and maintains its own rate limits, health status, and usage tracking.
+ * 
+ * Examples: OpenAI, Anthropic, Google AI, Hugging Face, Replicate
+ * 
+ * @property int $id
+ * @property string $provider Unique provider identifier (e.g., 'openai', 'anthropic')
+ * @property string $name Display name (e.g., 'OpenAI', 'Anthropic')
+ * @property string|null $description Provider description
+ * @property string|null $logo_url URL to provider logo
+ * @property bool $enabled Whether this provider is enabled
+ * @property array|null $ui_preferences UI display preferences
+ * @property array|null $capabilities Provider capabilities
+ * @property array|null $rate_limits Rate limiting configuration
+ * @property int $usage_count Total API calls to this provider
+ * @property float $total_cost Total cost incurred from this provider
+ * @property \Carbon\Carbon|null $last_health_check Last health check timestamp
+ * @property array|null $health_status Health check results
+ * @property int $priority Display/selection priority (lower = higher priority)
+ * @property array|null $metadata Additional provider-specific metadata
+ * @property \Carbon\Carbon|null $synced_at Last sync timestamp
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ */
+class AiProvider extends Model
 {
     protected $table = 'providers';
 
@@ -49,7 +77,7 @@ class Provider extends Model
      */
     public function models(): HasMany
     {
-        return $this->hasMany(AIModel::class);
+        return $this->hasMany(AiModel::class, 'provider_id');
     }
 
     /**
@@ -57,7 +85,7 @@ class Provider extends Model
      */
     public function credentials(): HasMany
     {
-        return $this->hasMany(AICredential::class, 'provider', 'provider');
+        return $this->hasMany(AiCredential::class, 'provider', 'provider');
     }
 
     /**

@@ -335,7 +335,7 @@ class ChatSessionController extends Controller
         ]);
 
         $aiModelId = $request->input('ai_model_id');
-        $aiModel = \App\Models\AIModel::with('provider')->findOrFail($aiModelId);
+        $aiModel = \App\Models\AiModel::with('provider')->findOrFail($aiModelId);
 
         // Update with FK and maintain legacy columns for backward compatibility
         $chatSession->update([

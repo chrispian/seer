@@ -45,7 +45,7 @@ class ValidCredentialFormat implements ValidationRule
 
         switch ($this->provider) {
             case 'openai':
-                $errors = array_merge($errors, $this->validateOpenAICredentials($credentials));
+                $errors = array_merge($errors, $this->validateOpenAiCredentials($credentials));
                 break;
 
             case 'anthropic':
@@ -70,7 +70,7 @@ class ValidCredentialFormat implements ValidationRule
     /**
      * Validate OpenAI credentials
      */
-    protected function validateOpenAICredentials(array $credentials): array
+    protected function validateOpenAiCredentials(array $credentials): array
     {
         $errors = [];
 

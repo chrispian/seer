@@ -3,13 +3,13 @@
 namespace App\Services\V2;
 
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\AIModel;
+use App\Models\AiModel;
 
 class ModelDataSourceResolver
 {
     public function query(array $params = []): array
     {
-        $query = AIModel::query();
+        $query = AiModel::query();
 
         if (isset($params['search']) && ! empty($params['search'])) {
             $search = $params['search'];

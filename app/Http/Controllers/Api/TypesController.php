@@ -33,7 +33,7 @@ class TypesController extends Controller
             // Simple direct implementation for v2 UI system
             $modelMap = [
                 'Agent' => \App\Models\Agent::class,
-                'Model' => \App\Models\AIModel::class,
+                'Model' => \App\Models\AiModel::class,
             ];
 
             if (!isset($modelMap[$alias])) {

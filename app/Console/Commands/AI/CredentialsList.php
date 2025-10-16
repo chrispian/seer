@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\AI;
 
-use App\Models\AICredential;
+use App\Models\AiCredential;
 use Illuminate\Console\Command;
 
 class CredentialsList extends Command
@@ -16,7 +16,7 @@ class CredentialsList extends Command
     {
         $showInactive = $this->option('show-inactive');
 
-        $query = AICredential::query();
+        $query = AiCredential::query();
 
         if (! $showInactive) {
             $query->where('is_active', true);
@@ -68,7 +68,7 @@ class CredentialsList extends Command
         return self::SUCCESS;
     }
 
-    protected function getCredentialStatus(AICredential $credential): string
+    protected function getCredentialStatus(AiCredential $credential): string
     {
         if (! $credential->is_active) {
             return '<fg=red>Inactive</>';

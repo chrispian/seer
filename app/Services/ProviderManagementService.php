@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Provider;
+use App\Models\AiProvider;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -14,7 +14,7 @@ class ProviderManagementService
     public function getAllProviders(): Collection
     {
         // Return Provider models with their models loaded (all models for display, not just enabled)
-        return Provider::with(['models' => function ($query) {
+        return AiProvider::with(['models' => function ($query) {
             $query->orderBy('enabled', 'desc')->orderBy('priority', 'desc');
         }, 'credentials'])
             ->orderBy('priority', 'desc')
@@ -32,12 +32,12 @@ class ProviderManagementService
 
         // If identifier is numeric, try to find by ID
         if (is_numeric($identifier)) {
-            $provider = Provider::with(['models', 'credentials'])->find($identifier);
+            $provider = AiProvider::with(['models', 'credentials'])->find($identifier);
         }
 
         // If not found, try by name or provider field
         if (! $provider) {
-            $provider = Provider::with(['models', 'credentials'])
+            $provider = AiProvider::with(['models', 'credentials'])
                 ->where('name', $identifier)
                 ->orWhere('provider', $identifier)
                 ->first();
@@ -76,11 +76,11 @@ class ProviderManagementService
         // Find provider by ID or name
         $provider = null;
         if (is_numeric($providerIdentifier)) {
-            $provider = Provider::find($providerIdentifier);
+            $provider = AiProvider::find($providerIdentifier);
         }
 
         if (! $provider) {
-            $provider = Provider::where('name', $providerIdentifier)
+            $provider = AiProvider::where('name', $providerIdentifier)
                 ->orWhere('provider', $providerIdentifier)
                 ->first();
         }
@@ -117,11 +117,11 @@ class ProviderManagementService
         // Find provider by ID or name
         $provider = null;
         if (is_numeric($providerIdentifier)) {
-            $provider = Provider::find($providerIdentifier);
+            $provider = AiProvider::find($providerIdentifier);
         }
 
         if (! $provider) {
-            $provider = Provider::where('name', $providerIdentifier)
+            $provider = AiProvider::where('name', $providerIdentifier)
                 ->orWhere('provider', $providerIdentifier)
                 ->first();
         }
@@ -149,7 +149,7 @@ class ProviderManagementService
         $results = [];
 
         if ($provider) {
-            $providerModel = Provider::where('provider', $provider)
+            $providerModel = AiProvider::where('provider', $provider)
                 ->orWhere('name', $provider)
                 ->orWhere('id', $provider)
                 ->first();
@@ -160,7 +160,7 @@ class ProviderManagementService
 
             $providersToSync = [$providerModel];
         } else {
-            $providersToSync = Provider::all();
+            $providersToSync = AiProvider::all();
         }
 
         foreach ($providersToSync as $providerModel) {
@@ -186,7 +186,7 @@ class ProviderManagementService
      */
     public function getProviderStatistics(): array
     {
-        $stats = Provider::getProviderStats();
+        $stats = AiProvider::getProviderStats();
         $providers = $this->getAllProviders();
 
         return array_merge($stats, [
