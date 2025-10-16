@@ -66,7 +66,7 @@ class ExportUiPages extends Command
             $this->comment('These are backups only - do not edit');
         } else {
             $this->info("Exported to: {$exportDir}");
-            $this->comment('Edit these files and run: php artisan db:seed --class=Modules\\UiBuilder\\database\\seeders\\V2UiBuilderSeeder');
+            $this->comment('Edit these files and run: php artisan db:seed --class=HollisLabs\\UiBuilder\\Database\\Seeders\\V2UiBuilderSeeder');
         }
 
         return 0;
