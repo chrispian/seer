@@ -1,0 +1,35 @@
+{
+    "overlay": "modal",
+    "title": "Test Components",
+    "components": [
+        {
+            "id": "test-heading",
+            "type": "typography.h2",
+            "props": {
+                "children": "Hello UI Builder v2!"
+            }
+        },
+        {
+            "id": "test-button",
+            "type": "button",
+            "props": {
+                "children": "Click Me",
+                "variant": "default"
+            }
+        },
+        {
+            "id": "test-badge",
+            "type": "badge",
+            "props": {
+                "children": "New",
+                "variant": "default"
+            }
+        }
+    ],
+    "_meta": {
+        "version": 1,
+        "hash": "098f6bcd4621d373cade4e832627b4f6",
+        "last_updated": "2025-10-15T19:41:18+00:00",
+        "last_synced": "2025-10-16T07:20:20+00:00"
+    }
+}

@@ -40,10 +40,7 @@ Route::middleware([\App\Http\Middleware\EnsureDefaultUser::class])->group(functi
         Route::post('/reset-token', [ImportExportController::class, 'generateResetToken'])->name('reset.token');
     });
 
-    // UI Builder v2 routes
-    Route::prefix('v2')->name('v2.')->group(function () {
-        Route::get('/pages/{key}', [\App\Http\Controllers\V2\V2ShellController::class, 'show'])->name('pages.show');
-    });
+    // UI Builder v2 routes moved to modules/UiBuilder/routes/web.php
 });
 
 Route::get('/test-ui', function () {

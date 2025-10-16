@@ -240,6 +240,7 @@ export function registerCompositeComponents() {
 export function registerAdvancedComponents() {
   import('./advanced/DataTableComponent').then(({ DataTableComponent }) => {
     registry.register('data-table', DataTableComponent as ComponentRenderer);
+    registry.register('table', DataTableComponent as ComponentRenderer);
   });
 
   import('./advanced/ChartComponent').then(({ ChartComponent }) => {

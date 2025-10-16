@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client'
 import { V2ShellPage } from './V2ShellPage'
+import { registerCoreComponents } from './registerCoreComponents'
 import {
   registerPrimitiveComponents,
   registerLayoutComponents,
@@ -25,6 +26,7 @@ const user = isAuthenticated && rootElement.dataset.user
 // Initialize the command handler (it auto-registers listeners)
 console.log('Command handler initialized:', commandHandler)
 
+registerCoreComponents()
 registerPrimitiveComponents()
 registerLayoutComponents()
 registerNavigationComponents()

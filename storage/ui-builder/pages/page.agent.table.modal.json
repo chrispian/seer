@@ -1,0 +1,167 @@
+{
+    "id": "page.agent.table.modal",
+    "overlay": "modal",
+    "title": "Agents",
+    "layout": {
+        "type": "rows",
+        "id": "root-layout",
+        "children": [
+            {
+                "id": "component.search.bar.agent",
+                "type": "search.bar",
+                "props": {
+                    "placeholder": "Search agents..."
+                },
+                "result": {
+                    "target": "component.table.agent",
+                    "open": "inline"
+                }
+            },
+            {
+                "id": "component.table.agent",
+                "type": "data-table",
+                "props": {
+                    "dataSource": "Agent",
+                    "columns": [
+                        {
+                            "key": "name",
+                            "label": "Name",
+                            "sortable": true
+                        },
+                        {
+                            "key": "designation",
+                            "label": "Designation",
+                            "sortable": true
+                        },
+                        {
+                            "key": "provider",
+                            "label": "Provider",
+                            "filterable": true
+                        },
+                        {
+                            "key": "model",
+                            "label": "Model",
+                            "filterable": true
+                        },
+                        {
+                            "key": "status",
+                            "label": "Status",
+                            "filterable": true
+                        },
+                        {
+                            "key": "updated_at",
+                            "label": "Updated",
+                            "sortable": true
+                        }
+                    ],
+                    "rowAction": {
+                        "type": "modal",
+                        "title": "Agent Details",
+                        "url": "/api/v2/ui/types/Agent/{{row.id}}",
+                        "fields": [
+                            {
+                                "key": "name",
+                                "label": "Name",
+                                "type": "text"
+                            },
+                            {
+                                "key": "designation",
+                                "label": "Designation",
+                                "type": "text"
+                            },
+                            {
+                                "key": "status",
+                                "label": "Status",
+                                "type": "text"
+                            },
+                            {
+                                "key": "provider",
+                                "label": "Provider",
+                                "type": "text"
+                            },
+                            {
+                                "key": "model",
+                                "label": "Model",
+                                "type": "text"
+                            },
+                            {
+                                "key": "agent_profile_id",
+                                "label": "Profile ID",
+                                "type": "text"
+                            },
+                            {
+                                "key": "created_at",
+                                "label": "Created",
+                                "type": "date"
+                            },
+                            {
+                                "key": "updated_at",
+                                "label": "Updated",
+                                "type": "date"
+                            }
+                        ]
+                    },
+                    "toolbar": [
+                        {
+                            "id": "component.button.icon.add-agent",
+                            "type": "button.icon",
+                            "props": {
+                                "icon": "plus",
+                                "label": "New Agent"
+                            },
+                            "actions": {
+                                "click": {
+                                    "type": "modal",
+                                    "modal": "form",
+                                    "title": "Add New Agent",
+                                    "fields": [
+                                        {
+                                            "name": "name",
+                                            "label": "Agent Name",
+                                            "type": "text",
+                                            "required": true,
+                                            "placeholder": "e.g., Research Assistant"
+                                        },
+                                        {
+                                            "name": "designation",
+                                            "label": "Designation",
+                                            "type": "text",
+                                            "required": true,
+                                            "placeholder": "e.g., research-assistant"
+                                        },
+                                        {
+                                            "name": "status",
+                                            "label": "Status",
+                                            "type": "select",
+                                            "required": true,
+                                            "options": [
+                                                {
+                                                    "value": "active",
+                                                    "label": "Active"
+                                                },
+                                                {
+                                                    "value": "inactive",
+                                                    "label": "Inactive"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "submitUrl": "/api/v2/ui/datasources/Agent",
+                                    "submitMethod": "POST",
+                                    "submitLabel": "Create Agent",
+                                    "refreshTarget": "component.table.agent"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "_meta": {
+        "version": 18,
+        "hash": "66a8755c8d053d58e091ac40039363828b2dd6b2164b6c115e80322ef3f5dcc9",
+        "last_updated": "2025-10-16T07:20:03+00:00",
+        "last_synced": "2025-10-16T07:20:20+00:00"
+    }
+}

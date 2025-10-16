@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\V2;
+namespace Modules\UiBuilder\app\Http\Controllers\V2;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Modules\UiBuilder\app\Models\Page;
 use Illuminate\Http\JsonResponse;
 
@@ -12,8 +12,8 @@ class UiPageController extends Controller
     {
         $page = Page::where('key', $key)->firstOrFail();
 
-        // Return the page config directly (layout_tree_json contains the PageConfig structure)
-        $config = $page->layout_tree_json ?? $page->config ?? [];
+        // Return the page config directly
+        $config = $page->config ?? [];
         
         // Add metadata to the config
         $config['_meta'] = [

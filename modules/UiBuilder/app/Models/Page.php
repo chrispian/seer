@@ -10,7 +10,7 @@ class Page extends Model
 
     protected $fillable = [
         'key',
-        'layout_tree_json',
+        'config',
         'route',
         'meta_json',
         'module_key',
@@ -21,7 +21,7 @@ class Page extends Model
     ];
 
     protected $casts = [
-        'layout_tree_json' => 'array',
+        'config' => 'array',
         'meta_json' => 'array',
         'guards_json' => 'array',
         'enabled' => 'boolean',
@@ -32,7 +32,7 @@ class Page extends Model
     protected static function booted()
     {
         static::saving(function ($page) {
-            $newHash = hash('sha256', json_encode($page->layout_tree_json));
+            $newHash = hash('sha256', json_encode($page->config));
             if ($page->hash !== $newHash) {
                 $page->hash = $newHash;
                 $page->version = ($page->version ?? 0) + 1;

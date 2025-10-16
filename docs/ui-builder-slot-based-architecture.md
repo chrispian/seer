@@ -374,26 +374,29 @@ Infinite nesting, fully config-driven!
 - [x] Define ComponentConfig interface with children support
 - [x] Create ComponentRegistry
 
-### Phase 2: Rendering Engine (In Progress)
+### Phase 2: Rendering Engine ✅
 
-- [ ] Update PageRenderer to use `config.layout` instead of `config.components`
-- [ ] Implement recursive rendering with children support
-- [ ] Register layout components in ComponentRegistry
-- [ ] Handle nested component props properly
+- [x] Update PageRenderer to use `config.layout` instead of `config.components`
+- [x] Implement recursive rendering with children support
+- [x] Register layout components in ComponentRegistry
+- [x] Handle nested component props properly
+- [x] Update V2ShellPage to use slot-based architecture
+- [x] Add children support to ComponentRenderer
 
-### Phase 3: Migration
+### Phase 3: Migration ✅
 
-- [ ] Update page config schema in database
-- [ ] Migrate existing pages to new nested structure
-- [ ] Update seeders to generate nested configs
-- [ ] Test component swapping in slots
+- [x] Update page config schema in database (renamed `layout_tree_json` → `config`)
+- [x] Migrate existing pages to new nested structure
+- [x] Update seeders to generate nested configs
+- [x] Remove duplicate V2ShellPage.tsx from components/v2/
 
-### Phase 4: Documentation & Testing
+### Phase 4: Documentation & Testing (In Progress)
 
-- [ ] Document all available layout components
-- [ ] Create component composition examples
+- [x] Document all available layout components
+- [x] Create component composition examples
 - [ ] Write tests for nested rendering
 - [ ] Create visual component library
+- [ ] Test component swapping in slots
 
 ---
 
@@ -596,13 +599,181 @@ rows -> columns -> rows -> content
 
 ---
 
+## Implementation Summary (October 16, 2025)
+
+### Problem Identified: Duplicate V2ShellPage Files
+
+**Root Cause:** Two V2ShellPage.tsx files existed with different implementations:
+- `/resources/js/v2/V2ShellPage.tsx` - **Actual entrypoint** used by the app
+- `/resources/js/components/v2/V2ShellPage.tsx` - Demo component (now deleted)
+
+The actual entrypoint was looking for `layout_tree_json` but the API now returns `config` with nested `layout` objects.
+
+**Resolution:**
+- Updated `/resources/js/v2/V2ShellPage.tsx` to use slot-based architecture
+- Deleted duplicate demo file to prevent confusion
+- Updated seeders to use `config` column instead of `layout_tree_json`
+
+### Files Modified
+
+**TypeScript/React:**
+1. `/resources/js/components/v2/types.ts` - Added `PageConfig` with `layout` property
+2. `/resources/js/v2/V2ShellPage.tsx` - Updated to use `config.layout` instead of `layout_tree_json`
+3. `/resources/js/v2/ComponentRenderer.tsx` - Added `children?: React.ReactNode` support
+4. `/resources/js/components/v2/V2ShellPage.tsx` - **DELETED** (duplicate demo file)
+5. `/resources/js/v2/registerCoreComponents.ts` - **NEW**: Eager synchronous registration for critical components
+6. `/resources/js/v2/main.tsx` - Added `registerCoreComponents()` call before async registrations
+7. `/resources/js/components/v2/ComponentRegistry.ts` - Added `table` alias for `data-table`
+
+**Backend/Database:**
+1. `database/seeders/V2UiBuilderSeeder.php` - Changed `layout_tree_json` → `config`
+2. `modules/UiBuilder/database/seeders/V2UiBuilderSeeder.php` - Changed `layout_tree_json` → `config`
+3. `delegation/tasks/ui-builder/frontend/page.agent.table.modal.json` - Converted to slot-based structure
+
+**Previously Modified (Earlier Session):**
+- `modules/UiBuilder/app/Models/Page.php` - Uses `config` column
+- `app/Http/Controllers/V2/UiPageController.php` - Returns `$page->config`
+- Database migration - Column renamed `layout_tree_json` → `config`
+
+### Complete Architecture Flow
+
+```
+Database (fe_ui_pages.config column)
+    ↓ JSON stored as: { "id": "...", "layout": { "type": "rows", "children": [...] } }
+    ↓
+Eloquent Model (Modules\UiBuilder\app\Models\Page)
+    ↓ Returns config as array via $casts
+    ↓
+API Controller (app/Http/Controllers/V2/UiPageController)
+    ↓ GET /api/v2/ui/pages/{key} returns $page->config
+    ↓
+React Route (/v2/pages/{key})
+    ↓ Fetches from API
+    ↓
+V2ShellPage.tsx (resources/js/v2/V2ShellPage.tsx)
+    ↓ Reads config.layout and renders recursively
+    ↓
+ComponentRenderer.tsx
+    ↓ Looks up component type in ComponentRegistry
+    ↓ Passes children to layout components
+    ↓
+RowsLayout / ColumnsLayout
+    ↓ Renders children with proper spacing
+    ↓
+Nested Components (SearchBar, DataTable, etc.)
+    ✓ Final rendered UI
+```
+
+### Test URL
+
+**Ready to test:** http://localhost:8000/v2/pages/page.agent.table.modal
+
+**Expected Result:**
+- Modal opens with title "Agents"
+- Search bar appears at top
+- Data table appears below search bar
+- Table shows agent data with sortable/filterable columns
+- Add agent button in toolbar
+
+### What Makes This Work
+
+1. **Recursive Component Rendering**: V2ShellPage recursively processes `config.layout.children`
+2. **Children Support**: ComponentRenderer passes `children` to components that accept them
+3. **Component Registry**: All layout and leaf components registered in ComponentRegistry
+4. **Proper TypeScript Types**: `PageConfig` interface matches API response structure
+5. **Database Schema**: `config` column stores complete nested layout JSON
+
+### Critical Fixes Applied
+
+#### Fix #1: Synchronous Component Registration
+
+**Problem:** Async component imports caused race condition where pages tried to render before components were registered.
+
+**Solution:** Created `registerCoreComponents.ts` with synchronous eager imports for critical components:
+- `rows`, `columns` (layouts)
+- `table`, `data-table` (tables)
+- `search.bar` (search)
+- `button.icon` (buttons)
+
+These are registered **first** in `main.tsx` before async registrations, ensuring they're always available.
+
+#### Fix #2: Component Config Structure
+
+**Problem:** Components expect props nested under `props` object, but JSON had them at root level.
+
+**Incorrect:**
+```json
+{
+  "type": "table",
+  "columns": [...],
+  "dataSource": "Agent"
+}
+```
+
+**Correct:**
+```json
+{
+  "type": "table",
+  "props": {
+    "columns": [...],
+    "dataSource": "Agent"
+  }
+}
+```
+
+**Solution:** Updated `page.agent.table.modal.json` to nest component-specific props under `props` object.
+
+### Row Click Behavior Fix
+
+**Issue:** Row clicks were showing `alert()` dialogs instead of proper detail modals.
+
+**Root Cause:** Config used `type: 'command'` which triggers CommandHandler's alert-based handlers (temporary POC code).
+
+**Solution:** Changed rowAction to `type: 'modal'` which:
+- Fetches detail data from API endpoint
+- Opens proper modal dialog with fields
+- Matches the working POC implementation from Oct 15, 2025
+
+**Working Config:**
+```json
+"rowAction": {
+  "type": "modal",
+  "title": "Agent Details",
+  "url": "/api/v2/ui/types/Agent/{{row.id}}",
+  "fields": [
+    { "key": "name", "label": "Name", "type": "text" },
+    { "key": "status", "label": "Status", "type": "badge" }
+  ]
+}
+```
+
+### Testing Component Swapping
+
+To test swapping the search bar for a different component:
+
+```bash
+# Update the database directly
+psql seer_db -c "
+  UPDATE fe_ui_pages 
+  SET config = jsonb_set(
+    config, 
+    '{layout,children,0,type}', 
+    '\"navbar\"'
+  )
+  WHERE key = 'page.agent.table.modal';
+"
+```
+
+Then refresh the page - **no code changes needed!**
+
 ## Next Steps
 
 1. ✅ Read this document
-2. ⬜ Implement PageRenderer recursive rendering
-3. ⬜ Update seeders to new schema
-4. ⬜ Test swapping components in slots
-5. ⬜ Build your first composed page!
+2. ✅ Implement PageRenderer recursive rendering
+3. ✅ Update seeders to new schema
+4. ⬜ Test in browser: http://localhost:8000/v2/pages/page.agent.table.modal
+5. ⬜ Test component swapping by updating config
+6. ⬜ Build your first composed page!
 
 ---
 

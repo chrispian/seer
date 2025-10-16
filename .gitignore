@@ -21,3 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# UI Builder page configs and caches
+/storage/ui-builder/cache/

@@ -812,3 +812,19 @@ export interface SonnerConfig extends BaseComponentConfig {
     className?: string;
   };
 }
+
+export interface PageConfig {
+  id: string;
+  title?: string;
+  overlay?: 'modal' | 'sheet' | 'drawer' | 'fullscreen';
+  layout?: ComponentConfig;
+  components?: ComponentConfig[];
+  _meta?: {
+    page_id: number;
+    hash: string;
+    version: number;
+    enabled: boolean;
+    module_key: string;
+    timestamp: string;
+  };
+}

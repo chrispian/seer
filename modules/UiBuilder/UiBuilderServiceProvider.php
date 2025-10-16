@@ -31,10 +31,19 @@ class UiBuilderServiceProvider extends ServiceProvider
 
         // Load routes
         $this->loadRoutesFrom(__DIR__ . '/routes/api.php');
+        $this->loadRoutesFrom(__DIR__ . '/routes/web.php');
+        
+        // Load views
+        $this->loadViewsFrom(__DIR__ . '/resources/views', 'ui-builder');
         
         // Publish config
         $this->publishes([
             __DIR__ . '/config/ui-builder.php' => config_path('ui-builder.php'),
         ], 'ui-builder-config');
+        
+        // Publish views
+        $this->publishes([
+            __DIR__ . '/resources/views' => resource_path('views/vendor/ui-builder'),
+        ], 'ui-builder-views');
     }
 }

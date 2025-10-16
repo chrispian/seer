@@ -2,9 +2,10 @@ import { componentRegistry } from '@/components/v2/ComponentRegistry'
 
 interface ComponentRendererProps {
   config: any
+  children?: React.ReactNode
 }
 
-export function ComponentRenderer({ config }: ComponentRendererProps) {
+export function ComponentRenderer({ config, children }: ComponentRendererProps) {
   if (!config || !config.type) {
     return null
   }
@@ -22,5 +23,10 @@ export function ComponentRenderer({ config }: ComponentRendererProps) {
     )
   }
 
-  return <Component config={config} />
+  const ComponentWithChildren = Component as React.ComponentType<{
+    config: any
+    children?: React.ReactNode
+  }>
+
+  return <ComponentWithChildren config={config}>{children}</ComponentWithChildren>
 }
