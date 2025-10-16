@@ -70,9 +70,10 @@ class SyncUiPages extends Command
             }
 
             // Calculate hash from JSON config content (excluding _meta)
+            // Use same encoding as Page model for consistent hashing
             $jsonConfigClean = $jsonConfig;
             unset($jsonConfigClean['_meta']);
-            $jsonHash = hash('sha256', json_encode($jsonConfigClean));
+            $jsonHash = hash('sha256', json_encode($jsonConfigClean, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
             $jsonVersion = $jsonMeta['version'] ?? 0;
             
             $dbVersion = $dbPage->version;
@@ -213,9 +214,10 @@ class SyncUiPages extends Command
             }
 
             // Calculate hash from JSON config content (excluding _meta)
+            // Use same encoding as Page model for consistent hashing
             $jsonConfigClean = $jsonConfig;
             unset($jsonConfigClean['_meta']);
-            $jsonHash = hash('sha256', json_encode($jsonConfigClean));
+            $jsonHash = hash('sha256', json_encode($jsonConfigClean, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
             $dbHash = $dbPage->hash;
 
             if ($jsonHash !== $dbHash) {

@@ -2207,12 +2207,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:hollis-labs/ui-builder.git",
-                "reference": "f7d0d64ca02b693d7dd2b04a33db72487272f2a9"
+                "reference": "4a944e84b673a4ffd7895f27ed16156cfad11970"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hollis-labs/ui-builder/zipball/f7d0d64ca02b693d7dd2b04a33db72487272f2a9",
-                "reference": "f7d0d64ca02b693d7dd2b04a33db72487272f2a9",
+                "url": "https://api.github.com/repos/hollis-labs/ui-builder/zipball/4a944e84b673a4ffd7895f27ed16156cfad11970",
+                "reference": "4a944e84b673a4ffd7895f27ed16156cfad11970",
                 "shasum": ""
             },
             "require": {
@@ -2257,7 +2257,7 @@
                 "source": "https://github.com/hollis-labs/ui-builder/tree/main",
                 "issues": "https://github.com/hollis-labs/ui-builder/issues"
             },
-            "time": "2025-10-16T07:40:33+00:00"
+            "time": "2025-10-16T07:47:32+00:00"
         },
         {
             "name": "justinrainbow/json-schema",
