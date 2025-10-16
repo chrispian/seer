@@ -1,34 +1,57 @@
 # UI Builder Module
 
-This module contains all UI builder functionality for the v2 system.
+Database-driven UI configuration system for building dynamic interfaces without code changes.
 
 ## Structure
 
 ```
-ui-builder/
-├── Models/           # Eloquent models (FeUiPage, FeUiComponent, etc.)
-├── Controllers/      # HTTP controllers for UI endpoints
-├── Services/         # Business logic (DataSourceResolvers, etc.)
-├── Seeders/          # Database seeders for UI components
-├── migrations/       # Database migrations
-├── routes/           # Module-specific routes
-└── config/           # Module configuration
+UiBuilder/
+├── app/
+│   ├── Http/Controllers/
+│   │   └── DataSourceController.php    # Unified data source API
+│   ├── Models/
+│   │   ├── Page.php                    # Page configurations
+│   │   ├── Component.php               # Component definitions
+│   │   ├── Datasource.php              # Data source configurations
+│   │   ├── Action.php                  # Action definitions
+│   │   ├── Registry.php                # Component registry
+│   │   ├── Module.php                  # Module grouping
+│   │   ├── Theme.php                   # Theme configurations
+│   │   └── FeatureFlag.php             # Feature flags
+│   └── Services/
+│       └── DataSourceResolver.php      # Generic data source resolver
+├── database/
+│   ├── migrations/                     # Consolidated migrations
+│   └── seeders/                        # Database seeders
+├── routes/
+│   └── api.php                         # API routes
+├── config/
+│   └── ui-builder.php                  # Module configuration
+└── UiBuilderServiceProvider.php        # Service provider
+
 ```
 
 ## Models
 
-- `FeUiPage` - Page configurations
-- `FeUiComponent` - Component definitions
-- `FeUiDatasource` - Data source configurations
-- `FeUiAction` - Action definitions
-- `FeUiRegistry` - Component registry
-- `FeUiModule` - Module definitions
-- `FeUiTheme` - Theme configurations
-- `FeUiFeatureFlag` - Feature flags
+All models use clean names without prefixes:
+
+- `Page` - UI page configurations (table: `ui_pages`)
+- `Component` - Reusable component definitions (table: `ui_components`)
+- `Datasource` - Model-to-API mappings (table: `ui_datasources`)
+- `Action` - Action handlers (table: `ui_actions`)
+- `Registry` - Component type registry (table: `ui_registry`)
+- `Module` - Module grouping (table: `ui_modules`)
+- `Theme` - Theme configurations (table: `ui_themes`)
+- `FeatureFlag` - Feature toggles (table: `ui_feature_flags`)
 
 ## Services
 
-- `GenericDataSourceResolver` - Main data source resolver
-- Legacy resolvers (to be removed):
-  - `AgentDataSourceResolver`
-  - `ModelDataSourceResolver`
+- `DataSourceResolver` - Handles all data source queries with filtering, sorting, pagination
+
+## Controllers
+
+- `DataSourceController` - Unified API endpoint for all data sources
+
+## Backward Compatibility
+
+The service provider maintains backward compatibility by binding old `FeUi*` class names to new clean names.
