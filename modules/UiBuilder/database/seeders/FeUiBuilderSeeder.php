@@ -14,22 +14,25 @@ class FeUiBuilderSeeder extends Seeder
             'id' => 'page.agent.table.modal',
             'overlay' => 'modal',
             'title' => 'Agents',
-            'components' => [
-                [
-                    'id' => 'component.search.bar.agent',
-                    'type' => 'search.bar',
-                    'dataSource' => 'Agent',
-                    'props' => [
-                        'placeholder' => 'Search agents...'
+            'layout' => [
+                'type' => 'rows',
+                'id' => 'root-layout',
+                'children' => [
+                    [
+                        'id' => 'component.search.bar.agent',
+                        'type' => 'search.bar',
+                        'dataSource' => 'Agent',
+                        'props' => [
+                            'placeholder' => 'Search agents...'
+                        ],
+                        'result' => [
+                            'target' => 'component.table.agent',
+                            'open' => 'inline'
+                        ],
                     ],
-                    'result' => [
-                        'target' => 'component.table.agent',
-                        'open' => 'inline'
-                    ],
-                ],
-                [
-                    'id' => 'component.table.agent',
-                    'type' => 'data-table',
+                    [
+                        'id' => 'component.table.agent',
+                        'type' => 'data-table',
                     'props' => [
                         'columns' => [
                             ['key' => 'name', 'label' => 'Name', 'sortable' => true],
@@ -116,6 +119,7 @@ class FeUiBuilderSeeder extends Seeder
                     ],
                 ],
             ],
+        ],
         ];
 
         Page::updateOrCreate(

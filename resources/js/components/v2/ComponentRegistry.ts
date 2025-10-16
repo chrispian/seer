@@ -155,6 +155,14 @@ export function registerLayoutComponents() {
   import('./layouts/AccordionComponent').then(({ AccordionComponent }) => {
     registry.register('accordion', AccordionComponent as ComponentRenderer);
   });
+
+  import('./layouts/RowsLayout').then(({ RowsLayout }) => {
+    registry.register('rows', RowsLayout as ComponentRenderer);
+  });
+
+  import('./layouts/ColumnsLayout').then(({ ColumnsLayout }) => {
+    registry.register('columns', ColumnsLayout as ComponentRenderer);
+  });
 }
 
 export function registerNavigationComponents() {

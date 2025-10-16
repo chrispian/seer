@@ -17,23 +17,26 @@ class V2ModelPageSeeder extends Seeder
             'id' => 'page.model.table.modal',
             'overlay' => 'modal',
             'title' => 'AI Models',
-            'components' => [
-                [
-                    'id' => 'component.search.bar.model',
-                    'type' => 'search.bar',
-                    'dataSource' => 'Model',
-                    'props' => [
-                        'placeholder' => 'Search models...'
+            'layout' => [
+                'type' => 'rows',
+                'id' => 'root-layout',
+                'children' => [
+                    [
+                        'id' => 'component.search.bar.model',
+                        'type' => 'search.bar',
+                        'dataSource' => 'Model',
+                        'props' => [
+                            'placeholder' => 'Search models...'
+                        ],
+                        'result' => [
+                            'target' => 'component.table.model',
+                            'open' => 'inline'
+                        ],
                     ],
-                    'result' => [
-                        'target' => 'component.table.model',
-                        'open' => 'inline'
-                    ],
-                ],
-                [
-                    'id' => 'component.table.model',
-                    'type' => 'data-table',
-                    'dataSource' => 'Model',
+                    [
+                        'id' => 'component.table.model',
+                        'type' => 'data-table',
+                        'dataSource' => 'Model',
                     'props' => [
                         'columns' => [
                             ['key' => 'name', 'label' => 'Name', 'sortable' => true],
@@ -129,6 +132,7 @@ class V2ModelPageSeeder extends Seeder
                     ],
                 ],
             ],
+        ],
         ];
 
         // Create/update the Model page
