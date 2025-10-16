@@ -157,7 +157,7 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
         params.append('search', searchTerm);
       }
       
-      fetch(`/api/v2/ui/datasources/${dataSource}?${params}`)
+      fetch(`/api/v2/ui/datasources/${dataSource}/query?${params}`)
         .then(res => res.json())
         .then(result => {
           setFetchedData(result.data || []);
@@ -349,7 +349,7 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
         setFormModalOpen(false);
         // Refresh table data if refreshTarget specified
         if (formModalConfig.refreshTarget && dataSource) {
-          const result = await fetch(`/api/v2/ui/datasources/${dataSource}`);
+          const result = await fetch(`/api/v2/ui/datasources/${dataSource}/query`);
           const refreshedData = await result.json();
           setFetchedData(refreshedData.data || []);
         }
