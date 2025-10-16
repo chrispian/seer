@@ -38,8 +38,8 @@ class ProviderController extends Controller
                 $status = $request->get('status');
                 $providers = $providers->filter(function ($provider) use ($status) {
                     return match ($status) {
-                        'enabled' => $provider['config']->enabled,
-                        'disabled' => ! $provider['config']->enabled,
+                        'enabled' => $provider->enabled,
+                        'disabled' => ! $provider->enabled,
                         'available' => $provider['is_available'],
                         'healthy' => $provider['health_status'] === 'healthy',
                         'unhealthy' => $provider['health_status'] === 'unhealthy',
@@ -58,7 +58,7 @@ class ProviderController extends Controller
                 'data' => ProviderResource::collection($providers->values()),
                 'meta' => [
                     'total' => $providers->count(),
-                    'enabled_count' => $providers->where('config.enabled', true)->count(),
+                    'enabled_count' => $providers->where('enabled', true)->count(),
                     'available_count' => $providers->where('is_available', true)->count(),
                 ],
                 'status' => 'success',
