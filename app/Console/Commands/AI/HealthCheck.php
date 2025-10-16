@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\AI;
 
-use App\Models\Provider;
+use App\Models\AiProvider;
 use App\Services\AI\AIProviderManager;
 use Illuminate\Console\Command;
 

@@ -3,7 +3,7 @@
 namespace App\Services\Telemetry;
 
 use App\Models\AiCredential;
-use App\Models\Provider;
+use App\Models\AiProvider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 

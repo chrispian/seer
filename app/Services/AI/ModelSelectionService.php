@@ -3,8 +3,8 @@
 namespace App\Services\AI;
 
 use App\Models\AiCredential;
+use App\Models\AiProvider;
 use App\Models\Project;
-use App\Models\Provider;
 use App\Models\Vault;
 use App\Services\Telemetry\LLMTelemetry;
 use Illuminate\Support\Facades\Log;

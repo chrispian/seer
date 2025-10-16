@@ -71,7 +71,7 @@ class ProviderManagementService
     /**
      * Update provider configuration
      */
-    public function updateProviderConfig(string $providerIdentifier, array $config): Provider
+    public function updateProviderConfig(string $providerIdentifier, array $config): AiProvider
     {
         // Find provider by ID or name
         $provider = null;
@@ -112,7 +112,7 @@ class ProviderManagementService
     /**
      * Toggle provider enabled/disabled state
      */
-    public function toggleProvider(string $providerIdentifier): Provider
+    public function toggleProvider(string $providerIdentifier): AiProvider
     {
         // Find provider by ID or name
         $provider = null;
