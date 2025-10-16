@@ -155,7 +155,7 @@ class MakeUiDataSourceCommand extends Command
 
         $this->newLine();
         $this->comment('You can now use this datasource in your UI components.');
-        $this->comment("Example: GET /api/v2/ui/datasource/{$alias}/query");
+        $this->comment("Example: GET /api/v2/ui/datasources/{$alias}");
 
         return 0;
     }

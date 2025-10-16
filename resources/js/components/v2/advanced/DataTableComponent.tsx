@@ -332,19 +332,23 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log('DataTable: handleFormSubmit called', { formModalConfig });
     if (!formModalConfig) return;
 
     setFormSubmitting(true);
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
+    console.log('DataTable: Form data collected', { data, submitUrl: formModalConfig.submitUrl });
 
     try {
+      console.log('DataTable: About to fetch', { url: formModalConfig.submitUrl, method: formModalConfig.submitMethod || 'POST' });
       const response = await fetch(formModalConfig.submitUrl, {
         method: formModalConfig.submitMethod || 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(data),
       });
 
+      console.log('DataTable: Response received', { status: response.status, ok: response.ok });
       if (response.ok) {
         setFormModalOpen(false);
         // Refresh table data if refreshTarget specified
@@ -354,9 +358,12 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
           setFetchedData(refreshedData.data || []);
         }
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('DataTable: Submit failed', { status: response.status, errorData });
         alert('Failed to submit form');
       }
     } catch (err) {
+      console.error('DataTable: Error submitting form', err);
       alert('Error submitting form');
     } finally {
       setFormSubmitting(false);
@@ -564,18 +571,24 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
                     required={field.required}
                   />
                 ) : field.type === 'select' ? (
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder={field.placeholder} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {field.options?.map((opt: any) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <>
+                    <Select name={field.name} onValueChange={(value) => {
+                      const input = document.querySelector(`input[name="${field.name}"]`) as HTMLInputElement;
+                      if (input) input.value = value;
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={field.placeholder} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {field.options?.map((opt: any) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <input type="hidden" name={field.name} required={field.required} />
+                  </>
                 ) : (
                   <Input
                     id={field.name}

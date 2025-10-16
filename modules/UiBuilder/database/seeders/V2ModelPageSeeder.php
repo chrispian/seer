@@ -118,7 +118,7 @@ class V2ModelPageSeeder extends Seeder
                                                 ]
                                             ],
                                         ],
-                                        'submitUrl' => '/api/v2/ui/datasource/Model',
+                                        'submitUrl' => '/api/v2/ui/datasources/Model',
                                         'submitMethod' => 'POST',
                                         'submitLabel' => 'Add Model',
                                         'refreshTarget' => 'component.table.model'

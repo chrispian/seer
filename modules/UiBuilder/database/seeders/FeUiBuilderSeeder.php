@@ -105,7 +105,7 @@ class FeUiBuilderSeeder extends Seeder
                                                 ]
                                             ],
                                         ],
-                                        'submitUrl' => '/api/v2/ui/datasource/Agent',
+                                        'submitUrl' => '/api/v2/ui/datasources/Agent',
                                         'submitMethod' => 'POST',
                                         'submitLabel' => 'Create Agent',
                                         'refreshTarget' => 'component.table.agent'
