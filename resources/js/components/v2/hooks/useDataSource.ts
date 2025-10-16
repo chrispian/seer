@@ -43,7 +43,7 @@ export function useDataSource<T = any>(options: UseDataSourceOptions): UseDataSo
 
     try {
       const result: DataSourceResult<T> = await apiPost(
-        `/api/v2/ui/datasources/${query.dataSource}/query`,
+        `/api/v2/ui/datasources/${query.dataSource}`,
         query
       )
       
