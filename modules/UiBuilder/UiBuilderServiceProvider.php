@@ -14,14 +14,14 @@ class UiBuilderServiceProvider extends ServiceProvider
         );
 
         // Register model bindings for backward compatibility
-        $this->app->bind(\App\Models\FeUiPage::class, \Modules\UiBuilder\app\Models\Page::class);
-        $this->app->bind(\App\Models\FeUiComponent::class, \Modules\UiBuilder\app\Models\Component::class);
-        $this->app->bind(\App\Models\FeUiDatasource::class, \Modules\UiBuilder\app\Models\Datasource::class);
-        $this->app->bind(\App\Models\FeUiAction::class, \Modules\UiBuilder\app\Models\Action::class);
-        $this->app->bind(\App\Models\FeUiRegistry::class, \Modules\UiBuilder\app\Models\Registry::class);
-        $this->app->bind(\App\Models\FeUiModule::class, \Modules\UiBuilder\app\Models\Module::class);
-        $this->app->bind(\App\Models\FeUiTheme::class, \Modules\UiBuilder\app\Models\Theme::class);
-        $this->app->bind(\App\Models\FeUiFeatureFlag::class, \Modules\UiBuilder\app\Models\FeatureFlag::class);
+        // $this->app->bind(\App\Models\FeUiPage::class, \Modules\UiBuilder\app\Models\Page::class);
+        // $this->app->bind(\App\Models\FeUiComponent::class, \Modules\UiBuilder\app\Models\Component::class);
+        // $this->app->bind(\App\Models\FeUiDatasource::class, \Modules\UiBuilder\app\Models\Datasource::class);
+        // $this->app->bind(\App\Models\FeUiAction::class, \Modules\UiBuilder\app\Models\Action::class);
+        // $this->app->bind(\App\Models\FeUiRegistry::class, \Modules\UiBuilder\app\Models\Registry::class);
+        // $this->app->bind(\App\Models\FeUiModule::class, \Modules\UiBuilder\app\Models\Module::class);
+        // $this->app->bind(\App\Models\FeUiTheme::class, \Modules\UiBuilder\app\Models\Theme::class);
+        // $this->app->bind(\App\Models\FeUiFeatureFlag::class, \Modules\UiBuilder\app\Models\FeatureFlag::class);
     }
 
     public function boot(): void

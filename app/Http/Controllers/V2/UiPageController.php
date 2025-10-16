@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\V2;
 
 use App\Http\Controllers\Controller;
-use App\Models\FeUiPage;
+use Modules\UiBuilder\app\Models\Page;
 use Illuminate\Http\JsonResponse;
 
 class UiPageController extends Controller
 {
     public function show(string $key): JsonResponse
     {
-        $page = FeUiPage::where('key', $key)->firstOrFail();
+        $page = Page::where('key', $key)->firstOrFail();
 
         return response()->json([
             'id' => $page->id,

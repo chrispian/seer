@@ -42,7 +42,7 @@ class Page extends Model
 
     public function module()
     {
-        return $this->belongsTo(FeUiModule::class, 'module_key', 'key');
+        return $this->belongsTo(Module::class, 'module_key', 'key');
     }
 
     public function scopeEnabled($query)

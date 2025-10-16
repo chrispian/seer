@@ -2,8 +2,8 @@
 
 namespace Modules\UiBuilder\database\seeders;
 
-use App\Models\FeUiRegistry;
-use App\Models\FeUiFeatureFlag;
+use Modules\UiBuilder\app\Models\Registry;
+use Modules\UiBuilder\app\Models\FeatureFlag;
 use Illuminate\Database\Seeder;
 
 class UiRegistrySeeder extends Seeder
@@ -64,7 +64,7 @@ class UiRegistrySeeder extends Seeder
         ];
 
         foreach ($flags as $flag) {
-            FeUiFeatureFlag::updateOrCreate(
+            FeatureFlag::updateOrCreate(
                 ['key' => $flag['key']],
                 $flag
             );
@@ -129,7 +129,7 @@ class UiRegistrySeeder extends Seeder
         ];
 
         foreach ($items as $item) {
-            FeUiRegistry::updateOrCreate(
+            Registry::updateOrCreate(
                 ['slug' => $item['slug']],
                 $item
             );

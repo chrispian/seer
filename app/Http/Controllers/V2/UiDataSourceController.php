@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\V2;
 
 use App\Http\Controllers\Controller;
-use App\Models\FeUiDatasource;
+use Modules\UiBuilder\app\Models\Datasource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -11,7 +11,7 @@ class UiDataSourceController extends Controller
 {
     public function query(Request $request, string $alias): JsonResponse
     {
-        $datasource = FeUiDatasource::where('alias', $alias)->first();
+        $datasource = Datasource::where('alias', $alias)->first();
 
         if (! $datasource) {
             return response()->json([

@@ -2,7 +2,7 @@
 
 namespace App\Services\V2;
 
-use App\Models\FeUiDatasource;
+use Modules\UiBuilder\app\Models\Datasource;
 use Illuminate\Support\Facades\Cache;
 
 class GenericDataSourceResolver
@@ -116,7 +116,7 @@ class GenericDataSourceResolver
     protected function getConfig(string $alias): array
     {
         return Cache::remember("datasource.{$alias}", 3600, function () use ($alias) {
-            $datasource = FeUiDatasource::where('alias', $alias)->firstOrFail();
+            $datasource = Datasource::where('alias', $alias)->firstOrFail();
 
             return [
                 'model' => $datasource->handler ?? $datasource->model_class,

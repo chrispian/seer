@@ -2,8 +2,8 @@
 
 namespace Modules\UiBuilder\database\seeders;
 
-use App\Models\FeUiPage;
-use App\Models\FeUiDatasource;
+use Modules\UiBuilder\app\Models\Page;
+use Modules\UiBuilder\app\Models\Datasource;
 use Illuminate\Database\Seeder;
 
 class V2ModelPageSeeder extends Seeder
@@ -132,7 +132,7 @@ class V2ModelPageSeeder extends Seeder
         ];
 
         // Create/update the Model page
-        $modelPage = FeUiPage::updateOrCreate(
+        $modelPage = Page::updateOrCreate(
             ['key' => 'page.model.table.modal'],
             ['layout_tree_json' => $modelPageConfig]
         );
@@ -141,7 +141,7 @@ class V2ModelPageSeeder extends Seeder
         $this->command->info("  Version: {$modelPage->version}");
 
         // Create/update Model datasource for GenericDataSourceResolver
-        FeUiDatasource::updateOrCreate(
+        Datasource::updateOrCreate(
             ['alias' => 'Model'],
             [
                 'model_class' => \App\Models\AIModel::class,

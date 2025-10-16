@@ -31,7 +31,7 @@ class Module extends Model
 
     public function pages()
     {
-        return $this->hasMany(FeUiPage::class, 'module_key', 'key');
+        return $this->hasMany(Page::class, 'module_key', 'key');
     }
 
     public function scopeEnabled($query)

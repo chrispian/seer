@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\FeUiModule;
-use App\Models\FeUiTheme;
+use Modules\UiBuilder\app\Models\Module;
+use Modules\UiBuilder\app\Models\Theme;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -11,7 +11,7 @@ class ModulesThemesSeeder extends Seeder
 {
     public function run(): void
     {
-        FeUiModule::create([
+        Module::create([
             'key' => 'core.agents',
             'title' => 'Agent Management',
             'description' => 'Manage AI agents, profiles, and configurations',
@@ -33,7 +33,7 @@ class ModulesThemesSeeder extends Seeder
             'permissions' => ['view_agents'],
         ]);
 
-        FeUiTheme::create([
+        Theme::create([
             'key' => 'theme.default',
             'title' => 'Default Theme',
             'description' => 'Standard Fragments Engine theme',

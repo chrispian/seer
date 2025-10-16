@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\FeUiDatasource;
-use App\Models\FeUiPage;
+use Modules\UiBuilder\app\Models\Datasource;
+use Modules\UiBuilder\app\Models\Page;
 use Illuminate\Database\Seeder;
 
 class FeUiBuilderSeeder extends Seeder
@@ -118,12 +118,12 @@ class FeUiBuilderSeeder extends Seeder
             ],
         ];
 
-        FeUiPage::updateOrCreate(
+        Page::updateOrCreate(
             ['key' => 'page.agent.table.modal'],
             ['layout_tree_json' => $pageConfig]
         );
 
-        FeUiDatasource::updateOrCreate(
+        Datasource::updateOrCreate(
             ['alias' => 'Agent'],
             [
                 'model_class' => \App\Models\Agent::class,

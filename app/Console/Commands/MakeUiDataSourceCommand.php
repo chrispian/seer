@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\FeUiDatasource;
+use Modules\UiBuilder\app\Models\Datasource;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
@@ -129,14 +129,14 @@ class MakeUiDataSourceCommand extends Command
             ],
         ];
 
-        $existing = FeUiDatasource::where('alias', $alias)->first();
+        $existing = Datasource::where('alias', $alias)->first();
         if ($existing && !$this->confirm("Datasource '{$alias}' already exists. Overwrite?", false)) {
             $this->info('Aborted.');
 
             return 0;
         }
 
-        FeUiDatasource::updateOrCreate(
+        Datasource::updateOrCreate(
             ['alias' => $alias],
             $datasource
         );

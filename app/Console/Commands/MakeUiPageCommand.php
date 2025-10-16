@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\FeUiPage;
+use Modules\UiBuilder\app\Models\Page;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
@@ -44,7 +44,7 @@ class MakeUiPageCommand extends Command
         $kebabName = Str::kebab($name);
         $pageKey = "page.{$kebabName}";
 
-        if (FeUiPage::where('key', $pageKey)->exists()) {
+        if (Page::where('key', $pageKey)->exists()) {
             $this->error("Page with key '{$pageKey}' already exists in database!");
             return 1;
         }
@@ -62,7 +62,7 @@ class MakeUiPageCommand extends Command
 
         $this->files->put($filePath, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-        $page = FeUiPage::create([
+        $page = Page::create([
             'key' => $pageKey,
             'config' => $config,
         ]);

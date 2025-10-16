@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\FeUiDatasource;
+use Modules\UiBuilder\app\Models\Datasource;
 use Illuminate\Database\Seeder;
 
 class DataSourceConfigSeeder extends Seeder
@@ -71,7 +71,7 @@ class DataSourceConfigSeeder extends Seeder
         ];
 
         foreach ($datasources as $datasourceConfig) {
-            FeUiDatasource::updateOrCreate(
+            Datasource::updateOrCreate(
                 ['alias' => $datasourceConfig['alias']],
                 $datasourceConfig
             );

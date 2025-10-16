@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\FeUiComponent;
+use Modules\UiBuilder\app\Models\Component;
 use Illuminate\Database\Seeder;
 
 class AdvancedComponentSeeder extends Seeder
@@ -317,7 +317,7 @@ class AdvancedComponentSeeder extends Seeder
         foreach ($components as $componentData) {
             $componentData['hash'] = md5(json_encode($componentData['schema_json']) . json_encode($componentData['defaults_json']));
             
-            FeUiComponent::updateOrCreate(
+            Component::updateOrCreate(
                 ['key' => $componentData['key']],
                 $componentData
             );

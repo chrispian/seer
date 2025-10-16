@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\FeUiComponent;
+use Modules\UiBuilder\app\Models\Component;
 use Illuminate\Database\Seeder;
 
 class FeedbackComponentSeeder extends Seeder
@@ -185,7 +185,7 @@ class FeedbackComponentSeeder extends Seeder
 
         foreach ($components as $component) {
             $component['hash'] = hash('sha256', json_encode($component));
-            FeUiComponent::updateOrCreate(
+            Component::updateOrCreate(
                 ['key' => $component['key']],
                 $component
             );
