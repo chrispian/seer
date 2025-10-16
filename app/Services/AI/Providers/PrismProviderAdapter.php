@@ -3,7 +3,7 @@
 namespace App\Services\AI\Providers;
 
 use App\Contracts\AIProviderInterface;
-use App\Models\AICredential;
+use App\Models\AiCredential;
 use App\Services\Telemetry\CorrelationContext;
 use Illuminate\Support\Facades\Log;
 use Prism\Prism\Prism;
@@ -39,7 +39,7 @@ class PrismProviderAdapter implements AIProviderInterface
 
     public function isAvailable(): bool
     {
-        $storedCredential = AICredential::getActiveCredential($this->providerName);
+        $storedCredential = AiCredential::getActiveCredential($this->providerName);
         if ($storedCredential) {
             return true;
         }
@@ -268,7 +268,7 @@ class PrismProviderAdapter implements AIProviderInterface
     {
         $config = [];
 
-        $storedCredential = AICredential::getActiveCredential($this->providerName);
+        $storedCredential = AiCredential::getActiveCredential($this->providerName);
         if ($storedCredential) {
             $credentials = $storedCredential->getCredentials();
             $config['api_key'] = $credentials['key'] ?? $credentials['api_key'] ?? null;

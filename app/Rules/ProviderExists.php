@@ -2,7 +2,7 @@
 
 namespace App\Rules;
 
-use App\Models\Provider;
+use App\Models\AiProvider;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
@@ -22,13 +22,13 @@ class ProviderExists implements ValidationRule
         }
 
         // Check if provider exists in database
-        $provider = Provider::where('provider', $value)
+        $provider = AiProvider::where('provider', $value)
             ->orWhere('name', $value)
             ->orWhere('id', $value)
             ->first();
 
         if (! $provider) {
-            $availableProviders = Provider::where('enabled', true)
+            $availableProviders = AiProvider::where('enabled', true)
                 ->pluck('name')
                 ->take(10)
                 ->implode(', ');

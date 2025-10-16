@@ -6,7 +6,30 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Crypt;
 
-class AICredential extends Model
+/**
+ * AiCredential represents API credentials for AI providers.
+ * 
+ * This model stores encrypted credentials (API keys, tokens, etc.) for various
+ * AI providers. Credentials are encrypted at rest and decrypted only when needed
+ * for API calls. Multiple credentials can exist for the same provider to support
+ * key rotation and different access levels.
+ * 
+ * @property int $id
+ * @property string $provider Provider identifier matching AiProvider.provider
+ * @property string $credential_type Type of credential (api_key, oauth_token, etc.)
+ * @property string $encrypted_credentials Encrypted credential data
+ * @property array|null $metadata Additional metadata about the credential
+ * @property array|null $ui_metadata UI-specific metadata
+ * @property string|null $provider_config_id Provider-specific configuration ID
+ * @property \Carbon\Carbon|null $expires_at Credential expiration timestamp
+ * @property bool $is_active Whether this credential is active
+ * @property \Carbon\Carbon|null $last_used_at Last time this credential was used
+ * @property int $usage_count Number of times this credential has been used
+ * @property float $total_cost Total cost incurred using this credential
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ */
+class AiCredential extends Model
 {
     protected $fillable = [
         'provider',

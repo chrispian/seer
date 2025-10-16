@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCredentialRequest;
 use App\Http\Requests\UpdateCredentialRequest;
 use App\Http\Resources\CredentialResource;
-use App\Models\AICredential;
-use App\Models\Provider;
+use App\Models\AiCredential;
+use App\Models\AiProvider;
 use App\Services\ProviderTestingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,7 +28,7 @@ class CredentialController extends Controller
     public function index(string $provider): JsonResponse
     {
         try {
-            $providerConfig = Provider::where('provider', $provider)->first();
+            $providerConfig = AiProvider::where('provider', $provider)->first();
 
             if (! $providerConfig) {
                 return response()->json([
@@ -103,7 +103,7 @@ class CredentialController extends Controller
             }
 
             // Store credentials
-            $credential = AICredential::storeCredentialsEnhanced(
+            $credential = AiCredential::storeCredentialsEnhanced(
                 $provider,
                 $validatedData['credentials'],
                 $validatedData['credential_type'] ?? 'api_key',
@@ -147,7 +147,7 @@ class CredentialController extends Controller
     public function update(UpdateCredentialRequest $request, string $provider, int $credentialId): JsonResponse
     {
         try {
-            $credential = AICredential::where('provider', $provider)
+            $credential = AiCredential::where('provider', $provider)
                 ->where('id', $credentialId)
                 ->first();
 
@@ -243,7 +243,7 @@ class CredentialController extends Controller
     public function destroy(Request $request, string $provider, int $credentialId): JsonResponse
     {
         try {
-            $credential = AICredential::where('provider', $provider)
+            $credential = AiCredential::where('provider', $provider)
                 ->where('id', $credentialId)
                 ->first();
 
@@ -305,7 +305,7 @@ class CredentialController extends Controller
     public function test(string $provider, int $credentialId): JsonResponse
     {
         try {
-            $credential = AICredential::where('provider', $provider)
+            $credential = AiCredential::where('provider', $provider)
                 ->where('id', $credentialId)
                 ->first();
 

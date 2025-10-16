@@ -8,6 +8,7 @@ import {
   registerAdvancedComponents,
   registerFormComponents,
 } from '@/components/v2/ComponentRegistry'
+import { commandHandler } from '@/components/v2/CommandHandler'
 
 const rootElement = document.getElementById('v2-root')
 if (!rootElement) {
@@ -20,6 +21,9 @@ const hasUsers = rootElement.dataset.hasUsers === 'true'
 const user = isAuthenticated && rootElement.dataset.user 
   ? JSON.parse(rootElement.dataset.user) 
   : null
+
+// Initialize the command handler (it auto-registers listeners)
+console.log('Command handler initialized:', commandHandler)
 
 registerPrimitiveComponents()
 registerLayoutComponents()

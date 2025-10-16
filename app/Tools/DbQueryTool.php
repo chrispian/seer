@@ -120,7 +120,7 @@ class DbQueryTool implements ToolContract
     protected function builderFor(string $entity): ?Builder
     {
         return match ($entity) {
-            'work_items' => \App\Models\WorkItem::query(),
+            'tasks' => \App\Models\OrchestrationTask::query(),
             'fragments' => \App\Models\Fragment::query(),
             'bookmarks' => \App\Models\Bookmark::query(),
             'chat_sessions' => \App\Models\ChatSession::query(),

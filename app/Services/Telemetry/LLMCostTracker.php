@@ -2,8 +2,8 @@
 
 namespace App\Services\Telemetry;
 
-use App\Models\AICredential;
-use App\Models\Provider;
+use App\Models\AiCredential;
+use App\Models\AiProvider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -113,7 +113,7 @@ class LLMCostTracker
             }
 
             // Update active credential cost
-            $credential = AICredential::getActiveEnabledCredential($provider);
+            $credential = AiCredential::getActiveEnabledCredential($provider);
             if ($credential) {
                 $credential->updateUsageStats($cost);
             }

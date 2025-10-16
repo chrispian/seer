@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { apiPost, apiGet } from '@/lib/api';
 import {
   useReactTable,
   getCoreRowModel,
@@ -73,10 +74,12 @@ interface DataTableConfig extends ComponentConfig {
 }
 
 function executeAction(action: ActionConfig, data?: any) {
-  const { type, command, url, event: eventName, payload } = action;
-  const finalPayload = { ...payload, ...data };
+  const { type, command, url, event: eventName, payload, params } = action as any;
+  // Merge params, payload, and data
+  const finalPayload = { ...params, ...payload, ...data };
 
   if (type === 'command' && command) {
+    console.log('Executing command:', command, 'with payload:', finalPayload);
     window.dispatchEvent(new CustomEvent('command:execute', { detail: { command, payload: finalPayload } }));
   } else if (type === 'navigate' && url) {
     window.location.href = url;
@@ -85,7 +88,7 @@ function executeAction(action: ActionConfig, data?: any) {
   } else if (type === 'http' && url) {
     fetch(url, {
       method: action.method || 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(finalPayload),
     }).catch(console.error);
   }
@@ -154,7 +157,7 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
         params.append('search', searchTerm);
       }
       
-      fetch(`/api/v2/ui/datasource/${dataSource}/query?${params}`)
+      fetch(`/api/v2/ui/datasources/${dataSource}?${params}`)
         .then(res => res.json())
         .then(result => {
           setFetchedData(result.data || []);
@@ -329,31 +332,38 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log('DataTable: handleFormSubmit called', { formModalConfig });
     if (!formModalConfig) return;
 
     setFormSubmitting(true);
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
+    console.log('DataTable: Form data collected', { data, submitUrl: formModalConfig.submitUrl });
 
     try {
+      console.log('DataTable: About to fetch', { url: formModalConfig.submitUrl, method: formModalConfig.submitMethod || 'POST' });
       const response = await fetch(formModalConfig.submitUrl, {
         method: formModalConfig.submitMethod || 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(data),
       });
 
+      console.log('DataTable: Response received', { status: response.status, ok: response.ok });
       if (response.ok) {
         setFormModalOpen(false);
         // Refresh table data if refreshTarget specified
         if (formModalConfig.refreshTarget && dataSource) {
-          const result = await fetch(`/api/v2/ui/datasource/${dataSource}/query`);
+          const result = await fetch(`/api/v2/ui/datasources/${dataSource}`);
           const refreshedData = await result.json();
           setFetchedData(refreshedData.data || []);
         }
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('DataTable: Submit failed', { status: response.status, errorData });
         alert('Failed to submit form');
       }
     } catch (err) {
+      console.error('DataTable: Error submitting form', err);
       alert('Error submitting form');
     } finally {
       setFormSubmitting(false);
@@ -362,9 +372,14 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
 
   const handleToolbarClick = (item: ComponentConfig) => {
     const clickAction = item.actions?.click;
-    if (clickAction?.type === 'modal' && clickAction?.modal === 'form') {
-      setFormModalConfig(clickAction);
-      setFormModalOpen(true);
+    if (clickAction) {
+      if (clickAction.type === 'modal' && clickAction.modal === 'form') {
+        setFormModalConfig(clickAction);
+        setFormModalOpen(true);
+      } else {
+        // Handle other action types (command, navigate, etc.)
+        executeAction(clickAction);
+      }
     }
   };
 
@@ -416,25 +431,48 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
                   key={row.id}
                   className={cn(
                     'border-b transition-colors hover:bg-muted/50',
-                    actions?.rowClick && 'cursor-pointer',
+                    (rowAction || actions?.rowClick) && 'cursor-pointer',
                     row.getIsSelected() && 'bg-muted'
                   )}
                   onClick={async (e) => {
                     const clickAction = rowAction || actions?.rowClick;
                     if (clickAction && !(e.target as HTMLElement).closest('button, input')) {
-                      if (rowAction?.type === 'modal') {
+                      if (clickAction.type === 'modal') {
                         setDetailLoading(true);
                         setDetailModalOpen(true);
                         try {
-                          const url = rowAction.url.replace('{{row.id}}', row.original.id);
+                          const url = clickAction.url.replace('{{row.id}}', row.original.id);
+                          console.log('Fetching details from:', url);
                           const response = await fetch(url);
-                          const data = await response.json();
-                          setDetailModalData(data);
+                          const result = await response.json();
+                          console.log('Detail response:', result);
+                          // Handle both wrapped and unwrapped responses
+                          setDetailModalData(result.data || result);
                         } catch (err) {
                           console.error('Failed to load details:', err);
+                          setDetailModalData(null);
                         } finally {
                           setDetailLoading(false);
                         }
+                      } else if (clickAction.type === 'command') {
+                        // Handle command type with template replacement in params
+                        const processedAction = { ...clickAction };
+                        if (processedAction.params) {
+                          // Replace template variables in params
+                          const processedParams: any = {};
+                          for (const [key, value] of Object.entries(processedAction.params)) {
+                            if (typeof value === 'string' && value.includes('{{')) {
+                              // Replace {{row.field}} with actual values
+                              processedParams[key] = value.replace(/\{\{row\.([^}]+)\}\}/g, (match, field) => {
+                                return row.original[field] || match;
+                              });
+                            } else {
+                              processedParams[key] = value;
+                            }
+                          }
+                          processedAction.params = processedParams;
+                        }
+                        executeAction(processedAction, row.original);
                       } else {
                         executeAction(clickAction, row.original);
                       }
@@ -533,18 +571,24 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
                     required={field.required}
                   />
                 ) : field.type === 'select' ? (
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder={field.placeholder} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {field.options?.map((opt: any) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <>
+                    <Select name={field.name} onValueChange={(value) => {
+                      const input = document.querySelector(`input[name="${field.name}"]`) as HTMLInputElement;
+                      if (input) input.value = value;
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={field.placeholder} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {field.options?.map((opt: any) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <input type="hidden" name={field.name} required={field.required} />
+                  </>
                 ) : (
                   <Input
                     id={field.name}

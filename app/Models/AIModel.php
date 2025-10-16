@@ -5,7 +5,32 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class AIModel extends Model
+/**
+ * AiModel represents an AI model configuration in the system.
+ * 
+ * This model stores information about available AI models from various providers
+ * (like OpenAI, Anthropic, etc.) including their capabilities, pricing, limits,
+ * and availability status. Each AI model belongs to an AiProvider.
+ * 
+ * Examples: gpt-4, claude-3-opus, llama-2-70b
+ * 
+ * @property int $id
+ * @property int $provider_id Foreign key to AiProvider
+ * @property string $model_id Unique identifier from the provider (e.g., 'gpt-4-turbo')
+ * @property string $name Display name for the model
+ * @property string|null $description Model description and capabilities
+ * @property array $capabilities Model capabilities (chat, completion, embeddings, etc.)
+ * @property array $pricing Pricing information per token/request
+ * @property array $limits Rate limits and constraints
+ * @property string|null $logo_url URL to model/provider logo
+ * @property bool $enabled Whether this model is enabled for use
+ * @property int $priority Display/selection priority (lower = higher priority)
+ * @property array|null $metadata Additional model-specific metadata
+ * @property \Carbon\Carbon|null $synced_at Last sync timestamp with provider
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ */
+class AiModel extends Model
 {
     protected $table = 'models';
 
@@ -42,7 +67,7 @@ class AIModel extends Model
      */
     public function provider(): BelongsTo
     {
-        return $this->belongsTo(Provider::class);
+        return $this->belongsTo(AiProvider::class, 'provider_id');
     }
 
     /**

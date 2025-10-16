@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\AI;
 
-use App\Models\AICredential;
+use App\Models\AiCredential;
 use App\Services\CredentialStorageManager;
 use Illuminate\Console\Command;
 
@@ -72,7 +72,7 @@ class CredentialsSet extends Command
         }
 
         // Check if credentials already exist
-        $existing = AICredential::getActiveCredential($provider, $type);
+        $existing = AiCredential::getActiveCredential($provider, $type);
         if ($existing) {
             if (! confirm("Credentials for {$provider} already exist. Overwrite?")) {
                 $this->info('Operation cancelled');

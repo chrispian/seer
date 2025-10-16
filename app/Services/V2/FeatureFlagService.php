@@ -2,7 +2,7 @@
 
 namespace App\Services\V2;
 
-use App\Models\FeUiFeatureFlag;
+use Modules\UiBuilder\app\Models\FeatureFlag;
 use Illuminate\Support\Facades\Cache;
 
 class FeatureFlagService
@@ -50,7 +50,7 @@ class FeatureFlagService
         return Cache::remember(
             "feature_flags:{$env}",
             $this->cacheTtl,
-            fn() => FeUiFeatureFlag::enabled()
+            fn() => FeatureFlag::enabled()
                 ->forEnvironment($env)
                 ->get()
                 ->keyBy('key')
@@ -64,14 +64,14 @@ class FeatureFlagService
         Cache::forget("feature_flags:{$env}");
     }
 
-    protected function getFlag(string $key): ?FeUiFeatureFlag
+    protected function getFlag(string $key): ?FeatureFlag
     {
         $cacheKey = "feature_flag:{$key}";
 
         return Cache::remember(
             $cacheKey,
             $this->cacheTtl,
-            fn() => FeUiFeatureFlag::byKey($key)
+            fn() => FeatureFlag::byKey($key)
                 ->forEnvironment()
                 ->first()
         );

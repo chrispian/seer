@@ -84,7 +84,7 @@ class UiBuilderTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response = $this->postJson('/api/v2/ui/datasource/Agent/query', [
+        $response = $this->postJson('/api/v2/ui/datasources/Agent', [
             'pagination' => [
                 'page' => 1,
                 'per_page' => 10,
@@ -126,7 +126,7 @@ class UiBuilderTest extends TestCase
             'agent_profile_id' => $profile->id,
         ]);
 
-        $response = $this->postJson('/api/v2/ui/datasource/Agent/query', [
+        $response = $this->postJson('/api/v2/ui/datasources/Agent', [
             'search' => 'John',
             'pagination' => [
                 'page' => 1,
@@ -151,7 +151,7 @@ class UiBuilderTest extends TestCase
             'agent_profile_id' => $profile->id,
         ]);
 
-        $response = $this->postJson('/api/v2/ui/datasource/Agent/query', [
+        $response = $this->postJson('/api/v2/ui/datasources/Agent', [
             'filters' => [
                 'status' => 'active',
             ],
@@ -178,7 +178,7 @@ class UiBuilderTest extends TestCase
             'agent_profile_id' => $profile->id,
         ]);
 
-        $response = $this->postJson('/api/v2/ui/datasource/Agent/query', [
+        $response = $this->postJson('/api/v2/ui/datasources/Agent', [
             'sort' => [
                 'field' => 'name',
                 'direction' => 'asc',

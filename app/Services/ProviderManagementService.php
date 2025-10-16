@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Provider;
+use App\Models\AiProvider;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -14,7 +14,7 @@ class ProviderManagementService
     public function getAllProviders(): Collection
     {
         // Return Provider models with their models loaded (all models for display, not just enabled)
-        return Provider::with(['models' => function ($query) {
+        return AiProvider::with(['models' => function ($query) {
             $query->orderBy('enabled', 'desc')->orderBy('priority', 'desc');
         }, 'credentials'])
             ->orderBy('priority', 'desc')
@@ -32,12 +32,12 @@ class ProviderManagementService
 
         // If identifier is numeric, try to find by ID
         if (is_numeric($identifier)) {
-            $provider = Provider::with(['models', 'credentials'])->find($identifier);
+            $provider = AiProvider::with(['models', 'credentials'])->find($identifier);
         }
 
         // If not found, try by name or provider field
         if (! $provider) {
-            $provider = Provider::with(['models', 'credentials'])
+            $provider = AiProvider::with(['models', 'credentials'])
                 ->where('name', $identifier)
                 ->orWhere('provider', $identifier)
                 ->first();
@@ -50,7 +50,7 @@ class ProviderManagementService
         return [
             'name' => $provider->name,
             'display_name' => $provider->name,
-            'config' => $provider,
+            
             'capabilities' => $provider->capabilities ?? [],
             'credentials' => $provider->credentials ?? collect(),
             'active_credentials' => $provider->credentials->where('is_active', true) ?? collect(),
@@ -71,16 +71,16 @@ class ProviderManagementService
     /**
      * Update provider configuration
      */
-    public function updateProviderConfig(string $providerIdentifier, array $config): Provider
+    public function updateProviderConfig(string $providerIdentifier, array $config): AiProvider
     {
         // Find provider by ID or name
         $provider = null;
         if (is_numeric($providerIdentifier)) {
-            $provider = Provider::find($providerIdentifier);
+            $provider = AiProvider::find($providerIdentifier);
         }
 
         if (! $provider) {
-            $provider = Provider::where('name', $providerIdentifier)
+            $provider = AiProvider::where('name', $providerIdentifier)
                 ->orWhere('provider', $providerIdentifier)
                 ->first();
         }
@@ -112,16 +112,16 @@ class ProviderManagementService
     /**
      * Toggle provider enabled/disabled state
      */
-    public function toggleProvider(string $providerIdentifier): Provider
+    public function toggleProvider(string $providerIdentifier): AiProvider
     {
         // Find provider by ID or name
         $provider = null;
         if (is_numeric($providerIdentifier)) {
-            $provider = Provider::find($providerIdentifier);
+            $provider = AiProvider::find($providerIdentifier);
         }
 
         if (! $provider) {
-            $provider = Provider::where('name', $providerIdentifier)
+            $provider = AiProvider::where('name', $providerIdentifier)
                 ->orWhere('provider', $providerIdentifier)
                 ->first();
         }
@@ -149,7 +149,7 @@ class ProviderManagementService
         $results = [];
 
         if ($provider) {
-            $providerModel = Provider::where('provider', $provider)
+            $providerModel = AiProvider::where('provider', $provider)
                 ->orWhere('name', $provider)
                 ->orWhere('id', $provider)
                 ->first();
@@ -160,7 +160,7 @@ class ProviderManagementService
 
             $providersToSync = [$providerModel];
         } else {
-            $providersToSync = Provider::all();
+            $providersToSync = AiProvider::all();
         }
 
         foreach ($providersToSync as $providerModel) {
@@ -186,7 +186,7 @@ class ProviderManagementService
      */
     public function getProviderStatistics(): array
     {
-        $stats = Provider::getProviderStats();
+        $stats = AiProvider::getProviderStats();
         $providers = $this->getAllProviders();
 
         return array_merge($stats, [
@@ -239,7 +239,7 @@ class ProviderManagementService
         $configKeys = $providerData['config_requirements'];
 
         // Check if provider is enabled
-        if (! $providerData['config']->enabled) {
+        if (! $provider->enabled) {
             $errors[] = 'Provider is disabled';
         }
 
@@ -270,7 +270,7 @@ class ProviderManagementService
             'valid' => empty($errors),
             'errors' => $errors,
             'provider' => $provider,
-            'config' => $providerData['config'],
+            'provider_model' => $provider,
         ];
     }
 }

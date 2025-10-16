@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { apiPost } from '@/lib/api'
 import type { DataSourceQuery, DataSourceResult } from '../types'
-
-function getCSRFToken(): string {
-  return (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
-}
 
 interface UseDataSourceOptions {
   dataSource: string
@@ -45,20 +42,11 @@ export function useDataSource<T = any>(options: UseDataSourceOptions): UseDataSo
     }
 
     try {
-      const response = await window.fetch(`/api/v2/ui/datasource/${query.dataSource}/query`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': getCSRFToken(),
-        },
-        body: JSON.stringify(query),
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch data: ${response.statusText}`)
-      }
-
-      const result: DataSourceResult<T> = await response.json()
+      const result: DataSourceResult<T> = await apiPost(
+        `/api/v2/ui/datasources/${query.dataSource}`,
+        query
+      )
+      
       setData(result.data)
       setMeta(result.meta)
     } catch (err) {

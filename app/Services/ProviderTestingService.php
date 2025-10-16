@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\AICredential;
-use App\Models\Provider;
+use App\Models\AiCredential;
+use App\Models\AiProvider;
 use App\Services\AI\AIProviderManager;
 use Illuminate\Support\Facades\Log;
 
@@ -26,7 +26,7 @@ class ProviderTestingService
         try {
             // If no credentials provided, use stored credentials
             if ($credentials === null) {
-                $credential = AICredential::getActiveEnabledCredential($provider);
+                $credential = AiCredential::getActiveEnabledCredential($provider);
                 if (! $credential) {
                     return [
                         'status' => 'failed',
@@ -38,7 +38,7 @@ class ProviderTestingService
                 }
             } else {
                 // Temporarily store credentials for testing
-                $testCredential = new AICredential;
+                $testCredential = new AiCredential;
                 $testCredential->provider = $provider;
                 $testCredential->setCredentials($credentials);
             }
@@ -50,7 +50,7 @@ class ProviderTestingService
 
             // Update provider health status if using stored credentials
             if ($credentials === null) {
-                $providerConfig = Provider::getOrCreateForProvider($provider);
+                $providerConfig = AiProvider::getOrCreateForProvider($provider);
                 $isHealthy = $result['status'] === 'healthy';
                 $providerConfig->updateHealthStatus($isHealthy, $result);
             }
@@ -154,7 +154,7 @@ class ProviderTestingService
 
         if ($providers === null) {
             // Get all enabled providers
-            $enabledProviders = Provider::getEnabledProviders();
+            $enabledProviders = AiProvider::getEnabledProviders();
             $providers = $enabledProviders->pluck('provider')->toArray();
         }
 
@@ -276,7 +276,7 @@ class ProviderTestingService
      */
     public function getHealthHistory(string $provider, int $days = 7): array
     {
-        $providerConfig = Provider::where('provider', $provider)->first();
+        $providerConfig = AiProvider::where('provider', $provider)->first();
 
         if (! $providerConfig) {
             return [

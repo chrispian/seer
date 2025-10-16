@@ -45,6 +45,7 @@ export function FormModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('FormModal: handleSubmit called', { formData, submitUrl, submitMethod })
     setLoading(true)
 
     try {
@@ -68,12 +69,14 @@ export function FormModal({
         body = JSON.stringify(formData)
       }
 
+      console.log('FormModal: About to fetch', { submitUrl, method: submitMethod, body })
       const response = await window.fetch(submitUrl, {
         method: submitMethod,
         headers,
         body,
       })
 
+      console.log('FormModal: Response received', { status: response.status })
       const result = await response.json()
 
       if (!response.ok) {
@@ -89,6 +92,7 @@ export function FormModal({
         onSuccess()
       }
     } catch (error) {
+      console.error('FormModal: Error during submission', error)
       toast.error('Error', error instanceof Error ? error.message : 'Submission failed')
     } finally {
       setLoading(false)
@@ -160,8 +164,20 @@ export function FormModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!loading) {
+        onOpenChange(newOpen)
+      }
+    }}>
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto" onPointerDownOutside={(e) => {
+        if (loading) {
+          e.preventDefault()
+        }
+      }} onEscapeKeyDown={(e) => {
+        if (loading) {
+          e.preventDefault()
+        }
+      }}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

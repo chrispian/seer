@@ -30,7 +30,7 @@ export function ButtonComponent({ config }: { config: ButtonConfig }) {
       } else if (type === 'http' && url) {
         fetch(url, {
           method: actions.click.method || 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify(payload),
         }).catch(console.error);
       }

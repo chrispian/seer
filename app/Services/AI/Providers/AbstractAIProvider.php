@@ -33,7 +33,7 @@ abstract class AbstractAIProvider implements AIProviderInterface
     public function isAvailable(): bool
     {
         // First check if stored credentials are available
-        $storedCredential = \App\Models\AICredential::getActiveCredential($this->getName());
+        $storedCredential = \App\Models\AiCredential::getActiveCredential($this->getName());
         if ($storedCredential) {
             return true;
         }
@@ -113,7 +113,7 @@ abstract class AbstractAIProvider implements AIProviderInterface
     protected function getConfigValue(string $key): ?string
     {
         // First check stored credentials
-        $storedCredential = \App\Models\AICredential::getActiveCredential($this->getName());
+        $storedCredential = \App\Models\AiCredential::getActiveCredential($this->getName());
         if ($storedCredential) {
             $credentials = $storedCredential->getCredentials();
             if (isset($credentials[$key])) {

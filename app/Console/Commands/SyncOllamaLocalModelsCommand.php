@@ -37,9 +37,9 @@ class SyncOllamaLocalModelsCommand extends Command
                 $this->info('✅ Sync completed successfully!');
 
                 // Show stats
-                $provider = \App\Models\Provider::where('provider', 'ollama-local')->first();
+                $provider = \App\Models\AiProvider::where('provider', 'ollama-local')->first();
                 if ($provider) {
-                    $modelCount = \App\Models\AIModel::where('provider_id', $provider->id)->count();
+                    $modelCount = \App\Models\AiModel::where('provider_id', $provider->id)->count();
                     $this->table(
                         ['Provider', 'Models'],
                         [

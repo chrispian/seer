@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\AIModel;
-use App\Models\Provider;
+use App\Models\AiModel;
+use App\Models\AiProvider;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
@@ -50,7 +50,7 @@ class SyncOllamaLocalModels implements ShouldQueue
      */
     private function ensureOllamaProvider(): void
     {
-        Provider::updateOrCreate(
+        AiProvider::updateOrCreate(
             ['provider' => self::PROVIDER_ID],
             [
                 'name' => 'Ollama (Local)',
@@ -80,7 +80,7 @@ class SyncOllamaLocalModels implements ShouldQueue
         $data = $response->json();
         $models = $data['models'] ?? [];
 
-        $provider = Provider::where('provider', self::PROVIDER_ID)->first();
+        $provider = AiProvider::where('provider', self::PROVIDER_ID)->first();
 
         if (! $provider) {
             throw new \Exception('Ollama provider not found');
@@ -116,7 +116,7 @@ class SyncOllamaLocalModels implements ShouldQueue
             ];
 
             // Only set description for new models
-            $existingModel = AIModel::where('provider_id', $provider->id)
+            $existingModel = AiModel::where('provider_id', $provider->id)
                 ->where('model_id', $modelId)
                 ->first();
 
@@ -124,7 +124,7 @@ class SyncOllamaLocalModels implements ShouldQueue
                 $updateData['description'] = $this->getModelDescription($modelData);
             }
 
-            $model = AIModel::updateOrCreate(
+            $model = AiModel::updateOrCreate(
                 [
                     'provider_id' => $provider->id,
                     'model_id' => $modelId,

@@ -3,7 +3,7 @@
 namespace App\Services\CredentialStorage;
 
 use App\Contracts\CredentialStorageInterface;
-use App\Models\AICredential;
+use App\Models\AiCredential;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -21,7 +21,7 @@ class DatabaseCredentialStorage implements CredentialStorageInterface
             'created_via' => $options['created_via'] ?? 'database_storage',
         ]);
 
-        $credential = AICredential::storeCredentials(
+        $credential = AiCredential::storeCredentials(
             $provider,
             $credentials,
             $type,
@@ -40,7 +40,7 @@ class DatabaseCredentialStorage implements CredentialStorageInterface
 
     public function retrieve(string $credentialId): ?array
     {
-        $credential = AICredential::find($credentialId);
+        $credential = AiCredential::find($credentialId);
 
         if (! $credential || ! $credential->is_active) {
             return null;
@@ -60,7 +60,7 @@ class DatabaseCredentialStorage implements CredentialStorageInterface
 
     public function update(string $credentialId, array $credentials): bool
     {
-        $credential = AICredential::find($credentialId);
+        $credential = AiCredential::find($credentialId);
 
         if (! $credential) {
             return false;
@@ -95,7 +95,7 @@ class DatabaseCredentialStorage implements CredentialStorageInterface
 
     public function delete(string $credentialId): bool
     {
-        $credential = AICredential::find($credentialId);
+        $credential = AiCredential::find($credentialId);
 
         if (! $credential) {
             return false;
@@ -131,7 +131,7 @@ class DatabaseCredentialStorage implements CredentialStorageInterface
 
     public function list(?string $provider = null): array
     {
-        $query = AICredential::where('is_active', true);
+        $query = AiCredential::where('is_active', true);
 
         if ($provider) {
             $query->where('provider', $provider);
@@ -141,7 +141,7 @@ class DatabaseCredentialStorage implements CredentialStorageInterface
             ->orderBy('credential_type')
             ->get();
 
-        return $credentials->map(function (AICredential $credential) {
+        return $credentials->map(function (AiCredential $credential) {
             return [
                 'id' => (string) $credential->id,
                 'provider' => $credential->provider,
@@ -197,7 +197,7 @@ class DatabaseCredentialStorage implements CredentialStorageInterface
 
     public function getMetadata(string $credentialId): ?array
     {
-        $credential = AICredential::find($credentialId);
+        $credential = AiCredential::find($credentialId);
 
         if (! $credential) {
             return null;
@@ -219,7 +219,7 @@ class DatabaseCredentialStorage implements CredentialStorageInterface
 
     public function exists(string $credentialId): bool
     {
-        return AICredential::where('id', $credentialId)
+        return AiCredential::where('id', $credentialId)
             ->where('is_active', true)
             ->exists();
     }
@@ -227,9 +227,9 @@ class DatabaseCredentialStorage implements CredentialStorageInterface
     public function getHealthStatus(): array
     {
         try {
-            $totalCredentials = AICredential::count();
-            $activeCredentials = AICredential::where('is_active', true)->count();
-            $expiredCredentials = AICredential::where('is_active', true)
+            $totalCredentials = AiCredential::count();
+            $activeCredentials = AiCredential::where('is_active', true)->count();
+            $expiredCredentials = AiCredential::where('is_active', true)
                 ->whereNotNull('expires_at')
                 ->where('expires_at', '<', now())
                 ->count();

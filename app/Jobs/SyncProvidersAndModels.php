@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\AIModel;
-use App\Models\Provider;
+use App\Models\AiModel;
+use App\Models\AiProvider;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
@@ -57,7 +57,7 @@ class SyncProvidersAndModels implements ShouldQueue
         $allData = $response->json();
 
         foreach ($allData as $providerId => $providerData) {
-            $provider = Provider::updateOrCreate(
+            $provider = AiProvider::updateOrCreate(
                 ['provider' => $providerId],
                 [
                     'name' => $providerData['name'] ?? ucfirst($providerId),
@@ -91,7 +91,7 @@ class SyncProvidersAndModels implements ShouldQueue
         $allData = $response->json();
 
         foreach ($allData as $providerId => $providerData) {
-            $provider = Provider::where('provider', $providerId)->first();
+            $provider = AiProvider::where('provider', $providerId)->first();
 
             if (! $provider) {
                 Log::warning('Provider not found for models', [
@@ -104,7 +104,7 @@ class SyncProvidersAndModels implements ShouldQueue
             $models = $providerData['models'] ?? [];
 
             foreach ($models as $modelId => $modelData) {
-                $model = AIModel::updateOrCreate(
+                $model = AiModel::updateOrCreate(
                     [
                         'provider_id' => $provider->id,
                         'model_id' => $modelId,

@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\FeUiPage;
+use Modules\UiBuilder\app\Models\Page;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 
@@ -28,9 +28,9 @@ class V2UiBuilderSeeder extends Seeder
 
         $pageKey = $config['id'] ?? 'page.agent.table.modal';
 
-        $page = FeUiPage::updateOrCreate(
+        $page = Page::updateOrCreate(
             ['key' => $pageKey],
-            ['config' => $config]
+            ['layout_tree_json' => $config]
         );
 
         $this->command->info("✓ Seeded page: {$pageKey}");
