@@ -15,4 +15,5 @@ return [
     App\Providers\ToolAwareServiceProvider::class,
     App\Providers\ToolServiceProvider::class,
     App\Providers\ToolTelemetryServiceProvider::class,
+    Modules\UiBuilder\UiBuilderServiceProvider::class,
 ];
