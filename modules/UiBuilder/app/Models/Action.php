@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Action extends Model
 {
-    protected $table = 'ui_actions';
+    protected $table = 'fe_ui_actions';
 
     protected $fillable = [
         'type',

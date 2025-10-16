@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Component extends Model
 {
-    protected $table = 'ui_components';
+    protected $table = 'fe_ui_components';
 
     protected $fillable = [
         'key',

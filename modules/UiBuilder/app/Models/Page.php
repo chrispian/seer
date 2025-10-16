@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Page extends Model
 {
-    protected $table = 'ui_pages';
+    protected $table = 'fe_ui_pages';
 
     protected $fillable = [
         'key',

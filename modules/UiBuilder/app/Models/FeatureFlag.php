@@ -9,7 +9,7 @@ class FeatureFlag extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'ui_feature_flags';
+    protected $table = 'fe_ui_feature_flags';
 
     protected $fillable = [
         'key',

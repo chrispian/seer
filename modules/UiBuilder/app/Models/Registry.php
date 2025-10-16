@@ -10,7 +10,7 @@ class Registry extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'ui_registry';
+    protected $table = 'fe_ui_registry';
 
     protected $fillable = [
         'type',

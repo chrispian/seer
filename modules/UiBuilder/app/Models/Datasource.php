@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Datasource extends Model
 {
-    protected $table = 'ui_datasources';
+    protected $table = 'fe_ui_datasources';
 
     protected $fillable = [
         'alias',
