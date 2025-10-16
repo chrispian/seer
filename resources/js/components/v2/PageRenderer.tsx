@@ -36,7 +36,7 @@ export function PageRenderer({ pageKey, open = true, onOpenChange }: PageRendere
     )
   }
 
-  const renderComponent = (componentConfig: ComponentConfig) => {
+  const renderComponent = (componentConfig: ComponentConfig): React.ReactNode => {
     const Component = componentRegistry.get(componentConfig.type)
 
     if (!Component) {
@@ -44,14 +44,30 @@ export function PageRenderer({ pageKey, open = true, onOpenChange }: PageRendere
       return null
     }
 
-    return <Component key={componentConfig.id} config={componentConfig} />
+    // Recursively render children if they exist
+    const children = componentConfig.children?.map((child) => renderComponent(child))
+
+    // Type assertion to allow children prop
+    const ComponentWithChildren = Component as React.ComponentType<{
+      config: ComponentConfig
+      children?: React.ReactNode
+    }>
+
+    return (
+      <ComponentWithChildren key={componentConfig.id} config={componentConfig}>
+        {children}
+      </ComponentWithChildren>
+    )
   }
 
-  const content = (
-    <>
-      {config.components.map(component => renderComponent(component))}
-    </>
-  )
+  // Support both old (components array) and new (layout object) schemas
+  const content = config.layout 
+    ? renderComponent(config.layout)
+    : (
+        <div className="space-y-4">
+          {config.components?.map((component: ComponentConfig) => renderComponent(component))}
+        </div>
+      )
 
   if (config.overlay === 'modal') {
     return (

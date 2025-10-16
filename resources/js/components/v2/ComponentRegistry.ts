@@ -155,6 +155,14 @@ export function registerLayoutComponents() {
   import('./layouts/AccordionComponent').then(({ AccordionComponent }) => {
     registry.register('accordion', AccordionComponent as ComponentRenderer);
   });
+
+  import('./layouts/RowsLayout').then(({ RowsLayout }) => {
+    registry.register('rows', RowsLayout as ComponentRenderer);
+  });
+
+  import('./layouts/ColumnsLayout').then(({ ColumnsLayout }) => {
+    registry.register('columns', ColumnsLayout as ComponentRenderer);
+  });
 }
 
 export function registerNavigationComponents() {
@@ -232,6 +240,7 @@ export function registerCompositeComponents() {
 export function registerAdvancedComponents() {
   import('./advanced/DataTableComponent').then(({ DataTableComponent }) => {
     registry.register('data-table', DataTableComponent as ComponentRenderer);
+    registry.register('table', DataTableComponent as ComponentRenderer);
   });
 
   import('./advanced/ChartComponent').then(({ ChartComponent }) => {

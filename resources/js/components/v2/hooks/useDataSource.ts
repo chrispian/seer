@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { apiPost } from '@/lib/api'
+import { apiGet } from '@/lib/api'
 import type { DataSourceQuery, DataSourceResult } from '../types'
 
 interface UseDataSourceOptions {
@@ -42,9 +42,25 @@ export function useDataSource<T = any>(options: UseDataSourceOptions): UseDataSo
     }
 
     try {
-      const result: DataSourceResult<T> = await apiPost(
-        `/api/v2/ui/datasources/${query.dataSource}`,
-        query
+      // Build query params for GET request
+      const params = new URLSearchParams()
+      if (query.search) params.append('search', query.search)
+      if (query.filters) {
+        Object.entries(query.filters).forEach(([key, value]) => {
+          params.append(`filters[${key}]`, String(value))
+        })
+      }
+      if (query.sort) {
+        params.append('sort[field]', query.sort.field)
+        params.append('sort[direction]', query.sort.direction)
+      }
+      if (query.pagination) {
+        params.append('page', String(query.pagination.page))
+        params.append('per_page', String(query.pagination.perPage))
+      }
+      
+      const result: DataSourceResult<T> = await apiGet(
+        `/api/v2/ui/datasources/${query.dataSource}?${params.toString()}`
       )
       
       setData(result.data)

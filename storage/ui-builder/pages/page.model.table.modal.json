@@ -1,0 +1,369 @@
+{
+    "id": "page.model.table.modal",
+    "overlay": "modal",
+    "title": "AI Models",
+    "layout": {
+        "type": "rows",
+        "id": "root-layout",
+        "children": [
+            {
+                "id": "component.search.bar.model",
+                "type": "search.bar",
+                "dataSource": "Model",
+                "props": {
+                    "placeholder": "Search models..."
+                },
+                "result": {
+                    "target": "component.table.model",
+                    "open": "inline"
+                }
+            },
+            {
+                "id": "component.table.model",
+                "type": "data-table",
+                "dataSource": "Model",
+                "props": {
+                    "columns": [
+                        {
+                            "key": "name",
+                            "label": "Name",
+                            "sortable": true
+                        },
+                        {
+                            "key": "model_id",
+                            "label": "Model ID",
+                            "sortable": true
+                        },
+                        {
+                            "key": "provider_name",
+                            "label": "Provider",
+                            "filterable": true
+                        },
+                        {
+                            "key": "enabled",
+                            "label": "Enabled",
+                            "filterable": true
+                        },
+                        {
+                            "key": "priority",
+                            "label": "Priority",
+                            "sortable": true
+                        },
+                        {
+                            "key": "updated_at",
+                            "label": "Updated",
+                            "sortable": true
+                        }
+                    ],
+                    "dataSource": "Model",
+                    "rowAction": {
+                        "type": "modal",
+                        "title": "Model Details",
+                        "url": "/api/v2/ui/types/Model/{{row.id}}",
+                        "fields": [
+                            {
+                                "key": "name",
+                                "label": "Name",
+                                "type": "text"
+                            },
+                            {
+                                "key": "model_id",
+                                "label": "Model ID",
+                                "type": "text"
+                            },
+                            {
+                                "key": "provider_name",
+                                "label": "Provider",
+                                "type": "text"
+                            },
+                            {
+                                "key": "description",
+                                "label": "Description",
+                                "type": "text"
+                            },
+                            {
+                                "key": "enabled",
+                                "label": "Enabled",
+                                "type": "text"
+                            },
+                            {
+                                "key": "priority",
+                                "label": "Priority",
+                                "type": "text"
+                            },
+                            {
+                                "key": "created_at",
+                                "label": "Created",
+                                "type": "date"
+                            },
+                            {
+                                "key": "updated_at",
+                                "label": "Updated",
+                                "type": "date"
+                            }
+                        ]
+                    },
+                    "toolbar": [
+                        {
+                            "id": "component.button.icon.add-model",
+                            "type": "button.icon",
+                            "props": {
+                                "icon": "plus",
+                                "label": "New Model"
+                            },
+                            "actions": {
+                                "click": {
+                                    "type": "modal",
+                                    "modal": "form",
+                                    "title": "Add AI Model",
+                                    "fields": [
+                                        {
+                                            "name": "name",
+                                            "label": "Model Name",
+                                            "type": "text",
+                                            "required": true,
+                                            "placeholder": "e.g., GPT-4"
+                                        },
+                                        {
+                                            "name": "model_id",
+                                            "label": "Model ID",
+                                            "type": "text",
+                                            "required": true,
+                                            "placeholder": "e.g., gpt-4-turbo"
+                                        },
+                                        {
+                                            "name": "provider_id",
+                                            "label": "Provider",
+                                            "type": "select",
+                                            "required": true,
+                                            "options": [
+                                                {
+                                                    "value": "9",
+                                                    "label": "Alibaba"
+                                                },
+                                                {
+                                                    "value": "18",
+                                                    "label": "Alibaba (China)"
+                                                },
+                                                {
+                                                    "value": "50",
+                                                    "label": "Amazon Bedrock"
+                                                },
+                                                {
+                                                    "value": "2",
+                                                    "label": "Anthropic"
+                                                },
+                                                {
+                                                    "value": "25",
+                                                    "label": "Azure"
+                                                },
+                                                {
+                                                    "value": "26",
+                                                    "label": "Baseten"
+                                                },
+                                                {
+                                                    "value": "51",
+                                                    "label": "Cerebras"
+                                                },
+                                                {
+                                                    "value": "21",
+                                                    "label": "Chutes"
+                                                },
+                                                {
+                                                    "value": "32",
+                                                    "label": "Cloudflare Workers AI"
+                                                },
+                                                {
+                                                    "value": "22",
+                                                    "label": "Cortecs"
+                                                },
+                                                {
+                                                    "value": "39",
+                                                    "label": "Deep Infra"
+                                                },
+                                                {
+                                                    "value": "17",
+                                                    "label": "DeepSeek"
+                                                },
+                                                {
+                                                    "value": "29",
+                                                    "label": "FastRouter"
+                                                },
+                                                {
+                                                    "value": "47",
+                                                    "label": "Fireworks AI"
+                                                },
+                                                {
+                                                    "value": "14",
+                                                    "label": "GitHub Copilot"
+                                                },
+                                                {
+                                                    "value": "23",
+                                                    "label": "GitHub Models"
+                                                },
+                                                {
+                                                    "value": "30",
+                                                    "label": "Google"
+                                                },
+                                                {
+                                                    "value": "13",
+                                                    "label": "Groq"
+                                                },
+                                                {
+                                                    "value": "27",
+                                                    "label": "Hugging Face"
+                                                },
+                                                {
+                                                    "value": "33",
+                                                    "label": "Inception"
+                                                },
+                                                {
+                                                    "value": "43",
+                                                    "label": "Inference"
+                                                },
+                                                {
+                                                    "value": "46",
+                                                    "label": "LMStudio"
+                                                },
+                                                {
+                                                    "value": "49",
+                                                    "label": "Llama"
+                                                },
+                                                {
+                                                    "value": "6",
+                                                    "label": "LucidQuery AI"
+                                                },
+                                                {
+                                                    "value": "15",
+                                                    "label": "Mistral"
+                                                },
+                                                {
+                                                    "value": "48",
+                                                    "label": "ModelScope"
+                                                },
+                                                {
+                                                    "value": "7",
+                                                    "label": "Moonshot AI"
+                                                },
+                                                {
+                                                    "value": "5",
+                                                    "label": "Moonshot AI (China)"
+                                                },
+                                                {
+                                                    "value": "45",
+                                                    "label": "Morph"
+                                                },
+                                                {
+                                                    "value": "11",
+                                                    "label": "Nvidia"
+                                                },
+                                                {
+                                                    "value": "52",
+                                                    "label": "Ollama (Local)"
+                                                },
+                                                {
+                                                    "value": "1",
+                                                    "label": "OpenAI"
+                                                },
+                                                {
+                                                    "value": "28",
+                                                    "label": "OpenCode Zen"
+                                                },
+                                                {
+                                                    "value": "4",
+                                                    "label": "OpenRouter"
+                                                },
+                                                {
+                                                    "value": "36",
+                                                    "label": "Perplexity"
+                                                },
+                                                {
+                                                    "value": "44",
+                                                    "label": "Requesty"
+                                                },
+                                                {
+                                                    "value": "38",
+                                                    "label": "Synthetic"
+                                                },
+                                                {
+                                                    "value": "24",
+                                                    "label": "Together AI"
+                                                },
+                                                {
+                                                    "value": "12",
+                                                    "label": "Upstage"
+                                                },
+                                                {
+                                                    "value": "20",
+                                                    "label": "Venice AI"
+                                                },
+                                                {
+                                                    "value": "16",
+                                                    "label": "Vercel AI Gateway"
+                                                },
+                                                {
+                                                    "value": "19",
+                                                    "label": "Vertex"
+                                                },
+                                                {
+                                                    "value": "31",
+                                                    "label": "Vertex"
+                                                },
+                                                {
+                                                    "value": "34",
+                                                    "label": "Weights & Biases"
+                                                },
+                                                {
+                                                    "value": "42",
+                                                    "label": "Z.AI"
+                                                },
+                                                {
+                                                    "value": "8",
+                                                    "label": "Z.AI Coding Plan"
+                                                },
+                                                {
+                                                    "value": "40",
+                                                    "label": "Zhipu AI"
+                                                },
+                                                {
+                                                    "value": "35",
+                                                    "label": "Zhipu AI Coding Plan"
+                                                },
+                                                {
+                                                    "value": "41",
+                                                    "label": "submodel"
+                                                },
+                                                {
+                                                    "value": "37",
+                                                    "label": "v0"
+                                                },
+                                                {
+                                                    "value": "10",
+                                                    "label": "xAI"
+                                                },
+                                                {
+                                                    "value": "3",
+                                                    "label": "Provider 3"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "submitUrl": "/api/v2/ui/datasources/Model",
+                                    "submitMethod": "POST",
+                                    "submitLabel": "Add Model",
+                                    "refreshTarget": "component.table.model"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "_meta": {
+        "version": 10,
+        "hash": "681d842a30c6983ce09c04512ead39be8d6cae1bd3dc77ddd1714abde5e598ce",
+        "last_updated": "2025-10-16T07:48:30+00:00",
+        "last_synced": "2025-10-16T07:48:31+00:00"
+    }
+}

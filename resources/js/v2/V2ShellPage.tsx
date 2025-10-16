@@ -2,15 +2,21 @@ import { useEffect, useState } from 'react'
 import { ComponentRenderer } from './ComponentRenderer'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import type { ComponentConfig } from '@/components/v2/types'
 
 interface PageConfig {
   id: string
-  key: string
   title?: string
   overlay?: 'modal' | 'sheet' | 'page'
-  layout_tree_json: {
-    overlay?: 'modal' | 'sheet' | 'page'
-    components: any[]
+  layout?: ComponentConfig
+  components?: ComponentConfig[]
+  _meta?: {
+    page_id: number
+    hash: string
+    version: number
+    enabled: boolean
+    module_key: string
+    timestamp: string
   }
 }
 
@@ -37,8 +43,10 @@ export function V2ShellPage({ pageKey }: V2ShellPageProps) {
         }
 
         const data = await response.json()
+        console.log('Loaded page config:', data)
         setConfig(data)
       } catch (err) {
+        console.error('Failed to load page:', err)
         setError(err instanceof Error ? err.message : 'Failed to load page')
       } finally {
         setLoading(false)
@@ -47,6 +55,16 @@ export function V2ShellPage({ pageKey }: V2ShellPageProps) {
 
     fetchPageConfig()
   }, [pageKey])
+
+  const renderComponent = (componentConfig: ComponentConfig): React.ReactNode => {
+    const children = componentConfig.children?.map((child) => renderComponent(child))
+    
+    return (
+      <ComponentRenderer key={componentConfig.id} config={componentConfig}>
+        {children}
+      </ComponentRenderer>
+    )
+  }
 
   if (loading) {
     return (
@@ -64,18 +82,15 @@ export function V2ShellPage({ pageKey }: V2ShellPageProps) {
     )
   }
 
-  const components = config.layout_tree_json?.components || []
+  const content = config.layout 
+    ? renderComponent(config.layout)
+    : (
+        <div className="flex flex-col gap-4">
+          {config.components?.map((component: ComponentConfig) => renderComponent(component))}
+        </div>
+      )
 
-  const content = (
-    <div className="flex flex-col gap-4">
-      {components.map((component: any, idx: number) => (
-        <ComponentRenderer key={component.id || idx} config={component} />
-      ))}
-    </div>
-  )
-
-  // Check for overlay type in layout_tree_json
-  const overlay = config.layout_tree_json?.overlay || 'page'
+  const overlay = config.overlay || 'page'
 
   if (overlay === 'modal') {
     if (!modalOpen) {

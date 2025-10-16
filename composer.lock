@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "63b25cce2074aa42a7349898fc636f3d",
+    "content-hash": "020f41269add0aec3adb35c69d53f096",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -2200,6 +2200,64 @@
                 "issues": "https://github.com/hollis-labs/laravel-tool-crate/issues"
             },
             "time": "2025-10-06T07:26:36+00:00"
+        },
+        {
+            "name": "hollis-labs/ui-builder",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:hollis-labs/ui-builder.git",
+                "reference": "4a944e84b673a4ffd7895f27ed16156cfad11970"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hollis-labs/ui-builder/zipball/4a944e84b673a4ffd7895f27ed16156cfad11970",
+                "reference": "4a944e84b673a4ffd7895f27ed16156cfad11970",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^10.0|^11.0|^12.0",
+                "illuminate/database": "^10.0|^11.0|^12.0",
+                "illuminate/support": "^10.0|^11.0|^12.0",
+                "php": "^8.1|^8.2|^8.3"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "HollisLabs\\UiBuilder\\UiBuilderServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "HollisLabs\\UiBuilder\\": "src/",
+                    "HollisLabs\\UiBuilder\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "Hollis Labs",
+                    "email": "info@hollislabs.com"
+                }
+            ],
+            "description": "Database-driven UI configuration system for building dynamic interfaces without code changes",
+            "keywords": [
+                "builder",
+                "configuration",
+                "dynamic",
+                "laravel",
+                "ui"
+            ],
+            "support": {
+                "source": "https://github.com/hollis-labs/ui-builder/tree/main",
+                "issues": "https://github.com/hollis-labs/ui-builder/issues"
+            },
+            "time": "2025-10-16T07:47:32+00:00"
         },
         {
             "name": "justinrainbow/json-schema",
@@ -13995,7 +14053,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "hollis-labs/ui-builder": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
