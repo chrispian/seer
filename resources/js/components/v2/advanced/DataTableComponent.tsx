@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { apiPost, apiGet } from '@/lib/api';
 import {
   useReactTable,
   getCoreRowModel,
@@ -87,7 +88,7 @@ function executeAction(action: ActionConfig, data?: any) {
   } else if (type === 'http' && url) {
     fetch(url, {
       method: action.method || 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(finalPayload),
     }).catch(console.error);
   }
@@ -340,7 +341,7 @@ export function DataTableComponent({ config }: { config: DataTableConfig }) {
     try {
       const response = await fetch(formModalConfig.submitUrl, {
         method: formModalConfig.submitMethod || 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(data),
       });
 

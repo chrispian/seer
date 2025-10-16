@@ -102,7 +102,7 @@ export function CommandComponent({ config }: { config: CommandConfig }) {
           if (action.url) {
             fetch(action.url, {
               method: action.method || 'GET',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
               body: action.payload ? JSON.stringify(action.payload) : undefined,
             });
           }

@@ -103,7 +103,7 @@ export function ComboboxComponent({ config }: { config: ComboboxConfig }) {
           if (action.url) {
             fetch(action.url, {
               method: action.method || 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
               body: JSON.stringify({ ...action.payload, value: newValue }),
             });
           }

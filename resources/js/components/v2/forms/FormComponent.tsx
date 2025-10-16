@@ -30,7 +30,7 @@ export function FormComponent({ config }: { config: FormConfig }) {
       } else if (type === 'http' && url) {
         fetch(url, {
           method: method || 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify(submitData),
         }).catch(console.error);
       }
