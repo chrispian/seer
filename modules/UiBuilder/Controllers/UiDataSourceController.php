@@ -3,7 +3,7 @@
 namespace Modules\UiBuilder\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\FeUiDatasource;
+use Modules\UiBuilder\Models\FeUiDatasource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

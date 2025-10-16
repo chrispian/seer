@@ -34,6 +34,12 @@ export function DetailComponent({ config, data: initialData }: DetailComponentPr
       }
 
       const result = await response.json()
+      
+      // All API responses should be wrapped in { data: ... } format
+      if (!result.data) {
+        console.warn('API response not wrapped. Expected { data: ... } format')
+      }
+      
       setData(result.data || result)
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to load data'))
