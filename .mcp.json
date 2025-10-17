@@ -1,21 +1,21 @@
 {
   "mcpServers": {
     "laravel-tool-crate": {
-      "command": "php",
+      "command": "/opt/homebrew/bin/php",
       "args": [
         "./artisan",
         "tool-crate:mcp"
       ]
     },
     "orch": {
-      "command": "php",
+      "command": "/opt/homebrew/bin/php",
       "args": [
         "./artisan",
         "orchestration:mcp"
       ]
     },
     "laravel-boost": {
-      "command": "php",
+      "command": "/opt/homebrew/bin/php",
       "args": [
         "./artisan",
         "boost:mcp"

@@ -2207,12 +2207,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:hollis-labs/ui-builder.git",
-                "reference": "4a944e84b673a4ffd7895f27ed16156cfad11970"
+                "reference": "76a4c2701ab0ffabd6b799d15713e2833db7cd3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hollis-labs/ui-builder/zipball/4a944e84b673a4ffd7895f27ed16156cfad11970",
-                "reference": "4a944e84b673a4ffd7895f27ed16156cfad11970",
+                "url": "https://api.github.com/repos/hollis-labs/ui-builder/zipball/76a4c2701ab0ffabd6b799d15713e2833db7cd3d",
+                "reference": "76a4c2701ab0ffabd6b799d15713e2833db7cd3d",
                 "shasum": ""
             },
             "require": {
@@ -2242,7 +2242,7 @@
             "authors": [
                 {
                     "name": "Hollis Labs",
-                    "email": "info@hollislabs.com"
+                    "email": "chrispian@hollislabs.com"
                 }
             ],
             "description": "Database-driven UI configuration system for building dynamic interfaces without code changes",
@@ -2257,7 +2257,7 @@
                 "source": "https://github.com/hollis-labs/ui-builder/tree/main",
                 "issues": "https://github.com/hollis-labs/ui-builder/issues"
             },
-            "time": "2025-10-16T07:47:32+00:00"
+            "time": "2025-10-17T05:00:54+00:00"
         },
         {
             "name": "justinrainbow/json-schema",
