@@ -154,7 +154,7 @@ class SyncUiPages extends Command
 
         if ($forceImport) {
             $this->info('Force importing JSON to database...');
-            $this->call('db:seed', ['--class' => 'HollisLabs\\UiBuilder\\Database\\Seeders\\V2UiBuilderSeeder']);
+                    $this->call('db:seed', ['--class' => 'HollisLabs\\UiBuilder\\database\\seeders\\UiBuilderSeeder']);
             return 0;
         }
 
@@ -179,7 +179,7 @@ class SyncUiPages extends Command
 
                 case '2':
                     $this->info('Importing JSON to database...');
-                    $this->call('db:seed', ['--class' => 'HollisLabs\\UiBuilder\\Database\\Seeders\\V2UiBuilderSeeder']);
+            $this->call('db:seed', ['--class' => 'HollisLabs\\UiBuilder\\database\\seeders\\UiBuilderSeeder']);
                     $this->info('✓ Imported');
                     break;
 
