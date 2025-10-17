@@ -2,6 +2,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { bootIslands } from './boot'
 import { Toaster } from 'sonner'
+import '@hollis-labs/ui-builder'
 
 export function mount(id: string, node: React.ReactNode) {
   const el = document.getElementById(id)
@@ -15,4 +16,3 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!boot) return // not on our shell
   bootIslands(mount, boot)
 })
-
