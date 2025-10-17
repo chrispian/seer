@@ -6,6 +6,7 @@ module.exports = {
         './resources/**/*.vue',
         "./resources/views/**/*.blade.php",
         "./resources/js/**/*.{ts,tsx}",
+        './node_modules/@hollis-labs/ui-builder/**/*.{js,ts,jsx,tsx}', // ← include lib
     ],
     safelist: [
         {

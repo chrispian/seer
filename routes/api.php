@@ -222,20 +222,20 @@ Route::prefix('orchestration')->group(function () {
     Route::get('/events/timeline', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'timeline']);
     Route::get('/events/stats', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'stats']);
     Route::post('/events/replay', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'replay']);
-    
+
     Route::get('/sprints/{code}/history', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'sprintHistory']);
     Route::get('/tasks/{code}/history', [\App\Http\Controllers\Api\OrchestrationEventController::class, 'taskHistory']);
-    
+
     Route::get('/templates', [\App\Http\Controllers\Api\OrchestrationTemplateController::class, 'index']);
     Route::get('/templates/{type}/{name}', [\App\Http\Controllers\Api\OrchestrationTemplateController::class, 'show']);
     Route::post('/sprints/from-template', [\App\Http\Controllers\Api\OrchestrationSprintController::class, 'createFromTemplate']);
     Route::post('/sprints/{code}/sync', [\App\Http\Controllers\Api\OrchestrationSprintController::class, 'sync']);
     Route::post('/sprints/{code}/tasks/from-template', [\App\Http\Controllers\Api\OrchestrationTaskController::class, 'createFromTemplate']);
-    
+
     Route::post('/agent/init', [\App\Http\Controllers\Api\OrchestrationAgentController::class, 'init']);
     Route::get('/sessions/{sessionKey}/context', [\App\Http\Controllers\Api\OrchestrationAgentController::class, 'getSessionContext']);
     Route::post('/sessions/{sessionKey}/activity', [\App\Http\Controllers\Api\OrchestrationAgentController::class, 'logActivity']);
-    
+
     Route::post('/pm-tools/adr', [\App\Http\Controllers\Api\OrchestrationPMToolsController::class, 'generateADR']);
     Route::post('/pm-tools/bug-report', [\App\Http\Controllers\Api\OrchestrationPMToolsController::class, 'generateBugReport']);
     Route::post('/pm-tools/task-status', [\App\Http\Controllers\Api\OrchestrationPMToolsController::class, 'updateTaskStatus']);
@@ -254,7 +254,7 @@ Route::prefix('orchestration')->group(function () {
     Route::patch('/tasks/{id}/field', [\App\Http\Controllers\Orchestration\TaskController::class, 'updateField']);
     Route::patch('/tasks/{id}/tags', [\App\Http\Controllers\Orchestration\TaskController::class, 'updateTags']);
     Route::get('/tasks/sprints/available', [\App\Http\Controllers\Orchestration\TaskController::class, 'getAvailableSprints']);
-    
+
     Route::get('/tasks/{taskId}/activities', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'index']);
     Route::post('/tasks/{taskId}/activities', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'store']);
     Route::get('/tasks/{taskId}/activities/summary', [\App\Http\Controllers\Orchestration\TaskActivityController::class, 'summary']);
@@ -299,10 +299,10 @@ Route::middleware(['web'])->post('/approvals/{id}/timeout', function ($id) {
     return response()->json(['success' => true]);
 });
 
-// FE Types API routes (v2/ui prefix)
-Route::prefix('v2/ui')->group(function () {
+// FE Types API routes
+Route::prefix('/ui')->group(function () {
     // UI Builder page routes moved to modules/UiBuilder/routes/api.php
-    
+
     Route::get('/types/{alias}/query', [\App\Http\Controllers\Api\TypesController::class, 'query']);
     Route::get('/types/{alias}/{id}', [\App\Http\Controllers\Api\TypesController::class, 'show']);
 });

@@ -57,7 +57,7 @@
                     "rowAction": {
                         "type": "modal",
                         "title": "Agent Details",
-                        "url": "/api/v2/ui/types/Agent/{{row.id}}",
+                        "url": "/api/ui/types/Agent/{{row.id}}",
                         "fields": [
                             {
                                 "key": "name",
@@ -146,7 +146,7 @@
                                             ]
                                         }
                                     ],
-                                    "submitUrl": "/api/v2/ui/datasources/Agent",
+                                    "submitUrl": "/api/ui/datasources/Agent",
                                     "submitMethod": "POST",
                                     "submitLabel": "Create Agent",
                                     "refreshTarget": "component.table.agent"

@@ -59,7 +59,7 @@
                     "rowAction": {
                         "type": "modal",
                         "title": "Model Details",
-                        "url": "/api/v2/ui/types/Model/{{row.id}}",
+                        "url": "/api/ui/types/Model/{{row.id}}",
                         "fields": [
                             {
                                 "key": "name",
@@ -348,7 +348,7 @@
                                             ]
                                         }
                                     ],
-                                    "submitUrl": "/api/v2/ui/datasources/Model",
+                                    "submitUrl": "/api/ui/datasources/Model",
                                     "submitMethod": "POST",
                                     "submitLabel": "Add Model",
                                     "refreshTarget": "component.table.model"

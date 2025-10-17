@@ -6,10 +6,12 @@
         "dev": "echo '⚠️  Use npm run build instead - Vite dev server disabled for this project' && exit 1"
     },
     "devDependencies": {
+        "@hollis-labs/ui-builder": "github:hollis-labs/ui-builder",
         "@tailwindcss/postcss": "^4.1.13",
         "@tailwindcss/typography": "^0.5.18",
         "@tailwindcss/vite": "^4.0.0",
         "@tiptap/pm": "^3.6.1",
+        "@types/node": "^24.8.0",
         "@vitejs/plugin-react": "^4.7.0",
         "autoprefixer": "^10.4.21",
         "axios": "^1.8.2",

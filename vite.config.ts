@@ -8,24 +8,24 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.tsx',
-                'resources/js/v2/main.tsx'
+                'resources/js/ui-builder-app.tsx',
             ],
-            refresh: true,
+            refresh: [
+                'resources/views/**/*.blade.php',
+                'vendor/hollis-labs/ui-builder/resources/views/**/*.blade.php', // triggers page reloads
+            ],
         }),
         react({
             jsxRuntime: 'automatic',
         }),
     ],
     resolve: {
+        dedupe: ['react', 'react-dom'],
         alias: {
             '@': '/resources/js',
         },
     },
-    optimizeDeps: {
-        include: ['react', 'react-dom'],
-        // Force re-optimization when dependencies change
-        force: false,
-    },
+
     // Configure HMR to be more resilient
     server: {
         hmr: {
