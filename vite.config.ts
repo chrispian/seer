@@ -21,6 +21,9 @@ export default defineConfig({
     ],
     resolve: {
         dedupe: ['react', 'react-dom'],
+        alias: {
+            '@': '/resources/js',
+        },
     },
 
     // Configure HMR to be more resilient
