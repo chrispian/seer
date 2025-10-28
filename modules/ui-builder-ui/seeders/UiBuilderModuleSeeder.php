@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Seeders;
+namespace HollisLabs\UiBuilder\Database\Seeders;
 
 use HollisLabs\UiBuilder\Models\Module;
 use Illuminate\Database\Seeder;
