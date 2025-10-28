@@ -4,7 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Models\TaskActivity;
 use App\Models\WorkItem;
-use EchoLabs\ToolCrate\Tool as ToolCrate;
+use HollisLabs\ToolCrate\Tool as ToolCrate;
 use HollisLabs\ToolCrate\Contracts\Tool;
 
 class TaskActivitiesLogTool implements Tool

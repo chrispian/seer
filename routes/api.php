@@ -299,10 +299,8 @@ Route::middleware(['web'])->post('/approvals/{id}/timeout', function ($id) {
     return response()->json(['success' => true]);
 });
 
-// FE Types API routes
+// FE Types API routes (handled by UI Builder package)
 Route::prefix('/ui')->group(function () {
-    // UI Builder page routes moved to modules/UiBuilder/routes/api.php
-
-    Route::get('/types/{alias}/query', [\App\Http\Controllers\Api\TypesController::class, 'query']);
-    Route::get('/types/{alias}/{id}', [\App\Http\Controllers\Api\TypesController::class, 'show']);
+    // UI Builder page routes and types routes moved to UI Builder package
+    // See vendor/hollis-labs/ui-builder/routes/api.php
 });

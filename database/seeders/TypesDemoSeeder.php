@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\DTOs\Types\TypeField;
-use App\DTOs\Types\TypeRelation;
-use App\DTOs\Types\TypeSchema;
-use App\Services\Types\TypeRegistry;
+use HollisLabs\UiBuilder\DTOs\Types\TypeField;
+use HollisLabs\UiBuilder\DTOs\Types\TypeRelation;
+use HollisLabs\UiBuilder\DTOs\Types\TypeSchema;
+use HollisLabs\UiBuilder\Services\Types\TypeRegistry;
 use Illuminate\Database\Seeder;
 
 class TypesDemoSeeder extends Seeder
