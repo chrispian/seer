@@ -79,7 +79,7 @@ class UiBuilderPagesSeeder extends Seeder
                             'rowAction' => [
                                 'type' => 'modal',
                                 'title' => 'Page Details',
-                                'url' => '/api/ui/types/UiPage/{{row.id}}',
+                                'url' => '/api/ui/datasources/UiPage/{{row.id}}',
                                 'fields' => [
                                     [
                                         'key' => 'id',
@@ -299,7 +299,7 @@ class UiBuilderPagesSeeder extends Seeder
                             'rowAction' => [
                                 'type' => 'modal',
                                 'title' => 'Component Details',
-                                'url' => '/api/ui/types/UiComponent/{{row.id}}',
+                                'url' => '/api/ui/datasources/UiComponent/{{row.id}}',
                                 'fields' => [
                                     [
                                         'key' => 'id',
