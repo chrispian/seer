@@ -16,11 +16,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Bind the SimpleTypeResolver for v2 UI system
-        $this->app->bind(
-            \App\Services\Types\TypeResolver::class,
-            \App\Services\Types\SimpleTypeResolver::class
-        );
+        //
     }
 
     /**

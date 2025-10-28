@@ -28,11 +28,11 @@ class DevRefreshCommand extends Command
     public function handle(): int
     {
         $this->info('🔄 Starting development refresh...');
-        
+
         // Clear all Laravel caches
         $this->info('Clearing Laravel caches...');
         $this->call('optimize:clear');
-        
+
         // Clear specific UI builder caches
         $this->info('Clearing UI builder caches...');
         Cache::forget('datasource.Agent');
@@ -40,21 +40,20 @@ class DevRefreshCommand extends Command
         Cache::forget('ui-builder.datasources');
         Cache::forget('ui-builder.components');
         Cache::forget('ui-builder.pages');
-        Cache::forget('ui-builder.registry');
-        
+
         // Clear Filament caches
         $this->info('Clearing Filament caches...');
         $this->call('filament:optimize-clear');
-        
+
         // Clear view caches
         $this->info('Clearing view caches...');
         $this->call('view:clear');
-        
+
         // Build frontend assets unless skipped
         if (!$this->option('skip-build')) {
             $this->info('Building frontend assets...');
             $result = Process::run('npm run build');
-            
+
             if ($result->successful()) {
                 $this->info('✅ Frontend assets built successfully');
             } else {
@@ -65,11 +64,11 @@ class DevRefreshCommand extends Command
         } else {
             $this->warn('⚠️  Skipping frontend build (--skip-build flag used)');
         }
-        
+
         $this->newLine();
         $this->info('✨ Development refresh complete!');
         $this->info('All caches cleared and assets rebuilt.');
-        
+
         return 0;
     }
 }

@@ -2,11 +2,11 @@
 
 namespace App\Providers;
 
-use App\Console\Commands\TelemetryCleanupCommand;
-use App\Console\Commands\TelemetryExportCommand;
-use App\Console\Commands\TelemetryHealthCommand;
-use App\Console\Commands\TelemetryQueryCommand;
-use App\Console\Commands\TelemetryTestCommand;
+use App\Console\Commands\Telemetry\TelemetryCleanupCommand;
+use App\Console\Commands\Telemetry\TelemetryExportCommand;
+use App\Console\Commands\Telemetry\TelemetryHealthCommand;
+use App\Console\Commands\Telemetry\TelemetryQueryCommand;
+use App\Console\Commands\Telemetry\TelemetryTestCommand;
 use App\Services\Telemetry\TelemetryAdapter;
 use App\Services\Telemetry\TelemetryQueryService;
 use App\Services\Telemetry\TelemetrySink;
