@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Commands;
+namespace App\Console\Commands;
 
 use App\Services\Telemetry\CommandMetricsAnalyzer;
 use Illuminate\Console\Command;
