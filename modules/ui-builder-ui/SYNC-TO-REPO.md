@@ -62,7 +62,7 @@ Successfully consolidated the FeType and DataSource systems into a single unifie
 2. ✅ `database/seeders/UiBuilderModuleSeeder.php`
 3. ✅ `database/seeders/UiBuilderPagesSeeder.php`
 4. ✅ `database/seeders/UiBuilderUiSeeder.php`
-   - All updated with namespace `HollisLabs\UiBuilder\database\seeders`
+   - All updated with namespace `HollisLabs\UiBuilder\Database\Seeders`
 
 ---
 
