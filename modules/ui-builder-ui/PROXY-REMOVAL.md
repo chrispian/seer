@@ -28,6 +28,7 @@ Removed the confusing `TypesController` proxy that was creating ambiguity about 
 ### Deleted
 
 - `src/Http/Controllers/TypesController.php` - Entire file removed
+- `database/seeders/TypeSeeder.php` - Obsolete seeder for deleted FeType system
 
 ## API Route Changes
 
@@ -79,8 +80,9 @@ Tested: ✅ GET `/api/ui/datasources/UiPage/1` returns 200 with correct data
 ```bash
 # In the actual UI Builder repository:
 
-# Delete old controller
+# Delete old controller and seeder
 git rm src/Http/Controllers/TypesController.php
+git rm database/seeders/TypeSeeder.php
 
 # Add modified files
 git add src/Http/Controllers/DataSourceController.php
