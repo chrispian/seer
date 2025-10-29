@@ -57,7 +57,7 @@
                     "rowAction": {
                         "type": "modal",
                         "title": "Agent Details",
-                        "url": "/api/ui/types/Agent/{{row.id}}",
+                        "url": "/api/ui/datasources/Agent/{{row.id}}",
                         "fields": [
                             {
                                 "key": "name",
@@ -162,6 +162,6 @@
         "version": 20,
         "hash": "5b1fdb9b9e8f5bbb8b88bb468ba5d55109a75dfc27afbcfe6ae74a9ef49b002d",
         "last_updated": "2025-10-17T13:51:49+00:00",
-        "last_synced": "2025-10-17T16:48:13+00:00"
+        "last_synced": "2025-10-29T02:01:23+00:00"
     }
 }

@@ -1,0 +1,182 @@
+{
+    "id": "page.ui-builder.components.list",
+    "overlay": "modal",
+    "title": "UI Components",
+    "layout": {
+        "type": "rows",
+        "id": "root-layout",
+        "children": [
+            {
+                "id": "component.search.bar.components",
+                "type": "search.bar",
+                "props": {
+                    "placeholder": "Search components..."
+                },
+                "result": {
+                    "target": "component.table.components",
+                    "open": "inline"
+                }
+            },
+            {
+                "id": "component.table.components",
+                "type": "data-table",
+                "props": {
+                    "dataSource": "UiComponent",
+                    "columns": [
+                        {
+                            "key": "key",
+                            "label": "Component Key",
+                            "sortable": true
+                        },
+                        {
+                            "key": "type",
+                            "label": "Type",
+                            "filterable": true
+                        },
+                        {
+                            "key": "kind",
+                            "label": "Kind",
+                            "filterable": true
+                        },
+                        {
+                            "key": "variant",
+                            "label": "Variant",
+                            "sortable": true
+                        },
+                        {
+                            "key": "version",
+                            "label": "Version",
+                            "sortable": true
+                        },
+                        {
+                            "key": "updated_at",
+                            "label": "Updated",
+                            "sortable": true
+                        }
+                    ],
+                    "rowAction": {
+                        "type": "modal",
+                        "title": "Component Details",
+                        "url": "/api/ui/datasources/UiComponent/{{row.id}}",
+                        "fields": [
+                            {
+                                "key": "id",
+                                "label": "ID",
+                                "type": "text"
+                            },
+                            {
+                                "key": "key",
+                                "label": "Component Key",
+                                "type": "text"
+                            },
+                            {
+                                "key": "type",
+                                "label": "Type",
+                                "type": "text"
+                            },
+                            {
+                                "key": "kind",
+                                "label": "Kind",
+                                "type": "text"
+                            },
+                            {
+                                "key": "variant",
+                                "label": "Variant",
+                                "type": "text"
+                            },
+                            {
+                                "key": "version",
+                                "label": "Version",
+                                "type": "text"
+                            },
+                            {
+                                "key": "created_at",
+                                "label": "Created",
+                                "type": "date"
+                            },
+                            {
+                                "key": "updated_at",
+                                "label": "Updated",
+                                "type": "date"
+                            }
+                        ]
+                    },
+                    "toolbar": [
+                        {
+                            "id": "component.button.icon.add-component",
+                            "type": "button.icon",
+                            "props": {
+                                "icon": "plus",
+                                "label": "New Component"
+                            },
+                            "actions": {
+                                "click": {
+                                    "type": "modal",
+                                    "modal": "form",
+                                    "title": "Create New Component",
+                                    "fields": [
+                                        {
+                                            "name": "key",
+                                            "label": "Component Key",
+                                            "type": "text",
+                                            "required": true,
+                                            "placeholder": "component.module.name"
+                                        },
+                                        {
+                                            "name": "type",
+                                            "label": "Component Type",
+                                            "type": "text",
+                                            "required": true,
+                                            "placeholder": "e.g., button, input, card"
+                                        },
+                                        {
+                                            "name": "kind",
+                                            "label": "Kind",
+                                            "type": "select",
+                                            "required": false,
+                                            "options": [
+                                                {
+                                                    "value": "primitive",
+                                                    "label": "Primitive"
+                                                },
+                                                {
+                                                    "value": "composite",
+                                                    "label": "Composite"
+                                                },
+                                                {
+                                                    "value": "layout",
+                                                    "label": "Layout"
+                                                },
+                                                {
+                                                    "value": "advanced",
+                                                    "label": "Advanced"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "name": "variant",
+                                            "label": "Variant (optional)",
+                                            "type": "text",
+                                            "required": false,
+                                            "placeholder": "e.g., default, outline"
+                                        }
+                                    ],
+                                    "submitUrl": "/api/ui/datasources/UiComponent",
+                                    "submitMethod": "POST",
+                                    "submitLabel": "Create Component",
+                                    "refreshTarget": "component.table.components"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "_meta": {
+        "version": 2,
+        "hash": "b16476d1f3bab2aee01094b201e057d3ecf9398e2baa55d34dd168a0ac3dcbfe",
+        "last_updated": "2025-10-28T18:10:01+00:00",
+        "last_synced": "2025-10-29T02:01:23+00:00"
+    }
+}

@@ -1,0 +1,211 @@
+{
+    "id": "page.ui-builder.pages.list",
+    "overlay": "modal",
+    "title": "UI Pages",
+    "layout": {
+        "type": "rows",
+        "id": "root-layout",
+        "children": [
+            {
+                "id": "component.search.bar.pages",
+                "type": "search.bar",
+                "props": {
+                    "placeholder": "Search pages..."
+                },
+                "result": {
+                    "target": "component.table.pages",
+                    "open": "inline"
+                }
+            },
+            {
+                "id": "component.table.pages",
+                "type": "data-table",
+                "props": {
+                    "dataSource": "UiPage",
+                    "columns": [
+                        {
+                            "key": "key",
+                            "label": "Page Key",
+                            "sortable": true
+                        },
+                        {
+                            "key": "route",
+                            "label": "Route",
+                            "sortable": true
+                        },
+                        {
+                            "key": "module_key",
+                            "label": "Module",
+                            "filterable": true
+                        },
+                        {
+                            "key": "enabled",
+                            "label": "Enabled",
+                            "filterable": true,
+                            "render": "badge"
+                        },
+                        {
+                            "key": "version",
+                            "label": "Version",
+                            "sortable": true
+                        },
+                        {
+                            "key": "updated_at",
+                            "label": "Updated",
+                            "sortable": true
+                        }
+                    ],
+                    "rowAction": {
+                        "type": "modal",
+                        "title": "Page Details",
+                        "url": "/api/ui/datasources/UiPage/{{row.id}}",
+                        "fields": [
+                            {
+                                "key": "id",
+                                "label": "ID",
+                                "type": "text"
+                            },
+                            {
+                                "key": "key",
+                                "label": "Page Key",
+                                "type": "text"
+                            },
+                            {
+                                "key": "route",
+                                "label": "Route",
+                                "type": "text"
+                            },
+                            {
+                                "key": "module_key",
+                                "label": "Module",
+                                "type": "text"
+                            },
+                            {
+                                "key": "enabled",
+                                "label": "Enabled",
+                                "type": "text"
+                            },
+                            {
+                                "key": "version",
+                                "label": "Version",
+                                "type": "text"
+                            },
+                            {
+                                "key": "hash",
+                                "label": "Hash",
+                                "type": "text"
+                            },
+                            {
+                                "key": "created_at",
+                                "label": "Created",
+                                "type": "date"
+                            },
+                            {
+                                "key": "updated_at",
+                                "label": "Updated",
+                                "type": "date"
+                            }
+                        ]
+                    },
+                    "toolbar": [
+                        {
+                            "id": "component.button.icon.add-page",
+                            "type": "button.icon",
+                            "props": {
+                                "icon": "plus",
+                                "label": "New Page"
+                            },
+                            "actions": {
+                                "click": {
+                                    "type": "modal",
+                                    "modal": "form",
+                                    "title": "Create New Page",
+                                    "fields": [
+                                        {
+                                            "name": "key",
+                                            "label": "Page Key",
+                                            "type": "text",
+                                            "required": true,
+                                            "placeholder": "page.module.name.type"
+                                        },
+                                        {
+                                            "name": "title",
+                                            "label": "Title",
+                                            "type": "text",
+                                            "required": false,
+                                            "placeholder": "e.g., User Management"
+                                        },
+                                        {
+                                            "name": "overlay",
+                                            "label": "Display Type",
+                                            "type": "select",
+                                            "required": true,
+                                            "options": [
+                                                {
+                                                    "value": "modal",
+                                                    "label": "Modal"
+                                                },
+                                                {
+                                                    "value": "sheet",
+                                                    "label": "Sheet"
+                                                },
+                                                {
+                                                    "value": "drawer",
+                                                    "label": "Drawer"
+                                                },
+                                                {
+                                                    "value": "fullscreen",
+                                                    "label": "Full Screen"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "name": "route",
+                                            "label": "Route (optional)",
+                                            "type": "text",
+                                            "required": false,
+                                            "placeholder": "/admin/pages"
+                                        },
+                                        {
+                                            "name": "module_key",
+                                            "label": "Module",
+                                            "type": "select",
+                                            "required": false,
+                                            "options": [
+                                                {
+                                                    "value": "core.ui-builder",
+                                                    "label": "UI Builder"
+                                                },
+                                                {
+                                                    "value": "core.agents",
+                                                    "label": "Agent Management"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "name": "enabled",
+                                            "label": "Enabled",
+                                            "type": "checkbox",
+                                            "required": false,
+                                            "defaultValue": true
+                                        }
+                                    ],
+                                    "submitUrl": "/api/ui/datasources/UiPage",
+                                    "submitMethod": "POST",
+                                    "submitLabel": "Create Page",
+                                    "refreshTarget": "component.table.pages"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "_meta": {
+        "version": 2,
+        "hash": "98fddd89081cfc5f57021dcb416a4c044910d46572f02aa17314bc413b4264dc",
+        "last_updated": "2025-10-28T18:10:01+00:00",
+        "last_synced": "2025-10-29T02:01:23+00:00"
+    }
+}
