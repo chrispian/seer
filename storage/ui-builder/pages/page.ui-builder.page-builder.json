@@ -1,0 +1,666 @@
+{
+  "id": "page.ui-builder.page-builder",
+  "overlay": "page",
+  "title": "Page Builder",
+  "layout": {
+    "type": "rows",
+    "id": "root-layout",
+    "children": [
+      {
+        "id": "builder-header",
+        "type": "card",
+        "props": {
+          "variant": "outlined",
+          "className": "mb-4"
+        },
+        "children": [
+          {
+            "id": "header-content",
+            "type": "rows",
+            "children": [
+              {
+                "id": "title-section",
+                "type": "typography",
+                "props": {
+                  "variant": "h2",
+                  "text": "Page Configuration Builder"
+                }
+              },
+              {
+                "id": "description",
+                "type": "typography",
+                "props": {
+                  "variant": "muted",
+                  "text": "Build complex pages by composing components, data sources, and actions. Progress is saved automatically."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "builder-main",
+        "type": "columns",
+        "props": {
+          "className": "gap-4"
+        },
+        "children": [
+          {
+            "id": "builder-form",
+            "type": "card",
+            "props": {
+              "className": "flex-1"
+            },
+            "children": [
+              {
+                "id": "form-container",
+                "type": "accordion",
+                "props": {
+                  "type": "single",
+                  "collapsible": true,
+                  "defaultValue": "page-basics"
+                },
+                "children": [
+                  {
+                    "id": "section-page-basics",
+                    "type": "accordion-item",
+                    "props": {
+                      "value": "page-basics",
+                      "trigger": "1. Page Basics"
+                    },
+                    "children": [
+                      {
+                        "id": "basics-form",
+                        "type": "form",
+                        "props": {
+                          "fields": [
+                            {
+                              "name": "page_key",
+                              "label": "Page Key",
+                              "type": "text",
+                              "required": true,
+                              "placeholder": "page.custom.mypage",
+                              "description": "Format: page.{module}.{name}",
+                              "validation": {
+                                "pattern": "^page\\.[a-z0-9-]+\\.[a-z0-9-]+$"
+                              }
+                            },
+                            {
+                              "name": "title",
+                              "label": "Page Title",
+                              "type": "text",
+                              "required": true,
+                              "placeholder": "My Custom Page"
+                            },
+                            {
+                              "name": "overlay",
+                              "label": "Display Type",
+                              "type": "select",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "Full Page",
+                                  "value": "page"
+                                },
+                                {
+                                  "label": "Modal Dialog",
+                                  "value": "modal"
+                                },
+                                {
+                                  "label": "Side Drawer",
+                                  "value": "drawer"
+                                }
+                              ],
+                              "defaultValue": "page"
+                            },
+                            {
+                              "name": "route",
+                              "label": "Route (optional)",
+                              "type": "text",
+                              "placeholder": "/my-page",
+                              "description": "URL path for this page"
+                            },
+                            {
+                              "name": "module_key",
+                              "label": "Module",
+                              "type": "select",
+                              "options": [
+                                {
+                                  "label": "Core UI Builder",
+                                  "value": "core.ui-builder"
+                                },
+                                {
+                                  "label": "Core App",
+                                  "value": "core.app"
+                                },
+                                {
+                                  "label": "Custom",
+                                  "value": "custom"
+                                }
+                              ]
+                            }
+                          ],
+                          "submitLabel": "Save Basics",
+                          "onSubmit": {
+                            "type": "http",
+                            "url": "/api/ui/builder/save-progress",
+                            "method": "POST"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "section-layout",
+                    "type": "accordion-item",
+                    "props": {
+                      "value": "layout",
+                      "trigger": "2. Layout Type"
+                    },
+                    "children": [
+                      {
+                        "id": "layout-form",
+                        "type": "form",
+                        "props": {
+                          "fields": [
+                            {
+                              "name": "layout_type",
+                              "label": "Layout Direction",
+                              "type": "select",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "Vertical Stack (Rows)",
+                                  "value": "rows"
+                                },
+                                {
+                                  "label": "Horizontal Stack (Columns)",
+                                  "value": "columns"
+                                },
+                                {
+                                  "label": "CSS Grid",
+                                  "value": "grid"
+                                },
+                                {
+                                  "label": "Layered (Stack)",
+                                  "value": "stack"
+                                }
+                              ],
+                              "defaultValue": "rows",
+                              "description": "How components are arranged"
+                            },
+                            {
+                              "name": "layout_id",
+                              "label": "Layout ID",
+                              "type": "text",
+                              "defaultValue": "root-layout",
+                              "description": "Unique identifier for this layout"
+                            }
+                          ],
+                          "submitLabel": "Save Layout",
+                          "onSubmit": {
+                            "type": "http",
+                            "url": "/api/ui/builder/save-progress",
+                            "method": "POST"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "section-components",
+                    "type": "accordion-item",
+                    "props": {
+                      "value": "components",
+                      "trigger": "3. Add Components"
+                    },
+                    "children": [
+                      {
+                        "id": "components-builder",
+                        "type": "rows",
+                        "children": [
+                          {
+                            "id": "component-list-header",
+                            "type": "typography",
+                            "props": {
+                              "variant": "h4",
+                              "text": "Current Components",
+                              "className": "mb-2"
+                            }
+                          },
+                          {
+                            "id": "component-list",
+                            "type": "data-table",
+                            "props": {
+                              "dataSource": "BuilderComponents",
+                              "emptyText": "No components added yet. Click 'Add Component' below.",
+                              "columns": [
+                                {
+                                  "key": "id",
+                                  "label": "Component ID",
+                                  "sortable": false
+                                },
+                                {
+                                  "key": "type",
+                                  "label": "Type",
+                                  "sortable": false
+                                },
+                                {
+                                  "key": "order",
+                                  "label": "Order",
+                                  "sortable": true
+                                }
+                              ],
+                              "rowAction": {
+                                "type": "modal",
+                                "title": "Edit Component",
+                                "url": "/api/ui/builder/component/{{row.id}}",
+                                "modal": "form"
+                              },
+                              "toolbar": [
+                                {
+                                  "id": "btn-add-component",
+                                  "type": "button",
+                                  "props": {
+                                    "label": "Add Component",
+                                    "variant": "primary"
+                                  },
+                                  "actions": {
+                                    "click": {
+                                      "type": "modal",
+                                      "title": "Add Component",
+                                      "url": "/api/ui/builder/component/new",
+                                      "modal": "form"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "section-preview",
+                    "type": "accordion-item",
+                    "props": {
+                      "value": "preview",
+                      "trigger": "4. Preview & Export"
+                    },
+                    "children": [
+                      {
+                        "id": "preview-section",
+                        "type": "rows",
+                        "children": [
+                          {
+                            "id": "json-preview",
+                            "type": "card",
+                            "props": {
+                              "variant": "outlined",
+                              "className": "mb-4"
+                            },
+                            "children": [
+                              {
+                                "id": "json-title",
+                                "type": "typography",
+                                "props": {
+                                  "variant": "h4",
+                                  "text": "Configuration JSON"
+                                }
+                              },
+                              {
+                                "id": "json-display",
+                                "type": "textarea",
+                                "props": {
+                                  "rows": 20,
+                                  "className": "font-mono text-xs",
+                                  "readonly": true,
+                                  "value": "{{generated_json}}"
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "id": "action-buttons",
+                            "type": "columns",
+                            "props": {
+                              "className": "gap-2"
+                            },
+                            "children": [
+                              {
+                                "id": "btn-copy-json",
+                                "type": "button",
+                                "props": {
+                                  "label": "Copy JSON",
+                                  "variant": "outline"
+                                },
+                                "actions": {
+                                  "click": {
+                                    "type": "command",
+                                    "command": "clipboard:copy",
+                                    "params": {
+                                      "text": "{{generated_json}}"
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "id": "btn-save-draft",
+                                "type": "button",
+                                "props": {
+                                  "label": "Save as Draft",
+                                  "variant": "secondary"
+                                },
+                                "actions": {
+                                  "click": {
+                                    "type": "http",
+                                    "url": "/api/ui/builder/save-draft",
+                                    "method": "POST"
+                                  }
+                                }
+                              },
+                              {
+                                "id": "btn-publish",
+                                "type": "button",
+                                "props": {
+                                  "label": "Publish Page",
+                                  "variant": "primary"
+                                },
+                                "actions": {
+                                  "click": {
+                                    "type": "modal",
+                                    "title": "Publish Page",
+                                    "url": "/api/ui/builder/publish-form",
+                                    "modal": "form"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "builder-sidebar",
+            "type": "card",
+            "props": {
+              "className": "w-80"
+            },
+            "children": [
+              {
+                "id": "sidebar-content",
+                "type": "rows",
+                "children": [
+                  {
+                    "id": "sidebar-title",
+                    "type": "typography",
+                    "props": {
+                      "variant": "h3",
+                      "text": "Quick Reference"
+                    }
+                  },
+                  {
+                    "id": "reference-tabs",
+                    "type": "tabs",
+                    "props": {
+                      "defaultValue": "components"
+                    },
+                    "children": [
+                      {
+                        "id": "tab-components",
+                        "type": "tab-panel",
+                        "props": {
+                          "value": "components",
+                          "label": "Components"
+                        },
+                        "children": [
+                          {
+                            "id": "components-reference",
+                            "type": "data-table",
+                            "props": {
+                              "dataSource": "UiComponent",
+                              "columns": [
+                                {
+                                  "key": "type",
+                                  "label": "Type",
+                                  "sortable": true
+                                },
+                                {
+                                  "key": "kind",
+                                  "label": "Kind",
+                                  "filterable": true,
+                                  "render": "badge"
+                                }
+                              ],
+                              "rowAction": {
+                                "type": "modal",
+                                "title": "Component Details",
+                                "url": "/api/ui/datasources/UiComponent/{{row.id}}",
+                                "fields": [
+                                  {
+                                    "key": "key",
+                                    "label": "Key",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "key": "type",
+                                    "label": "Type",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "key": "kind",
+                                    "label": "Kind",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "key": "schema_json",
+                                    "label": "Schema",
+                                    "type": "json"
+                                  }
+                                ]
+                              },
+                              "pagination": {
+                                "enabled": true,
+                                "pageSize": 10
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "id": "tab-datasources",
+                        "type": "tab-panel",
+                        "props": {
+                          "value": "datasources",
+                          "label": "Data Sources"
+                        },
+                        "children": [
+                          {
+                            "id": "datasources-list",
+                            "type": "rows",
+                            "children": [
+                              {
+                                "id": "ds-agent",
+                                "type": "card",
+                                "props": {
+                                  "variant": "outlined",
+                                  "className": "mb-2"
+                                },
+                                "children": [
+                                  {
+                                    "id": "ds-agent-title",
+                                    "type": "typography",
+                                    "props": {
+                                      "variant": "h5",
+                                      "text": "Agent"
+                                    }
+                                  },
+                                  {
+                                    "id": "ds-agent-desc",
+                                    "type": "typography",
+                                    "props": {
+                                      "variant": "muted",
+                                      "text": "Orchestration agents"
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "ds-model",
+                                "type": "card",
+                                "props": {
+                                  "variant": "outlined",
+                                  "className": "mb-2"
+                                },
+                                "children": [
+                                  {
+                                    "id": "ds-model-title",
+                                    "type": "typography",
+                                    "props": {
+                                      "variant": "h5",
+                                      "text": "Model"
+                                    }
+                                  },
+                                  {
+                                    "id": "ds-model-desc",
+                                    "type": "typography",
+                                    "props": {
+                                      "variant": "muted",
+                                      "text": "AI Models"
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "ds-uipage",
+                                "type": "card",
+                                "props": {
+                                  "variant": "outlined",
+                                  "className": "mb-2"
+                                },
+                                "children": [
+                                  {
+                                    "id": "ds-uipage-title",
+                                    "type": "typography",
+                                    "props": {
+                                      "variant": "h5",
+                                      "text": "UiPage"
+                                    }
+                                  },
+                                  {
+                                    "id": "ds-uipage-desc",
+                                    "type": "typography",
+                                    "props": {
+                                      "variant": "muted",
+                                      "text": "UI Pages"
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "ds-uicomponent",
+                                "type": "card",
+                                "props": {
+                                  "variant": "outlined",
+                                  "className": "mb-2"
+                                },
+                                "children": [
+                                  {
+                                    "id": "ds-uicomponent-title",
+                                    "type": "typography",
+                                    "props": {
+                                      "variant": "h5",
+                                      "text": "UiComponent"
+                                    }
+                                  },
+                                  {
+                                    "id": "ds-uicomponent-desc",
+                                    "type": "typography",
+                                    "props": {
+                                      "variant": "muted",
+                                      "text": "UI Components"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "id": "tab-examples",
+                        "type": "tab-panel",
+                        "props": {
+                          "value": "examples",
+                          "label": "Examples"
+                        },
+                        "children": [
+                          {
+                            "id": "examples-list",
+                            "type": "data-table",
+                            "props": {
+                              "dataSource": "UiPage",
+                              "columns": [
+                                {
+                                  "key": "key",
+                                  "label": "Page Key",
+                                  "sortable": true
+                                }
+                              ],
+                              "rowAction": {
+                                "type": "modal",
+                                "title": "Page Config Example",
+                                "url": "/api/ui/pages/{{row.key}}",
+                                "fields": [
+                                  {
+                                    "key": "key",
+                                    "label": "Key",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "key": "title",
+                                    "label": "Title",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "key": "overlay",
+                                    "label": "Overlay",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "key": "config",
+                                    "label": "Full Config",
+                                    "type": "json"
+                                  }
+                                ]
+                              },
+                              "pagination": {
+                                "enabled": true,
+                                "pageSize": 5
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Adaptive page builder for creating complex UI configurations",
+    "created": "2025-10-28"
+  }
+}
